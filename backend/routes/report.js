@@ -142,10 +142,17 @@ router.get('/:id/download', (req, res) => {
     
     // 设置响应头
     res.setHeader('Content-Type', contentType);
-    const asciiName = downloadName.replace(/[^\x00-\x7F]/g, '_');
+    
+    // 🔧 修复中文文件名乱码
+    // ASCII fallback: 用任务ID确保有意义的文件名
+    const asciiName = `report_${id.slice(0, 8)}_${fileName}`;
+    // UTF-8 编码: 额外转义可能导致问题的字符
+    const encodedName = encodeURIComponent(downloadName)
+        .replace(/['()]/g, escape)
+        .replace(/\*/g, '%2A');
+    
     res.setHeader('Content-Disposition', 
-    `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(downloadName)}`
-);
+        `attachment; filename="${asciiName}"; filename*=UTF-8''${encodedName}`);
     // 发送文件
     res.sendFile(filePath);
 });

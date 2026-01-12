@@ -1,6 +1,8 @@
 /**
  * 文件上传路由
  * POST /api/upload
+ * 
+ * 【v2.1 更新】支持自定义标题
  */
 
 const express = require('express');
@@ -46,6 +48,16 @@ const upload = multer({
 });
 
 /**
+ * 生成默认标题：X月X日课堂笔记
+ */
+function generateDefaultTitle() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    return `${month}月${day}日课堂笔记`;
+}
+
+/**
  * POST /api/upload
  * 上传文件并创建处理任务
  */
@@ -59,14 +71,20 @@ router.post('/', upload.single('file'), (req, res) => {
         }
 
         const file = req.file;
+        
+        // 【新增】获取自定义标题，如果没有则使用默认标题
+        const customTitle = req.body.customTitle?.trim() || generateDefaultTitle();
+        
         console.log(`📤 文件上传: ${file.originalname} (${file.size} bytes)`);
+        console.log(`📝 报告标题: ${customTitle}`);
 
-        // 创建任务
+        // 创建任务，【新增】传入自定义标题
         const task = taskQueue.createTask({
             originalName: file.originalname,
             savedPath: file.path,
             size: file.size,
-            mimeType: file.mimetype
+            mimeType: file.mimetype,
+            customTitle: customTitle  // 【新增】
         });
 
         res.status(201).json({
@@ -79,6 +97,7 @@ router.post('/', upload.single('file'), (req, res) => {
                     name: file.originalname,
                     size: file.size
                 },
+                customTitle: customTitle,  // 【新增】返回给前端
                 createdAt: task.createdAt
             },
             // 告诉前端如何获取进度

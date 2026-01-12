@@ -1,12 +1,32 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 /**
- * 文件上传组件 - 支持拖拽
+ * 生成默认标题：X月X日课堂笔记
+ */
+function generateDefaultTitle() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    return `${month}月${day}日课堂笔记`;
+}
+
+/**
+ * 文件上传组件 - 支持拖拽 + 自定义标题
  */
 function FileUploader({ onUploadStart, onUploadSuccess, onUploadError, disabled }) {
     const [isDragging, setIsDragging] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploading, setUploading] = useState(false);
+    
+    // 【新增】自定义标题
+    const [customTitle, setCustomTitle] = useState(generateDefaultTitle());
+
+    // 【新增】每次选择新文件时，重置标题为默认值
+    useEffect(() => {
+        if (selectedFile) {
+            setCustomTitle(generateDefaultTitle());
+        }
+    }, [selectedFile]);
 
     // 处理拖拽进入
     const handleDragEnter = useCallback((e) => {
@@ -77,6 +97,10 @@ function FileUploader({ onUploadStart, onUploadSuccess, onUploadError, disabled 
         try {
             const formData = new FormData();
             formData.append('file', selectedFile);
+            
+            // 【新增】添加自定义标题
+            const titleToUse = customTitle.trim() || generateDefaultTitle();
+            formData.append('customTitle', titleToUse);
 
             const response = await fetch('/api/upload', {
                 method: 'POST',
@@ -88,6 +112,7 @@ function FileUploader({ onUploadStart, onUploadSuccess, onUploadError, disabled 
             if (response.ok && data.success) {
                 onUploadSuccess?.(data);
                 setSelectedFile(null);
+                setCustomTitle(generateDefaultTitle()); // 重置标题
             } else {
                 throw new Error(data.message || '上传失败');
             }
@@ -102,6 +127,7 @@ function FileUploader({ onUploadStart, onUploadSuccess, onUploadError, disabled 
     // 取消选择
     const handleCancel = () => {
         setSelectedFile(null);
+        setCustomTitle(generateDefaultTitle());
     };
 
     return (
@@ -159,6 +185,35 @@ function FileUploader({ onUploadStart, onUploadSuccess, onUploadError, disabled 
                     )}
                 </div>
             </div>
+
+            {/* 【新增】标题输入框 - 选择文件后显示 */}
+            {selectedFile && (
+                <div className="mt-4 fade-in">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        📝 报告标题
+                    </label>
+                    <input
+                        type="text"
+                        value={customTitle}
+                        onChange={(e) => setCustomTitle(e.target.value)}
+                        placeholder="输入报告标题..."
+                        disabled={uploading || disabled}
+                        className={`
+                            w-full px-4 py-3 rounded-xl border-2 
+                            transition-all duration-200
+                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                            ${uploading || disabled 
+                                ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' 
+                                : 'bg-white border-gray-200 hover:border-indigo-300'
+                            }
+                        `}
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                        默认格式：X月X日课堂笔记，可自行修改
+                    </p>
+                </div>
+            )}
 
             {/* 操作按钮 */}
             {selectedFile && (

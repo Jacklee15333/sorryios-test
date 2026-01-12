@@ -6,6 +6,8 @@
  * - 队列管理（FIFO）
  * - 进度回调
  * 
+ * 【v2.1 更新】支持自定义标题
+ * 
  * 后续可升级为 Redis + Bull 实现持久化
  */
 
@@ -48,6 +50,7 @@ class TaskQueue {
 
     /**
      * 创建新任务
+     * 【v2.1 更新】支持 customTitle 参数
      */
     createTask(fileInfo) {
         const taskId = uuidv4();
@@ -69,6 +72,9 @@ class TaskQueue {
                 mimeType: fileInfo.mimeType
             },
             
+            // 【新增】自定义标题
+            customTitle: fileInfo.customTitle || null,
+            
             // 结果
             result: null,           // 处理完成后的报告路径
             error: null,            // 错误信息
@@ -83,6 +89,9 @@ class TaskQueue {
         this.queue.push(taskId);
         
         console.log(`📝 任务已创建: ${taskId}`);
+        if (task.customTitle) {
+            console.log(`   标题: ${task.customTitle}`);
+        }
         
         // 尝试处理队列
         this._processQueue();

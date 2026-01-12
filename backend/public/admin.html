@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorryios AI - 管理后台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        
+        /* 侧边栏 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 220px;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .logo h1 {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo span {
+            font-size: 12px;
+            opacity: 0.7;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .nav-menu li a:hover,
+        .nav-menu li a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left: 3px solid #667eea;
+        }
+        
+        .nav-menu li a .icon {
+            font-size: 18px;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            margin-left: 220px;
+            padding: 20px 30px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .header h2 {
+            font-size: 22px;
+            color: #1a1a2e;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd6;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .stat-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .stat-card .icon.blue { background: #e3f2fd; }
+        .stat-card .icon.green { background: #e8f5e9; }
+        .stat-card .icon.orange { background: #fff3e0; }
+        .stat-card .icon.purple { background: #f3e5f5; }
+        .stat-card .icon.red { background: #ffebee; }
+        
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+        
+        .stat-card .label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* 卡片容器 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h3 {
+            font-size: 16px;
+            color: #1a1a2e;
+        }
+        
+        .card-body {
+            padding: 0;
+        }
+        
+        /* 表格 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 14px 20px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        td {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* 徽章 */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #f57c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .badge-info { background: #e3f2fd; color: #1565c0; }
+        .badge-default { background: #f5f5f5; color: #666; }
+        
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            font-size: 18px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* 操作按钮 */
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn.edit { background: #e3f2fd; color: #1565c0; }
+        .action-btn.edit:hover { background: #bbdefb; }
+        .action-btn.delete { background: #ffebee; color: #c62828; }
+        .action-btn.delete:hover { background: #ffcdd2; }
+        .action-btn.view { background: #e8f5e9; color: #2e7d32; }
+        .action-btn.view:hover { background: #c8e6c9; }
+        
+        /* 区块显示 */
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        /* 时间线样式 */
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+        
+        .timeline-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #667eea;
+            margin-top: 5px;
+        }
+        
+        .timeline-content {
+            flex: 1;
+        }
+        
+        .timeline-content .time {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+        
+        .timeline-content .message {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+            .sidebar .logo h1 span,
+            .sidebar .nav-menu li a span {
+                display: none;
+            }
+            .main-content {
+                margin-left: 60px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+        <div class="logo">
+            <h1>🤖 Sorryios AI</h1>
+            <span>管理后台</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#" class="active" onclick="showSection('dashboard')"><span class="icon">📊</span><span>仪表盘</span></a></li>
+            <li><a href="#" onclick="showSection('users')"><span class="icon">👥</span><span>用户管理</span></a></li>
+            <li><a href="#" onclick="showSection('tasks')"><span class="icon">📋</span><span>任务管理</span></a></li>
+            <li><a href="#" onclick="showSection('files')"><span class="icon">📁</span><span>文件管理</span></a></li>
+            <li><a href="#" onclick="showSection('logs')"><span class="icon">📝</span><span>系统日志</span></a></li>
+            <li><a href="/" target="_blank"><span class="icon">🔗</span><span>API 文档</span></a></li>
+            <li><a href="http://localhost:5173" target="_blank"><span class="icon">🌐</span><span>前端页面</span></a></li>
+        </ul>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 仪表盘 -->
+        <div id="section-dashboard" class="section active">
+            <div class="header">
+                <h2>📊 仪表盘</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshDashboard()">🔄 刷新数据</button>
+                </div>
+            </div>
+            
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="icon blue">👥</div>
+                    <div class="value" id="stat-users">-</div>
+                    <div class="label">总用户数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon green">✅</div>
+                    <div class="value" id="stat-tasks-completed">-</div>
+                    <div class="label">已完成任务</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon orange">📋</div>
+                    <div class="value" id="stat-tasks-total">-</div>
+                    <div class="label">总任务数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon purple">📁</div>
+                    <div class="value" id="stat-files">-</div>
+                    <div class="label">总文件数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon red">⏳</div>
+                    <div class="value" id="stat-tasks-today">-</div>
+                    <div class="label">今日任务</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>📋 最近任务</h3>
+                    <button class="btn btn-secondary" onclick="showSection('tasks')">查看全部</button>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>任务ID</th>
+                                <th>标题</th>
+                                <th>用户</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-tasks">
+                            <tr><td colspan="5" class="loading">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>📝 最近日志</h3>
+                    <button class="btn btn-secondary" onclick="showSection('logs')">查看全部</button>
+                </div>
+                <div class="card-body" id="recent-logs">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用户管理 -->
+        <div id="section-users" class="section">
+            <div class="header">
+                <h2>👥 用户管理</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showAddUserModal()">+ 添加用户</button>
+                    <button class="btn btn-secondary" onclick="loadUsers()">🔄 刷新</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>邮箱</th>
+                                <th>角色</th>
+                                <th>状态</th>
+                                <th>任务数</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table">
+                            <tr><td colspan="8" class="loading">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 任务管理 -->
+        <div id="section-tasks" class="section">
+            <div class="header">
+                <h2>📋 任务管理</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="loadTasks()">🔄 刷新</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>任务ID</th>
+                                <th>标题</th>
+                                <th>用户</th>
+                                <th>状态</th>
+                                <th>进度</th>
+                                <th>文件名</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-table">
+                            <tr><td colspan="8" class="loading">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文件管理 -->
+        <div id="section-files" class="section">
+            <div class="header">
+                <h2>📁 文件管理</h2>
+                <div class="header-actions">
+                    <span id="files-stats" style="color:#666;margin-right:15px;"></span>
+                    <button class="btn btn-secondary" onclick="loadFiles()">🔄 刷新</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>原始文件名</th>
+                                <th>用户</th>
+                                <th>类型</th>
+                                <th>大小</th>
+                                <th>创建时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="files-table">
+                            <tr><td colspan="6" class="loading">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统日志 -->
+        <div id="section-logs" class="section">
+            <div class="header">
+                <h2>📝 系统日志</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="loadLogs()">🔄 刷新</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>级别</th>
+                                <th>操作</th>
+                                <th>用户</th>
+                                <th>消息</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table">
+                            <tr><td colspan="5" class="loading">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用户弹窗 -->
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加新用户</h3>
+                <button class="modal-close" onclick="closeModal('addUserModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label>用户名 *</label>
+                        <input type="text" name="username" required placeholder="请输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" name="password" placeholder="默认：123456">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" name="email" placeholder="可选">
+                    </div>
+                    <div class="form-group">
+                        <label>角色</label>
+                        <select name="role">
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addUserModal')">取消</button>
+                <button class="btn btn-primary" onclick="addUser()">确认添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑用户弹窗 -->
+    <div class="modal" id="editUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑用户</h3>
+                <button class="modal-close" onclick="closeModal('editUserModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" name="id">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" name="username" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>新密码</label>
+                        <input type="password" name="password" placeholder="留空则不修改">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" name="email">
+                    </div>
+                    <div class="form-group">
+                        <label>角色</label>
+                        <select name="role">
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select name="status">
+                            <option value="active">正常</option>
+                            <option value="inactive">禁用</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editUserModal')">取消</button>
+                <button class="btn btn-primary" onclick="updateUser()">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/admin';
+        
+        // 导航切换
+        function showSection(name) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+            
+            document.getElementById(`section-${name}`).classList.add('active');
+            event.target.closest('a').classList.add('active');
+            
+            switch(name) {
+                case 'dashboard': refreshDashboard(); break;
+                case 'users': loadUsers(); break;
+                case 'tasks': loadTasks(); break;
+                case 'files': loadFiles(); break;
+                case 'logs': loadLogs(); break;
+            }
+        }
+        
+        // 仪表盘数据
+        async function refreshDashboard() {
+            try {
+                const res = await fetch(`${API_BASE}/dashboard`);
+                const json = await res.json();
+                
+                if (json.success) {
+                    const data = json.data;
+                    
+                    // 更新统计数据
+                    document.getElementById('stat-users').textContent = data.users.total;
+                    document.getElementById('stat-tasks-completed').textContent = data.tasks.completed;
+                    document.getElementById('stat-tasks-total').textContent = data.tasks.total;
+                    document.getElementById('stat-files').textContent = data.files.total;
+                    document.getElementById('stat-tasks-today').textContent = data.tasks.today || 0;
+                    
+                    // 更新最近任务
+                    const tbody = document.getElementById('recent-tasks');
+                    if (data.recentTasks.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="loading">暂无任务</td></tr>';
+                    } else {
+                        tbody.innerHTML = data.recentTasks.map(task => `
+                            <tr>
+                                <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;">${task.id.slice(0,8)}...</code></td>
+                                <td>${task.title || '未命名'}</td>
+                                <td>${task.username || '-'}</td>
+                                <td>${getStatusBadge(task.status)}</td>
+                                <td>${formatDate(task.created_at)}</td>
+                            </tr>
+                        `).join('');
+                    }
+                    
+                    // 更新最近日志
+                    const logsDiv = document.getElementById('recent-logs');
+                    if (data.recentLogs && data.recentLogs.length > 0) {
+                        logsDiv.innerHTML = data.recentLogs.slice(0, 5).map(log => `
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="time">${formatDate(log.created_at)}</div>
+                                    <div class="message">${log.action || ''} - ${log.message || '无消息'}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        logsDiv.innerHTML = '<div class="empty-state"><div class="icon">📝</div><div>暂无日志</div></div>';
+                    }
+                }
+            } catch (err) {
+                console.error('Dashboard error:', err);
+            }
+        }
+        
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${API_BASE}/users`);
+                const json = await res.json();
+                
+                const tbody = document.getElementById('users-table');
+                if (json.success && json.data.length > 0) {
+                    tbody.innerHTML = json.data.map(user => `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td><strong>${user.username}</strong></td>
+                            <td>${user.email || '-'}</td>
+                            <td>${getRoleBadge(user.role)}</td>
+                            <td>${getStatusBadge(user.status)}</td>
+                            <td>${user.total_tasks || 0}</td>
+                            <td>${formatDate(user.created_at)}</td>
+                            <td>
+                                <button class="action-btn edit" onclick="editUser(${user.id})">编辑</button>
+                                ${user.role !== 'admin' ? `<button class="action-btn delete" onclick="deleteUser(${user.id})">删除</button>` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="8" class="loading">暂无用户</td></tr>';
+                }
+            } catch (err) {
+                console.error('Load users error:', err);
+            }
+        }
+        
+        // 加载任务列表
+        async function loadTasks() {
+            try {
+                const res = await fetch(`${API_BASE}/tasks`);
+                const json = await res.json();
+                
+                const tbody = document.getElementById('tasks-table');
+                if (json.success && json.data.length > 0) {
+                    tbody.innerHTML = json.data.map(task => `
+                        <tr>
+                            <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;">${task.id.slice(0,8)}...</code></td>
+                            <td>${task.title || '未命名'}</td>
+                            <td>${task.username || '-'}</td>
+                            <td>${getStatusBadge(task.status)}</td>
+                            <td>
+                                <div style="background:#eee;border-radius:10px;height:8px;width:80px;overflow:hidden;">
+                                    <div style="background:#667eea;height:100%;width:${task.progress || 0}%;"></div>
+                                </div>
+                                <span style="font-size:12px;color:#666;">${task.progress || 0}%</span>
+                            </td>
+                            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${task.file_name || ''}">${task.file_name || '-'}</td>
+                            <td>${formatDate(task.created_at)}</td>
+                            <td>
+                                <button class="action-btn delete" onclick="deleteTask('${task.id}')">删除</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="8" class="loading">暂无任务</td></tr>';
+                }
+            } catch (err) {
+                console.error('Load tasks error:', err);
+            }
+        }
+        
+        // 加载文件列表
+        async function loadFiles() {
+            try {
+                const res = await fetch(`${API_BASE}/files`);
+                const json = await res.json();
+                
+                const tbody = document.getElementById('files-table');
+                if (json.success && json.data.length > 0) {
+                    tbody.innerHTML = json.data.map(file => `
+                        <tr>
+                            <td>${file.id}</td>
+                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${file.original_name}">${file.original_name}</td>
+                            <td>${file.username || '-'}</td>
+                            <td>${getTypeBadge(file.file_type)}</td>
+                            <td>${formatSize(file.file_size)}</td>
+                            <td>${formatDate(file.created_at)}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="loading">暂无文件</td></tr>';
+                }
+            } catch (err) {
+                console.error('Load files error:', err);
+            }
+        }
+        
+        // 加载日志
+        async function loadLogs() {
+            try {
+                const res = await fetch(`${API_BASE}/logs`);
+                const json = await res.json();
+                
+                const tbody = document.getElementById('logs-table');
+                if (json.success && json.data.length > 0) {
+                    tbody.innerHTML = json.data.map(log => `
+                        <tr>
+                            <td style="white-space:nowrap;">${formatDate(log.created_at)}</td>
+                            <td>${getLevelBadge(log.level)}</td>
+                            <td>${log.action || '-'}</td>
+                            <td>${log.username || '-'}</td>
+                            <td>${log.message || '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="loading">暂无日志</td></tr>';
+                }
+            } catch (err) {
+                console.error('Load logs error:', err);
+            }
+        }
+        
+        // 弹窗相关
+        function showAddUserModal() {
+            document.getElementById('addUserForm').reset();
+            document.getElementById('addUserModal').classList.add('active');
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        async function addUser() {
+            const form = document.getElementById('addUserForm');
+            const data = {
+                username: form.username.value,
+                password: form.password.value || '123456',
+                email: form.email.value,
+                role: form.role.value
+            };
+            
+            if (!data.username) {
+                alert('请输入用户名！');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const json = await res.json();
+                
+                if (json.success) {
+                    alert('用户创建成功！');
+                    closeModal('addUserModal');
+                    form.reset();
+                    loadUsers();
+                } else {
+                    alert('错误：' + json.error);
+                }
+            } catch (err) {
+                alert('创建用户失败');
+            }
+        }
+        
+        async function editUser(id) {
+            try {
+                const res = await fetch(`${API_BASE}/users/${id}`);
+                const json = await res.json();
+                
+                if (json.success) {
+                    const user = json.data;
+                    const form = document.getElementById('editUserForm');
+                    form.id.value = user.id;
+                    form.username.value = user.username;
+                    form.email.value = user.email || '';
+                    form.role.value = user.role;
+                    form.status.value = user.status;
+                    form.password.value = '';
+                    
+                    document.getElementById('editUserModal').classList.add('active');
+                }
+            } catch (err) {
+                alert('获取用户信息失败');
+            }
+        }
+        
+        async function updateUser() {
+            const form = document.getElementById('editUserForm');
+            const data = {
+                email: form.email.value,
+                role: form.role.value,
+                status: form.status.value
+            };
+            
+            if (form.password.value) {
+                data.password = form.password.value;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/users/${form.id.value}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const json = await res.json();
+                
+                if (json.success) {
+                    alert('用户更新成功！');
+                    closeModal('editUserModal');
+                    loadUsers();
+                } else {
+                    alert('更新失败');
+                }
+            } catch (err) {
+                alert('更新用户失败');
+            }
+        }
+        
+        async function deleteUser(id) {
+            if (!confirm('确定要删除此用户吗？此操作不可恢复！')) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/users/${id}`, { method: 'DELETE' });
+                const json = await res.json();
+                
+                if (json.success) {
+                    loadUsers();
+                } else {
+                    alert('删除失败');
+                }
+            } catch (err) {
+                alert('删除用户失败');
+            }
+        }
+        
+        async function deleteTask(id) {
+            if (!confirm('确定要删除此任务吗？此操作不可恢复！')) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/tasks/${id}`, { method: 'DELETE' });
+                const json = await res.json();
+                
+                if (json.success) {
+                    loadTasks();
+                } else {
+                    alert('删除失败');
+                }
+            } catch (err) {
+                alert('删除任务失败');
+            }
+        }
+        
+        // 辅助函数
+        function getStatusBadge(status) {
+            const badges = {
+                'active': '<span class="badge badge-success">正常</span>',
+                'inactive': '<span class="badge badge-default">禁用</span>',
+                'completed': '<span class="badge badge-success">已完成</span>',
+                'processing': '<span class="badge badge-warning">处理中</span>',
+                'pending': '<span class="badge badge-info">等待中</span>',
+                'failed': '<span class="badge badge-danger">失败</span>'
+            };
+            return badges[status] || `<span class="badge badge-default">${status || '未知'}</span>`;
+        }
+        
+        function getRoleBadge(role) {
+            const badges = {
+                'admin': '<span class="badge badge-danger">管理员</span>',
+                'user': '<span class="badge badge-info">普通用户</span>'
+            };
+            return badges[role] || `<span class="badge badge-default">${role}</span>`;
+        }
+        
+        function getLevelBadge(level) {
+            const badges = {
+                'info': '<span class="badge badge-info">信息</span>',
+                'warn': '<span class="badge badge-warning">警告</span>',
+                'error': '<span class="badge badge-danger">错误</span>'
+            };
+            return badges[level] || `<span class="badge badge-default">${level}</span>`;
+        }
+        
+        function getTypeBadge(type) {
+            const colors = {
+                'txt': 'info',
+                'pdf': 'danger',
+                'mp3': 'warning',
+                'wav': 'warning',
+                'doc': 'info',
+                'docx': 'info'
+            };
+            const color = colors[type] || 'default';
+            return `<span class="badge badge-${color}">${type || '未知'}</span>`;
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleString('zh-CN', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function formatSize(bytes) {
+            if (!bytes) return '-';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+        
+        // 页面加载完成后刷新仪表盘
+        refreshDashboard();
+    </script>
+</body>
+</html>

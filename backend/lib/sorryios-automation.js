@@ -25,6 +25,11 @@ const CONFIG = {
     loginTimeout: 60000,
     responseTimeout: 120000,  // AI响应可能比较慢
     
+    // 【新增】无活动超时 - 如果200秒内页面没有任何活动，判定为卡死
+    inactivityTimeout: 200000,  // 200秒
+    // 【新增】最大等待时间 - 即使有活动，最多等30分钟
+    maxResponseWaitTime: 1800000,  // 30分钟
+    
     // 重试设置
     maxRetries: 3,
     retryDelay: 5000,
@@ -554,21 +559,42 @@ class SorryiosAutomation {
     }
 
     /**
-     * 等待并获取AI响应
+     * 等待并获取AI响应 - 【增强版：智能活动检测】
+     * 
+     * 超时逻辑：
+     * - 如果页面有活动（AI正在生成 或 内容在变化），继续等待
+     * - 如果页面无活动超过200秒，判定为卡死，抛出超时错误
+     * - 最长等待30分钟（防止无限等待）
      */
     async waitForResponse() {
         const startTime = Date.now();
+        let lastActivityTime = Date.now();  // 【新增】上次活动时间
         let lastResponseText = '';
         let lastResponseHtml = '';
+        let lastResponseLength = 0;  // 【新增】上次响应长度
         let stableCount = 0;
-        const maxWaitTime = 180000; // 最多等待3分钟
+        
+        // 使用配置的超时时间
+        const inactivityTimeout = CONFIG.inactivityTimeout || 200000;  // 200秒无活动超时
+        const maxWaitTime = CONFIG.maxResponseWaitTime || 1800000;     // 30分钟最大等待
         
         log('开始等待AI响应...');
+        log(`[超时设置] 无活动超时: ${inactivityTimeout/1000}秒, 最大等待: ${maxWaitTime/1000}秒`);
         
         // 先等待一下让AI开始响应
         await sleep(3000);
         
         while (Date.now() - startTime < maxWaitTime) {
+            const now = Date.now();
+            const elapsed = Math.round((now - startTime) / 1000);
+            const inactiveTime = Math.round((now - lastActivityTime) / 1000);
+            
+            // 【新增】检查无活动超时
+            if (inactiveTime >= inactivityTimeout / 1000) {
+                log(`⚠️ 页面无活动已达 ${inactiveTime} 秒，判定为卡死！`, 'WARN');
+                throw new Error(`页面卡死：${inactiveTime}秒无活动`);
+            }
+            
             // 检查AI是否正在回复（有加载/打字动画）
             const isGenerating = await this.checkIfAIGenerating();
             
@@ -721,11 +747,21 @@ class SorryiosAutomation {
                 continue;
             }
             
-            const elapsed = Math.round((Date.now() - startTime) / 1000);
+            // 【新增】检测活动：AI正在生成 或 内容长度变化
+            const currentLength = responseText.length;
+            const hasActivity = isGenerating || (currentLength > lastResponseLength);
             
-            // 如果AI还在生成中，继续等待
-            if (isGenerating) {
-                log(`AI正在回复中... (${elapsed}秒)`);
+            if (hasActivity) {
+                // 有活动，重置无活动计时器
+                lastActivityTime = now;
+                
+                if (isGenerating) {
+                    log(`AI正在生成中... (${elapsed}秒, 内容长度: ${currentLength})`);
+                } else if (currentLength > lastResponseLength) {
+                    log(`内容增长中... (${elapsed}秒, 长度: ${lastResponseLength} → ${currentLength})`);
+                }
+                
+                lastResponseLength = currentLength;
                 stableCount = 0;
                 lastResponseText = responseText;
                 lastResponseHtml = responseHtml;
@@ -733,11 +769,12 @@ class SorryiosAutomation {
                 continue;
             }
             
-            // AI没有在生成，检查响应是否稳定
+            // 没有活动（AI不在生成，内容也没变化）
+            // 检查响应是否稳定
             if (responseText && responseText.length > 10) {
                 if (responseText === lastResponseText) {
                     stableCount++;
-                    log(`响应内容稳定检测: ${stableCount}/3 (${elapsed}秒)`);
+                    log(`响应稳定检测: ${stableCount}/3 (${elapsed}秒, 无活动: ${inactiveTime}秒)`);
                     
                     // 如果响应稳定3次（约6秒），认为完成
                     if (stableCount >= 3) {
@@ -763,13 +800,15 @@ class SorryiosAutomation {
                         };
                     }
                 } else {
+                    // 内容变化了（虽然长度没变），也算有活动
+                    lastActivityTime = now;
                     stableCount = 0;
                     lastResponseText = responseText;
                     lastResponseHtml = responseHtml;
                     log(`响应内容变化中... (${elapsed}秒, 长度: ${responseText.length})`);
                 }
             } else {
-                log(`等待响应内容... (${elapsed}秒)`);
+                log(`等待响应内容... (${elapsed}秒, 无活动: ${inactiveTime}秒)`);
             }
             
             await sleep(2000);
@@ -797,14 +836,14 @@ class SorryiosAutomation {
                 }
                 throw new Error('无法提取AI响应内容（页面结构可能已更改）');
             }
-            log('等待超时，返回已获取的内容');
+            log('最大等待时间到达，返回已获取的内容');
             return {
                 text: lastResponseText.trim(),
                 html: lastResponseHtml || ''
             };
         }
         
-        throw new Error('等待AI响应超时');
+        throw new Error('等待AI响应超时（最大等待时间）');
     }
     
     /**
