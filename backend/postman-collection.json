@@ -1,0 +1,173 @@
+{
+    "info": {
+        "name": "Sorryios AI 智能笔记系统 API",
+        "description": "后端 API 测试集合",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "健康检查",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:3000/api/health",
+                    "protocol": "http",
+                    "host": ["localhost"],
+                    "port": "3000",
+                    "path": ["api", "health"]
+                }
+            }
+        },
+        {
+            "name": "上传文件",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "file",
+                            "type": "file",
+                            "src": ""
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "http://localhost:3000/api/upload",
+                    "protocol": "http",
+                    "host": ["localhost"],
+                    "port": "3000",
+                    "path": ["api", "upload"]
+                }
+            }
+        },
+        {
+            "name": "获取任务列表",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:3000/api/task",
+                    "protocol": "http",
+                    "host": ["localhost"],
+                    "port": "3000",
+                    "path": ["api", "task"]
+                }
+            }
+        },
+        {
+            "name": "获取任务状态",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:3000/api/task/:taskId",
+                    "protocol": "http",
+                    "host": ["localhost"],
+                    "port": "3000",
+                    "path": ["api", "task", ":taskId"],
+                    "variable": [
+                        {
+                            "key": "taskId",
+                            "value": "替换为实际taskId"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "取消任务",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:3000/api/task/:taskId/cancel",
+                    "protocol": "http",
+                    "host": ["localhost"],
+                    "port": "3000",
+                    "path": ["api", "task", ":taskId", "cancel"],
+                    "variable": [
+                        {
+                            "key": "taskId",
+                            "value": "替换为实际taskId"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "获取报告信息",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:3000/api/report/:taskId",
+                    "protocol": "http",
+                    "host": ["localhost"],
+                    "port": "3000",
+                    "path": ["api", "report", ":taskId"],
+                    "variable": [
+                        {
+                            "key": "taskId",
+                            "value": "替换为实际taskId"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "下载HTML报告",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:3000/api/report/:taskId/download?format=html",
+                    "protocol": "http",
+                    "host": ["localhost"],
+                    "port": "3000",
+                    "path": ["api", "report", ":taskId", "download"],
+                    "query": [
+                        {
+                            "key": "format",
+                            "value": "html"
+                        }
+                    ],
+                    "variable": [
+                        {
+                            "key": "taskId",
+                            "value": "替换为实际taskId"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "下载Markdown报告",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:3000/api/report/:taskId/download?format=md",
+                    "protocol": "http",
+                    "host": ["localhost"],
+                    "port": "3000",
+                    "path": ["api", "report", ":taskId", "download"],
+                    "query": [
+                        {
+                            "key": "format",
+                            "value": "md"
+                        }
+                    ],
+                    "variable": [
+                        {
+                            "key": "taskId",
+                            "value": "替换为实际taskId"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
