@@ -225,7 +225,189 @@ class SorryiosAutomation {
         log('等待AI界面加载...');
         await this.waitForInputBox();
         
+        // 🆕 选择 Instant 模型（即刻回答，速度更快）
+        await this.selectInstantModel();
+        
         log('AI界面已就绪');
+    }
+    
+    /**
+     * 🆕 选择 Instant（即刻回答）模型
+     * 避免使用 Thinking 模型导致等待时间过长
+     */
+    async selectInstantModel() {
+        log('========== 开始选择 Instant 模型 ==========');
+        try {
+            // 等待页面稳定
+            await sleep(1500);
+            
+            // 第一步：扫描页面上所有按钮，找到模型选择按钮
+            log('[步骤1] 扫描页面按钮...');
+            const allButtons = await this.page.$$eval('button', (buttons) => {
+                return buttons.map((btn, index) => {
+                    const rect = btn.getBoundingClientRect();
+                    const text = btn.innerText || btn.textContent || '';
+                    const isVisible = rect.width > 0 && rect.height > 0;
+                    return {
+                        index,
+                        text: text.trim().substring(0, 50),
+                        x: Math.round(rect.x),
+                        y: Math.round(rect.y),
+                        width: Math.round(rect.width),
+                        height: Math.round(rect.height),
+                        isVisible,
+                        className: btn.className.substring(0, 50),
+                    };
+                }).filter(b => b.isVisible && b.y < 100); // 只看顶部100px内的按钮
+            });
+            
+            log(`[调试] 顶部区域找到 ${allButtons.length} 个可见按钮:`);
+            allButtons.forEach(btn => {
+                log(`  - 按钮[${btn.index}]: "${btn.text}" 位置(${btn.x},${btn.y}) 大小(${btn.width}x${btn.height})`);
+            });
+            
+            // 查找包含 ChatGPT / GPT / Thinking / Instant / Auto 的按钮
+            const modelButton = allButtons.find(btn => 
+                btn.text.includes('ChatGPT') || 
+                btn.text.includes('GPT') ||
+                btn.text.includes('Thinking') || 
+                btn.text.includes('Instant') ||
+                btn.text.includes('Auto')
+            );
+            
+            if (!modelButton) {
+                log('[步骤1] ❌ 未在顶部找到模型选择按钮', 'WARN');
+                log('[调试] 尝试扩大搜索范围...');
+                
+                // 扩大搜索：查找所有包含相关文字的元素
+                const modelElements = await this.page.$$eval('*', (elements) => {
+                    const keywords = ['ChatGPT', 'GPT-', 'Thinking', 'Instant', 'Auto'];
+                    return elements.filter(el => {
+                        const text = el.innerText || '';
+                        const rect = el.getBoundingClientRect();
+                        return rect.y < 80 && rect.width > 0 && keywords.some(k => text.includes(k));
+                    }).slice(0, 10).map(el => ({
+                        tag: el.tagName,
+                        text: (el.innerText || '').substring(0, 60),
+                        x: Math.round(el.getBoundingClientRect().x),
+                        y: Math.round(el.getBoundingClientRect().y),
+                    }));
+                });
+                
+                log(`[调试] 扩大搜索找到 ${modelElements.length} 个相关元素:`);
+                modelElements.forEach(el => {
+                    log(`  - <${el.tag}> "${el.text}" 位置(${el.x},${el.y})`);
+                });
+                
+                log('[步骤1] 使用默认模型继续', 'WARN');
+                return;
+            }
+            
+            log(`[步骤1] ✅ 找到模型按钮: "${modelButton.text}" 位置(${modelButton.x},${modelButton.y})`);
+            
+            // 检查是否已经是 Instant
+            if (modelButton.text.includes('Instant')) {
+                log('[步骤1] 当前已是 Instant 模型，无需切换 ✅');
+                return;
+            }
+            
+            // 第二步：点击模型按钮打开下拉菜单
+            log('[步骤2] 点击模型按钮打开下拉菜单...');
+            await this.page.mouse.click(modelButton.x + modelButton.width / 2, modelButton.y + modelButton.height / 2);
+            await sleep(1000);
+            
+            // 第三步：查找下拉菜单中的 Instant 选项
+            log('[步骤3] 查找 Instant 选项...');
+            
+            // 先等待下拉菜单完全展开
+            await sleep(500);
+            
+            // 下拉菜单应该在模型按钮正下方，根据按钮位置计算搜索范围
+            const menuMinX = modelButton.x - 50;  // 按钮左侧稍微扩展
+            const menuMaxX = modelButton.x + modelButton.width + 100; // 按钮右侧扩展
+            const menuMinY = modelButton.y + modelButton.height; // 按钮下方开始
+            const menuMaxY = 450; // 下拉菜单不会太长
+            
+            log(`[调试] 搜索下拉菜单范围: x(${menuMinX}-${menuMaxX}), y(${menuMinY}-${menuMaxY})`);
+            
+            // 扫描下拉菜单区域
+            log('[调试] 扫描下拉菜单区域的所有元素...');
+            const allMenuElements = await this.page.$$eval('*', (elements, range) => {
+                return elements.filter(el => {
+                    const rect = el.getBoundingClientRect();
+                    const text = (el.innerText || '').trim();
+                    // 严格限定在下拉菜单区域
+                    return rect.x >= range.minX && rect.x <= range.maxX &&
+                           rect.y >= range.minY && rect.y <= range.maxY &&
+                           rect.width > 30 && rect.width < 300 &&
+                           rect.height > 15 && rect.height < 80 &&
+                           text.length > 0 && text.length < 60;
+                }).slice(0, 25).map(el => ({
+                    tag: el.tagName,
+                    text: (el.innerText || '').trim().substring(0, 50),
+                    x: Math.round(el.getBoundingClientRect().x),
+                    y: Math.round(el.getBoundingClientRect().y),
+                    width: Math.round(el.getBoundingClientRect().width),
+                    height: Math.round(el.getBoundingClientRect().height),
+                }));
+            }, { minX: menuMinX, maxX: menuMaxX, minY: menuMinY, maxY: menuMaxY });
+            
+            log(`[调试] 下拉菜单区域找到 ${allMenuElements.length} 个元素:`);
+            allMenuElements.forEach(item => {
+                log(`  - <${item.tag}> "${item.text}" 位置(${item.x},${item.y}) 大小(${item.width}x${item.height})`);
+            });
+            
+            // 查找包含 Instant 的元素
+            const menuItems = allMenuElements.filter(item => 
+                item.text.includes('Instant') || item.text.includes('即刻')
+            );
+            
+            log(`[调试] 其中包含 Instant 的有 ${menuItems.length} 个`);
+            
+            // 找到最合适的 Instant 选项（优先找小的、明确的元素）
+            const instantItem = menuItems.find(item => 
+                item.height > 20 && item.height < 80 && 
+                (item.text.startsWith('Instant') || item.text.includes('即刻回答'))
+            ) || menuItems[0];
+            
+            if (!instantItem) {
+                log('[步骤3] ❌ 未找到 Instant 选项', 'WARN');
+                await this.page.keyboard.press('Escape');
+                return;
+            }
+            
+            log(`[步骤3] ✅ 找到 Instant 选项: "${instantItem.text}" 位置(${instantItem.x},${instantItem.y})`);
+            
+            // 第四步：点击 Instant 选项
+            log('[步骤4] 点击 Instant 选项...');
+            await this.page.mouse.click(instantItem.x + instantItem.width / 2, instantItem.y + instantItem.height / 2);
+            await sleep(800);
+            
+            // 验证是否切换成功
+            const newButtonText = await this.page.$$eval('button', (buttons) => {
+                const btn = buttons.find(b => {
+                    const rect = b.getBoundingClientRect();
+                    const text = b.innerText || '';
+                    return rect.y < 80 && (text.includes('ChatGPT') || text.includes('GPT') || text.includes('Instant'));
+                });
+                return btn ? btn.innerText : '';
+            });
+            
+            if (newButtonText.includes('Instant')) {
+                log(`[步骤4] ✅ 成功切换到 Instant 模型！当前: "${newButtonText.substring(0, 30)}"`);
+            } else {
+                log(`[步骤4] ⚠️ 切换可能未成功，当前按钮文字: "${newButtonText.substring(0, 30)}"`, 'WARN');
+            }
+            
+            log('========== 模型选择完成 ==========');
+            
+        } catch (error) {
+            log(`[错误] 模型选择过程出错: ${error.message}`, 'ERROR');
+            log(`[错误] 错误堆栈: ${error.stack}`, 'ERROR');
+            try {
+                await this.page.keyboard.press('Escape');
+            } catch (e) {}
+        }
     }
     
     /**

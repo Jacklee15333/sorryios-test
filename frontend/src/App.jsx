@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import LoginPage from './components/LoginPage';
+import UserStatsPanel from './components/UserStatsPanel';
 import FileUploader from './components/FileUploader';
 import ProgressTracker from './components/ProgressTracker';
 import ReportViewer from './components/ReportViewer';
 import useTaskProgress from './hooks/useTaskProgress';
 
 /**
- * 主应用组件
+ * 主应用内容组件（需要在 AuthProvider 内部）
  */
-function App() {
+function AppContent() {
+    const { user, loading, logout, isAuthenticated } = useAuth();
+    
     // 应用状态：upload | processing | report
     const [appState, setAppState] = useState('upload');
     const [currentTaskId, setCurrentTaskId] = useState(null);
     const [taskInfo, setTaskInfo] = useState(null);
+    const [showUserStats, setShowUserStats] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
     // WebSocket 进度订阅
     const { progress, connected } = useTaskProgress(currentTaskId);
@@ -27,6 +34,23 @@ function App() {
             }
         }
     }, [progress]);
+
+    // 加载中
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin h-12 w-12 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-gray-600">加载中...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // 未登录显示登录页
+    if (!isAuthenticated) {
+        return <LoginPage />;
+    }
 
     // 上传开始
     const handleUploadStart = () => {
@@ -57,7 +81,11 @@ function App() {
         // 如果任务正在处理，尝试取消
         if (currentTaskId && taskInfo?.status === 'processing') {
             try {
-                await fetch(`/api/task/${currentTaskId}/cancel`, { method: 'POST' });
+                const token = localStorage.getItem('token');
+                await fetch(`/api/task/${currentTaskId}/cancel`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
             } catch (e) {
                 console.error('取消任务失败:', e);
             }
@@ -73,6 +101,12 @@ function App() {
         setAppState('report');
     };
 
+    // 登出处理
+    const handleLogout = () => {
+        setShowUserMenu(false);
+        logout();
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
             {/* 顶部导航 */}
@@ -85,14 +119,65 @@ function App() {
                             <p className="text-xs text-gray-500">课堂笔记自动化处理系统</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
-                        <span className="text-xs text-gray-500">
-                            {connected ? '已连接' : '未连接'}
-                        </span>
+                    <div className="flex items-center gap-4">
+                        {/* 连接状态 */}
+                        <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+                            <span className="text-xs text-gray-500">
+                                {connected ? '已连接' : '未连接'}
+                            </span>
+                        </div>
+
+                        {/* 用户菜单 */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowUserMenu(!showUserMenu)}
+                                className="flex items-center gap-2 px-3 py-2 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-colors"
+                            >
+                                <span className="w-7 h-7 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm">
+                                    {(user?.nickname || user?.username || 'U').charAt(0).toUpperCase()}
+                                </span>
+                                <span className="text-sm font-medium text-gray-700 max-w-[80px] truncate">
+                                    {user?.nickname || user?.username}
+                                </span>
+                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {/* 下拉菜单 */}
+                            {showUserMenu && (
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-20">
+                                    <button
+                                        onClick={() => {
+                                            setShowUserMenu(false);
+                                            setShowUserStats(true);
+                                        }}
+                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                    >
+                                        <span>📊</span> 学习数据
+                                    </button>
+                                    <hr className="my-1 border-gray-100" />
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                    >
+                                        <span>🚪</span> 退出登录
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
+
+            {/* 点击其他区域关闭菜单 */}
+            {showUserMenu && (
+                <div
+                    className="fixed inset-0 z-5"
+                    onClick={() => setShowUserMenu(false)}
+                />
+            )}
 
             {/* 主内容区 */}
             <main className="max-w-2xl mx-auto px-4 py-8">
@@ -174,7 +259,23 @@ function App() {
             <footer className="text-center py-6 text-gray-500 text-sm">
                 <p>Sorryios AI 智能笔记系统 v1.0</p>
             </footer>
+
+            {/* 用户学习数据面板 */}
+            {showUserStats && (
+                <UserStatsPanel onClose={() => setShowUserStats(false)} />
+            )}
         </div>
+    );
+}
+
+/**
+ * 主应用组件（包裹 AuthProvider）
+ */
+function App() {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
     );
 }
 

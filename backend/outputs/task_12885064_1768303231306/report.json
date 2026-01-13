@@ -1,0 +1,2872 @@
+{
+  "vocabulary": {
+    "words": [
+      {
+        "word": "environment",
+        "phonetic": "/ɪnˈvaɪrənmənt/",
+        "pos": "n.",
+        "meaning": "环境",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "The environment is getting worse day by day.",
+        "note": ""
+      },
+      {
+        "word": "protect",
+        "phonetic": "/prəˈtekt/",
+        "pos": "v.",
+        "meaning": "保护",
+        "forms": {
+          "past": "protected",
+          "past_participle": "protected",
+          "third_person": "protects",
+          "present_participle": "protecting",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "We should protect the environment.",
+        "note": "常见拼写错误：portag（×）→ protect（✓）"
+      },
+      {
+        "word": "importance",
+        "phonetic": "/ɪmˈpɔːrtəns/",
+        "pos": "n.",
+        "meaning": "重要性",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "The importance of protecting the environment is clear.",
+        "note": ""
+      },
+      {
+        "word": "important",
+        "phonetic": "/ɪmˈpɔːrtənt/",
+        "pos": "adj.",
+        "meaning": "重要的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more important",
+          "superlative": "most important"
+        },
+        "example": "Protecting the environment becomes more and more important.",
+        "note": "搭配：important to somebody（对某人重要）"
+      },
+      {
+        "word": "become",
+        "phonetic": "/bɪˈkʌm/",
+        "pos": "v.",
+        "meaning": "变得；成为",
+        "forms": {
+          "past": "became",
+          "past_participle": "become",
+          "third_person": "becomes",
+          "present_participle": "becoming",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Protecting the environment becomes more and more important.",
+        "note": ""
+      },
+      {
+        "word": "worse",
+        "phonetic": "/wɜːrs/",
+        "pos": "adj.",
+        "meaning": "更差的；更糟的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "The environment is getting worse day by day.",
+        "note": "常见错误：worseday（×）→ worse day by day（✓）或 getting worse（✓）"
+      },
+      {
+        "word": "better",
+        "phonetic": "/ˈbetər/",
+        "pos": "adj.",
+        "meaning": "更好的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "If everyone does it, the environment will be better.",
+        "note": ""
+      },
+      {
+        "word": "plant",
+        "phonetic": "/plænt/",
+        "pos": "v.",
+        "meaning": "种植",
+        "forms": {
+          "past": "planted",
+          "past_participle": "planted",
+          "third_person": "plants",
+          "present_participle": "planting",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "We can plant some trees to clean the air.",
+        "note": ""
+      },
+      {
+        "word": "clean",
+        "phonetic": "/kliːn/",
+        "pos": "v./adj.",
+        "meaning": "清洁；使干净 / 干净的",
+        "forms": {
+          "past": "cleaned",
+          "past_participle": "cleaned",
+          "third_person": "cleans",
+          "present_participle": "cleaning",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Trees can help clean the air.",
+        "note": ""
+      },
+      {
+        "word": "air",
+        "phonetic": "/er/",
+        "pos": "n.",
+        "meaning": "空气",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "We can plant some trees to clean the air.",
+        "note": ""
+      },
+      {
+        "word": "control",
+        "phonetic": "/kənˈtroʊl/",
+        "pos": "v./n.",
+        "meaning": "控制；管理 / 控制",
+        "forms": {
+          "past": "controlled",
+          "past_participle": "controlled",
+          "third_person": "controls",
+          "present_participle": "controlling",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "The house is controlled by a central system.",
+        "note": "规则动词但需双写l：controlled / controlling"
+      },
+      {
+        "word": "system",
+        "phonetic": "/ˈsɪstəm/",
+        "pos": "n.",
+        "meaning": "系统",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "This system controls the lights.",
+        "note": ""
+      },
+      {
+        "word": "nervous",
+        "phonetic": "/ˈnɜːrvəs/",
+        "pos": "adj.",
+        "meaning": "紧张的；焦虑的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more nervous",
+          "superlative": "most nervous"
+        },
+        "example": "I feel nervous before a speech.",
+        "note": ""
+      },
+      {
+        "word": "crowd",
+        "phonetic": "/kraʊd/",
+        "pos": "n.",
+        "meaning": "人群",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He spoke in front of a crowd.",
+        "note": ""
+      },
+      {
+        "word": "speech",
+        "phonetic": "/spiːtʃ/",
+        "pos": "n.",
+        "meaning": "演讲；讲话",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Giving a speech can be stressful.",
+        "note": "与 speaker（演讲者）区分：speech 是“演讲（名词）”"
+      },
+      {
+        "word": "proper",
+        "phonetic": "/ˈprɑːpər/",
+        "pos": "adj.",
+        "meaning": "合适的；恰当的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more proper",
+          "superlative": "most proper"
+        },
+        "example": "Proper preparation is essential.",
+        "note": ""
+      },
+      {
+        "word": "preparation",
+        "phonetic": "/ˌprepəˈreɪʃn/",
+        "pos": "n.",
+        "meaning": "准备；筹备",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Good preparation helps you succeed.",
+        "note": ""
+      },
+      {
+        "word": "essential",
+        "phonetic": "/ɪˈsenʃl/",
+        "pos": "adj.",
+        "meaning": "必不可少的；极其重要的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more essential",
+          "superlative": "most essential"
+        },
+        "example": "Sleep is essential for health.",
+        "note": ""
+      },
+      {
+        "word": "experiment",
+        "phonetic": "/ɪkˈsperɪmənt/",
+        "pos": "n.",
+        "meaning": "实验",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "They did an experiment in the lab.",
+        "note": "易混词：experience（经历/经验）≠ experiment（实验）"
+      },
+      {
+        "word": "experience",
+        "phonetic": "/ɪkˈspɪriəns/",
+        "pos": "n./v.",
+        "meaning": "经历；经验 / 经历",
+        "forms": {
+          "past": "experienced",
+          "past_participle": "experienced",
+          "third_person": "experiences",
+          "present_participle": "experiencing",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "She has a lot of teaching experience.",
+        "note": "与 experiment 区分：词形相近但意义不同"
+      },
+      {
+        "word": "amazing",
+        "phonetic": "/əˈmeɪzɪŋ/",
+        "pos": "adj.",
+        "meaning": "令人惊讶的；很棒的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more amazing",
+          "superlative": "most amazing"
+        },
+        "example": "The result is amazing.",
+        "note": ""
+      },
+      {
+        "word": "hurt",
+        "phonetic": "/hɜːrt/",
+        "pos": "v.",
+        "meaning": "弄伤；使疼痛",
+        "forms": {
+          "past": "hurt",
+          "past_participle": "hurt",
+          "third_person": "hurts",
+          "present_participle": "hurting",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "My leg hurt yesterday.",
+        "note": "AAA型不规则：hurt-hurt-hurt"
+      },
+      {
+        "word": "cut",
+        "phonetic": "/kʌt/",
+        "pos": "v.",
+        "meaning": "切；割",
+        "forms": {
+          "past": "cut",
+          "past_participle": "cut",
+          "third_person": "cuts",
+          "present_participle": "cutting",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He cut the paper.",
+        "note": "AAA型不规则：cut-cut-cut"
+      },
+      {
+        "word": "spread",
+        "phonetic": "/spred/",
+        "pos": "v.",
+        "meaning": "传播；扩散",
+        "forms": {
+          "past": "spread",
+          "past_participle": "spread",
+          "third_person": "spreads",
+          "present_participle": "spreading",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "News spread quickly.",
+        "note": "AAA型不规则：spread-spread-spread"
+      },
+      {
+        "word": "hit",
+        "phonetic": "/hɪt/",
+        "pos": "v.",
+        "meaning": "打；击中",
+        "forms": {
+          "past": "hit",
+          "past_participle": "hit",
+          "third_person": "hits",
+          "present_participle": "hitting",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He hit the ball hard.",
+        "note": "AAA型不规则：hit-hit-hit"
+      },
+      {
+        "word": "successful",
+        "phonetic": "/səkˈsesfl/",
+        "pos": "adj.",
+        "meaning": "成功的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more successful",
+          "superlative": "most successful"
+        },
+        "example": "This is a successful experiment.",
+        "note": ""
+      },
+      {
+        "word": "manage",
+        "phonetic": "/ˈmænɪdʒ/",
+        "pos": "v.",
+        "meaning": "管理；经营",
+        "forms": {
+          "past": "managed",
+          "past_participle": "managed",
+          "third_person": "manages",
+          "present_participle": "managing",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "She manages a small team.",
+        "note": ""
+      },
+      {
+        "word": "management",
+        "phonetic": "/ˈmænɪdʒmənt/",
+        "pos": "n.",
+        "meaning": "管理；经营；管理层",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Women should be in management.",
+        "note": "词形变化：manage + -ment → management（名词）"
+      },
+      {
+        "word": "manager",
+        "phonetic": "/ˈmænɪdʒər/",
+        "pos": "n.",
+        "meaning": "经理；管理者",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "The manager is very busy today.",
+        "note": "词形变化：manage + -er → manager（人）"
+      },
+      {
+        "word": "surprise",
+        "phonetic": "/sərˈpraɪz/",
+        "pos": "v./n.",
+        "meaning": "使惊讶 / 惊喜；惊讶",
+        "forms": {
+          "past": "surprised",
+          "past_participle": "surprised",
+          "third_person": "surprises",
+          "present_participle": "surprising",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "It surprised me to see such a little boy speak English fluently.",
+        "note": ""
+      },
+      {
+        "word": "foreign",
+        "phonetic": "/ˈfɔːrɪn/",
+        "pos": "adj.",
+        "meaning": "外国的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more foreign",
+          "superlative": "most foreign"
+        },
+        "example": "English is a foreign language for many students.",
+        "note": ""
+      },
+      {
+        "word": "foreigner",
+        "phonetic": "/ˈfɔːrənər/",
+        "pos": "n.",
+        "meaning": "外国人",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "A foreigner asked me for directions.",
+        "note": "可数名词：a foreigner / foreigners"
+      },
+      {
+        "word": "language",
+        "phonetic": "/ˈlæŋɡwɪdʒ/",
+        "pos": "n.",
+        "meaning": "语言",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "She can speak two languages.",
+        "note": ""
+      },
+      {
+        "word": "fluent",
+        "phonetic": "/ˈfluːənt/",
+        "pos": "adj.",
+        "meaning": "流利的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more fluent",
+          "superlative": "most fluent"
+        },
+        "example": "He is fluent in English.",
+        "note": ""
+      },
+      {
+        "word": "fluently",
+        "phonetic": "/ˈfluːəntli/",
+        "pos": "adv.",
+        "meaning": "流利地",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He can speak English fluently.",
+        "note": "形容词→副词：fluent + -ly → fluently"
+      },
+      {
+        "word": "such",
+        "phonetic": "/sʌtʃ/",
+        "pos": "det./pron.",
+        "meaning": "如此的；这样的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He is such a little boy.",
+        "note": ""
+      },
+      {
+        "word": "invite",
+        "phonetic": "/ɪnˈvaɪt/",
+        "pos": "v.",
+        "meaning": "邀请",
+        "forms": {
+          "past": "invited",
+          "past_participle": "invited",
+          "third_person": "invites",
+          "present_participle": "inviting",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "They invited me to join the party.",
+        "note": ""
+      },
+      {
+        "word": "website",
+        "phonetic": "/ˈwebsaɪt/",
+        "pos": "n.",
+        "meaning": "网站",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Students can share ideas on a website.",
+        "note": ""
+      },
+      {
+        "word": "share",
+        "phonetic": "/ʃer/",
+        "pos": "v.",
+        "meaning": "分享",
+        "forms": {
+          "past": "shared",
+          "past_participle": "shared",
+          "third_person": "shares",
+          "present_participle": "sharing",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "They share their ideas online.",
+        "note": ""
+      },
+      {
+        "word": "culture",
+        "phonetic": "/ˈkʌltʃər/",
+        "pos": "n.",
+        "meaning": "文化",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "We learned about different cultures.",
+        "note": "常见用复数：cultures"
+      },
+      {
+        "word": "quiet",
+        "phonetic": "/ˈkwaɪət/",
+        "pos": "adj.",
+        "meaning": "安静的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "quieter",
+          "superlative": "quietest"
+        },
+        "example": "Please be quiet in class.",
+        "note": ""
+      },
+      {
+        "word": "Mrs.",
+        "phonetic": "/ˈmɪsɪz/",
+        "pos": "n.",
+        "meaning": "夫人；太太（已婚）",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Mrs. Smith is our teacher.",
+        "note": "用于已婚女性姓氏前"
+      },
+      {
+        "word": "Ms.",
+        "phonetic": "/mɪz/",
+        "pos": "n.",
+        "meaning": "女士（不强调婚姻状况）",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Ms. Liu asked us to be quiet.",
+        "note": "更中性/正式，常用于不确定或不想提婚姻状况时"
+      },
+      {
+        "word": "without",
+        "phonetic": "/wɪˈðaʊt/",
+        "pos": "prep.",
+        "meaning": "没有；不带；不使用",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He left without saying goodbye.",
+        "note": "介词：后接名词或动名词（V-ing）"
+      },
+      {
+        "word": "auxiliary",
+        "phonetic": "/ɔːɡˈzɪliəri/",
+        "pos": "adj.",
+        "meaning": "辅助的；助动的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Do is an auxiliary verb in questions.",
+        "note": "常见搭配：auxiliary verb（助动词）"
+      },
+      {
+        "word": "auxiliary verb",
+        "phonetic": "/ɔːɡˈzɪliəri vɜːrb/",
+        "pos": "n.",
+        "meaning": "助动词",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Do/does/did are auxiliary verbs used to form questions.",
+        "note": "语法术语请放在 grammar；此处作为固定术语词条记录"
+      },
+      {
+        "word": "modal",
+        "phonetic": "/ˈmoʊdl/",
+        "pos": "adj.",
+        "meaning": "情态的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Can is a modal verb.",
+        "note": "常见搭配：modal verb（情态动词）"
+      },
+      {
+        "word": "modal verb",
+        "phonetic": "/ˈmoʊdl vɜːrb/",
+        "pos": "n.",
+        "meaning": "情态动词",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Can/should/must are modal verbs.",
+        "note": "语法术语请放在 grammar；此处作为固定术语词条记录"
+      },
+      {
+        "word": "negative",
+        "phonetic": "/ˈneɡətɪv/",
+        "pos": "adj.",
+        "meaning": "否定的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "We can change the sentence into a negative form.",
+        "note": "常见搭配：negative sentence（否定句）"
+      },
+      {
+        "word": "intonation",
+        "phonetic": "/ˌɪntəˈneɪʃn/",
+        "pos": "n.",
+        "meaning": "语调",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Yes/No questions usually have rising intonation.",
+        "note": ""
+      },
+      {
+        "word": "special",
+        "phonetic": "/ˈspeʃl/",
+        "pos": "adj.",
+        "meaning": "特殊的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more special",
+          "superlative": "most special"
+        },
+        "example": "We learned special questions today.",
+        "note": ""
+      },
+      {
+        "word": "choice",
+        "phonetic": "/tʃɔɪs/",
+        "pos": "n.",
+        "meaning": "选择",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "This is a choice question.",
+        "note": ""
+      },
+      {
+        "word": "pronunciation",
+        "phonetic": "/prəˌnʌnsiˈeɪʃn/",
+        "pos": "n.",
+        "meaning": "发音",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Pay attention to pronunciation and intonation.",
+        "note": ""
+      },
+      {
+        "word": "grow",
+        "phonetic": "/ɡroʊ/",
+        "pos": "v.",
+        "meaning": "生长；成长；种植",
+        "forms": {
+          "past": "grew",
+          "past_participle": "grown",
+          "third_person": "grows",
+          "present_participle": "growing",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Plants grow fast in summer.",
+        "note": "不规则动词：grow-grew-grown；常见误读：grew 读 /ɡruː/（类似 new 的 /nuː/ 音感）"
+      },
+      {
+        "word": "top",
+        "phonetic": "/tɑːp/",
+        "pos": "n./adj.",
+        "meaning": "顶部；顶端 / 顶尖的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He is at the top of the list.",
+        "note": "语境可引申为“榜首/前列”，核心义是“顶端”"
+      },
+      {
+        "word": "bath",
+        "phonetic": "/bæθ/",
+        "pos": "n.",
+        "meaning": "洗澡；浴缸；浴室（语境相关）",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "I need a bath after the game.",
+        "note": "名词：bath（/bæθ/）"
+      },
+      {
+        "word": "bathe",
+        "phonetic": "/beɪð/",
+        "pos": "v.",
+        "meaning": "洗澡；给……洗澡",
+        "forms": {
+          "past": "bathed",
+          "past_participle": "bathed",
+          "third_person": "bathes",
+          "present_participle": "bathing",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He bathes every evening.",
+        "note": "名词 bath 加 e 变动词 bathe，且读音变化（/æ/ → /eɪ/）"
+      },
+      {
+        "word": "breathe",
+        "phonetic": "/briːð/",
+        "pos": "v.",
+        "meaning": "呼吸",
+        "forms": {
+          "past": "breathed",
+          "past_participle": "breathed",
+          "third_person": "breathes",
+          "present_participle": "breathing",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "It is hard to breathe here.",
+        "note": "名词 breath 加 e 变动词 breathe，且读音变化（/e/ → /iː/）"
+      },
+      {
+        "word": "volunteer",
+        "phonetic": "/ˌvɑːlənˈtɪr/",
+        "pos": "n./v.",
+        "meaning": "志愿者 / 自愿；志愿做",
+        "forms": {
+          "past": "volunteered",
+          "past_participle": "volunteered",
+          "third_person": "volunteers",
+          "present_participle": "volunteering",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Many young people volunteer to help others.",
+        "note": "既可作名词也可作动词：volunteer to do something"
+      },
+      {
+        "word": "USA",
+        "phonetic": "/ˌjuː es ˈeɪ/",
+        "pos": "n.",
+        "meaning": "美国（缩写）",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "She lives in the USA.",
+        "note": "专有名词，常作为关键词定位阅读答案"
+      },
+      {
+        "word": "keyword",
+        "phonetic": "/ˈkiːwɜːrd/",
+        "pos": "n.",
+        "meaning": "关键词",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Find keywords in the question first.",
+        "note": ""
+      },
+      {
+        "word": "smart",
+        "phonetic": "/smɑːrt/",
+        "pos": "adj.",
+        "meaning": "智能的；聪明的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "smarter",
+          "superlative": "smartest"
+        },
+        "example": "This is a smart garden system.",
+        "note": ""
+      },
+      {
+        "word": "summary",
+        "phonetic": "/ˈsʌməri/",
+        "pos": "n.",
+        "meaning": "总结；概括",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "At the end of the passage, there is a short summary.",
+        "note": ""
+      },
+      {
+        "word": "cross",
+        "phonetic": "/krɔːs/",
+        "pos": "v./n.",
+        "meaning": "交叉；穿过 / 交叉点",
+        "forms": {
+          "past": "crossed",
+          "past_participle": "crossed",
+          "third_person": "crosses",
+          "present_participle": "crossing",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "The answer is at the crossing point of two keywords.",
+        "note": ""
+      },
+      {
+        "word": "information",
+        "phonetic": "/ˌɪnfərˈmeɪʃn/",
+        "pos": "n.",
+        "meaning": "信息",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "You need two pieces of information to find the answer.",
+        "note": "不可数名词：information（不加-s）"
+      },
+      {
+        "word": "intersection",
+        "phonetic": "/ˌɪntərˈsekʃn/",
+        "pos": "n.",
+        "meaning": "交叉点；交集",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Find the intersection of two keywords in the passage.",
+        "note": ""
+      },
+      {
+        "word": "attribute",
+        "phonetic": "/ˈætrɪbjuːt/",
+        "pos": "n.",
+        "meaning": "定语；属性",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "An attribute describes a noun.",
+        "note": "语法术语：定语（attribute）应归入 grammar"
+      },
+      {
+        "word": "postpositive",
+        "phonetic": "/ˌpoʊstˈpɑːzətɪv/",
+        "pos": "adj.",
+        "meaning": "后置的（定语后置）",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "A postpositive attribute comes after the noun.",
+        "note": "用于：postpositive attribute（后置定语）"
+      },
+      {
+        "word": "relative",
+        "phonetic": "/ˈrelətɪv/",
+        "pos": "adj.",
+        "meaning": "关系的；相对的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "That introduces a relative clause.",
+        "note": "常见搭配：relative clause（定语从句）"
+      },
+      {
+        "word": "clause",
+        "phonetic": "/klɔːz/",
+        "pos": "n.",
+        "meaning": "从句；分句",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "A relative clause describes a noun.",
+        "note": ""
+      },
+      {
+        "word": "rich",
+        "phonetic": "/rɪtʃ/",
+        "pos": "adj.",
+        "meaning": "富有的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "richer",
+          "superlative": "richest"
+        },
+        "example": "They build houses for the rich.",
+        "note": ""
+      },
+      {
+        "word": "low-cost",
+        "phonetic": "/ˌloʊ ˈkɔːst/",
+        "pos": "adj.",
+        "meaning": "低成本的；便宜的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "They sell low-cost houses to families.",
+        "note": "连字符形容词：low-cost"
+      },
+      {
+        "word": "build",
+        "phonetic": "/bɪld/",
+        "pos": "v.",
+        "meaning": "建造",
+        "forms": {
+          "past": "built",
+          "past_participle": "built",
+          "third_person": "builds",
+          "present_participle": "building",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "They build low-cost houses.",
+        "note": "不规则动词：build-built-built"
+      },
+      {
+        "word": "double",
+        "phonetic": "/ˈdʌbl/",
+        "pos": "adj./v.",
+        "meaning": "双倍的 / （使）加倍",
+        "forms": {
+          "past": "doubled",
+          "past_participle": "doubled",
+          "third_person": "doubles",
+          "present_participle": "doubling",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He did double the reading this week.",
+        "note": ""
+      },
+      {
+        "word": "reading",
+        "phonetic": "/ˈriːdɪŋ/",
+        "pos": "n.",
+        "meaning": "阅读；阅读量",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "Reading helps you learn English.",
+        "note": ""
+      },
+      {
+        "word": "exact",
+        "phonetic": "/ɪɡˈzækt/",
+        "pos": "adj.",
+        "meaning": "精确的；确切的",
+        "forms": {
+          "past": "",
+          "past_participle": "",
+          "third_person": "",
+          "present_participle": "",
+          "comparative": "more exact",
+          "superlative": "most exact"
+        },
+        "example": "Look for the exact words in the passage.",
+        "note": ""
+      },
+      {
+        "word": "trouble",
+        "phonetic": "/ˈtrʌbl/",
+        "pos": "n.",
+        "meaning": "困难；麻烦",
+        "example": "He has trouble in reading.",
+        "note": "固定搭配：have trouble (in) doing sth"
+      },
+      {
+        "word": "recent",
+        "phonetic": "/ˈriːsnt/",
+        "pos": "adj.",
+        "meaning": "最近的",
+        "example": "Recent exams focus more on grammar.",
+        "note": ""
+      },
+      {
+        "word": "progress",
+        "phonetic": "/ˈprəʊɡres/",
+        "pos": "n.",
+        "meaning": "进步",
+        "example": "Reading books helps you make progress.",
+        "note": "不可数名词"
+      },
+      {
+        "word": "stable",
+        "phonetic": "/ˈsteɪbl/",
+        "pos": "adj.",
+        "meaning": "稳定的",
+        "example": "You need stable performance in exams.",
+        "note": ""
+      },
+      {
+        "word": "performance",
+        "phonetic": "/pəˈfɔːməns/",
+        "pos": "n.",
+        "meaning": "表现",
+        "example": "His performance in reading has improved.",
+        "note": ""
+      },
+      {
+        "word": "structure",
+        "phonetic": "/ˈstrʌktʃə/",
+        "pos": "n.",
+        "meaning": "结构",
+        "example": "Sentence structure is important in English.",
+        "note": ""
+      },
+      {
+        "word": "recently",
+        "phonetic": "/ˈriːsntli/",
+        "pos": "adv.",
+        "meaning": "最近",
+        "example": "He has improved recently.",
+        "note": ""
+      }
+    ],
+    "phrases": [
+      {
+        "phrase": "day by day",
+        "meaning": "一天天地；逐日",
+        "example": "The environment is getting worse day by day."
+      },
+      {
+        "phrase": "more and more",
+        "meaning": "越来越……",
+        "example": "It becomes more and more important."
+      },
+      {
+        "phrase": "for example",
+        "meaning": "例如",
+        "example": "For example, we can turn off the light when we leave home."
+      },
+      {
+        "phrase": "turn off",
+        "meaning": "关掉（电器/灯等）",
+        "example": "Please turn off the light."
+      },
+      {
+        "phrase": "go out",
+        "meaning": "出去；外出",
+        "example": "When we go out, we can walk."
+      },
+      {
+        "phrase": "talk about",
+        "meaning": "谈论……；讨论……",
+        "example": "We often talk about environmental problems."
+      },
+      {
+        "phrase": "talk with somebody",
+        "meaning": "和某人交谈",
+        "example": "I want to talk with you."
+      },
+      {
+        "phrase": "talk to somebody",
+        "meaning": "对某人说话；与某人交谈",
+        "example": "I need to talk to you."
+      },
+      {
+        "phrase": "tell somebody to do something",
+        "meaning": "告诉某人去做某事",
+        "example": "He told me to turn off the light."
+      },
+      {
+        "phrase": "tell somebody something",
+        "meaning": "告诉某人某事",
+        "example": "Please tell me the truth."
+      },
+      {
+        "phrase": "talk about something",
+        "meaning": "谈论某事",
+        "example": "Let's talk about the plan."
+      },
+      {
+        "phrase": "speak English",
+        "meaning": "说英语（强调用英语这种语言）",
+        "example": "He can speak English well."
+      },
+      {
+        "phrase": "speak up",
+        "meaning": "大声点说；说清楚",
+        "example": "Please speak up."
+      },
+      {
+        "phrase": "in front of a crowd",
+        "meaning": "在人群面前",
+        "example": "She felt nervous in front of a crowd."
+      },
+      {
+        "phrase": "give a speech",
+        "meaning": "做演讲",
+        "example": "He will give a speech tomorrow."
+      },
+      {
+        "phrase": "ask somebody to do something",
+        "meaning": "请求/要求某人做某事",
+        "example": "He asked me to help him."
+      },
+      {
+        "phrase": "ask for something",
+        "meaning": "请求某物",
+        "example": "She asked for help."
+      },
+      {
+        "phrase": "ask somebody for something",
+        "meaning": "向某人要某物",
+        "example": "I asked him for a pen."
+      },
+      {
+        "phrase": "be essential for",
+        "meaning": "对……必不可少",
+        "example": "Proper preparation is essential for a successful experiment."
+      },
+      {
+        "phrase": "in science class",
+        "meaning": "在科学课上",
+        "example": "We did an experiment in science class."
+      },
+      {
+        "phrase": "for a successful experiment",
+        "meaning": "为了/对于一个成功的实验",
+        "example": "Proper preparation is essential for a successful experiment."
+      },
+      {
+        "phrase": "such a",
+        "meaning": "如此一个……（用于名词前）",
+        "example": "such a little boy"
+      },
+      {
+        "phrase": "foreign language",
+        "meaning": "外语",
+        "example": "English is a foreign language for him."
+      },
+      {
+        "phrase": "speak a foreign language",
+        "meaning": "说一门外语",
+        "example": "He can speak a foreign language fluently."
+      },
+      {
+        "phrase": "in front of",
+        "meaning": "在……前面",
+        "example": "He spoke in front of a crowd."
+      },
+      {
+        "phrase": "invite somebody to do something",
+        "meaning": "邀请某人做某事",
+        "example": "They invited me to join them."
+      },
+      {
+        "phrase": "share ideas",
+        "meaning": "分享想法",
+        "example": "Students share ideas online."
+      },
+      {
+        "phrase": "to do",
+        "meaning": "动词不定式：做……（原形）",
+        "example": "He asked me to be quiet."
+      },
+      {
+        "phrase": "without + doing",
+        "meaning": "没有做某事（without 后接动名词）",
+        "example": "He left without saying goodbye."
+      },
+      {
+        "phrase": "change ... into ...",
+        "meaning": "把……变成……",
+        "example": "Change the sentence into a negative sentence."
+      },
+      {
+        "phrase": "make a mistake",
+        "meaning": "犯错误",
+        "example": "Don't make the same mistake again."
+      },
+      {
+        "phrase": "raise a question",
+        "meaning": "提出问题",
+        "example": "Students raised a question."
+      },
+      {
+        "phrase": "ask a question",
+        "meaning": "提问",
+        "example": "Please ask a question."
+      },
+      {
+        "phrase": "write down",
+        "meaning": "写下；记下",
+        "example": "Write down the key points."
+      },
+      {
+        "phrase": "in a hurry",
+        "meaning": "匆忙地",
+        "example": "He left in a hurry."
+      },
+      {
+        "phrase": "be careful with",
+        "meaning": "小心……；注意……",
+        "example": "Be careful with the verb form."
+      },
+      {
+        "phrase": "in questions",
+        "meaning": "在疑问句中",
+        "example": "Do is used in questions."
+      },
+      {
+        "phrase": "change into",
+        "meaning": "变成；改为",
+        "example": "Change the sentence into a yes/no question."
+      },
+      {
+        "phrase": "in summer",
+        "meaning": "在夏天",
+        "example": "Plants grow fast in summer."
+      },
+      {
+        "phrase": "on the top of",
+        "meaning": "在……顶部；在……之首/前列",
+        "example": "Her name is on the top of the list."
+      },
+      {
+        "phrase": "computer room",
+        "meaning": "电脑室；机房",
+        "example": "We have classes in the computer room."
+      },
+      {
+        "phrase": "take a breath",
+        "meaning": "吸一口气",
+        "example": "Take a breath and relax."
+      },
+      {
+        "phrase": "breathe in",
+        "meaning": "吸入",
+        "example": "Breathe in slowly."
+      },
+      {
+        "phrase": "volunteer to do something",
+        "meaning": "自愿做某事",
+        "example": "They volunteer to help others."
+      },
+      {
+        "phrase": "spend time doing something",
+        "meaning": "花时间做某事",
+        "example": "He spends time reading every day."
+      },
+      {
+        "phrase": "find keywords",
+        "meaning": "找关键词",
+        "example": "Find keywords in the question and locate them in the passage."
+      },
+      {
+        "phrase": "cross information",
+        "meaning": "交叉信息（两条信息交叉定位）",
+        "example": "You must cross information to find the answer."
+      },
+      {
+        "phrase": "in the passage",
+        "meaning": "在文章中",
+        "example": "Find the keywords in the passage."
+      },
+      {
+        "phrase": "from the passage",
+        "meaning": "从文章中",
+        "example": "We can know it from the passage."
+      },
+      {
+        "phrase": "know ... from ...",
+        "meaning": "从……得知……",
+        "example": "We know his age from the passage."
+      },
+      {
+        "phrase": "for the rich",
+        "meaning": "给富人；为了富人",
+        "example": "They build houses for the rich."
+      },
+      {
+        "phrase": "low-cost house",
+        "meaning": "低成本的房子",
+        "example": "They build low-cost houses."
+      },
+      {
+        "phrase": "sell ... to ...",
+        "meaning": "把……卖给……",
+        "example": "They sell houses to families."
+      },
+      {
+        "phrase": "teach somebody how to do something",
+        "meaning": "教某人如何做某事",
+        "example": "He teaches people how to build houses."
+      },
+      {
+        "phrase": "The + adjective",
+        "meaning": "the + 形容词：表示一类人",
+        "example": "the rich"
+      },
+      {
+        "phrase": "be not rich",
+        "meaning": "不富有（口语/简写表达）",
+        "example": "families that are not rich"
+      },
+      {
+        "phrase": "double reading",
+        "meaning": "双倍阅读量",
+        "example": "Children with double reading need help."
+      },
+      {
+        "phrase": "have trouble in reading",
+        "meaning": "在阅读中有困难",
+        "example": "Some children have trouble in reading."
+      },
+      {
+        "phrase": "teach children with trouble in reading",
+        "meaning": "教在阅读中有困难的孩子",
+        "example": "The teacher teaches children with trouble in reading."
+      },
+      {
+        "phrase": "from back to front",
+        "meaning": "从后往前（翻译顺序）",
+        "example": "Long sentences are often translated from back to front."
+      },
+      {
+        "phrase": "play a role",
+        "meaning": "起作用",
+        "example": "Grammar plays a role in reading comprehension."
+      }
+    ],
+    "patterns": [
+      {
+        "pattern": "It is important to do something",
+        "meaning": "做某事很重要",
+        "example": "It is important to protect the environment."
+      },
+      {
+        "pattern": "It is + adj. + for somebody + to do something",
+        "meaning": "对某人来说做某事是……的",
+        "example": "It is better for us to turn off the light."
+      },
+      {
+        "pattern": "When + clause, + clause",
+        "meaning": "当……的时候，……",
+        "example": "When we leave home, we can turn off the light."
+      },
+      {
+        "pattern": "If + clause, + will + verb",
+        "meaning": "如果……，就会……",
+        "example": "If everyone does it, the environment will be better."
+      },
+      {
+        "pattern": "Subject + become(s) + more and more + adj.",
+        "meaning": "……变得越来越……",
+        "example": "Protecting the environment becomes more and more important."
+      },
+      {
+        "pattern": "First, ... Second, ...",
+        "meaning": "首先……其次……（写作层次）",
+        "example": "First, we can save energy. Second, we can plant trees."
+      },
+      {
+        "pattern": "have/has + past participle",
+        "meaning": "现在完成时：表示已完成或对现在有影响",
+        "example": "I have already done my homework."
+      },
+      {
+        "pattern": "be + past participle",
+        "meaning": "被动语态：表示“被……”",
+        "example": "The house is controlled by a system."
+      },
+      {
+        "pattern": "be + past participle + by + agent",
+        "meaning": "被动语态强调执行者：被……所……",
+        "example": "The apple is eaten by me."
+      },
+      {
+        "pattern": "past participle + noun",
+        "meaning": "过去分词作定语：表示“被……的”",
+        "example": "the eaten apple"
+      },
+      {
+        "pattern": "Proper + noun + be + essential",
+        "meaning": "写作表达：……是必不可少的",
+        "example": "Proper preparation is essential."
+      },
+      {
+        "pattern": "be nervous about doing something",
+        "meaning": "对做某事感到紧张",
+        "example": "I am nervous about giving a speech."
+      },
+      {
+        "pattern": "It surprised somebody to do something",
+        "meaning": "做某事让某人惊讶",
+        "example": "It surprised me to see him speak English fluently."
+      },
+      {
+        "pattern": "see somebody do something",
+        "meaning": "看见某人做某事（从头到尾/全过程）",
+        "example": "I saw him give a speech."
+      },
+      {
+        "pattern": "see somebody doing something",
+        "meaning": "看见某人正在做某事（强调进行）",
+        "example": "I saw him giving a speech."
+      },
+      {
+        "pattern": "It is + adj. + for + noun + to do something",
+        "meaning": "对……来说做某事是……的（常见句型）",
+        "example": "It is essential for students to prepare well."
+      },
+      {
+        "pattern": "invite somebody to do something",
+        "meaning": "邀请某人做某事（固定结构）",
+        "example": "They invited me to join the club."
+      },
+      {
+        "pattern": "without + noun/V-ing",
+        "meaning": "without 后接名词或动名词",
+        "example": "He left without saying goodbye."
+      },
+      {
+        "pattern": "Do/Does/Did + subject + verb (base form) ...?",
+        "meaning": "一般疑问句结构：用 do/does/did 提前",
+        "example": "Do you like apples?"
+      },
+      {
+        "pattern": "Wh- + do/does/did + subject + verb (base form) ...?",
+        "meaning": "特殊疑问句结构：疑问词 + 一般疑问句语序",
+        "example": "What do you want?"
+      },
+      {
+        "pattern": "A or B?",
+        "meaning": "选择疑问句：……还是……？",
+        "example": "Is this an apple or an orange?"
+      },
+      {
+        "pattern": "Subject + don't/doesn't/didn't + verb (base form) ...",
+        "meaning": "否定句结构：do/does/did + not + 动词原形",
+        "example": "He doesn't have anything to eat."
+      },
+      {
+        "pattern": "Is this your ...?",
+        "meaning": "一般疑问句：这是你的……吗？",
+        "example": "Is this your book?"
+      },
+      {
+        "pattern": "Whose + noun + be + this?",
+        "meaning": "特殊疑问句：这是谁的……？",
+        "example": "Whose book is this?"
+      },
+      {
+        "pattern": "Subject + can + verb (base form) ...",
+        "meaning": "情态动词后接动词原形",
+        "example": "The smart kitchen can cook meals."
+      },
+      {
+        "pattern": "without + doing",
+        "meaning": "without 后接动名词",
+        "example": "They left without wasting any food."
+      },
+      {
+        "pattern": "Subject + volunteer(s) to + verb (base form) ...",
+        "meaning": "志愿做某事",
+        "example": "Young people volunteer to help others."
+      },
+      {
+        "pattern": "spend + time/money + doing something",
+        "meaning": "花费时间/金钱做某事",
+        "example": "They spend time helping others."
+      },
+      {
+        "pattern": "be on the top of + noun",
+        "meaning": "在……之首/顶端",
+        "example": "He is on the top of the list."
+      },
+      {
+        "pattern": "We know ... from the passage",
+        "meaning": "我们从文章中得知……",
+        "example": "We know Jason is 18 from the passage."
+      },
+      {
+        "pattern": "The + adjective",
+        "meaning": "表示一类人：富人/穷人/老人/年轻人",
+        "example": "The rich have more choices."
+      },
+      {
+        "pattern": "noun + that + clause",
+        "meaning": "定语从句：that 引导从句修饰名词",
+        "example": "families that are not rich"
+      },
+      {
+        "pattern": "noun + prepositional phrase",
+        "meaning": "后置定语（介词短语）修饰名词",
+        "example": "the apples on the tree"
+      },
+      {
+        "pattern": "Wh- + do/does + subject + verb (base form) ...?",
+        "meaning": "对宾语提问：what/which 等 + 一般疑问句语序",
+        "example": "What does he teach people?"
+      },
+      {
+        "pattern": "teach somebody something",
+        "meaning": "双宾语结构：教某人某物",
+        "example": "He teaches people skills."
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "title": "important 的介词搭配：important to somebody",
+      "definition": "表示“对某人来说重要”，常用 important to somebody；不要随意换介词导致语义不清。",
+      "structure": "be important to somebody",
+      "usage": [
+        "表示“对每个人都重要”：It is important to everyone.",
+        "写作中可用：Protecting the environment is important to everyone."
+      ],
+      "mistakes": [
+        {
+          "wrong": "It is important for everyone. (想表达“对每个人重要”时易写成这样)",
+          "correct": "It is important to everyone.",
+          "explanation": "important 后面表达“对某人”通常用 to；for 更常见于 It is + adj + for sb + to do 的结构里。"
+        }
+      ],
+      "examples": [
+        "It is important to everyone.",
+        "Protecting the environment is important to us."
+      ]
+    },
+    {
+      "title": "动词变名词：动名词（V-ing）作主语",
+      "definition": "当一个动作/事情充当句子主语时，英语常用 V-ing（动名词）来表示“这件事”。",
+      "structure": "V-ing + ... + 谓语 + ...",
+      "usage": [
+        "把动作当作“一件事”：Protecting the environment ...",
+        "动名词短语作主语时，整体看作“单数的一件事”。"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Protect the environment becomes important.",
+          "correct": "Protecting the environment becomes important.",
+          "explanation": "这里主语应是“保护环境这件事”，用 V-ing 作主语更自然。"
+        }
+      ],
+      "examples": [
+        "Protecting the environment becomes more and more important.",
+        "Saving energy helps the planet."
+      ]
+    },
+    {
+      "title": "主谓一致：动名词短语作主语视为单数",
+      "definition": "当主语是动名词短语（如 Protecting the environment）时，谓语动词一般用第三人称单数形式。",
+      "structure": "V-ing 短语（单数） + 动词三单（-s/-es）",
+      "usage": [
+        "Protecting the environment becomes ...（becomes 用三单）",
+        "动名词短语虽然包含多个词，但语义上是一件事。"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Protecting the environment become more important.",
+          "correct": "Protecting the environment becomes more important.",
+          "explanation": "动名词短语作主语整体为单数，谓语要用三单。"
+        }
+      ],
+      "examples": [
+        "Protecting the environment becomes more and more important.",
+        "Planting trees helps clean the air."
+      ]
+    },
+    {
+      "title": "比较表达：more important vs more and more important",
+      "definition": "more important 表示“更重要（比较对象通常明确）”；more and more important 表示“越来越重要（变化趋势）”。",
+      "structure": "more + adj. / more and more + adj.",
+      "usage": [
+        "比较：A is more important than B.",
+        "趋势：It is becoming more and more important."
+      ],
+      "mistakes": [
+        {
+          "wrong": "It becomes more important. (想表达“越来越重要”)",
+          "correct": "It becomes more and more important.",
+          "explanation": "只写 more important 更像“更重要”，加 more and more 才是“越来越”。"
+        }
+      ],
+      "examples": [
+        "It becomes more and more important.",
+        "This rule is more important than that one."
+      ]
+    },
+    {
+      "title": "时态表达：be getting + 形容词（表示变化）与 now 的冗余",
+      "definition": "be getting + adj. 常用来表达“正在变得……”。如果已经有 day by day（逐日变化），再加 now 往往显得重复。",
+      "structure": "be + getting + adj. (+ 时间/趋势状语)",
+      "usage": [
+        "The environment is getting worse day by day.",
+        "如果用 day by day，通常不必再加 now。"
+      ],
+      "mistakes": [
+        {
+          "wrong": "The environment is getting worse day by day now.",
+          "correct": "The environment is getting worse day by day.",
+          "explanation": "day by day 已经表达“现在这种持续变化”，now 容易显得多余。"
+        }
+      ],
+      "examples": [
+        "The weather is getting colder.",
+        "The environment is getting worse day by day."
+      ]
+    },
+    {
+      "title": "句子连接：避免逗号拼接（comma splice），两句需要连接词",
+      "definition": "英语中两个完整句子不能只用逗号硬拼在一起；通常需要并列连词（and/but/so）或从属连词（because/when/if）等。",
+      "structure": "句子A + 连接词 + 句子B / 句子A; 句子B / 句子A. 句子B.",
+      "usage": [
+        "并列：We should protect the environment, and it can make our lives better.",
+        "因果：We should protect the environment because it is important to everyone."
+      ],
+      "mistakes": [
+        {
+          "wrong": "We should protect the environment, make our life better.",
+          "correct": "We should protect the environment, and it can make our lives better.",
+          "explanation": "后半句缺主语且缺连接词；需要补主语并用连接词连接两句。"
+        }
+      ],
+      "examples": [
+        "We should protect the environment, and it can make our lives better.",
+        "If everyone does it, the environment will be better."
+      ]
+    },
+    {
+      "title": "代词指代：it / them / this 要与前文对象一致",
+      "definition": "代词必须清楚指向前面的对象；当提到多个事物时，用 them；指“这件事/这个做法”可用 this；只指单个对象才用 it。",
+      "structure": "it（单数）/ them（复数）/ this（这件事）",
+      "usage": [
+        "两个做法（first/second）→ everyone can do them.",
+        "指“这种做法”→ everyone can do this."
+      ],
+      "mistakes": [
+        {
+          "wrong": "If everyone can do it, the environment will be better. (前面列了两个做法)",
+          "correct": "If everyone can do them, the environment will be better.",
+          "explanation": "前面是两个点（first/second），指代应为复数 them，或用 this 指“这些做法”。"
+        }
+      ],
+      "examples": [
+        "We can save energy and plant trees. If everyone can do them, the environment will be better.",
+        "This can make our lives better."
+      ]
+    },
+    {
+      "title": "词汇辨析：tell / say / speak / talk（用法与固定搭配）",
+      "definition": "这四个词都与“说”相关，但搭配与语法结构不同，必须按固定用法记忆；属于词汇辨析（归入语法理解）。",
+      "structure": "tell + 人 + 内容 / tell + 人 + to do；say + 内容；speak/talk + 介词搭配",
+      "usage": [
+        "tell somebody something：Tell me the truth.",
+        "tell somebody to do something：He told me to go out.",
+        "say something：He said sorry.",
+        "talk about something：talk about the environment（谈论某事）",
+        "talk with/to somebody：talk with/to you（与某人交谈）",
+        "speak to somebody：speak to the teacher（更正式的“与……说话”）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "tell somebody doing something",
+          "correct": "tell somebody to do something",
+          "explanation": "tell 表“告诉某人去做某事”用 to do，不用 doing。"
+        },
+        {
+          "wrong": "talk something",
+          "correct": "talk about something",
+          "explanation": "talk 常用介词 about 才能接“谈论的内容”。"
+        }
+      ],
+      "examples": [
+        "He told me to turn off the light.",
+        "We often talk about ways of protecting the environment.",
+        "Please speak to your teacher after class."
+      ]
+    },
+    {
+      "title": "词汇辨析：speak vs say（方式/语言 vs 内容）",
+      "definition": "speak 更强调“说话的方式、能力或用某种语言说”；say 强调“说的内容是什么”。",
+      "structure": "speak + language / speak to somebody；say + 内容（从句/句子/话）",
+      "usage": [
+        "speak English：强调会用英语说话（不是把“English”这个词念出来）",
+        "say + 从句：He said it would rain.（说的内容是“将要下雨”）",
+        "如果要“说出某个单词”，更贴近 say（说出内容）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "He speaks it will rain.",
+          "correct": "He said it would rain.",
+          "explanation": "表达“说的内容”用 say（said），不用 speak。"
+        },
+        {
+          "wrong": "I say English. (想表达“我会说英语”)",
+          "correct": "I speak English.",
+          "explanation": "表达“会用某种语言说话”用 speak + language。"
+        }
+      ],
+      "examples": [
+        "He said it would rain.",
+        "She can speak English fluently."
+      ]
+    },
+    {
+      "title": "动词变形：过去式 vs 过去分词（功能区别）",
+      "definition": "过去式主要用于一般过去时；过去分词用途更多：用于完成时、被动语态、以及作形容词/定语。",
+      "structure": "过去式：V-ed/不规则V2；过去分词：V-ed/不规则V3",
+      "usage": [
+        "一般过去时：I ate rice yesterday.（表示过去发生的动作）",
+        "现在完成时：have/has + 过去分词：I have eaten rice. / I have done my homework.",
+        "被动语态：be + 过去分词：The apple is eaten (by me).",
+        "过去分词作定语：the eaten apple（被吃的苹果）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "I have did my homework.",
+          "correct": "I have done my homework.",
+          "explanation": "完成时必须用过去分词（V3），do 的 V3 是 done。"
+        },
+        {
+          "wrong": "The house is control by a system.",
+          "correct": "The house is controlled by a system.",
+          "explanation": "被动语态 be + 过去分词；control 的过去分词是 controlled。"
+        }
+      ],
+      "examples": [
+        "I did my homework yesterday.",
+        "I have already done my homework."
+      ]
+    },
+    {
+      "title": "现在完成时：have/has + past participle",
+      "definition": "现在完成时用来表达“已经完成/经历过”，常与 already, yet, ever, never 等连用。",
+      "structure": "have/has + V3（过去分词）",
+      "usage": [
+        "I have already done my homework.",
+        "She has spoken to the teacher."
+      ],
+      "mistakes": [
+        {
+          "wrong": "I have already did my homework.",
+          "correct": "I have already done my homework.",
+          "explanation": "have 后必须接过去分词（V3），不能接过去式（V2）。"
+        }
+      ],
+      "examples": [
+        "I have already done my homework.",
+        "He has said sorry."
+      ]
+    },
+    {
+      "title": "被动语态：be + past participle（含 be 的多种形态）",
+      "definition": "被动语态表示“主语是动作的承受者”。核心结构是 be + 过去分词；be 会随时态变化（am/is/are/was/were/been/being）。",
+      "structure": "be（am/is/are/was/were/been/being） + V3 (+ by + 执行者)",
+      "usage": [
+        "现在一般被动：is/are + V3：The apple is eaten by me.",
+        "过去一般被动：was/were + V3：The apple was eaten by me.",
+        "完成时被动：have/has been + V3：The house has been controlled.",
+        "进行时被动：am/is/are being + V3：The house is being controlled."
+      ],
+      "mistakes": [
+        {
+          "wrong": "The apple is eat by me.",
+          "correct": "The apple is eaten by me.",
+          "explanation": "be 后必须用过去分词 eaten，而不是原形 eat。"
+        }
+      ],
+      "examples": [
+        "The apple is eaten by me.",
+        "The house is being controlled by a central system."
+      ]
+    },
+    {
+      "title": "过去分词的三个常见用法总结",
+      "definition": "过去分词（V3）不仅用于完成时，还用于被动语态，并且可像形容词一样修饰名词。",
+      "structure": "1) have/has + V3；2) be + V3；3) V3 + noun / be + V3(adj.)",
+      "usage": [
+        "完成：have eaten / have done",
+        "被动：is eaten / is controlled",
+        "作定语：the eaten apple / controlled system（语义上表示“被……”的）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "the eat apple (想表达“被吃的苹果”)",
+          "correct": "the eaten apple",
+          "explanation": "作定语需要用过去分词 eaten。"
+        }
+      ],
+      "examples": [
+        "I have eaten rice.",
+        "The apple is eaten by me.",
+        "the eaten apple"
+      ]
+    },
+    {
+      "title": "不规则动词分类记忆：AAA / ABB / ABC",
+      "definition": "不规则动词不按 -ed 变化，需要记 V2/V3。常见类型：AAA（三者相同）、ABB（后两者相同）、ABC（三者不同）。",
+      "structure": "V1 - V2 - V3（AAA/ABB/ABC）",
+      "usage": [
+        "AAA：cut-cut-cut；put-put-put；hit-hit-hit；cost-cost-cost；spread-spread-spread；hurt-hurt-hurt",
+        "ABB：say-said-said；tell-told-told",
+        "ABC：speak-spoke-spoken；do-did-done"
+      ],
+      "mistakes": [
+        {
+          "wrong": "speaked",
+          "correct": "spoke / spoken",
+          "explanation": "speak 是不规则动词：speak-spoke-spoken。"
+        },
+        {
+          "wrong": "doed",
+          "correct": "did / done",
+          "explanation": "do 是不规则动词：do-did-done。"
+        }
+      ],
+      "examples": [
+        "He spoke to me yesterday.",
+        "He has spoken to me before."
+      ]
+    },
+    {
+      "title": "词汇辨析：speaker vs speech（避免语义跑偏）",
+      "definition": "speaker 通常指“演讲者/说话者/扬声器”；speech 指“演讲（名词）”。写作中要用对词性与含义。",
+      "structure": "speaker（人/设备名词）；speech（演讲名词）；give a speech（固定搭配）",
+      "usage": [
+        "give a speech：做演讲",
+        "in front of a crowd：在人群面前（常与 give a speech 连用）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Give a speaker in front of a crowd.",
+          "correct": "Give a speech in front of a crowd.",
+          "explanation": "speaker 不是“演讲”，speech 才是“演讲（名词）”。"
+        }
+      ],
+      "examples": [
+        "Giving a speech in front of a crowd makes me nervous.",
+        "The speaker was confident."
+      ]
+    },
+    {
+      "title": "ask 的三种核心结构：ask sb to do / ask for / ask sb for",
+      "definition": "ask 的含义会随结构变化：ask sb to do 表“要求/请求某人做”；ask for 表“请求某物”；ask sb for 表“向某人要某物”。",
+      "structure": "ask somebody to do something / ask for something / ask somebody for something",
+      "usage": [
+        "ask somebody to do something：He asked me to plan the meal.",
+        "ask for something：She asked for help.",
+        "ask somebody for something：I asked him for advice."
+      ],
+      "mistakes": [
+        {
+          "wrong": "ask somebody something (想表达“要求某人做某事”)",
+          "correct": "ask somebody to do something",
+          "explanation": "要求别人去做，用 to do 结构更标准。"
+        }
+      ],
+      "examples": [
+        "He asked me to help him.",
+        "I asked her for a pen."
+      ]
+    },
+    {
+      "title": "长句翻译技巧：先找介词/连词，从后往前拆分",
+      "definition": "英语长句往往因为介词短语或连词结构变长；翻译时先找介词/连词，把“增加的部分”先抽出来，再从后往前组织中文。",
+      "structure": "主干（主语+谓语+宾语/表语） + 介词短语/从句（修饰成分）",
+      "usage": [
+        "先抽修饰：in science class / for a successful experiment",
+        "再翻主干：Proper preparation is essential",
+        "组合：在科学课上，对于一个成功的实验来说，合适的准备非常重要。"
+      ],
+      "mistakes": [
+        {
+          "wrong": "合适的准备是重要的对于一个成功的实验在科学课上。",
+          "correct": "在科学课上，对于一个成功的实验来说，合适的准备非常重要。",
+          "explanation": "先处理介词短语（in..., for...），再翻主干更顺畅。"
+        }
+      ],
+      "examples": [
+        "Proper preparation is essential for a successful experiment in science class.",
+        "In science class, proper preparation is essential for a successful experiment."
+      ]
+    },
+    {
+      "title": "动名词（V-ing）作主语：整体作主语",
+      "definition": "动词加 -ing 变成动名词短语后可作主语，表示“一件事/一个动作”，作为整体看待。",
+      "structure": "V-ing（短语） + 谓语 + ...",
+      "usage": [
+        "Giving a speech can make people nervous.",
+        "Sharing ideas online is helpful."
+      ],
+      "mistakes": [
+        {
+          "wrong": "Give a speech make me nervous.",
+          "correct": "Giving a speech makes me nervous.",
+          "explanation": "作主语需要用动名词短语 Giving a speech，并注意主谓一致。"
+        }
+      ],
+      "examples": [
+        "Giving a speech in front of a crowd is difficult.",
+        "Learning a foreign language takes time."
+      ]
+    },
+    {
+      "title": "介词后面接什么：介词 + 名词/动名词，不接动词原形或过去式",
+      "definition": "介词后面通常接名词或动名词（V-ing）；不能直接接动词原形或过去式。to do 里的 to 不算普通介词（是动词不定式标记）。",
+      "structure": "preposition + noun / preposition + V-ing",
+      "usage": [
+        "into management（介词 into + 名词）",
+        "without saying goodbye（without + 动名词）",
+        "for a successful experiment（for + 名词短语）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "into manage",
+          "correct": "into management",
+          "explanation": "into 后要跟名词；manage 是动词，需变名词 management。"
+        },
+        {
+          "wrong": "without say goodbye",
+          "correct": "without saying goodbye",
+          "explanation": "without 后可接动名词 V-ing。"
+        }
+      ],
+      "examples": [
+        "Women should get into management.",
+        "He left without saying goodbye."
+      ]
+    },
+    {
+      "title": "词性变化：动词变名词的常见后缀 -ment / -er",
+      "definition": "英语中动词可以通过加后缀变成名词：-ment 表“行为/结果/领域”，-er 表“做这件事的人”。",
+      "structure": "verb + -ment → noun；verb + -er → person noun",
+      "usage": [
+        "manage → management（管理）",
+        "manage → manager（经理/管理者）",
+        "prepare → preparation（准备）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "into manage",
+          "correct": "into management",
+          "explanation": "介词后需要名词，常用 -ment 构词。"
+        }
+      ],
+      "examples": [
+        "Management is important in a company.",
+        "The manager is responsible."
+      ]
+    },
+    {
+      "title": "see 的两种宾补结构：see sb do vs see sb doing",
+      "definition": "see somebody do something 强调“看见全过程/事实”；see somebody doing something 强调“看见正在发生”。",
+      "structure": "see + sb + do；see + sb + doing",
+      "usage": [
+        "see sb do：I saw him speak English fluently.（强调他会说/事实）",
+        "see sb doing：I saw him speaking English.（强调当时正在说）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "I saw him to speak English.",
+          "correct": "I saw him speak English.",
+          "explanation": "see 的宾补结构不用 to。"
+        }
+      ],
+      "examples": [
+        "I saw her cross the road.",
+        "I saw her crossing the road."
+      ]
+    },
+    {
+      "title": "invite 的固定结构：invite sb to do（不接 doing）",
+      "definition": "invite 表“邀请某人去做某事”，结构固定为 invite somebody to do something；不能用 invite somebody doing。",
+      "structure": "invite somebody to do something",
+      "usage": [
+        "They invited me to join the club.",
+        "She invited him to have dinner."
+      ],
+      "mistakes": [
+        {
+          "wrong": "They invited me joining the club.",
+          "correct": "They invited me to join the club.",
+          "explanation": "邀请是“还没发生的动作”，用 to do 表目的/将要做。"
+        }
+      ],
+      "examples": [
+        "He invited us to visit his home.",
+        "She invited me to speak."
+      ]
+    },
+    {
+      "title": "称呼用法：Miss / Mrs. / Ms.（婚姻状况与正式程度）",
+      "definition": "Miss 用于未婚女性；Mrs. 用于已婚女性；Ms. 更中性，常用于不确定或不强调婚姻状况的女性称呼。",
+      "structure": "Miss + 姓；Mrs. + 姓；Ms. + 姓",
+      "usage": [
+        "Miss Liu：刘老师（未婚或常规课堂称呼）",
+        "Mrs. Smith：史密斯太太（已婚）",
+        "Ms. Liu：刘老师（不强调婚姻状况）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Mr. Liu (指女性老师)",
+          "correct": "Miss Liu / Ms. Liu",
+          "explanation": "Mr. 仅用于男性；女性用 Miss/Mrs./Ms.。"
+        }
+      ],
+      "examples": [
+        "Miss Liu asked us to be quiet in class.",
+        "Ms. Wang teaches English."
+      ]
+    },
+    {
+      "title": "初中高频语法清单：时态 + 被动（考试核心）",
+      "definition": "初中语法高频考点集中在：常见时态（一般现在/过去/将来；现在进行；现在完成等）以及被动语态结构（be + V3）。掌握定义与结构即可快速做题。",
+      "structure": "时态：按助动词/动词形式变化；被动：be + V3",
+      "usage": [
+        "一般过去：V2（I did）",
+        "现在完成：have/has + V3（I have done）",
+        "被动语态：be + V3（is done / was done）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "have + V2",
+          "correct": "have + V3",
+          "explanation": "现在完成时 have/has 后必须接过去分词。"
+        }
+      ],
+      "examples": [
+        "I have finished my work.",
+        "The homework is finished."
+      ]
+    },
+    {
+      "title": "to do vs to doing：不定式后用动词原形",
+      "definition": "动词不定式结构是 to + 动词原形（base form）；to doing 一般不成立（除非 to 是介词，但那是另一种结构）。",
+      "structure": "to + verb (base form)",
+      "usage": [
+        "ask somebody to do something：要求/请求某人做某事",
+        "invite somebody to do something：邀请某人做某事",
+        "need/want/hope to do something：需要/想要/希望做某事"
+      ],
+      "mistakes": [
+        {
+          "wrong": "ask somebody to doing something",
+          "correct": "ask somebody to do something",
+          "explanation": "to do 里的 to 是不定式标记，后接动词原形。"
+        }
+      ],
+      "examples": [
+        "Miss Liu asked us to be quiet.",
+        "They invited me to join the club."
+      ]
+    },
+    {
+      "title": "介词用法：without 后接名词或动名词（V-ing）",
+      "definition": "without 是介词，后面不能直接跟动词原形；可接名词或 V-ing（动名词）。",
+      "structure": "without + noun / without + V-ing",
+      "usage": [
+        "without a word（没有一句话）",
+        "without saying goodbye（没有说再见）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "without say goodbye",
+          "correct": "without saying goodbye",
+          "explanation": "介词后接动名词 V-ing。"
+        }
+      ],
+      "examples": [
+        "He left without saying goodbye.",
+        "She finished the task without help."
+      ]
+    },
+    {
+      "title": "一般疑问句变换：优先提前 be / 情态动词 / 助动词",
+      "definition": "把陈述句变一般疑问句时：若句中有 be（am/is/are/was/were）或情态动词（can/should...）或完成时 have/has，直接提前；若没有，则借助 do/does/did。",
+      "structure": "1) Be/Modal/Have + 主语 + ...? 2) Do/Does/Did + 主语 + 动词原形 + ...?",
+      "usage": [
+        "I am Jim. → Are you Jim?",
+        "He has finished. → Has he finished?",
+        "She likes apples. → Does she like apples?",
+        "They played soccer. → Did they play soccer?"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Do you are Jim?",
+          "correct": "Are you Jim?",
+          "explanation": "有 be 动词时直接提前 be，不用 do。"
+        }
+      ],
+      "examples": [
+        "Is this your book?",
+        "Do you like English?"
+      ]
+    },
+    {
+      "title": "do / does / did 的选择：看时态与主语（三单）",
+      "definition": "一般疑问句/否定句使用 do 系列：一般现在时用 do/does；一般过去时用 did。一般现在时中，第三人称单数用 does，其余用 do。",
+      "structure": "do（I/you/we/they）; does（he/she/it/单数名词）; did（过去时）",
+      "usage": [
+        "动词原形 → do：They make... → Do they make...?",
+        "三单动词（-s/-es）→ does：He makes... → Does he make...?",
+        "过去式 → did：He made... → Did he make...?"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Do he like apples?",
+          "correct": "Does he like apples?",
+          "explanation": "he 是第三人称单数，用 does。"
+        },
+        {
+          "wrong": "Does they make it?",
+          "correct": "Do they make it?",
+          "explanation": "they 不是三单，用 do。"
+        }
+      ],
+      "examples": [
+        "Does the oven tell you the time?",
+        "Did you finish your homework?"
+      ]
+    },
+    {
+      "title": "第三人称单数（三单）到底是什么",
+      "definition": "“三单”= 第三人称单数，不是“三个单”。指 he/she/it 或单数名词作主语时，一般现在时谓语动词加 -s/-es。",
+      "structure": "he/she/it/单数名词 + V-s/V-es（一般现在时）",
+      "usage": [
+        "The oven tells us ...（oven 单数 → tells）",
+        "He goes to school. / She studies hard."
+      ],
+      "mistakes": [
+        {
+          "wrong": "The oven tell us ...",
+          "correct": "The oven tells us ...",
+          "explanation": "The oven 是第三人称单数，一般现在时动词要加 -s。"
+        }
+      ],
+      "examples": [
+        "It works well.",
+        "My father drives to work."
+      ]
+    },
+    {
+      "title": "疑问句类型与语调：一般/特殊/选择疑问句",
+      "definition": "一般疑问句（Yes/No）常用升调；特殊疑问句（Wh-）多用降调；选择疑问句在 or 前升调，or 后降调。",
+      "structure": "一般：Be/Do... ?；特殊：Wh- + 一般疑问句语序；选择：A or B?",
+      "usage": [
+        "一般：Is this your book?（升）",
+        "特殊：Whose book is this?（降）",
+        "选择：Is this an apple or an orange?（apple ↑ / orange ↓）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Whose book is this?（用成明显升调）",
+          "correct": "Whose book is this?（更自然用降调）",
+          "explanation": "特殊疑问句通常用降调表达完整询问。"
+        }
+      ],
+      "examples": [
+        "Is this your book?",
+        "Is it tea or coffee?"
+      ]
+    },
+    {
+      "title": "否定句：doesn't have 而不是 hasn't（一般现在的否定）",
+      "definition": "have 在一般现在时做实义动词时，否定要借助 do/does：don't/doesn't have。hasn't 常用于 have 作助动词（完成时）或英式用法中特定结构。",
+      "structure": "subject + don't/doesn't + have + ...",
+      "usage": [
+        "He doesn't have any time.",
+        "She doesn't have anything to say."
+      ],
+      "mistakes": [
+        {
+          "wrong": "He hasn't any books. (在一般现在语境下想表达“没有”)",
+          "correct": "He doesn't have any books.",
+          "explanation": "把 have 当实义动词时，用 do/does 构成否定更标准。"
+        },
+        {
+          "wrong": "He doesn't have some books.",
+          "correct": "He doesn't have any books.",
+          "explanation": "否定句和疑问句里通常用 any 代替 some。"
+        }
+      ],
+      "examples": [
+        "He doesn't have any money.",
+        "Does she have any sisters?"
+      ]
+    },
+    {
+      "title": "画线部分提问：先确定问什么，再把其余部分变一般疑问句",
+      "definition": "对画线部分提问：第一步确定画线部分的性质（人/物/时间/地点/原因等），选对应 Wh- 疑问词；第二步把没画线的部分改成一般疑问句语序。",
+      "structure": "Wh- word + 一般疑问句语序（be/情态/have 提前；否则 do/does/did）",
+      "usage": [
+        "画线是名词宾语 → 用 what：The oven tells us the time. → What does the oven tell us?",
+        "画线是时间 → 用 when：We eat at 8. → When do you eat?"
+      ],
+      "mistakes": [
+        {
+          "wrong": "What the oven tells us?",
+          "correct": "What does the oven tell us?",
+          "explanation": "特殊疑问句中，除了疑问词外，其余部分要用一般疑问句语序（缺助动词要加 do/does/did）。"
+        }
+      ],
+      "examples": [
+        "What does the oven tell us?",
+        "Where do you live?"
+      ]
+    },
+    {
+      "title": "一般疑问句复述：优先提前已有的“头”，没有就借助 do/does/did",
+      "definition": "陈述句变一般疑问句：句中若有 be/情态动词/助动词（如 have/has），直接提前；若没有，就在句首加 do/does/did，并把实义动词变回原形。",
+      "structure": "Be/Modal/Have + 主语 + ...? / Do/Does/Did + 主语 + 动词原形 + ...?",
+      "usage": [
+        "原句动词原形（一般现在）→ 用 do：They waste food. → Do they waste food?",
+        "原句动词三单（一般现在）→ 用 does：He wastes food. → Does he waste food?",
+        "原句动词过去式（一般过去）→ 用 did：They wasted food. → Did they waste food?"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Does they waste food?",
+          "correct": "Do they waste food?",
+          "explanation": "they 不是第三人称单数，用 do，不用 does。"
+        }
+      ],
+      "examples": [
+        "Do you like English?",
+        "Did she go to school yesterday?"
+      ]
+    },
+    {
+      "title": "do/does/did 的快速判断：看原句动词形态",
+      "definition": "判断用 do/does/did 的快捷法：看原句谓语动词是原形/三单/过去式。原形→do；三单→does；过去式→did。",
+      "structure": "原形→do；三单(-s/-es)→does；过去式(V2)→did",
+      "usage": [
+        "make（原形）→ Do ... make ...?",
+        "makes（三单）→ Does ... make ...?",
+        "made（过去式）→ Did ... make ...?"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Do he makes ...?",
+          "correct": "Does he make ...?",
+          "explanation": "三单陈述句变疑问句：用 does，同时动词去掉 -s 还原为原形。"
+        }
+      ],
+      "examples": [
+        "Does the oven tell us the time?",
+        "Did they finish the work?"
+      ]
+    },
+    {
+      "title": "介词合并句：without 合并时，后句去主语并用动名词（V-ing）",
+      "definition": "用 without 把两句合并：without 是介词，后面要接名词或 V-ing；合并时通常把后一句的主语省略（若与前句主语一致），并把动词改为 V-ing。",
+      "structure": "句子A + without + V-ing + ...",
+      "usage": [
+        "The smart kitchen can cook meals without wasting any food.",
+        "They left without saying goodbye."
+      ],
+      "mistakes": [
+        {
+          "wrong": "The smart kitchen can cook meals without they waste food.",
+          "correct": "The smart kitchen can cook meals without wasting any food.",
+          "explanation": "without 后不能接完整句；要省略主语并把动词变 V-ing。"
+        }
+      ],
+      "examples": [
+        "He went out without locking the door.",
+        "She finished the task without asking for help."
+      ]
+    },
+    {
+      "title": "and 合并句：主语相同可省略后句主语（并列结构）",
+      "definition": "用 and 连接两句时，如果两句主语相同，后一句主语可以省略以避免重复；and 连接的是并列成分或并列分句。",
+      "structure": "主语 + 谓语A + ... and + 谓语B + ...（省略重复主语）",
+      "usage": [
+        "They can cook meals and (they) never waste any food.",
+        "Apples are tasty and (they are) green."
+      ],
+      "mistakes": [
+        {
+          "wrong": "They can cook meals and never wastes food.",
+          "correct": "They can cook meals and never waste food.",
+          "explanation": "并列结构中动词形式要与主语一致；waste 与 they 搭配用原形。"
+        }
+      ],
+      "examples": [
+        "He opened the window and looked outside.",
+        "She studied hard and passed the exam."
+      ]
+    },
+    {
+      "title": "阅读定位策略：先读题目，抓名词关键词，再做“交叉定位”",
+      "definition": "做阅读题不一定通读全文：先读题干，提取稳定不易变的名词关键词（人名、地点、时间、专有名词），回文中找同词或同义词；多个信息点交叉出现的位置往往就是答案区。",
+      "structure": "题干关键词A + 关键词B → 文中交叉点 → 答案区",
+      "usage": [
+        "题干：young people + USA + volunteer → 先找 USA/young people/volunteer 位置",
+        "题干：Alice + summer → 先找 Alice，再在附近找 summer"
+      ],
+      "mistakes": [
+        {
+          "wrong": "只凭感觉选项不回文定位",
+          "correct": "先找题干关键词，再回文验证",
+          "explanation": "阅读题多数答案在原文可定位，靠猜容易失分。"
+        }
+      ],
+      "examples": [
+        "Look for names and places first.",
+        "Then match the keywords with the options."
+      ]
+    },
+    {
+      "title": "词汇辨析：volunteer（名词/动词）与 spend（核心义是“花费”）",
+      "definition": "volunteer 既可作名词“志愿者”，也可作动词“自愿/志愿做”；spend 的底层含义是“花费”，花费时间可引申为“度过”。",
+      "structure": "volunteer to do something；spend time/money doing something",
+      "usage": [
+        "They volunteer to help others.",
+        "They spend time helping others."
+      ],
+      "mistakes": [
+        {
+          "wrong": "They spend helping others.",
+          "correct": "They spend time helping others.",
+          "explanation": "spend 后需要明确花费的对象：time/money。"
+        }
+      ],
+      "examples": [
+        "Many students volunteer to clean the park.",
+        "He spends money buying books."
+      ]
+    },
+    {
+      "title": "发音规律提醒：名词/动词拼写仅差 e，读音常变化",
+      "definition": "部分词名词和动词形式只差一个结尾 e，但读音会变化：bath/bathe，breath/breathe；考试和听力都可能考到。",
+      "structure": "noun（无 e）/ verb（加 e）",
+      "usage": [
+        "bath /bæθ/ → bathe /beɪð/",
+        "breath /breθ/ → breathe /briːð/"
+      ],
+      "mistakes": [
+        {
+          "wrong": "I need to breath.",
+          "correct": "I need to breathe.",
+          "explanation": "动词“呼吸”是 breathe（有 e），breath（无 e）是名词。"
+        }
+      ],
+      "examples": [
+        "Take a deep breath.",
+        "Breathe deeply and relax."
+      ]
+    },
+    {
+      "title": "不规则动词复习：grow-grew-grown（V2/V3 要记）",
+      "definition": "grow 是不规则动词，过去式 grew，过去分词 grown；完成时或被动需要用过去分词 grown。",
+      "structure": "grow - grew - grown",
+      "usage": [
+        "一般过去：Plants grew quickly.",
+        "现在完成：Plants have grown quickly."
+      ],
+      "mistakes": [
+        {
+          "wrong": "Plants have grew quickly.",
+          "correct": "Plants have grown quickly.",
+          "explanation": "have/has 后要用过去分词（V3）grown。"
+        }
+      ],
+      "examples": [
+        "The tree grew taller last year.",
+        "The tree has grown a lot."
+      ]
+    },
+    {
+      "title": "阅读交叉定位：两条信息交叉处就是答案区",
+      "definition": "当题干给出两个信息点（如人物+时间/地点），需要在原文中分别定位两者，然后寻找它们的交叉区域；答案通常就在交叉点附近，而不是只找到其中一个信息点就选。",
+      "structure": "关键词A定位 + 关键词B定位 → 交叉点/重叠段落 → 找同义替换/答案句",
+      "usage": [
+        "题干：Alice + summer → 先找 Alice 段，再在其附近找 summer；两者交叉的句子就是答案句",
+        "题干：USA + young people + volunteer → 先找 USA/young people，再找 volunteer，交叉处即答案区"
+      ],
+      "mistakes": [
+        {
+          "wrong": "只找到 Alice 就直接选答案",
+          "correct": "Alice 定位后必须再找 summer，并在交叉处找答案句",
+          "explanation": "题干双信息必须交叉验证，否则容易误选附近干扰项。"
+        }
+      ],
+      "examples": [
+        "The answer is near where the two keywords meet.",
+        "Find 'Alice' first, then find 'summer' in the same area."
+      ]
+    },
+    {
+      "title": "宾语从句：that/wh- 引导的从句在句中作宾语",
+      "definition": "当 that/what/when/where/why/how 等出现在句中间并引导一个完整句子时，这个从句常作动词的宾语，叫宾语从句。",
+      "structure": "verb + (that/wh-) + clause",
+      "usage": [
+        "We know (that) Jason is 18.",
+        "We know from the passage that Jason is 18."
+      ],
+      "mistakes": [
+        {
+          "wrong": "把 that 当作“那个”去翻译成形容词修饰人名（如 that Jason）",
+          "correct": "把 that 识别为连词，引导后面的完整句子",
+          "explanation": "人名前一般不加 that/this 去修饰；在阅读中 that 多数是连词或关系词。"
+        }
+      ],
+      "examples": [
+        "I think that he is right.",
+        "She knows what you want."
+      ]
+    },
+    {
+      "title": "后置定语：修饰名词的成分放在名词后面",
+      "definition": "英语里当修饰成分较长或为短语/从句时，常放在被修饰名词后面，叫后置定语。后置定语本质是“定语”，修饰名词。",
+      "structure": "noun + (prepositional phrase / relative clause / participle phrase)",
+      "usage": [
+        "介词短语作后置定语：the apples on the tree",
+        "定语从句作后置定语：families that are not rich"
+      ],
+      "mistakes": [
+        {
+          "wrong": "把后置定语当成另一个名词或当成副词",
+          "correct": "先确定它在句中是“修饰名词”的成分=定语",
+          "explanation": "后置定语的核心任务是修饰名词，回答“哪个/什么样的”。"
+        }
+      ],
+      "examples": [
+        "The man in the hat is my uncle.",
+        "The book that you bought is interesting."
+      ]
+    },
+    {
+      "title": "定语从句：that 引导从句修饰前面的名词",
+      "definition": "that 引导的从句如果用来修饰前面某个名词（先行词），这个从句叫定语从句；that 在从句中可作主语或宾语等成分。",
+      "structure": "noun + that + clause",
+      "usage": [
+        "families that are not rich（that 从句修饰 families）",
+        "the person that teaches people（that 从句修饰 person）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "看到 that 就一律当宾语从句",
+          "correct": "看 that 前面的词：若是名词且 that 从句修饰它→定语从句；若 that 从句作动词宾语→宾语从句",
+          "explanation": "判断从句类型的关键是看 that 前的“依附对象”与句中功能。"
+        }
+      ],
+      "examples": [
+        "I like the book that you recommended.",
+        "Families that are not rich need help."
+      ]
+    },
+    {
+      "title": "The + 形容词：表示“一类人”（词汇辨析归入语法）",
+      "definition": "the + 形容词可以把形容词名词化，表示“某一类人”，常作复数意义（整体群体）。",
+      "structure": "the + adjective → a group of people",
+      "usage": [
+        "the rich（富人）",
+        "the old（老人）",
+        "the young（年轻人）"
+      ],
+      "mistakes": [
+        {
+          "wrong": "the rich 翻成“富有的（某个东西）”",
+          "correct": "the rich 翻成“富人（这一类人）”",
+          "explanation": "the + adj 在语法上名词化，指人群而非单个物品。"
+        }
+      ],
+      "examples": [
+        "The rich are not always happy.",
+        "The young need more opportunities."
+      ]
+    },
+    {
+      "title": "特殊疑问句对宾语提问：what + do/does + 主语 + 动词原形",
+      "definition": "当画线部分是动词的宾语（东西/内容）时，用 what 提问；句子其余部分按一般疑问句语序（缺助动词就加 do/does）。",
+      "structure": "What + do/does + subject + verb (base form) ...?",
+      "usage": [
+        "He teaches people how to build houses. → What does he teach people?",
+        "They sell houses to families. → What do they sell to families?"
+      ],
+      "mistakes": [
+        {
+          "wrong": "What he teaches people?",
+          "correct": "What does he teach people?",
+          "explanation": "特殊疑问句=疑问词+一般疑问句语序；无助动词要补 do/does。"
+        }
+      ],
+      "examples": [
+        "What do you want?",
+        "What does she need?"
+      ]
+    },
+    {
+      "title": "双宾语结构：teach 的两个宾语（人 + 物/内容）",
+      "definition": "部分动词可接两个宾语：一个是“人”（间接宾语），一个是“物/内容”（直接宾语）。teach 常用 teach sb sth 或 teach sb how to do sth。",
+      "structure": "teach + sb + sth / teach + sb + how to do sth",
+      "usage": [
+        "He teaches people skills.",
+        "He teaches people how to build houses."
+      ],
+      "mistakes": [
+        {
+          "wrong": "He teaches to people how to build houses.",
+          "correct": "He teaches people how to build houses.",
+          "explanation": "teach 后可直接接人作宾语，不需要 to。"
+        }
+      ],
+      "examples": [
+        "She taught me English.",
+        "They teach children how to read."
+      ]
+    },
+    {
+      "title": "从句判断技巧：优先看从句前面的名词（最近修饰原则）",
+      "definition": "判断从句类型时，先看从句前紧挨着的词：如果是名词且从句用于说明它，多为定语从句；并且从句通常优先修饰最近的那个名词，避免“同时修饰两个名词”的歧义。",
+      "structure": "noun1 noun2 + clause → 通常修饰 noun2（最近名词）",
+      "usage": [
+        "families that are not rich：that 从句修饰 families",
+        "the apples on the tree：on the tree 修饰 apples"
+      ],
+      "mistakes": [
+        {
+          "wrong": "认为一个从句同时修饰两个名词",
+          "correct": "默认修饰最近名词；若要修饰更远名词需改写",
+          "explanation": "英语倾向表达准确，避免模糊修饰范围。"
+        }
+      ],
+      "examples": [
+        "The student in the classroom is my brother.",
+        "The car that he bought is new."
+      ]
+    },
+    {
+      "title": "最近修饰原则（定语从句/后置定语）",
+      "definition": "修饰成分通常修饰离它最近的名词，不能跨越去修饰更远的名词。",
+      "structure": "noun + modifier (phrase / clause)",
+      "usage": [
+        "children with trouble in reading（修饰 children）",
+        "the apples on the tree（修饰 apples）"
+      ],
+      "examples": [
+        "The students in the classroom are quiet.",
+        "Children with trouble in reading need help."
+      ],
+      "notes": "避免出现“修饰两个名词”的歧义。"
+    },
+    {
+      "title": "定语从句与介词短语作后置定语的区别",
+      "definition": "后置定语可以是定语从句，也可以是介词短语，但二者结构不同。",
+      "structure": [
+        "定语从句：noun + that/which/who + clause",
+        "介词短语：noun + preposition + noun"
+      ],
+      "examples": [
+        "families that are not rich（定语从句）",
+        "children with trouble in reading（介词短语）"
+      ]
+    },
+    {
+      "title": "翻译顺序原则：是否从后往前翻",
+      "definition": "只有在句子中出现介词、连词、从句等导致结构变长、难以直译时，才需要从后往前翻译。",
+      "usage": [
+        "简单句：按正常顺序翻译",
+        "复杂句：先翻介词短语或从句，再回到主干"
+      ],
+      "examples": [
+        "He teaches children.（正序）",
+        "He teaches children with trouble in reading.（先翻后置定语）"
+      ]
+    },
+    {
+      "title": "动名词作主语",
+      "definition": "动词 + -ing 形式可以作主语，表示“一件事/一种行为”，整体视为单数。",
+      "structure": "V-ing + 谓语动词（第三人称单数）",
+      "examples": [
+        "Reading books makes people better.",
+        "Doing exercise helps your health."
+      ],
+      "notes": "即使后面的名词是复数，V-ing 作主语仍视为单数。"
+    },
+    {
+      "title": "主语逻辑判断：行为 vs 事物",
+      "definition": "英语中需明确主语是“行为”还是“事物”，以决定谓语形式和句意。",
+      "examples": [
+        "Reading books makes people better.（行为作主语）",
+        "Books make people better.（事物作主语）"
+      ],
+      "notes": "两句都对，但逻辑重心不同。"
+    },
+    {
+      "title": "三单判断的核心原则",
+      "definition": "判断谓语是否加 -s 的关键不是名词是否复数，而是主语整体是否是第三人称单数。",
+      "examples": [
+        "Reading books makes progress.",
+        "The book makes progress."
+      ],
+      "notes": "V-ing 作主语时，谓语用三单。"
+    }
+  ],
+  "summary": {
+    "total_words": 83,
+    "total_phrases": 61,
+    "total_patterns": 35,
+    "total_grammar": 54,
+    "filter_stats": {
+      "original": 109,
+      "final": 83,
+      "removed": 26
+    }
+  },
+  "metadata": {
+    "taskId": "12885064-d96d-4860-ae24-21b3d30b7170",
+    "originalFile": "1æ7æ¥è¯¾å ç¬è®°.txt",
+    "processedAt": "2026-01-13T11:20:31.307Z",
+    "totalSegments": 7,
+    "successCount": 7,
+    "failCount": 0,
+    "browserRestarts": 1
+  }
+}

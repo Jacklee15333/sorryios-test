@@ -7,6 +7,7 @@
  * - 用户管理
  * - 任务记录持久化
  * - 🆕 智能文本分块管理
+ * - 🆕 用户登录注册系统
  */
 
 const express = require('express');
@@ -20,15 +21,17 @@ const uploadRoutes = require('./routes/upload');
 const taskRoutes = require('./routes/task');
 const reportRoutes = require('./routes/report');
 const adminRoutes = require('./routes/admin');
-const chunkRoutes = require('./routes/chunk-api');  // 🆕 新增：分块管理路由
-const aiRoutes = require('./routes/ai-api');        // 🆕 新增：AI处理路由
+const chunkRoutes = require('./routes/chunk-api');
+const aiRoutes = require('./routes/ai-api');
+const { router: authRouter } = require('./routes/auth');  // 🆕 新增：用户认证路由
 
 // 服务
 const taskQueue = require('./services/taskQueue');
 const aiProcessor = require('./services/aiProcessor');
+const userService = require('./services/userService');  // 🆕 新增：用户服务
 
 // 数据库（新增）
-const { initDatabase, LogDB } = require('./services/database');
+const { initDatabase, LogDB, getDb } = require('./services/database');
 
 const app = express();
 const server = http.createServer(app);
@@ -43,23 +46,25 @@ const io = new Server(server, {
 
 // 中间件
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));  // 🆕 增加 JSON 大小限制，支持大文本分块
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // 静态文件服务
 app.use('/outputs', express.static(path.join(__dirname, 'outputs')));
-app.use('/admin', express.static(path.join(__dirname, 'public'))); // 管理后台静态文件
+app.use('/admin', express.static(path.join(__dirname, 'public')));
 
 // 将 io 实例挂载到 app
 app.set('io', io);
 
 // API 路由
+app.use('/api/auth', authRouter);  // 🆕 新增：认证路由 (登录/注册)
+app.use('/api', authRouter);       // 🆕 新增：用户信息路由 (/api/user/stats 等)
 app.use('/api/upload', uploadRoutes);
 app.use('/api/task', taskRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/chunk', chunkRoutes);  // 🆕 新增：分块管理 API
-app.use('/api/ai', aiRoutes);        // 🆕 新增：AI处理 API
+app.use('/api/chunk', chunkRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 健康检查
 app.get('/api/health', (req, res) => {
@@ -76,8 +81,13 @@ app.get('/api/health', (req, res) => {
 app.get('/', (req, res) => {
     res.json({
         name: 'Sorryios AI 智能笔记系统',
-        version: '2.1.0',  // 🆕 版本升级
+        version: '2.2.0',  // 🆕 版本升级
         endpoints: {
+            // 🆕 新增：用户认证 API
+            authRegister: 'POST /api/auth/register',
+            authLogin: 'POST /api/auth/login',
+            userProfile: 'GET /api/user/profile',
+            userStats: 'GET /api/user/stats',
             // 原有 API
             upload: 'POST /api/upload',
             taskStatus: 'GET /api/task/:id',
@@ -91,12 +101,12 @@ app.get('/', (req, res) => {
             adminTasks: 'GET /api/admin/tasks',
             adminFiles: 'GET /api/admin/files',
             adminLogs: 'GET /api/admin/logs',
-            // 🆕 新增：分块管理 API
+            // 分块管理 API
             chunkConfig: 'GET/PUT /api/chunk/config',
             chunkPreview: 'POST /api/chunk/preview',
             chunkSplit: 'POST /api/chunk/split',
             chunkFiles: 'GET /api/chunk/files',
-            // 🆕 新增：AI处理 API
+            // AI处理 API
             aiProcess: 'POST /api/ai/process',
             aiStatus: 'GET /api/ai/status/:taskId',
             aiResult: 'GET /api/ai/result/:taskId',
@@ -105,7 +115,7 @@ app.get('/', (req, res) => {
         links: {
             frontend: 'http://localhost:5173',
             adminPanel: 'http://localhost:3000/admin/admin.html',
-            chunkManager: 'http://localhost:3000/admin/chunk-admin.html'  // 🆕 新增
+            chunkManager: 'http://localhost:3000/admin/chunk-admin.html'
         }
     });
 });
@@ -164,23 +174,40 @@ app.use((err, req, res, next) => {
 
 // 启动服务器
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    // 初始化 AI 处理器
-    aiProcessor.init();
-    
-    console.log('');
-    console.log('='.repeat(60));
-    console.log('  🤖 Sorryios AI Smart Note System v2.1');
-    console.log('='.repeat(60));
-    console.log(`  📡 API Server:    http://localhost:${PORT}`);
-    console.log(`  📡 API Docs:      http://localhost:${PORT}/`);
-    console.log(`  📡 Health Check:  http://localhost:${PORT}/api/health`);
-    console.log('  ' + '-'.repeat(56));
-    console.log(`  🔧 Admin Panel:   http://localhost:${PORT}/admin`);
-    console.log(`  📄 Chunk Manager: http://localhost:${PORT}/admin/chunk-admin.html`);  // 🆕 新增
-    console.log(`  👤 Default Login: admin / admin123`);
-    console.log('='.repeat(60));
-    console.log('');
-});
+
+// 🆕 异步启动，确保数据库初始化完成
+async function startServer() {
+    try {
+        // 🆕 初始化用户服务数据库
+        await userService.initDatabase();
+        console.log('✅ 用户数据库初始化完成');
+
+        // 初始化 AI 处理器
+        aiProcessor.init();
+
+        server.listen(PORT, () => {
+            console.log('');
+            console.log('='.repeat(60));
+            console.log('  🤖 Sorryios AI Smart Note System v2.2');
+            console.log('='.repeat(60));
+            console.log(`  📡 API Server:    http://localhost:${PORT}`);
+            console.log(`  📡 API Docs:      http://localhost:${PORT}/`);
+            console.log(`  📡 Health Check:  http://localhost:${PORT}/api/health`);
+            console.log('  ' + '-'.repeat(56));
+            console.log(`  🔧 Admin Panel:   http://localhost:${PORT}/admin`);
+            console.log(`  📄 Chunk Manager: http://localhost:${PORT}/admin/chunk-admin.html`);
+            console.log(`  👤 Default Login: admin / admin123`);
+            console.log('  ' + '-'.repeat(56));
+            console.log('  🆕 用户系统已启用');  // 🆕 新增提示
+            console.log('='.repeat(60));
+            console.log('');
+        });
+    } catch (err) {
+        console.error('❌ 服务器启动失败:', err);
+        process.exit(1);
+    }
+}
+
+startServer();
 
 module.exports = { app, server, io };
