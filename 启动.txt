@@ -1,3 +1,0 @@
-cd D:\sorryios-test
-# 替换文件后
-node main-processor.js --input "n8n-input\1月7日课堂笔记.txt" --output "n8n-output"
