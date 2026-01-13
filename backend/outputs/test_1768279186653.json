@@ -1,0 +1,206 @@
+{
+  "vocabulary": {
+    "words": [
+      {
+        "word": "cut",
+        "phonetic": "/kʌt/",
+        "pos": "v.",
+        "meaning": "切；剪；割",
+        "forms": {
+          "past": "cut",
+          "past_participle": "cut",
+          "third_person": "cuts",
+          "present_participle": "cutting",
+          "comparative": "",
+          "superlative": ""
+        },
+        "example": "He cut the paper.",
+        "note": "不规则动词AAA型：cut-cut-cut；学生易错：cutted（误）→ cut（正）。"
+      }
+    ],
+    "phrases": [
+      {
+        "phrase": "look forward to doing sth",
+        "meaning": "期待做某事",
+        "example": "I look forward to seeing you."
+      },
+      {
+        "phrase": "be good at doing sth",
+        "meaning": "擅长做某事",
+        "example": "She is good at playing basketball."
+      },
+      {
+        "phrase": "ask sb to do sth",
+        "meaning": "请求/让某人做某事",
+        "example": "I asked him to help me."
+      },
+      {
+        "phrase": "tell sb sth",
+        "meaning": "告诉某人某事",
+        "example": "Tell me the truth."
+      },
+      {
+        "phrase": "say hello",
+        "meaning": "打招呼；说“你好”",
+        "example": "He said hello to his teacher."
+      },
+      {
+        "phrase": "talk to someone",
+        "meaning": "和某人交谈",
+        "example": "I want to talk to you."
+      },
+      {
+        "phrase": "talk about something",
+        "meaning": "谈论某事",
+        "example": "They talked about the plan."
+      },
+      {
+        "phrase": "speak English",
+        "meaning": "说英语",
+        "example": "He can speak English."
+      }
+    ],
+    "patterns": [
+      {
+        "pattern": "It is + adj + for sb + to do sth",
+        "meaning": "对某人来说做某事是……的",
+        "example": "It is important for us to learn English."
+      },
+      {
+        "pattern": "see sb do sth",
+        "meaning": "看见某人做了某事（全过程）",
+        "example": "I saw him play basketball."
+      },
+      {
+        "pattern": "see sb doing sth",
+        "meaning": "看见某人正在做某事（进行中）",
+        "example": "I saw him playing basketball."
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "title": "不规则动词的三种类型（AAA / ABB / ABC）",
+      "definition": "不按一般过去式/过去分词加 -ed 的规则变化的动词，需要单独记忆其过去式和过去分词。",
+      "structure": "原形 - 过去式 - 过去分词；常见分类：AAA型（三者相同）、ABB型（后两者相同）、ABC型（三者不同）。",
+      "usage": [
+        "AAA型：三者相同，如 cut-cut-cut。",
+        "ABB型：过去式=过去分词，如 tell-told-told。",
+        "ABC型：三者都不同，如 go-went-gone。",
+        "学习建议：按类型分组记忆，比孤立背诵更容易。"
+      ],
+      "mistakes": [
+        {
+          "wrong": "goed",
+          "correct": "went",
+          "explanation": "go 是ABC型不规则动词，过去式不是 goed，而是 went。"
+        },
+        {
+          "wrong": "He cutted the paper.",
+          "correct": "He cut the paper.",
+          "explanation": "cut 是AAA型不规则动词，过去式与原形相同，不加 -ed。"
+        }
+      ],
+      "examples": [
+        "He went to school yesterday.",
+        "I have gone there before.",
+        "He told me the truth.",
+        "He cut the paper."
+      ]
+    },
+    {
+      "title": "词汇辨析：tell / say / speak / talk 的区别与搭配",
+      "definition": "这四个动词都与“说”有关，但侧重点不同：tell 强调“告诉（对象）”，say 强调“说的内容”，speak 强调“语言/方式”，talk 强调“交谈/交流”。",
+      "structure": "tell + 人 + 事；say + 说的话/内容；speak + 语言/方式（可不带宾语或接语言）；talk + to/with + 人 或 talk about + 话题。",
+      "usage": [
+        "tell：后面通常必须有“人/对象”，常用结构 tell sb sth / tell sb to do sth。",
+        "say：更关注“说了什么内容”，可用 say hello / say something / say + 句子。",
+        "speak：强调说话方式或说某种语言，如 speak English / speak loudly。",
+        "talk：强调双向交流，常用 talk to/with someone；谈论话题用 talk about something。"
+      ],
+      "mistakes": [
+        {
+          "wrong": "tell hello",
+          "correct": "say hello",
+          "explanation": "hello 属于说话内容，通常用 say 搭配。"
+        },
+        {
+          "wrong": "say English",
+          "correct": "speak English",
+          "explanation": "谈“语言能力/语言种类”常用 speak。"
+        },
+        {
+          "wrong": "tell to him",
+          "correct": "tell him / talk to him",
+          "explanation": "tell 后面直接接人作宾语（tell him），而 talk 需要介词 to/with（talk to him）。"
+        }
+      ],
+      "examples": [
+        "Please tell me the truth.",
+        "He said hello and sat down.",
+        "She speaks English fluently.",
+        "We talked about the homework after class."
+      ]
+    },
+    {
+      "title": "感官动词结构：see sb do sth vs see sb doing sth",
+      "definition": "在感官动词（如 see）后，宾语补足语可用动词原形或现在分词，表达不同观察角度：do 表示看到全过程/结果，doing 表示看到正在进行的动作片段。",
+      "structure": "see + 宾语 + 动词原形（do） / 现在分词（doing）。",
+      "usage": [
+        "see sb do sth：强调动作从开始到结束（完整过程）或动作结果。",
+        "see sb doing sth：强调动作正在进行（当时看到的片段/进行中）。"
+      ],
+      "mistakes": [
+        {
+          "wrong": "I saw him to play basketball.",
+          "correct": "I saw him play basketball.",
+          "explanation": "see sb do/doing 结构中不加 to。"
+        }
+      ],
+      "examples": [
+        "I saw him play basketball.",
+        "I saw him playing basketball."
+      ]
+    },
+    {
+      "title": "形式主语句型：It is + adj + for sb + to do sth",
+      "definition": "用 it 作形式主语，把真正的主语（to do 不定式）后置，使句子更自然；形容词描述事情对某人的性质（重要、必要、困难等）。",
+      "structure": "It is + 形容词 + for + 人 + to + 动词原形 + 其他。",
+      "usage": [
+        "常见形容词：important, necessary, difficult, easy 等。",
+        "for sb 表示“对某人而言/对某人来说”。",
+        "真正主语是 to do sth：表达“做某事”。"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Is important for us to learn English.",
+          "correct": "It is important for us to learn English.",
+          "explanation": "该结构必须用 It is 开头，it 作形式主语。"
+        }
+      ],
+      "examples": [
+        "It is important for us to learn English.",
+        "It is necessary for him to practice every day."
+      ]
+    }
+  ],
+  "summary": {
+    "total_words": 1,
+    "total_phrases": 8,
+    "total_patterns": 3,
+    "total_grammar": 4,
+    "filter_stats": {
+      "original": 6,
+      "final": 1,
+      "removed": 5
+    }
+  },
+  "metadata": {
+    "taskId": "test_1768279186653",
+    "processedAt": "2026-01-13T04:40:58.410Z",
+    "originalLength": 4389,
+    "chunksProcessed": 1,
+    "successfulChunks": 1,
+    "userId": null
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "name": "小学基础词汇表",
+  "description": "小学1-6年级常见英语词汇，这些词太简单不需要在笔记中显示",
+  "version": "1.0.0",
+  "count": 520,
+  "words": [
+    "a", "an", "the",
+    "i", "you", "he", "she", "it", "we", "they",
+    "my", "your", "his", "her", "its", "our", "their",
+    "me", "him", "us", "them",
+    "this", "that", "these", "those",
+    "what", "who", "where", "when", "why", "how", "which",
+    
+    "be", "am", "is", "are", "was", "were", "been",
+    "have", "has", "had",
+    "do", "does", "did",
+    "can", "could", "will", "would", "shall", "should", "may", "might", "must",
+    
+    "and", "or", "but", "so", "if", "because", "when", "while", "before", "after",
+    "in", "on", "at", "to", "for", "from", "with", "by", "of", "about",
+    "up", "down", "out", "into", "over", "under", "between", "through",
+    
+    "yes", "no", "not", "ok", "okay", "please", "thank", "thanks", "sorry", "hello", "hi", "bye", "goodbye",
+    
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+    "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
+    "first", "second", "third", "fourth", "fifth",
+    "hundred", "thousand",
+    
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
+    "spring", "summer", "autumn", "fall", "winter",
+    "today", "tomorrow", "yesterday", "now", "then",
+    "morning", "afternoon", "evening", "night", "noon",
+    "day", "week", "month", "year", "time", "hour", "minute", "second",
+    
+    "red", "blue", "green", "yellow", "orange", "purple", "pink", "black", "white", "brown", "grey", "gray",
+    
+    "big", "small", "large", "little", "long", "short", "tall", "high", "low",
+    "good", "bad", "great", "nice", "fine", "well",
+    "new", "old", "young",
+    "hot", "cold", "warm", "cool",
+    "fast", "slow", "quick",
+    "easy", "hard", "difficult",
+    "happy", "sad", "angry", "tired", "hungry", "thirsty", "full",
+    "right", "wrong", "true", "false",
+    "same", "different",
+    "many", "much", "few", "little", "some", "any", "all", "every", "each",
+    "more", "most", "less", "least",
+    "other", "another",
+    
+    "family", "father", "mother", "dad", "mom", "mum", "parent", "parents",
+    "son", "daughter", "brother", "sister", "grandfather", "grandmother", "grandpa", "grandma",
+    "uncle", "aunt", "cousin",
+    "baby", "child", "children", "kid", "kids", "boy", "girl", "man", "woman", "men", "women",
+    "friend", "people", "person",
+    
+    "teacher", "student", "doctor", "nurse", "police", "policeman", "driver", "farmer", "worker",
+    
+    "home", "house", "room", "door", "window", "floor", "wall", "bed", "desk", "chair", "table",
+    "kitchen", "bathroom", "bedroom", "living room",
+    
+    "school", "class", "classroom", "library", "playground",
+    "book", "pen", "pencil", "ruler", "eraser", "bag", "desk",
+    "homework", "test", "exam",
+    
+    "food", "rice", "bread", "cake", "egg", "meat", "fish", "chicken", "beef", "pork",
+    "vegetable", "fruit", "apple", "banana", "orange", "grape", "watermelon", "pear", "peach",
+    "tomato", "potato", "carrot", "cabbage", "onion",
+    "milk", "water", "juice", "tea", "coffee", "coke", "cola",
+    "breakfast", "lunch", "dinner", "meal",
+    "eat", "drink",
+    
+    "animal", "cat", "dog", "bird", "fish", "pig", "cow", "horse", "sheep", "chicken", "duck",
+    "lion", "tiger", "elephant", "monkey", "bear", "rabbit", "mouse", "snake", "frog",
+    "zoo",
+    
+    "body", "head", "face", "eye", "eyes", "ear", "ears", "nose", "mouth", "tooth", "teeth",
+    "hair", "hand", "hands", "arm", "arms", "leg", "legs", "foot", "feet", "finger", "toe",
+    
+    "clothes", "shirt", "t-shirt", "dress", "skirt", "pants", "trousers", "shorts", "coat", "jacket",
+    "hat", "cap", "shoe", "shoes", "sock", "socks", "glasses",
+    
+    "car", "bus", "train", "plane", "airplane", "bike", "bicycle", "boat", "ship", "taxi",
+    
+    "city", "town", "village", "street", "road", "park", "hospital", "bank", "shop", "store", "supermarket",
+    "restaurant", "hotel", "station", "airport",
+    "country", "China", "America", "England", "Japan",
+    
+    "sun", "moon", "star", "sky", "cloud", "rain", "snow", "wind",
+    "tree", "flower", "grass", "river", "lake", "sea", "ocean", "mountain", "hill",
+    "weather", "sunny", "cloudy", "rainy", "snowy", "windy",
+    
+    "go", "come", "get", "give", "take", "make", "let", "put", "see", "look", "watch",
+    "hear", "listen", "say", "speak", "talk", "tell", "ask", "answer",
+    "read", "write", "draw", "sing", "dance", "play", "run", "walk", "jump", "swim", "fly",
+    "sit", "stand", "lie", "sleep", "wake", "work", "study", "learn", "teach",
+    "open", "close", "turn", "stop", "start", "begin", "finish", "end",
+    "buy", "sell", "pay", "cost", "spend",
+    "like", "love", "want", "need", "hope", "wish", "think", "know", "feel", "believe",
+    "try", "use", "help", "show", "find", "lose", "win", "keep", "hold", "bring", "carry",
+    "live", "stay", "leave", "arrive", "return", "visit", "travel", "move",
+    "wait", "meet", "call", "send", "receive",
+    "rain", "snow",
+    
+    "thing", "something", "anything", "nothing", "everything",
+    "place", "somewhere", "anywhere", "nowhere", "everywhere",
+    "way", "kind", "sort", "type",
+    "name", "number", "word", "letter", "sentence",
+    "picture", "photo", "map", "game", "sport", "music", "movie", "film",
+    "phone", "telephone", "computer", "TV", "television", "radio",
+    "money", "price",
+    "news", "story", "question", "problem", "answer", "idea",
+    "life", "world", "nature",
+    
+    "here", "there", "somewhere", "anywhere", "everywhere", "nowhere",
+    "always", "usually", "often", "sometimes", "never", "ever",
+    "already", "yet", "still", "just", "soon", "late", "early",
+    "very", "really", "quite", "too", "also", "even", "only", "just",
+    "again", "once", "twice",
+    "together", "alone",
+    "maybe", "perhaps",
+    "almost", "about", "around",
+    
+    "age", "birthday", "party", "gift", "present", "card", "holiday", "vacation", "Christmas", "festival",
+    
+    "sir", "madam", "miss", "mr", "mrs", "ms"
+  ]
+}

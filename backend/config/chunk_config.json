@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "description": "文本分块处理配置",
+  
+  "chunk_settings": {
+    "default_chunk_size": 6000,
+    "min_chunk_size": 2000,
+    "max_chunk_size": 10000,
+    "overlap_size": 200
+  },
+  
+  "split_rules": {
+    "priority": [
+      {"name": "paragraph", "pattern": "\\n\\n+", "description": "段落分隔（双换行）"},
+      {"name": "newline", "pattern": "\\n", "description": "单换行"},
+      {"name": "sentence_end", "pattern": "[.!?。！？]\\s*", "description": "句子结束"},
+      {"name": "comma", "pattern": "[,;:，；：]\\s*", "description": "逗号分号"},
+      {"name": "space", "pattern": "\\s+", "description": "空格（兜底）"}
+    ],
+    "search_range": 500
+  },
+  
+  "output_settings": {
+    "save_chunks": true,
+    "chunks_dir": "chunks",
+    "filename_pattern": "{original}_chunk_{index}.txt",
+    "save_metadata": true
+  },
+  
+  "ai_settings": {
+    "prompt_template": "prompt_template_v2.md",
+    "timeout": 120000,
+    "max_retries": 3,
+    "retry_delay": 5000
+  }
+}

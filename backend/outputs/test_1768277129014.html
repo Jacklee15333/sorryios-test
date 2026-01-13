@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1月13日英语课堂笔记</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        /* 头部 */
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header .meta {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        
+        header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        header .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        header .stat-item .number {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        header .stat-item .label {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+        
+        /* 导出按钮 */
+        .export-bar {
+            background: #f8f9fa;
+            padding: 15px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .export-btn.pdf {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .export-btn.word {
+            background: #3498db;
+            color: white;
+        }
+        
+        .export-btn.print {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        /* 主体内容 */
+        main {
+            padding: 40px;
+        }
+        
+        /* 章节样式 */
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4em;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .section-title .icon {
+            font-size: 1.2em;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .card.error {
+            border-left-color: #e74c3c;
+            background: #fdf2f2;
+        }
+        
+        .card.emphasis {
+            border-left-color: #f39c12;
+            background: #fef9e7;
+        }
+        
+        .card.grammar {
+            border-left-color: #9b59b6;
+            background: #f5eef8;
+        }
+        
+        /* 单词表格 */
+        .word-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .word-table th,
+        .word-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .word-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .word-table tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .word-table .irregular {
+            background: #fff3cd;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+        
+        .badge.irregular {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .badge.aaa {
+            background: #3498db;
+            color: white;
+        }
+        
+        .badge.abb {
+            background: #9b59b6;
+            color: white;
+        }
+        
+        .badge.abc {
+            background: #e67e22;
+            color: white;
+        }
+        
+        /* 词汇辨析 */
+        .comparison-box {
+            background: linear-gradient(135deg, #e8f4fd 0%, #f0e6fa 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .comparison-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-item .word {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .comparison-item .meaning {
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .comparison-item .usage {
+            font-size: 0.9em;
+            color: #888;
+            font-style: italic;
+        }
+        
+        .key-difference {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        /* 不规则动词表 */
+        .verb-category {
+            margin-bottom: 20px;
+        }
+        
+        .verb-category-title {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .verb-category-title.aaa { background: #3498db; }
+        .verb-category-title.abb { background: #9b59b6; }
+        .verb-category-title.abc { background: #e67e22; }
+        
+        .verb-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .verb-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-family: 'Consolas', monospace;
+        }
+        
+        /* 短语和句型 */
+        .phrase-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .phrase-item .phrase {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .phrase-item .meaning {
+            color: #e74c3c;
+            margin: 5px 0;
+        }
+        
+        .phrase-item .usage {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .phrase-item .example {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+            border-left: 3px solid #667eea;
+        }
+        
+        /* 学生错误 */
+        .error-item {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        .error-wrong {
+            background: #ffebee;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #c62828;
+            text-decoration: line-through;
+            flex: 1;
+        }
+        
+        .error-arrow {
+            font-size: 1.5em;
+            color: #4caf50;
+        }
+        
+        .error-correct {
+            background: #e8f5e9;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #2e7d32;
+            font-weight: bold;
+            flex: 1;
+        }
+        
+        .error-explanation {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background: #fff8e1;
+            border-radius: 6px;
+            font-size: 0.95em;
+            color: #f57c00;
+        }
+        
+        /* 页脚 */
+        footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+        
+        /* 打印样式 */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .export-bar {
+                display: none;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            header {
+                background: #1a1a2e !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            header .stats {
+                gap: 15px;
+            }
+            
+            .export-bar {
+                padding: 15px 20px;
+            }
+            
+            main {
+                padding: 20px;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .error-item {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📖 1月13日英语课堂笔记</h1>
+            <div class="meta">
+                <p>生成时间: 2026/1/13 12:07:11</p>
+                <p>任务ID: test_1768277129014</p>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="number">14</div>
+                    <div class="label">单词</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">12</div>
+                    <div class="label">短语</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">3</div>
+                    <div class="label">句型</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">4</div>
+                    <div class="label">语法点</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">0</div>
+                    <div class="label">不规则动词</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="export-bar">
+            <button class="export-btn pdf" onclick="window.print()">📄 导出PDF（打印）</button>
+            <button class="export-btn print" onclick="window.print()">🖨️ 打印</button>
+            <span style="color: #666; line-height: 36px; margin-left: 10px;">提示：点击打印后选择"另存为PDF"即可导出PDF文件</span>
+        </div>
+        
+        <main>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">✏️</span> 拼写纠错</h2>
+            <div class="card error">
+                <table class="word-table">
+                    <thead>
+                        <tr>
+                            <th>错误拼写</th>
+                            <th>正确拼写</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td style="color: #e74c3c; text-decoration: line-through;">goed</td>
+                            <td style="color: #27ae60; font-weight: bold;">went</td>
+                            <td>go 的过去式是 went（去），不是 goed</td>
+                        </tr>
+                        
+                        <tr>
+                            <td style="color: #e74c3c; text-decoration: line-through;">cutted</td>
+                            <td style="color: #27ae60; font-weight: bold;">cut</td>
+                            <td>cut 的过去式/过去分词仍是 cut（切）</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </section>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">🔍</span> 词汇辨析</h2>
+            
+            <div class="comparison-box">
+                <div class="comparison-title">📌 tell / say / speak / talk 区别</div>
+                <div class="comparison-grid">
+                    <div class="comparison-item"><div class="word">tell</div></div><div class="comparison-item"><div class="word">say</div></div><div class="comparison-item"><div class="word">speak</div></div><div class="comparison-item"><div class="word">talk</div></div>
+                </div>
+                
+                <div class="key-difference">
+                    <strong>💡 核心区别：</strong>tell 强调“告诉某人某事”，通常需要宾语人（tell sb sth）；say 强调“说的内容”，后接说的话（say hello/ say something）；speak 强调“说话方式/语言”（speak English / speak loudly）；talk 强调“双向交流/交谈”，常用 talk to sb / talk about sth。
+                </div>
+            </div>
+            
+        </section>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">🔄</span> 不规则动词分类</h2>
+            
+            
+            <div class="verb-category">
+                <div class="verb-category-title aaa">AAA 型（三形相同）</div>
+                <div class="verb-list">
+                    
+                    <div class="verb-item">
+                        cut - cut - cut
+                        <br><small style="color:#666">切；剪</small>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            
+            <div class="verb-category">
+                <div class="verb-category-title abb">ABB 型（后两形相同）</div>
+                <div class="verb-list">
+                    
+                    <div class="verb-item">
+                        tell - told - told
+                        <br><small style="color:#666">告诉；讲述</small>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            
+            <div class="verb-category">
+                <div class="verb-category-title abc">ABC 型（三形不同）</div>
+                <div class="verb-list">
+                    
+                    <div class="verb-item">
+                        go - went - gone
+                        <br><small style="color:#666">去；走</small>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">📚</span> 单词列表</h2>
+            <table class="word-table">
+                <thead>
+                    <tr>
+                        <th>单词</th>
+                        <th>词性</th>
+                        <th>释义</th>
+                        <th>备注</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr class="irregular">
+                        <td>
+                            <strong>went</strong>
+                            <br><small style="color:#888">原形: go</small>
+                        </td>
+                        <td>v. (past)</td>
+                        <td>去；走（过去式）</td>
+                        <td>
+                            <span class="badge irregular">不规则</span>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="irregular">
+                        <td>
+                            <strong>gone</strong>
+                            <br><small style="color:#888">原形: go</small>
+                        </td>
+                        <td>v. (past participle)</td>
+                        <td>去过；走了（过去分词）</td>
+                        <td>
+                            <span class="badge irregular">不规则</span>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="irregular">
+                        <td>
+                            <strong>told</strong>
+                            <br><small style="color:#888">原形: tell</small>
+                        </td>
+                        <td>v. (past/past participle)</td>
+                        <td>告诉；讲述（过去式/过去分词）</td>
+                        <td>
+                            <span class="badge irregular">不规则</span>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="irregular">
+                        <td>
+                            <strong>cut</strong>
+                            
+                        </td>
+                        <td>v.</td>
+                        <td>切；剪</td>
+                        <td>
+                            <span class="badge irregular">不规则</span>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>mistake</strong>
+                            
+                        </td>
+                        <td>n.</td>
+                        <td>错误</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>irregular</strong>
+                            
+                        </td>
+                        <td>adj.</td>
+                        <td>不规则的</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>verb</strong>
+                            
+                        </td>
+                        <td>n.</td>
+                        <td>动词</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>past tense</strong>
+                            
+                        </td>
+                        <td>n.</td>
+                        <td>过去时</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>past participle</strong>
+                            
+                        </td>
+                        <td>n.</td>
+                        <td>过去分词</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>important</strong>
+                            
+                        </td>
+                        <td>adj.</td>
+                        <td>重要的</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>review</strong>
+                            
+                        </td>
+                        <td>v.</td>
+                        <td>复习；回顾</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>practice</strong>
+                            
+                        </td>
+                        <td>v./n.</td>
+                        <td>练习；实践</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>pattern</strong>
+                            
+                        </td>
+                        <td>n.</td>
+                        <td>句型；模式</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr class="">
+                        <td>
+                            <strong>forward</strong>
+                            
+                        </td>
+                        <td>adv./adj.</td>
+                        <td>向前；前面的（在短语 look forward to 中常见）</td>
+                        <td>
+                            
+                            
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </section>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">💬</span> 短语搭配</h2>
+            
+            <div class="phrase-item">
+                <div class="phrase">go - went - gone</div>
+                <div class="meaning">📗 go 的三态：原形-过去式-过去分词</div>
+                <div class="usage">📝 用法：用于记忆不规则动词变化（ABC：三态都不同）</div>
+                <div class="example">💡 I go to school every day. / I went yesterday. / I have gone to the park.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">tell somebody something</div>
+                <div class="meaning">📗 告诉某人某事</div>
+                <div class="usage">📝 用法：tell 后通常要有“人”作宾语（sb）</div>
+                <div class="example">💡 Please tell me the truth.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">tell him the truth</div>
+                <div class="meaning">📗 告诉他真相</div>
+                <div class="usage">📝 用法：tell + 间接宾语（人）+ 直接宾语（事）</div>
+                <div class="example">💡 You should tell him the truth.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">say hello</div>
+                <div class="meaning">📗 打招呼；说“你好”</div>
+                <div class="usage">📝 用法：say 强调说的内容，后接具体话语</div>
+                <div class="example">💡 She smiled and said hello.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">say something</div>
+                <div class="meaning">📗 说点什么</div>
+                <div class="usage">📝 用法：say + 说的内容</div>
+                <div class="example">💡 Please say something about yourself.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">speak English</div>
+                <div class="meaning">📗 说英语</div>
+                <div class="usage">📝 用法：speak + 语言</div>
+                <div class="example">💡 He can speak English very well.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">speak loudly</div>
+                <div class="meaning">📗 大声说话</div>
+                <div class="usage">📝 用法：speak + 副词，强调说话方式</div>
+                <div class="example">💡 Please speak loudly so everyone can hear you.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">talk to someone</div>
+                <div class="meaning">📗 和某人交谈</div>
+                <div class="usage">📝 用法：talk to + 人，强调交流</div>
+                <div class="example">💡 I need to talk to you.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">talk about something</div>
+                <div class="meaning">📗 谈论某事</div>
+                <div class="usage">📝 用法：talk about + 话题</div>
+                <div class="example">💡 They talked about the plan.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">look forward to doing sth</div>
+                <div class="meaning">📗 期待做某事</div>
+                <div class="usage">📝 用法：to 是介词，后面必须接动名词 doing</div>
+                <div class="example">💡 I look forward to meeting you.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">be good at doing sth</div>
+                <div class="meaning">📗 擅长做某事</div>
+                <div class="usage">📝 用法：at 是介词，后面接动名词 doing</div>
+                <div class="example">💡 She is good at playing the piano.</div>
+            </div>
+            
+            <div class="phrase-item">
+                <div class="phrase">ask sb to do sth</div>
+                <div class="meaning">📗 请求/让某人做某事</div>
+                <div class="usage">📝 用法：ask + 人 + to do（不定式）</div>
+                <div class="example">💡 He asked me to help him.</div>
+            </div>
+            
+        </section>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">📐</span> 重要句型</h2>
+            
+            <div class="card">
+                <div style="font-size: 1.1em; font-weight: bold; color: #667eea; margin-bottom: 10px;">
+                    It is + adj + for sb + to do sth
+                </div>
+                <div style="color: #e74c3c; margin-bottom: 10px;">📗 对某人来说做某事是……的（常用于表达重要性/必要性等）</div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <strong>例句：</strong>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>It is important for us to learn English.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div style="font-size: 1.1em; font-weight: bold; color: #667eea; margin-bottom: 10px;">
+                    see sb do sth
+                </div>
+                <div style="color: #e74c3c; margin-bottom: 10px;">📗 看见某人做了某事（强调全过程/动作完成）</div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <strong>例句：</strong>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>I saw him play basketball.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div style="font-size: 1.1em; font-weight: bold; color: #667eea; margin-bottom: 10px;">
+                    see sb doing sth
+                </div>
+                <div style="color: #e74c3c; margin-bottom: 10px;">📗 看见某人正在做某事（强调动作进行中）</div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <strong>例句：</strong>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>I saw him playing basketball.</li>
+                    </ul>
+                </div>
+            </div>
+            
+        </section>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">📖</span> 语法知识点</h2>
+            
+            <div class="card grammar">
+                <div style="font-size: 1.15em; font-weight: bold; color: #9b59b6; margin-bottom: 10px;">
+                    不规则动词三态分类（AAA/ABB/ABC）
+                </div>
+                
+                <div style="background: #f5f5f5; padding: 10px 15px; border-radius: 6px; font-family: monospace; margin-bottom: 10px;">
+                    📋 结构：AAA: base = past = past participle；ABB: past = past participle；ABC: 三者都不同
+                </div>
+                <div style="margin-bottom: 10px;">用三态变化来归类记忆不规则动词：cut 属于 AAA；tell 属于 ABB；go 属于 ABC。注意过去式与过去分词在句子中的语法位置不同（过去式用于一般过去时；过去分词常用于完成时/被动等）。</div>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 3px solid #9b59b6;">
+                    <strong>例句：</strong>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>cut - cut - cut (AAA)</li><li>tell - told - told (ABB)</li><li>go - went - gone (ABC)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card grammar">
+                <div style="font-size: 1.15em; font-weight: bold; color: #9b59b6; margin-bottom: 10px;">
+                    It is + adj + for sb + to do sth 句型
+                </div>
+                
+                <div style="background: #f5f5f5; padding: 10px 15px; border-radius: 6px; font-family: monospace; margin-bottom: 10px;">
+                    📋 结构：It is + 形容词 + for + 人 + to do
+                </div>
+                <div style="margin-bottom: 10px;">用形式主语 it 承担句首位置，真正主语是不定式 to do。for sb 表示“对某人而言”。常配合 important/necessary/easy/difficult 等形容词。</div>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 3px solid #9b59b6;">
+                    <strong>例句：</strong>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>It is important for us to learn English.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card grammar">
+                <div style="font-size: 1.15em; font-weight: bold; color: #9b59b6; margin-bottom: 10px;">
+                    感官动词 see 的宾补：do vs doing
+                </div>
+                
+                <div style="background: #f5f5f5; padding: 10px 15px; border-radius: 6px; font-family: monospace; margin-bottom: 10px;">
+                    📋 结构：see + 宾语 + do / doing
+                </div>
+                <div style="margin-bottom: 10px;">see sb do sth 强调看到动作全过程或动作完成；see sb doing sth 强调看到动作正在进行。两者意义不同，需根据语境选择。</div>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 3px solid #9b59b6;">
+                    <strong>例句：</strong>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>I saw him play basketball.</li><li>I saw him playing basketball.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card grammar">
+                <div style="font-size: 1.15em; font-weight: bold; color: #9b59b6; margin-bottom: 10px;">
+                    介词 to / at 后接动名词
+                </div>
+                
+                <div style="background: #f5f5f5; padding: 10px 15px; border-radius: 6px; font-family: monospace; margin-bottom: 10px;">
+                    📋 结构：look forward to + doing；be good at + doing
+                </div>
+                <div style="margin-bottom: 10px;">look forward to 中的 to 是介词不是不定式符号；be good at 中 at 是介词。介词后动词要用动名词（doing）。</div>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 3px solid #9b59b6;">
+                    <strong>例句：</strong>
+                    <ul style="margin: 10px 0 0 20px;">
+                        <li>I look forward to meeting you.</li><li>She is good at playing the piano.</li>
+                    </ul>
+                </div>
+            </div>
+            
+        </section>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">❌</span> 学生常见错误</h2>
+            
+            <div class="card error">
+                <div style="margin-bottom: 5px; color: #666; font-size: 0.9em;">
+                    错误类型: irregular_verb_past_tense
+                </div>
+                <div class="error-item">
+                    <div class="error-wrong">❌ goed</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-correct">✅ went</div>
+                </div>
+                
+                <div class="error-explanation">
+                    💡 <strong>解释：</strong>go 是不规则动词，过去式是 went，不是按规则加 -ed 形成的 goed。
+                </div>
+            </div>
+            
+            <div class="card error">
+                <div style="margin-bottom: 5px; color: #666; font-size: 0.9em;">
+                    错误类型: past_tense_formation
+                </div>
+                <div class="error-item">
+                    <div class="error-wrong">❌ He cutted the paper.</div>
+                    <div class="error-arrow">→</div>
+                    <div class="error-correct">✅ He cut the paper.</div>
+                </div>
+                
+                <div class="error-explanation">
+                    💡 <strong>解释：</strong>cut 属于 AAA 型不规则动词，过去式仍是 cut，不能加 -ed。
+                </div>
+            </div>
+            
+        </section>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">⭐</span> 老师重点强调</h2>
+            
+            <div class="card emphasis">
+                <div style="font-weight: bold; color: #f39c12; margin-bottom: 10px;">
+                    📌 go 的不规则变化（ABC）
+                </div>
+                <div style="margin-bottom: 10px;">go - went - gone；过去式是 went，不是 goed。</div>
+                
+                <div style="background: white; padding: 10px 15px; border-radius: 6px; font-size: 0.95em; color: #666;">
+                    💡 重要性：高频基础动词，学生极易按规则误加 -ed，必须牢牢记住三态。
+                </div>
+            </div>
+            
+            <div class="card emphasis">
+                <div style="font-weight: bold; color: #f39c12; margin-bottom: 10px;">
+                    📌 tell 的不规则变化（ABB）
+                </div>
+                <div style="margin-bottom: 10px;">tell - told - told；过去式和过去分词相同。</div>
+                
+                <div style="background: white; padding: 10px 15px; border-radius: 6px; font-size: 0.95em; color: #666;">
+                    💡 重要性：常用动词，理解 ABB 分类有助于快速记忆大量不规则动词。
+                </div>
+            </div>
+            
+            <div class="card emphasis">
+                <div style="font-weight: bold; color: #f39c12; margin-bottom: 10px;">
+                    📌 cut 的不规则变化（AAA）
+                </div>
+                <div style="margin-bottom: 10px;">cut - cut - cut；三个形式完全一样。</div>
+                
+                <div style="background: white; padding: 10px 15px; border-radius: 6px; font-size: 0.95em; color: #666;">
+                    💡 重要性：学生常犯 cutted 错误；AAA 类一旦掌握，能减少大量拼写/时态错误。
+                </div>
+            </div>
+            
+            <div class="card emphasis">
+                <div style="font-weight: bold; color: #f39c12; margin-bottom: 10px;">
+                    📌 tell / say / speak / talk 辨析
+                </div>
+                <div style="margin-bottom: 10px;">tell 要有人作宾语；say 重内容；speak 重语言/方式；talk 重交流。</div>
+                
+                <div style="background: white; padding: 10px 15px; border-radius: 6px; font-size: 0.95em; color: #666;">
+                    💡 重要性：口语与写作高频易混点，掌握搭配能显著提升表达准确性。
+                </div>
+            </div>
+            
+            <div class="card emphasis">
+                <div style="font-weight: bold; color: #f39c12; margin-bottom: 10px;">
+                    📌 see sb do vs doing 区别
+                </div>
+                <div style="margin-bottom: 10px;">do 强调全过程/完成；doing 强调进行中。</div>
+                
+                <div style="background: white; padding: 10px 15px; border-radius: 6px; font-size: 0.95em; color: #666;">
+                    💡 重要性：常考语法点，直接影响句意，需结合语境准确选择。
+                </div>
+            </div>
+            
+            <div class="card emphasis">
+                <div style="font-weight: bold; color: #f39c12; margin-bottom: 10px;">
+                    📌 It is + adj + for sb + to do 句型
+                </div>
+                <div style="margin-bottom: 10px;">It is important for us to learn English.</div>
+                
+                <div style="background: white; padding: 10px 15px; border-radius: 6px; font-size: 0.95em; color: #666;">
+                    💡 重要性：经典写作句型，用于表达观点与重要性，适合作文与口语陈述。
+                </div>
+            </div>
+            
+        </section>
+            
+        <section class="section">
+            <h2 class="section-title"><span class="icon">🇨🇳</span> 中文问答</h2>
+            <div class="card">
+                <table class="word-table">
+                    <thead>
+                        <tr>
+                            <th>中文问题</th>
+                            <th>英文答案</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>去用英语怎么说？</td>
+                            <td style="font-weight: bold; color: #667eea;">go</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        </main>
+        
+        <footer>
+            <p>🤖 由 Sorryios AI 智能生成 | 英语课堂笔记自动化系统 v3.0</p>
+            <p>过滤统计：原始 20 词 → 最终 14 词（移除 6 个基础/重复词）</p>
+        </footer>
+    </div>
+</body>
+</html>

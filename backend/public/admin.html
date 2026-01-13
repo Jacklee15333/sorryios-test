@@ -75,6 +75,20 @@
         .nav-menu li a .icon {
             font-size: 18px;
         }
+
+        .nav-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 10px 20px;
+        }
+
+        .nav-label {
+            padding: 10px 20px 5px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
         
         /* 主内容区 */
         .main-content {
@@ -199,6 +213,10 @@
         .card-body {
             padding: 0;
         }
+
+        .card-body-padded {
+            padding: 20px;
+        }
         
         /* 表格 */
         table {
@@ -306,7 +324,8 @@
         }
         
         .form-group input,
-        .form-group select {
+        .form-group select,
+        .form-group textarea {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid #ddd;
@@ -315,7 +334,8 @@
         }
         
         .form-group input:focus,
-        .form-group select:focus {
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -408,6 +428,226 @@
             font-size: 14px;
             color: #333;
         }
+
+        /* ============================================ */
+        /* 分块管理专用样式 */
+        /* ============================================ */
+        .chunk-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .chunk-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chunk-full-width {
+            grid-column: 1 / -1;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .slider-group input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            appearance: none;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            min-width: 60px;
+            text-align: right;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .chunk-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .chunk-stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .chunk-stat-item .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .chunk-stat-item .label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .chunk-text-input {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            resize: vertical;
+        }
+
+        .chunk-text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chunk-result-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chunk-result-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            background: white;
+            margin-bottom: 8px;
+            border-radius: 6px;
+        }
+
+        .chunk-result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .chunk-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .chunk-index {
+            background: #667eea;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .chunk-size {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .chunk-preview {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .chunk-file-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .chunk-file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .chunk-file-item:hover {
+            background: #f8f9fa;
+        }
+
+        .chunk-file-name {
+            flex: 1;
+            font-family: monospace;
+            font-size: 12px;
+            color: #667eea;
+            cursor: pointer;
+        }
+
+        .chunk-file-name:hover {
+            text-decoration: underline;
+        }
+
+        .chunk-file-size {
+            color: #888;
+            font-size: 12px;
+            margin: 0 10px;
+        }
+
+        .chunk-loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .chunk-loading.active {
+            display: block;
+        }
+
+        .chunk-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: chunk-spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes chunk-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
+            animation: toast-slide 0.3s ease;
+        }
+
+        .toast.success { background: #2e7d32; }
+        .toast.error { background: #c62828; }
+
+        @keyframes toast-slide {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
         
         /* 响应式 */
         @media (max-width: 768px) {
@@ -415,7 +655,8 @@
                 width: 60px;
             }
             .sidebar .logo h1 span,
-            .sidebar .nav-menu li a span {
+            .sidebar .nav-menu li a span,
+            .sidebar .nav-label {
                 display: none;
             }
             .main-content {
@@ -432,7 +673,7 @@
     <div class="sidebar">
         <div class="logo">
             <h1>🤖 Sorryios AI</h1>
-            <span>管理后台</span>
+            <span>管理后台 v2.1</span>
         </div>
         <ul class="nav-menu">
             <li><a href="#" class="active" onclick="showSection('dashboard')"><span class="icon">📊</span><span>仪表盘</span></a></li>
@@ -440,6 +681,14 @@
             <li><a href="#" onclick="showSection('tasks')"><span class="icon">📋</span><span>任务管理</span></a></li>
             <li><a href="#" onclick="showSection('files')"><span class="icon">📁</span><span>文件管理</span></a></li>
             <li><a href="#" onclick="showSection('logs')"><span class="icon">📝</span><span>系统日志</span></a></li>
+            
+            <div class="nav-divider"></div>
+            <div class="nav-label">工具</div>
+            
+            <li><a href="#" onclick="showSection('chunk')"><span class="icon">✂️</span><span>分块管理</span></a></li>
+            
+            <div class="nav-divider"></div>
+            
             <li><a href="/" target="_blank"><span class="icon">🔗</span><span>API 文档</span></a></li>
             <li><a href="http://localhost:5173" target="_blank"><span class="icon">🌐</span><span>前端页面</span></a></li>
         </ul>
@@ -642,6 +891,119 @@
                 </div>
             </div>
         </div>
+
+        <!-- ============================================ -->
+        <!-- 分块管理 -->
+        <!-- ============================================ -->
+        <div id="section-chunk" class="section">
+            <div class="header">
+                <h2>✂️ 分块管理</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="loadChunkFiles()">🔄 刷新文件</button>
+                </div>
+            </div>
+
+            <div class="chunk-grid">
+                <!-- 配置卡片 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>⚙️ 分块配置</h3>
+                    </div>
+                    <div class="card-body card-body-padded">
+                        <div class="form-group">
+                            <label>分块大小（字符数）</label>
+                            <div class="slider-group">
+                                <input type="range" id="chunkSize" min="2000" max="12000" step="500" value="6000">
+                                <span class="slider-value" id="chunkSizeValue">6000</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>最小分块大小</label>
+                            <input type="number" id="minChunkSize" value="2000" min="500" max="5000">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="saveChunks" checked>
+                                <span>保存分块文件</span>
+                            </label>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-primary" onclick="saveChunkConfig()">💾 保存配置</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📊 分块统计</h3>
+                    </div>
+                    <div class="card-body card-body-padded">
+                        <div class="chunk-stats-grid">
+                            <div class="chunk-stat-item">
+                                <div class="value" id="statTotalLength">0</div>
+                                <div class="label">总字符数</div>
+                            </div>
+                            <div class="chunk-stat-item">
+                                <div class="value" id="statChunks">0</div>
+                                <div class="label">分块数量</div>
+                            </div>
+                            <div class="chunk-stat-item">
+                                <div class="value" id="statAvgSize">0</div>
+                                <div class="label">平均块大小</div>
+                            </div>
+                        </div>
+                        <div id="splitPointsInfo" style="color: #666; font-size: 12px;"></div>
+                    </div>
+                </div>
+
+                <!-- 文本输入 -->
+                <div class="card chunk-full-width">
+                    <div class="card-header">
+                        <h3>📝 输入文本</h3>
+                    </div>
+                    <div class="card-body card-body-padded">
+                        <textarea class="chunk-text-input" id="chunkInputText" placeholder="粘贴需要分块的文本..."></textarea>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="previewChunks()">👁️ 预览分块</button>
+                            <button class="btn btn-primary" onclick="executeChunks()">✂️ 执行分块</button>
+                            <button class="btn btn-secondary" onclick="clearChunkInput()">🗑️ 清空</button>
+                        </div>
+                        <div class="chunk-loading" id="chunkLoading">
+                            <div class="chunk-spinner"></div>
+                            <div>处理中...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分块结果 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📦 分块结果</h3>
+                    </div>
+                    <div class="card-body card-body-padded">
+                        <div class="chunk-result-box" id="chunkResultBox">
+                            <div class="empty-state" style="padding: 30px;">
+                                点击"预览分块"或"执行分块"查看结果
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 已保存文件 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📁 已保存的分块文件</h3>
+                        <button class="btn btn-danger" onclick="clearAllChunkFiles()" style="padding: 6px 12px; font-size: 12px;">🗑️ 清空全部</button>
+                    </div>
+                    <div class="card-body card-body-padded">
+                        <div class="chunk-file-list" id="chunkFileList">
+                            <div class="empty-state" style="padding: 20px;">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 添加用户弹窗 -->
@@ -728,8 +1090,11 @@
 
     <script>
         const API_BASE = '/api/admin';
+        const CHUNK_API = '/api/chunk';
         
+        // ============================================
         // 导航切换
+        // ============================================
         function showSection(name) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
@@ -743,63 +1108,64 @@
                 case 'tasks': loadTasks(); break;
                 case 'files': loadFiles(); break;
                 case 'logs': loadLogs(); break;
+                case 'chunk': loadChunkConfig(); loadChunkFiles(); break;
             }
         }
         
+        // ============================================
         // 仪表盘数据
+        // ============================================
         async function refreshDashboard() {
             try {
                 const res = await fetch(`${API_BASE}/dashboard`);
                 const json = await res.json();
                 
                 if (json.success) {
-                    const data = json.data;
-                    
-                    // 更新统计数据
-                    document.getElementById('stat-users').textContent = data.users.total;
-                    document.getElementById('stat-tasks-completed').textContent = data.tasks.completed;
-                    document.getElementById('stat-tasks-total').textContent = data.tasks.total;
-                    document.getElementById('stat-files').textContent = data.files.total;
-                    document.getElementById('stat-tasks-today').textContent = data.tasks.today || 0;
-                    
-                    // 更新最近任务
-                    const tbody = document.getElementById('recent-tasks');
-                    if (data.recentTasks.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" class="loading">暂无任务</td></tr>';
-                    } else {
-                        tbody.innerHTML = data.recentTasks.map(task => `
-                            <tr>
-                                <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;">${task.id.slice(0,8)}...</code></td>
-                                <td>${task.title || '未命名'}</td>
-                                <td>${task.username || '-'}</td>
-                                <td>${getStatusBadge(task.status)}</td>
-                                <td>${formatDate(task.created_at)}</td>
-                            </tr>
-                        `).join('');
-                    }
-                    
-                    // 更新最近日志
-                    const logsDiv = document.getElementById('recent-logs');
-                    if (data.recentLogs && data.recentLogs.length > 0) {
-                        logsDiv.innerHTML = data.recentLogs.slice(0, 5).map(log => `
-                            <div class="timeline-item">
-                                <div class="timeline-dot"></div>
-                                <div class="timeline-content">
-                                    <div class="time">${formatDate(log.created_at)}</div>
-                                    <div class="message">${log.action || ''} - ${log.message || '无消息'}</div>
-                                </div>
+                    const d = json.data;
+                    document.getElementById('stat-users').textContent = d.users?.total || 0;
+                    document.getElementById('stat-tasks-completed').textContent = d.tasks?.completed || 0;
+                    document.getElementById('stat-tasks-total').textContent = d.tasks?.total || 0;
+                    document.getElementById('stat-files').textContent = d.files?.total || 0;
+                    document.getElementById('stat-tasks-today').textContent = d.tasks?.today || 0;
+                }
+                
+                // 加载最近任务
+                const tasksRes = await fetch(`${API_BASE}/tasks?limit=5`);
+                const tasksJson = await tasksRes.json();
+                if (tasksJson.success && tasksJson.data.length > 0) {
+                    document.getElementById('recent-tasks').innerHTML = tasksJson.data.slice(0, 5).map(task => `
+                        <tr>
+                            <td style="font-family:monospace;font-size:12px;">${task.task_id?.slice(0,8) || '-'}...</td>
+                            <td>${task.title || '-'}</td>
+                            <td>${task.username || '-'}</td>
+                            <td>${getStatusBadge(task.status)}</td>
+                            <td>${formatDate(task.created_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+                
+                // 加载最近日志
+                const logsRes = await fetch(`${API_BASE}/logs?limit=5`);
+                const logsJson = await logsRes.json();
+                if (logsJson.success && logsJson.data.length > 0) {
+                    document.getElementById('recent-logs').innerHTML = logsJson.data.slice(0, 5).map(log => `
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="time">${formatDate(log.created_at)}</div>
+                                <div class="message">${log.action || ''} - ${log.message || ''}</div>
                             </div>
-                        `).join('');
-                    } else {
-                        logsDiv.innerHTML = '<div class="empty-state"><div class="icon">📝</div><div>暂无日志</div></div>';
-                    }
+                        </div>
+                    `).join('');
                 }
             } catch (err) {
                 console.error('Dashboard error:', err);
             }
         }
         
+        // ============================================
         // 加载用户列表
+        // ============================================
         async function loadUsers() {
             try {
                 const res = await fetch(`${API_BASE}/users`);
@@ -810,15 +1176,15 @@
                     tbody.innerHTML = json.data.map(user => `
                         <tr>
                             <td>${user.id}</td>
-                            <td><strong>${user.username}</strong></td>
+                            <td>${user.username}</td>
                             <td>${user.email || '-'}</td>
                             <td>${getRoleBadge(user.role)}</td>
                             <td>${getStatusBadge(user.status)}</td>
-                            <td>${user.total_tasks || 0}</td>
+                            <td>${user.task_count || 0}</td>
                             <td>${formatDate(user.created_at)}</td>
                             <td>
                                 <button class="action-btn edit" onclick="editUser(${user.id})">编辑</button>
-                                ${user.role !== 'admin' ? `<button class="action-btn delete" onclick="deleteUser(${user.id})">删除</button>` : ''}
+                                <button class="action-btn delete" onclick="deleteUser(${user.id})">删除</button>
                             </td>
                         </tr>
                     `).join('');
@@ -830,7 +1196,9 @@
             }
         }
         
+        // ============================================
         // 加载任务列表
+        // ============================================
         async function loadTasks() {
             try {
                 const res = await fetch(`${API_BASE}/tasks`);
@@ -840,20 +1208,16 @@
                 if (json.success && json.data.length > 0) {
                     tbody.innerHTML = json.data.map(task => `
                         <tr>
-                            <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;">${task.id.slice(0,8)}...</code></td>
-                            <td>${task.title || '未命名'}</td>
+                            <td style="font-family:monospace;font-size:12px;">${task.task_id?.slice(0,8) || '-'}...</td>
+                            <td>${task.title || '-'}</td>
                             <td>${task.username || '-'}</td>
                             <td>${getStatusBadge(task.status)}</td>
-                            <td>
-                                <div style="background:#eee;border-radius:10px;height:8px;width:80px;overflow:hidden;">
-                                    <div style="background:#667eea;height:100%;width:${task.progress || 0}%;"></div>
-                                </div>
-                                <span style="font-size:12px;color:#666;">${task.progress || 0}%</span>
-                            </td>
-                            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${task.file_name || ''}">${task.file_name || '-'}</td>
+                            <td>${task.progress || 0}%</td>
+                            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${task.original_file || ''}">${task.original_file || '-'}</td>
                             <td>${formatDate(task.created_at)}</td>
                             <td>
-                                <button class="action-btn delete" onclick="deleteTask('${task.id}')">删除</button>
+                                <button class="action-btn view" onclick="viewTask('${task.task_id}')">查看</button>
+                                <button class="action-btn delete" onclick="deleteTask(${task.id})">删除</button>
                             </td>
                         </tr>
                     `).join('');
@@ -865,7 +1229,9 @@
             }
         }
         
+        // ============================================
         // 加载文件列表
+        // ============================================
         async function loadFiles() {
             try {
                 const res = await fetch(`${API_BASE}/files`);
@@ -891,7 +1257,9 @@
             }
         }
         
+        // ============================================
         // 加载日志
+        // ============================================
         async function loadLogs() {
             try {
                 const res = await fetch(`${API_BASE}/logs`);
@@ -915,8 +1283,268 @@
                 console.error('Load logs error:', err);
             }
         }
+
+        // ============================================
+        // 分块管理功能
+        // ============================================
         
+        // 初始化滑块
+        document.addEventListener('DOMContentLoaded', () => {
+            const slider = document.getElementById('chunkSize');
+            const valueDisplay = document.getElementById('chunkSizeValue');
+            slider.addEventListener('input', () => {
+                valueDisplay.textContent = slider.value;
+            });
+        });
+
+        // 加载分块配置
+        async function loadChunkConfig() {
+            try {
+                const res = await fetch(`${CHUNK_API}/config`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    const config = data.data.chunk_settings;
+                    document.getElementById('chunkSize').value = config.default_chunk_size;
+                    document.getElementById('chunkSizeValue').textContent = config.default_chunk_size;
+                    document.getElementById('minChunkSize').value = config.min_chunk_size;
+                    document.getElementById('saveChunks').checked = data.data.output_settings?.save_chunks !== false;
+                }
+            } catch (err) {
+                console.error('加载配置失败:', err);
+            }
+        }
+
+        // 保存分块配置
+        async function saveChunkConfig() {
+            try {
+                const config = {
+                    chunk_size: parseInt(document.getElementById('chunkSize').value),
+                    min_chunk_size: parseInt(document.getElementById('minChunkSize').value),
+                    save_chunks: document.getElementById('saveChunks').checked
+                };
+
+                const res = await fetch(`${CHUNK_API}/config`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('配置已保存');
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (err) {
+                showToast('保存失败', 'error');
+            }
+        }
+
+        // 预览分块
+        async function previewChunks() {
+            const text = document.getElementById('chunkInputText').value;
+            if (!text.trim()) {
+                showToast('请输入文本', 'error');
+                return;
+            }
+
+            setChunkLoading(true);
+
+            try {
+                const res = await fetch(`${CHUNK_API}/preview`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        chunk_size: parseInt(document.getElementById('chunkSize').value)
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    updateChunkStats(data.data);
+                    displayChunkPreview(data.data);
+                    showToast('预览完成');
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (err) {
+                showToast('预览失败', 'error');
+            } finally {
+                setChunkLoading(false);
+            }
+        }
+
+        // 执行分块
+        async function executeChunks() {
+            const text = document.getElementById('chunkInputText').value;
+            if (!text.trim()) {
+                showToast('请输入文本', 'error');
+                return;
+            }
+
+            setChunkLoading(true);
+
+            try {
+                const res = await fetch(`${CHUNK_API}/split`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        filename: `text_${Date.now()}`,
+                        chunk_size: parseInt(document.getElementById('chunkSize').value),
+                        save_chunks: document.getElementById('saveChunks').checked
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    displayChunkResults(data.data.chunks);
+                    updateChunkStats({
+                        totalLength: text.length,
+                        estimatedChunks: data.data.totalChunks,
+                        avgChunkSize: data.data.stats.avgChunkSize
+                    });
+                    loadChunkFiles();
+                    showToast(`分块完成，共 ${data.data.totalChunks} 块`);
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (err) {
+                showToast('分块失败', 'error');
+            } finally {
+                setChunkLoading(false);
+            }
+        }
+
+        function setChunkLoading(show) {
+            document.getElementById('chunkLoading').classList.toggle('active', show);
+        }
+
+        function updateChunkStats(data) {
+            document.getElementById('statTotalLength').textContent = (data.totalLength || 0).toLocaleString();
+            document.getElementById('statChunks').textContent = data.estimatedChunks || 0;
+            document.getElementById('statAvgSize').textContent = (data.avgChunkSize || 0).toLocaleString();
+            
+            if (data.splitPoints) {
+                const patterns = data.splitPoints.map(p => p.pattern).join(' → ');
+                document.getElementById('splitPointsInfo').textContent = `切分模式: ${patterns}`;
+            }
+        }
+
+        function displayChunkPreview(data) {
+            const box = document.getElementById('chunkResultBox');
+            box.innerHTML = data.splitPoints.map((point, index) => `
+                <div class="chunk-result-item">
+                    <div class="chunk-result-header">
+                        <span class="chunk-index">块 ${index + 1}</span>
+                        <span class="chunk-size">${point.chunkSize || '?'} 字符 | ${point.pattern}</span>
+                    </div>
+                    <div class="chunk-preview">${escapeHtml(point.preview || '')}</div>
+                </div>
+            `).join('');
+        }
+
+        function displayChunkResults(chunks) {
+            const box = document.getElementById('chunkResultBox');
+            box.innerHTML = chunks.map(chunk => `
+                <div class="chunk-result-item">
+                    <div class="chunk-result-header">
+                        <span class="chunk-index">块 ${chunk.index + 1}</span>
+                        <span class="chunk-size">${chunk.charCount} 字符</span>
+                    </div>
+                    <div class="chunk-preview">${escapeHtml(chunk.preview)}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearChunkInput() {
+            document.getElementById('chunkInputText').value = '';
+            document.getElementById('chunkResultBox').innerHTML = '<div class="empty-state" style="padding: 30px;">点击"预览分块"或"执行分块"查看结果</div>';
+            document.getElementById('statTotalLength').textContent = '0';
+            document.getElementById('statChunks').textContent = '0';
+            document.getElementById('statAvgSize').textContent = '0';
+            document.getElementById('splitPointsInfo').textContent = '';
+        }
+
+        async function loadChunkFiles() {
+            try {
+                const res = await fetch(`${CHUNK_API}/files`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    displayChunkFiles(data.data.files || []);
+                }
+            } catch (err) {
+                console.error('加载文件列表失败:', err);
+            }
+        }
+
+        function displayChunkFiles(files) {
+            const list = document.getElementById('chunkFileList');
+            if (files.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="padding: 20px;">暂无文件</div>';
+                return;
+            }
+
+            list.innerHTML = files.slice(0, 30).map(file => `
+                <div class="chunk-file-item">
+                    <span class="chunk-file-name" onclick="viewChunkFile('${file.filename}')">${file.filename}</span>
+                    <span class="chunk-file-size">${formatSize(file.size)}</span>
+                    <button class="action-btn delete" onclick="deleteChunkFile('${file.filename}')">删除</button>
+                </div>
+            `).join('');
+        }
+
+        async function viewChunkFile(filename) {
+            try {
+                const res = await fetch(`${CHUNK_API}/files/${filename}`);
+                const data = await res.json();
+                if (data.success && !data.data.isJson) {
+                    document.getElementById('chunkInputText').value = data.data.content;
+                    showToast('已加载到输入框');
+                } else if (data.success && data.data.isJson) {
+                    alert(JSON.stringify(data.data.content, null, 2));
+                }
+            } catch (err) {
+                showToast('加载失败', 'error');
+            }
+        }
+
+        async function deleteChunkFile(filename) {
+            if (!confirm(`确定删除 ${filename}？`)) return;
+            
+            try {
+                const res = await fetch(`${CHUNK_API}/files/${filename}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('已删除');
+                    loadChunkFiles();
+                }
+            } catch (err) {
+                showToast('删除失败', 'error');
+            }
+        }
+
+        async function clearAllChunkFiles() {
+            if (!confirm('确定清空所有分块文件？')) return;
+            
+            try {
+                const res = await fetch(`${CHUNK_API}/files`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message);
+                    loadChunkFiles();
+                }
+            } catch (err) {
+                showToast('清空失败', 'error');
+            }
+        }
+        
+        // ============================================
         // 弹窗相关
+        // ============================================
         function showAddUserModal() {
             document.getElementById('addUserForm').reset();
             document.getElementById('addUserModal').classList.add('active');
@@ -1048,8 +1676,15 @@
                 alert('删除任务失败');
             }
         }
+
+        function viewTask(taskId) {
+            showToast('查看任务: ' + taskId);
+            // TODO: 实现任务详情查看
+        }
         
+        // ============================================
         // 辅助函数
+        // ============================================
         function getStatusBadge(status) {
             const badges = {
                 'active': '<span class="badge badge-success">正常</span>',
@@ -1108,6 +1743,21 @@
             if (bytes < 1024) return bytes + ' B';
             if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
             return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Toast 提示
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
         
         // 页面加载完成后刷新仪表盘
