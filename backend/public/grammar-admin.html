@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语法库管理 - Sorryios AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #666;
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .stat-item strong {
+            font-size: 20px;
+            margin-right: 4px;
+        }
+        
+        .toolbar {
+            background: white;
+            border-radius: 16px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .filter-select {
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        
+        .sidebar h3 {
+            color: #333;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .category-list {
+            list-style: none;
+        }
+        
+        .category-item {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .category-item:hover {
+            background: #f3f4f6;
+        }
+        
+        .category-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .category-count {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .grammar-list {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .grammar-item {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .grammar-item:hover {
+            background: #f9fafb;
+        }
+        
+        .grammar-item:last-child {
+            border-bottom: none;
+        }
+        
+        .grammar-item.disabled {
+            opacity: 0.5;
+        }
+        
+        .grammar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .grammar-title .badge {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+        
+        .grammar-definition {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .grammar-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .keyword-tag {
+            background: #f3f4f6;
+            color: #4b5563;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .grammar-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .grammar-actions .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px 0;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            color: #333;
+            font-size: 20px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+        }
+        
+        .modal-body {
+            padding: 24px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-group .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        
+        .array-input {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .array-item {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .array-item input {
+            flex: 1;
+        }
+        
+        .array-item .btn {
+            padding: 8px 12px;
+        }
+        
+        .mistake-item {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .mistake-item input {
+            margin-bottom: 8px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #666;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            z-index: 2000;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            background: #10b981;
+        }
+        
+        .toast.error {
+            background: #ef4444;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #666;
+            text-decoration: none;
+            margin-bottom: 16px;
+            transition: color 0.3s;
+        }
+        
+        .back-link:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/admin" class="back-link">← 返回管理后台</a>
+        
+        <div class="header">
+            <h1>📚 语法库管理</h1>
+            <p>管理初中英语语法知识库，支持添加、编辑、删除语法点</p>
+            <div class="stats-bar" id="statsBar">
+                <div class="stat-item"><strong id="statTotal">0</strong> 总数</div>
+                <div class="stat-item"><strong id="statEnabled">0</strong> 已启用</div>
+                <div class="stat-item"><strong id="statDisabled">0</strong> 已禁用</div>
+            </div>
+        </div>
+        
+        <div class="toolbar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索语法点...">
+                <button class="btn btn-primary" onclick="searchGrammar()">搜索</button>
+            </div>
+            <select class="filter-select" id="categoryFilter" onchange="filterByCategory()">
+                <option value="">全部分类</option>
+            </select>
+            <button class="btn btn-success" onclick="openAddModal()">+ 添加语法</button>
+            <button class="btn btn-secondary" onclick="exportData()">导出 JSON</button>
+            <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">导入 JSON</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>分类</h3>
+                <ul class="category-list" id="categoryList">
+                    <li class="category-item active" data-category="" onclick="selectCategory(this)">
+                        <span>全部</span>
+                        <span class="category-count" id="countAll">0</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="grammar-list" id="grammarList">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加/编辑模态框 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">添加语法点</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="grammarId">
+                
+                <div class="form-group">
+                    <label>标题 *</label>
+                    <input type="text" id="grammarTitle" placeholder="如：一般现在时">
+                </div>
+                
+                <div class="form-group">
+                    <label>分类</label>
+                    <select id="grammarCategory">
+                        <option value="时态">时态</option>
+                        <option value="语态">语态</option>
+                        <option value="非谓语动词">非谓语动词</option>
+                        <option value="从句">从句</option>
+                        <option value="句式">句式</option>
+                        <option value="比较等级">比较等级</option>
+                        <option value="词法">词法</option>
+                        <option value="词汇辨析">词汇辨析</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>关键词 * (用于自动检测)</label>
+                    <div class="array-input" id="keywordsInput">
+                        <div class="array-item">
+                            <input type="text" placeholder="关键词">
+                            <button class="btn btn-danger" onclick="removeArrayItem(this)">删除</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="addArrayItem('keywordsInput')" style="margin-top:8px">+ 添加关键词</button>
+                    <p class="hint">输入能够识别该语法点的关键词，如"一般现在时"、"do/does"</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>定义 *</label>
+                    <textarea id="grammarDefinition" placeholder="详细解释这个语法点是什么"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>结构</label>
+                    <input type="text" id="grammarStructure" placeholder="如：主语 + 动词原形">
+                </div>
+                
+                <div class="form-group">
+                    <label>用法</label>
+                    <div class="array-input" id="usageInput">
+                        <div class="array-item">
+                            <input type="text" placeholder="用法说明">
+                            <button class="btn btn-danger" onclick="removeArrayItem(this)">删除</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="addArrayItem('usageInput')" style="margin-top:8px">+ 添加用法</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>易错点</label>
+                    <div id="mistakesInput">
+                        <div class="mistake-item">
+                            <input type="text" class="mistake-wrong" placeholder="错误写法">
+                            <input type="text" class="mistake-correct" placeholder="正确写法">
+                            <input type="text" class="mistake-explanation" placeholder="解释">
+                            <button class="btn btn-danger" onclick="removeMistakeItem(this)" style="margin-top:8px">删除</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="addMistakeItem()" style="margin-top:8px">+ 添加易错点</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>例句</label>
+                    <div class="array-input" id="examplesInput">
+                        <div class="array-item">
+                            <input type="text" placeholder="例句">
+                            <button class="btn btn-danger" onclick="removeArrayItem(this)">删除</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="addArrayItem('examplesInput')" style="margin-top:8px">+ 添加例句</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>难度</label>
+                    <select id="grammarDifficulty">
+                        <option value="1">简单</option>
+                        <option value="2" selected>中等</option>
+                        <option value="3">困难</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveGrammar()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 查看详情模态框 -->
+    <div class="modal" id="viewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="viewTitle">语法详情</h2>
+                <button class="modal-close" onclick="closeViewModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="viewContent">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeViewModal()">关闭</button>
+                <button class="btn btn-primary" id="viewEditBtn">编辑</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        const API_BASE = '/api/grammar';
+        let allGrammar = [];
+        let currentCategory = '';
+        let currentViewId = null;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadCategories();
+            loadGrammar();
+            
+            // 搜索框回车事件
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchGrammar();
+            });
+        });
+        
+        // 加载统计
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('statTotal').textContent = data.data.total;
+                    document.getElementById('statEnabled').textContent = data.data.enabled;
+                    document.getElementById('statDisabled').textContent = data.data.disabled;
+                }
+            } catch (e) {
+                console.error('加载统计失败:', e);
+            }
+        }
+        
+        // 加载分类
+        async function loadCategories() {
+            try {
+                const res = await fetch(`${API_BASE}/categories`);
+                const data = await res.json();
+                if (data.success) {
+                    const list = document.getElementById('categoryList');
+                    // 保留"全部"选项
+                    list.innerHTML = `
+                        <li class="category-item active" data-category="" onclick="selectCategory(this)">
+                            <span>全部</span>
+                            <span class="category-count" id="countAll">0</span>
+                        </li>
+                    `;
+                    
+                    data.data.forEach(cat => {
+                        list.innerHTML += `
+                            <li class="category-item" data-category="${cat}" onclick="selectCategory(this)">
+                                <span>${cat}</span>
+                                <span class="category-count">0</span>
+                            </li>
+                        `;
+                    });
+                    
+                    // 更新筛选下拉框
+                    const select = document.getElementById('categoryFilter');
+                    select.innerHTML = '<option value="">全部分类</option>';
+                    data.data.forEach(cat => {
+                        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    });
+                }
+            } catch (e) {
+                console.error('加载分类失败:', e);
+            }
+        }
+        
+        // 加载语法列表
+        async function loadGrammar() {
+            try {
+                const res = await fetch(`${API_BASE}?all=true`);
+                const data = await res.json();
+                if (data.success) {
+                    allGrammar = data.data;
+                    document.getElementById('countAll').textContent = allGrammar.length;
+                    updateCategoryCounts();
+                    renderGrammarList(allGrammar);
+                }
+            } catch (e) {
+                console.error('加载语法失败:', e);
+                document.getElementById('grammarList').innerHTML = `
+                    <div class="empty-state">
+                        <h3>加载失败</h3>
+                        <p>请检查后端服务是否正常运行</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 更新分类计数
+        function updateCategoryCounts() {
+            const counts = {};
+            allGrammar.forEach(g => {
+                counts[g.category] = (counts[g.category] || 0) + 1;
+            });
+            
+            document.querySelectorAll('.category-item').forEach(item => {
+                const cat = item.dataset.category;
+                if (cat) {
+                    const countEl = item.querySelector('.category-count');
+                    countEl.textContent = counts[cat] || 0;
+                }
+            });
+        }
+        
+        // 渲染语法列表
+        function renderGrammarList(grammar) {
+            const container = document.getElementById('grammarList');
+            
+            if (grammar.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>暂无语法点</h3>
+                        <p>点击"添加语法"按钮创建新的语法点</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = grammar.map(g => `
+                <div class="grammar-item ${g.enabled ? '' : 'disabled'}" onclick="viewGrammar(${g.id})">
+                    <div class="grammar-title">
+                        ${g.title}
+                        <span class="badge">${g.category}</span>
+                        ${!g.enabled ? '<span class="badge" style="background:#fee2e2;color:#dc2626">已禁用</span>' : ''}
+                    </div>
+                    <div class="grammar-definition">${g.definition}</div>
+                    <div class="grammar-keywords">
+                        ${g.keywords.slice(0, 5).map(k => `<span class="keyword-tag">${k}</span>`).join('')}
+                        ${g.keywords.length > 5 ? `<span class="keyword-tag">+${g.keywords.length - 5}</span>` : ''}
+                    </div>
+                    <div class="grammar-actions" onclick="event.stopPropagation()">
+                        <button class="btn btn-primary" onclick="editGrammar(${g.id})">编辑</button>
+                        <button class="btn ${g.enabled ? 'btn-warning' : 'btn-success'}" onclick="toggleGrammar(${g.id})">
+                            ${g.enabled ? '禁用' : '启用'}
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteGrammar(${g.id}, '${g.title}')">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 选择分类
+        function selectCategory(el) {
+            document.querySelectorAll('.category-item').forEach(item => item.classList.remove('active'));
+            el.classList.add('active');
+            currentCategory = el.dataset.category;
+            filterByCategory();
+        }
+        
+        // 按分类筛选
+        function filterByCategory() {
+            const category = currentCategory || document.getElementById('categoryFilter').value;
+            const filtered = category 
+                ? allGrammar.filter(g => g.category === category)
+                : allGrammar;
+            renderGrammarList(filtered);
+        }
+        
+        // 搜索
+        async function searchGrammar() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) {
+                renderGrammarList(allGrammar);
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/search?keyword=${encodeURIComponent(keyword)}`);
+                const data = await res.json();
+                if (data.success) {
+                    renderGrammarList(data.data);
+                }
+            } catch (e) {
+                console.error('搜索失败:', e);
+            }
+        }
+        
+        // 查看详情
+        function viewGrammar(id) {
+            const grammar = allGrammar.find(g => g.id === id);
+            if (!grammar) return;
+            
+            currentViewId = id;
+            document.getElementById('viewTitle').textContent = grammar.title;
+            document.getElementById('viewEditBtn').onclick = () => { closeViewModal(); editGrammar(id); };
+            
+            document.getElementById('viewContent').innerHTML = `
+                <div class="form-group">
+                    <label>分类</label>
+                    <p>${grammar.category}</p>
+                </div>
+                <div class="form-group">
+                    <label>关键词</label>
+                    <div class="grammar-keywords">
+                        ${grammar.keywords.map(k => `<span class="keyword-tag">${k}</span>`).join('')}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>定义</label>
+                    <p>${grammar.definition}</p>
+                </div>
+                <div class="form-group">
+                    <label>结构</label>
+                    <p>${grammar.structure || '无'}</p>
+                </div>
+                <div class="form-group">
+                    <label>用法</label>
+                    <ul style="margin-left:20px">
+                        ${grammar.usage.map(u => `<li>${u}</li>`).join('') || '<li>无</li>'}
+                    </ul>
+                </div>
+                <div class="form-group">
+                    <label>易错点</label>
+                    ${grammar.mistakes.length > 0 ? grammar.mistakes.map(m => `
+                        <div style="background:#fef2f2;padding:12px;border-radius:8px;margin-bottom:8px">
+                            <div style="color:#dc2626">❌ ${m.wrong}</div>
+                            <div style="color:#16a34a">✅ ${m.correct}</div>
+                            <div style="color:#666;font-size:12px;margin-top:4px">${m.explanation}</div>
+                        </div>
+                    `).join('') : '<p>无</p>'}
+                </div>
+                <div class="form-group">
+                    <label>例句</label>
+                    <ul style="margin-left:20px">
+                        ${grammar.examples.map(e => `<li>${e}</li>`).join('') || '<li>无</li>'}
+                    </ul>
+                </div>
+            `;
+            
+            document.getElementById('viewModal').classList.add('active');
+        }
+        
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.remove('active');
+        }
+        
+        // 打开添加模态框
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '添加语法点';
+            document.getElementById('grammarId').value = '';
+            clearForm();
+            document.getElementById('editModal').classList.add('active');
+        }
+        
+        // 编辑语法
+        function editGrammar(id) {
+            const grammar = allGrammar.find(g => g.id === id);
+            if (!grammar) return;
+            
+            document.getElementById('modalTitle').textContent = '编辑语法点';
+            document.getElementById('grammarId').value = id;
+            document.getElementById('grammarTitle').value = grammar.title;
+            document.getElementById('grammarCategory').value = grammar.category;
+            document.getElementById('grammarDefinition').value = grammar.definition;
+            document.getElementById('grammarStructure').value = grammar.structure;
+            document.getElementById('grammarDifficulty').value = grammar.difficulty;
+            
+            // 填充关键词
+            fillArrayInput('keywordsInput', grammar.keywords);
+            // 填充用法
+            fillArrayInput('usageInput', grammar.usage);
+            // 填充例句
+            fillArrayInput('examplesInput', grammar.examples);
+            // 填充易错点
+            fillMistakes(grammar.mistakes);
+            
+            document.getElementById('editModal').classList.add('active');
+        }
+        
+        // 填充数组输入
+        function fillArrayInput(containerId, values) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (values.length === 0) values = [''];
+            values.forEach(v => {
+                container.innerHTML += `
+                    <div class="array-item">
+                        <input type="text" value="${v}">
+                        <button class="btn btn-danger" onclick="removeArrayItem(this)">删除</button>
+                    </div>
+                `;
+            });
+        }
+        
+        // 填充易错点
+        function fillMistakes(mistakes) {
+            const container = document.getElementById('mistakesInput');
+            container.innerHTML = '';
+            if (mistakes.length === 0) {
+                addMistakeItem();
+                return;
+            }
+            mistakes.forEach(m => {
+                container.innerHTML += `
+                    <div class="mistake-item">
+                        <input type="text" class="mistake-wrong" value="${m.wrong}" placeholder="错误写法">
+                        <input type="text" class="mistake-correct" value="${m.correct}" placeholder="正确写法">
+                        <input type="text" class="mistake-explanation" value="${m.explanation}" placeholder="解释">
+                        <button class="btn btn-danger" onclick="removeMistakeItem(this)" style="margin-top:8px">删除</button>
+                    </div>
+                `;
+            });
+        }
+        
+        // 添加数组项
+        function addArrayItem(containerId) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'array-item';
+            div.innerHTML = `
+                <input type="text" placeholder="${containerId === 'keywordsInput' ? '关键词' : containerId === 'usageInput' ? '用法说明' : '例句'}">
+                <button class="btn btn-danger" onclick="removeArrayItem(this)">删除</button>
+            `;
+            container.appendChild(div);
+        }
+        
+        // 删除数组项
+        function removeArrayItem(btn) {
+            btn.parentElement.remove();
+        }
+        
+        // 添加易错点项
+        function addMistakeItem() {
+            const container = document.getElementById('mistakesInput');
+            const div = document.createElement('div');
+            div.className = 'mistake-item';
+            div.innerHTML = `
+                <input type="text" class="mistake-wrong" placeholder="错误写法">
+                <input type="text" class="mistake-correct" placeholder="正确写法">
+                <input type="text" class="mistake-explanation" placeholder="解释">
+                <button class="btn btn-danger" onclick="removeMistakeItem(this)" style="margin-top:8px">删除</button>
+            `;
+            container.appendChild(div);
+        }
+        
+        // 删除易错点项
+        function removeMistakeItem(btn) {
+            btn.parentElement.remove();
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+        
+        // 清空表单
+        function clearForm() {
+            document.getElementById('grammarTitle').value = '';
+            document.getElementById('grammarCategory').value = '时态';
+            document.getElementById('grammarDefinition').value = '';
+            document.getElementById('grammarStructure').value = '';
+            document.getElementById('grammarDifficulty').value = '2';
+            fillArrayInput('keywordsInput', ['']);
+            fillArrayInput('usageInput', ['']);
+            fillArrayInput('examplesInput', ['']);
+            document.getElementById('mistakesInput').innerHTML = '';
+            addMistakeItem();
+        }
+        
+        // 获取数组输入值
+        function getArrayValues(containerId) {
+            const inputs = document.querySelectorAll(`#${containerId} input`);
+            return Array.from(inputs).map(i => i.value.trim()).filter(v => v);
+        }
+        
+        // 获取易错点值
+        function getMistakesValues() {
+            const items = document.querySelectorAll('#mistakesInput .mistake-item');
+            return Array.from(items).map(item => ({
+                wrong: item.querySelector('.mistake-wrong').value.trim(),
+                correct: item.querySelector('.mistake-correct').value.trim(),
+                explanation: item.querySelector('.mistake-explanation').value.trim()
+            })).filter(m => m.wrong && m.correct);
+        }
+        
+        // 保存语法
+        async function saveGrammar() {
+            const id = document.getElementById('grammarId').value;
+            const grammar = {
+                title: document.getElementById('grammarTitle').value.trim(),
+                category: document.getElementById('grammarCategory').value,
+                keywords: getArrayValues('keywordsInput'),
+                definition: document.getElementById('grammarDefinition').value.trim(),
+                structure: document.getElementById('grammarStructure').value.trim(),
+                usage: getArrayValues('usageInput'),
+                mistakes: getMistakesValues(),
+                examples: getArrayValues('examplesInput'),
+                difficulty: parseInt(document.getElementById('grammarDifficulty').value)
+            };
+            
+            // 验证
+            if (!grammar.title) {
+                showToast('请输入标题', 'error');
+                return;
+            }
+            if (!grammar.definition) {
+                showToast('请输入定义', 'error');
+                return;
+            }
+            if (grammar.keywords.length === 0) {
+                showToast('请至少添加一个关键词', 'error');
+                return;
+            }
+            
+            try {
+                const url = id ? `${API_BASE}/${id}` : API_BASE;
+                const method = id ? 'PUT' : 'POST';
+                
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(grammar)
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    showToast(id ? '更新成功' : '添加成功', 'success');
+                    closeModal();
+                    loadStats();
+                    loadCategories();
+                    loadGrammar();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                console.error('保存失败:', e);
+                showToast('保存失败', 'error');
+            }
+        }
+        
+        // 切换启用状态
+        async function toggleGrammar(id) {
+            try {
+                const res = await fetch(`${API_BASE}/${id}/toggle`, { method: 'PATCH' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    loadStats();
+                    loadGrammar();
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+        
+        // 删除语法
+        async function deleteGrammar(id, title) {
+            if (!confirm(`确定要删除"${title}"吗？此操作不可恢复。`)) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('删除成功', 'success');
+                    loadStats();
+                    loadCategories();
+                    loadGrammar();
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (e) {
+                showToast('删除失败', 'error');
+            }
+        }
+        
+        // 导出数据
+        async function exportData() {
+            try {
+                const res = await fetch(`${API_BASE}/export`);
+                const data = await res.json();
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'grammar_database.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showToast('导出成功', 'success');
+            } catch (e) {
+                showToast('导出失败', 'error');
+            }
+        }
+        
+        // 导入数据
+        async function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                const res = await fetch(`${API_BASE}/import`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data })
+                });
+                
+                const result = await res.json();
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    loadStats();
+                    loadCategories();
+                    loadGrammar();
+                } else {
+                    showToast(result.error, 'error');
+                }
+            } catch (e) {
+                console.error('导入失败:', e);
+                showToast('导入失败，请检查文件格式', 'error');
+            }
+            
+            event.target.value = '';
+        }
+        
+        // 显示提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

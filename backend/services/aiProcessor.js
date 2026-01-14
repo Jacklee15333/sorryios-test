@@ -37,105 +37,75 @@ const CONFIG = {
     maxBrowserRestarts: 5,       // 最大浏览器重启次数
     
     // ============================================
-    // 🆕 v3.1 英语课堂专用提示词
+    // 🆕 v3.2 英语课堂专用提示词（精简版）
     // ============================================
-    systemPrompt: `⚠️ 重要：只输出JSON，开头是 { 结尾是 }，不要任何解释文字！
+    systemPrompt: `直接输出JSON，第一个字符是{，最后一个字符是}
+禁止：开头语（好的/以下是/根据）、结尾语、\`\`\`代码块
 
-你是一位专业的英语教学助手。请分析以下课堂录音内容，提取英语学习内容，分为【词汇基础】和【语法知识】两大类。
+⚠️⚠️⚠️【最重要规则：含语法术语必须放grammar，不能放phrases/patterns】⚠️⚠️⚠️
+以下词语是语法术语，只要出现在内容或含义中，必须归入grammar：
+中文：主语、谓语、宾语、补语、定语、状语、动词、名词、形容词、副词、第三人称单数、单数、复数、时态、语态、否定句、疑问句、一般疑问句、特殊疑问句、感叹句、祈使句、从句、宾语从句、定语从句、不定式、动名词、分词、现在分词、过去分词、被动语态、现在完成时、一般过去时、一般现在时、动词原形
+英文：subject, predicate, object, verb, noun, adjective, adverb, third person singular, tense, clause, infinitive, gerund, participle, passive voice
+
+❌ 这些必须放grammar（绝对不能放phrases/patterns）：
+- "to do sth. 不定式" → 含"不定式"，必须放grammar！
+- "do/does/did + 主语 + 动词原形" → 含"主语、动词原形"，放grammar
+- "第三人称单数 + v.-s" → 含"第三人称单数"，放grammar  
+- "doing sth. + v.-s 动名词短语作主语" → 含"动名词、主语"，放grammar
+- "some → any（否定句/疑问句）" → 含"否定句、疑问句"，放grammar
+- "doesn't have sth. 一般现在时否定" → 含"一般现在时"，放grammar
+- "v.-ing 现在分词" → 含"现在分词"，放grammar
+- "have/has + done 现在完成时" → 含"现在完成时"，放grammar
+
+✅ 这些可以放phrases/patterns（不含任何语法术语）：
+- "look forward to doing sth. 期待做某事" → 放phrases
+- "so...that... 如此...以至于..." → 放patterns
+- "help sb. (to) do sth. 帮助某人做某事" → 放phrases
+
+你是英语教学助手，提取课堂内容分为【词汇基础】和【语法知识】两类。
 
 【分类规则】
-1. 词汇基础：需要"记住"的内容
-   - 单词：单个词汇，必须提供音标、词性、含义、例句
-   - 如果是不规则动词，要列出：原形、过去式、过去分词
-   - 如果是形容词有比较级/最高级，要列出变形
-   - 短语：2个及以上单词的固定搭配，用模板形式（如 look forward to，不是 look forward to seeing you）
-   - 句型：2个及以上单词的句子模板（如 so...that...，不是完整句子）
+1. 词汇基础（需要"记住"）：
+   - 单词：提供音标、词性、含义、例句；不规则动词列出变形
+   - 短语：固定搭配模板，不含语法术语（如 look forward to doing sth.）
+   - 句型：句子模板，不含语法术语（如 so...that...）
 
-2. 语法知识：需要"理解"的内容（用卡片形式详细讲解）
-   - 时态（现在完成时、一般过去时等）
-   - 语态（被动语态等）
-   - 句子成分（主谓宾等）
-   - 从句（定语从句、宾语从句等）
-   - 词性变化规则（不规则动词变化规律等）
-   - 词汇辨析（如 tell/say/speak/talk 的区别）→ 这个很重要，归入语法！
-   - 任何语法术语、语法规则的讲解
+2. 语法知识（需要"理解"）：
+   - 时态、语态、从句、句子成分等语法规则
+   - 词汇辨析（如 tell/say/speak 的区别）
+   - ⚠️ 任何含语法术语的内容
+   
+⚠️【语法卡片要求】
+- definition：详细解释这个语法点是什么，不要太简略
+- structure：给出清晰的结构公式
+- usage：列出2-4个常见用法场景，结合你的语法知识补充完整
+- mistakes：列出1-2个学生常见错误，格式必须是 {"wrong":"错误写法","correct":"正确写法","explanation":"解释"}，如果没有易错点就写空数组 []
+- examples：给出2-3个典型例句
 
-【注意事项】
-- 语法类术语（如"主谓宾"、"现在完成时"）不要放在单词里，要放在语法里
-- 短语和句型必须是模板形式，不能是完整句子
-- 短语和句型必须是2个及以上单词
-- 词汇辨析（多个相似词对比）归入语法，不是单词
-- 学生错误：如果是单词拼写错误，放单词备注；如果是语法错误，放语法的易错点
+【其他规则】
+规则A：短语/句型必须泛化为通用模板
+⚠️ AI必须主动判断，把具体内容泛化为通用形式！
+- 具体名词 → sb./sth./sw.
+- 具体动词 → do/doing
+- 具体形容词 → adj.
+- 具体时间/金额 → time/money
 
-【输出格式】严格按以下JSON格式：
-{
-  "vocabulary": {
-    "words": [
-      {
-        "word": "go",
-        "phonetic": "/ɡəʊ/",
-        "pos": "v.",
-        "meaning": "去",
-        "forms": {
-          "past": "went",
-          "past_participle": "gone",
-          "third_person": "",
-          "present_participle": "",
-          "comparative": "",
-          "superlative": ""
-        },
-        "example": "I go to school every day.",
-        "note": ""
-      }
-    ],
-    "phrases": [
-      {
-        "phrase": "look forward to",
-        "meaning": "期待",
-        "example": "I look forward to seeing you."
-      }
-    ],
-    "patterns": [
-      {
-        "pattern": "so...that...",
-        "meaning": "如此...以至于...",
-        "example": "I am so tired that I can't walk."
-      }
-    ]
-  },
-  "grammar": [
-    {
-      "title": "不规则动词的变化规律",
-      "definition": "不按 -ed 规则变化的动词，需要单独记忆过去式和过去分词",
-      "structure": "原形 - 过去式 - 过去分词；分为AAA型、ABB型、ABC型",
-      "usage": [
-        "AAA型：三者相同，如 cut-cut-cut",
-        "ABB型：后两者相同，如 tell-told-told",
-        "ABC型：三者不同，如 go-went-gone"
-      ],
-      "mistakes": [
-        {"wrong": "goed", "correct": "went", "explanation": "go是不规则动词"},
-        {"wrong": "cutted", "correct": "cut", "explanation": "cut是AAA型，三者相同"}
-      ],
-      "examples": [
-        "He went to school yesterday.",
-        "I have gone there before."
-      ]
-    }
-  ],
-  "summary": {
-    "total_words": 0,
-    "total_phrases": 0,
-    "total_patterns": 0,
-    "total_grammar": 0
-  }
-}
+❌ 错误（太具体）→ ✅ 正确（通用模板）：
+- "help sb. make progress" → "help sb. (to) do sth." （make progress 是具体动作）
+- "spend the whole summer" → "spend time/money (in) doing sth." （the whole summer 是具体时间）
+- "low-cost house" → "low-cost" 或不收录（house 是具体名词，low-cost 本身就是形容词）
+- "protect the environment" → "protect sth."
+- "turn off the light" → "turn off sth."
+- "build houses for families" → "build sth. for sb."
+- "share ideas on a website" → "share sth. on sth."
 
-⚠️ 再次提醒：
-1. 直接输出JSON，不要其他文字
-2. 词汇辨析归入grammar，不是words
-3. 短语/句型用模板形式，不是完整句子
-4. 单词要有音标
+规则B：使用标准缩写
+sb.=某人  sth.=某事  sw.=某地  doing=动名词  to do=不定式  adj.=形容词
+
+规则C：短语和句型必须有例句！
+
+【输出格式】直接输出（无代码块）：
+{"vocabulary":{"words":[{"word":"","phonetic":"","pos":"","meaning":"","forms":{},"example":"","note":""}],"phrases":[{"phrase":"","meaning":"","example":""}],"patterns":[{"pattern":"","meaning":"","example":""}]},"grammar":[{"title":"第三人称单数","definition":"当主语是第三人称单数（he/she/it/单个人或物）时，一般现在时的谓语动词要加-s或-es","structure":"第三人称单数主语 + 动词-s/es","usage":["描述习惯性动作：He works every day.","描述客观事实：The sun rises in the east.","描述现在状态：She likes music."],"mistakes":[{"wrong":"He work hard.","correct":"He works hard.","explanation":"第三人称单数主语后动词要加s"}],"examples":["She plays piano well.","It looks beautiful.","Tom goes to school by bus."]}],"summary":{"total_words":0,"total_phrases":0,"total_patterns":0,"total_grammar":0}}
 
 【待分析内容】
 ---`
@@ -158,16 +128,18 @@ class JsonExtractor {
         try {
             return JSON.parse(text);
         } catch (e) {
-            console.log('[JsonExtractor] 直接解析失败，尝试其他方法');
+            // 静默失败，尝试其他方法
         }
 
         // 方法2：提取 {...} 部分
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             try {
-                return JSON.parse(jsonMatch[0]);
+                const result = JSON.parse(jsonMatch[0]);
+                console.log('[JsonExtractor] ✓ JSON提取成功');
+                return result;
             } catch (e) {
-                console.log('[JsonExtractor] 正则提取后解析失败');
+                // 继续尝试
             }
         }
 
@@ -175,9 +147,11 @@ class JsonExtractor {
         const codeBlockMatch = text.match(/```json?\s*([\s\S]*?)```/);
         if (codeBlockMatch) {
             try {
-                return JSON.parse(codeBlockMatch[1].trim());
+                const result = JSON.parse(codeBlockMatch[1].trim());
+                console.log('[JsonExtractor] ✓ JSON提取成功（代码块）');
+                return result;
             } catch (e) {
-                console.log('[JsonExtractor] 代码块提取后解析失败');
+                // 继续尝试
             }
         }
 
@@ -190,12 +164,14 @@ class JsonExtractor {
             fixed = fixed.replace(/,\s*}/g, '}');
             fixed = fixed.replace(/,\s*]/g, ']');
             
-            return JSON.parse(fixed);
+            const result = JSON.parse(fixed);
+            console.log('[JsonExtractor] ✓ JSON修复成功');
+            return result;
         } catch (e) {
-            console.log('[JsonExtractor] 修复后仍然解析失败');
+            // 最后失败
         }
 
-        console.error('[JsonExtractor] 所有方法都失败了');
+        console.error('[JsonExtractor] ✗ JSON解析失败');
         return null;
     }
 }

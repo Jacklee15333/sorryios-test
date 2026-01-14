@@ -1,0 +1,2975 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1月13日课堂笔记</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        /* 头部 */
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 15px;
+        }
+        
+        header .meta {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        
+        header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        header .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        header .stat-item .number {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        header .stat-item .label {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+        
+        /* 导出栏 */
+        .export-bar {
+            background: #f8f9fa;
+            padding: 15px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .export-btn.pdf { background: #e74c3c; color: white; }
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        /* 主体 */
+        main {
+            padding: 40px;
+        }
+        
+        /* 大分类标题 */
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section-header .icon {
+            font-size: 2em;
+        }
+        
+        .section-header h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .section-header .desc {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-left: auto;
+        }
+        
+        /* 子分类标题 */
+        .sub-section-title {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .data-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table .index {
+            width: 50px;
+            text-align: center;
+            color: #999;
+        }
+        
+        /* 单词行（带变形） */
+        .word-main {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.05em;
+        }
+        
+        .word-forms {
+            margin-top: 5px;
+            padding-left: 10px;
+            border-left: 3px solid #ddd;
+        }
+        
+        .word-form-item {
+            color: #e67e22;
+            font-size: 0.9em;
+            margin: 2px 0;
+        }
+        
+        .word-form-label {
+            color: #999;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        .phonetic {
+            color: #9b59b6;
+            font-family: 'Lucida Sans Unicode', sans-serif;
+        }
+        
+        .pos {
+            color: #3498db;
+            font-weight: 500;
+        }
+        
+        .example {
+            color: #666;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        
+        /* 语法卡片 */
+        .grammar-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .grammar-card-header {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .grammar-card-body {
+            padding: 20px;
+        }
+        
+        .grammar-item {
+            margin-bottom: 15px;
+        }
+        
+        .grammar-item-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .grammar-item-content {
+            padding-left: 25px;
+            color: #555;
+        }
+        
+        .grammar-item-content ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        
+        .grammar-item-content li {
+            margin: 5px 0;
+        }
+        
+        /* 易错点 */
+        .mistake-item {
+            background: #fff5f5;
+            border-left: 4px solid #e74c3c;
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .mistake-wrong {
+            color: #e74c3c;
+            text-decoration: line-through;
+        }
+        
+        .mistake-correct {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .mistake-arrow {
+            color: #999;
+            margin: 0 10px;
+        }
+        
+        .mistake-explanation {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        /* 例句框 */
+        .examples-box {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-top: 10px;
+        }
+        
+        .examples-box li {
+            color: #2980b9;
+        }
+        
+        /* 页脚 */
+        footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+        
+        /* 打印样式 */
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border-radius: 0; }
+            .export-bar { display: none; }
+            header { background: #1a1a2e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .section-header { background: #667eea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .grammar-card-header { background: #9b59b6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            header .stats { gap: 15px; }
+            .export-bar { padding: 15px 20px; }
+            main { padding: 20px; }
+            .data-table { font-size: 0.85em; }
+            .data-table th, .data-table td { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📖 1月13日课堂笔记</h1>
+            <div class="meta">
+                <p>生成时间: 2026/1/13 22:51:36</p>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="number">44</div>
+                    <div class="label">单词</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">30</div>
+                    <div class="label">短语</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">2</div>
+                    <div class="label">句型</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">32</div>
+                    <div class="label">语法点</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="export-bar">
+            <button class="export-btn pdf" onclick="window.print()">📄 导出PDF / 打印</button>
+            <span style="color: #666; line-height: 36px; margin-left: 10px;">提示：点击打印后选择"另存为PDF"即可导出PDF文件</span>
+        </div>
+        
+        <main>
+            <!-- ==================== 第一部分：词汇基础 ==================== -->
+            <div class="section-header">
+                <span class="icon">📚</span>
+                <h2>词汇基础</h2>
+                <span class="desc">需要记住的单词、短语、句型</span>
+            </div>
+            
+            
+        <h3 class="sub-section-title">📝 单词</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="index">#</th>
+                    <th style="width: 180px;">单词</th>
+                    <th style="width: 100px;">音标</th>
+                    <th style="width: 200px;">含义</th>
+                    <th>例句</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td class="index">1</td>
+                    <td>
+                        <div class="word-main">importance</div>
+                        
+                    </td>
+                    <td class="phonetic">/ɪmˈpɔːrtəns/</td>
+                    <td><span class="pos">n.</span> 重要性</td>
+                    <td class="example">The importance of sth. is clear to everyone.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">2</td>
+                    <td>
+                        <div class="word-main">protect</div>
+                        
+                    </td>
+                    <td class="phonetic">/prəˈtekt/</td>
+                    <td><span class="pos">v.</span> 保护</td>
+                    <td class="example">We should protect sth.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">3</td>
+                    <td>
+                        <div class="word-main">environment</div>
+                        
+                    </td>
+                    <td class="phonetic">/ɪnˈvaɪrənmənt/</td>
+                    <td><span class="pos">n.</span> 环境</td>
+                    <td class="example">The environment is changing.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">4</td>
+                    <td>
+                        <div class="word-main">become</div>
+                        <div class="word-forms"><div class="word-form-item">became<span class="word-form-label">过去式</span></div><div class="word-form-item">become<span class="word-form-label">过去分词</span></div></div>
+                    </td>
+                    <td class="phonetic">/bɪˈkʌm/</td>
+                    <td><span class="pos">v.</span> 变得</td>
+                    <td class="example">Life becomes better.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">5</td>
+                    <td>
+                        <div class="word-main">important</div>
+                        
+                    </td>
+                    <td class="phonetic">/ɪmˈpɔːrtənt/</td>
+                    <td><span class="pos">adj.</span> 重要的</td>
+                    <td class="example">It is important to do sth.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">6</td>
+                    <td>
+                        <div class="word-main">example</div>
+                        
+                    </td>
+                    <td class="phonetic">/ɪɡˈzæmpl/</td>
+                    <td><span class="pos">n.</span> 例子</td>
+                    <td class="example">For example, we can save energy.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">7</td>
+                    <td>
+                        <div class="word-main">plant</div>
+                        
+                    </td>
+                    <td class="phonetic">/plænt/</td>
+                    <td><span class="pos">v.</span> 种植</td>
+                    <td class="example">We can plant trees.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">8</td>
+                    <td>
+                        <div class="word-main">save</div>
+                        
+                    </td>
+                    <td class="phonetic">/seɪv/</td>
+                    <td><span class="pos">v.</span> 节约；拯救</td>
+                    <td class="example">We should save energy.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">9</td>
+                    <td>
+                        <div class="word-main">control</div>
+                        <div class="word-forms"><div class="word-form-item">controlled<span class="word-form-label">过去式</span></div><div class="word-form-item">controlled<span class="word-form-label">过去分词</span></div></div>
+                    </td>
+                    <td class="phonetic">/kənˈtrəʊl/</td>
+                    <td><span class="pos">v.</span> 控制</td>
+                    <td class="example">The system is controlled by a computer.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">10</td>
+                    <td>
+                        <div class="word-main">system</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈsɪstəm/</td>
+                    <td><span class="pos">n.</span> 系统</td>
+                    <td class="example">The system works well.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">11</td>
+                    <td>
+                        <div class="word-main">speech</div>
+                        
+                    </td>
+                    <td class="phonetic">/spiːtʃ/</td>
+                    <td><span class="pos">n.</span> 演讲</td>
+                    <td class="example">She gave a speech.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">12</td>
+                    <td>
+                        <div class="word-main">nervous</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈnɜːvəs/</td>
+                    <td><span class="pos">adj.</span> 紧张的</td>
+                    <td class="example">He feels nervous before a speech.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">13</td>
+                    <td>
+                        <div class="word-main">proper</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈprɒpər/</td>
+                    <td><span class="pos">adj.</span> 合适的；恰当的</td>
+                    <td class="example">Proper preparation is important.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">14</td>
+                    <td>
+                        <div class="word-main">essential</div>
+                        
+                    </td>
+                    <td class="phonetic">/ɪˈsenʃl/</td>
+                    <td><span class="pos">adj.</span> 必要的；极其重要的</td>
+                    <td class="example">Water is essential for life.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">15</td>
+                    <td>
+                        <div class="word-main">experiment</div>
+                        
+                    </td>
+                    <td class="phonetic">/ɪkˈsperɪmənt/</td>
+                    <td><span class="pos">n.</span> 实验</td>
+                    <td class="example">The experiment was successful.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">16</td>
+                    <td>
+                        <div class="word-main">preparation</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˌprepəˈreɪʃn/</td>
+                    <td><span class="pos">n.</span> 准备</td>
+                    <td class="example">Good preparation helps a lot.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">17</td>
+                    <td>
+                        <div class="word-main">experience</div>
+                        
+                    </td>
+                    <td class="phonetic">/ɪkˈspɪəriəns/</td>
+                    <td><span class="pos">n.</span> 经历；经验</td>
+                    <td class="example">She has rich experience.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">18</td>
+                    <td>
+                        <div class="word-main">science</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈsaɪəns/</td>
+                    <td><span class="pos">n.</span> 科学</td>
+                    <td class="example">He likes science.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">19</td>
+                    <td>
+                        <div class="word-main">foreign</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈfɒrɪn/</td>
+                    <td><span class="pos">adj.</span> 外国的</td>
+                    <td class="example">She studies a foreign language.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">20</td>
+                    <td>
+                        <div class="word-main">language</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈlæŋɡwɪdʒ/</td>
+                    <td><span class="pos">n.</span> 语言</td>
+                    <td class="example">English is a useful language.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">21</td>
+                    <td>
+                        <div class="word-main">fluently</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈfluːəntli/</td>
+                    <td><span class="pos">adv.</span> 流利地</td>
+                    <td class="example">He speaks English fluently.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">22</td>
+                    <td>
+                        <div class="word-main">surprise</div>
+                        
+                    </td>
+                    <td class="phonetic">/səˈpraɪz/</td>
+                    <td><span class="pos">v./n.</span> 使惊讶；惊喜</td>
+                    <td class="example">The news surprised everyone.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">23</td>
+                    <td>
+                        <div class="word-main">invite</div>
+                        <div class="word-forms"><div class="word-form-item">invited<span class="word-form-label">过去式</span></div><div class="word-form-item">invited<span class="word-form-label">过去分词</span></div></div>
+                    </td>
+                    <td class="phonetic">/ɪnˈvaɪt/</td>
+                    <td><span class="pos">v.</span> 邀请</td>
+                    <td class="example">They invited sb. to the party.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">24</td>
+                    <td>
+                        <div class="word-main">share</div>
+                        <div class="word-forms"><div class="word-form-item">shared<span class="word-form-label">过去式</span></div><div class="word-form-item">shared<span class="word-form-label">过去分词</span></div></div>
+                    </td>
+                    <td class="phonetic">/ʃeər/</td>
+                    <td><span class="pos">v.</span> 分享</td>
+                    <td class="example">They share ideas online.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">25</td>
+                    <td>
+                        <div class="word-main">website</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈwebsaɪt/</td>
+                    <td><span class="pos">n.</span> 网站</td>
+                    <td class="example">The website is useful.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">26</td>
+                    <td>
+                        <div class="word-main">quiet</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈkwaɪət/</td>
+                    <td><span class="pos">adj.</span> 安静的</td>
+                    <td class="example">Please keep quiet.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">27</td>
+                    <td>
+                        <div class="word-main">without</div>
+                        
+                    </td>
+                    <td class="phonetic">/wɪˈðaʊt/</td>
+                    <td><span class="pos">prep.</span> 没有；不</td>
+                    <td class="example">He left without saying goodbye.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">28</td>
+                    <td>
+                        <div class="word-main">require</div>
+                        <div class="word-forms"><div class="word-form-item">required<span class="word-form-label">过去式</span></div><div class="word-form-item">required<span class="word-form-label">过去分词</span></div></div>
+                    </td>
+                    <td class="phonetic">/rɪˈkwaɪər/</td>
+                    <td><span class="pos">v.</span> 要求</td>
+                    <td class="example">The teacher requires sb. to do sth.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">29</td>
+                    <td>
+                        <div class="word-main">general</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈdʒenrəl/</td>
+                    <td><span class="pos">adj.</span> 一般的；普通的</td>
+                    <td class="example">This is a general question.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">30</td>
+                    <td>
+                        <div class="word-main">grow</div>
+                        <div class="word-forms"><div class="word-form-item">grew<span class="word-form-label">过去式</span></div><div class="word-form-item">grown<span class="word-form-label">过去分词</span></div></div>
+                    </td>
+                    <td class="phonetic">/ɡrəʊ/</td>
+                    <td><span class="pos">v.</span> 生长；增长</td>
+                    <td class="example">Plants grow fast in spring.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">31</td>
+                    <td>
+                        <div class="word-main">volunteer</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˌvɒlənˈtɪə(r)/</td>
+                    <td><span class="pos">v./n.</span> 志愿做；志愿者</td>
+                    <td class="example">Many people volunteer to help others.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">32</td>
+                    <td>
+                        <div class="word-main">bath</div>
+                        
+                    </td>
+                    <td class="phonetic">/bɑːθ/</td>
+                    <td><span class="pos">n.</span> 洗澡；浴缸</td>
+                    <td class="example">He takes a bath every day.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">33</td>
+                    <td>
+                        <div class="word-main">bathe</div>
+                        <div class="word-forms"><div class="word-form-item">bathed<span class="word-form-label">过去式</span></div><div class="word-form-item">bathed<span class="word-form-label">过去分词</span></div></div>
+                    </td>
+                    <td class="phonetic">/beɪð/</td>
+                    <td><span class="pos">v.</span> 洗澡</td>
+                    <td class="example">She bathed the baby.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">34</td>
+                    <td>
+                        <div class="word-main">breathe</div>
+                        <div class="word-forms"><div class="word-form-item">breathed<span class="word-form-label">过去式</span></div><div class="word-form-item">breathed<span class="word-form-label">过去分词</span></div></div>
+                    </td>
+                    <td class="phonetic">/briːð/</td>
+                    <td><span class="pos">v.</span> 呼吸</td>
+                    <td class="example">It is hard to breathe here.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">35</td>
+                    <td>
+                        <div class="word-main">top</div>
+                        
+                    </td>
+                    <td class="phonetic">/tɒp/</td>
+                    <td><span class="pos">n./adj.</span> 顶部；最高的</td>
+                    <td class="example">He is at the top of the list.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">36</td>
+                    <td>
+                        <div class="word-main">fresh</div>
+                        
+                    </td>
+                    <td class="phonetic">/freʃ/</td>
+                    <td><span class="pos">adj.</span> 新鲜的</td>
+                    <td class="example">They breathed fresh air.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">37</td>
+                    <td>
+                        <div class="word-main">rich</div>
+                        
+                    </td>
+                    <td class="phonetic">/rɪtʃ/</td>
+                    <td><span class="pos">adj.</span> 富有的</td>
+                    <td class="example">The rich often live there.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">38</td>
+                    <td>
+                        <div class="word-main">build</div>
+                        <div class="word-forms"><div class="word-form-item">built<span class="word-form-label">过去式</span></div><div class="word-form-item">built<span class="word-form-label">过去分词</span></div></div>
+                    </td>
+                    <td class="phonetic">/bɪld/</td>
+                    <td><span class="pos">v.</span> 建造</td>
+                    <td class="example">They build houses for families.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">39</td>
+                    <td>
+                        <div class="word-main">exact</div>
+                        
+                    </td>
+                    <td class="phonetic">/ɪɡˈzækt/</td>
+                    <td><span class="pos">adj.</span> 确切的；正是的</td>
+                    <td class="example">This is the exact answer.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">40</td>
+                    <td>
+                        <div class="word-main">double</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈdʌbl/</td>
+                    <td><span class="pos">adj.</span> 双倍的</td>
+                    <td class="example">The program offers double reading time.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">41</td>
+                    <td>
+                        <div class="word-main">trouble</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈtrʌbl/</td>
+                    <td><span class="pos">n.</span> 困难；麻烦</td>
+                    <td class="example">He has trouble reading.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">42</td>
+                    <td>
+                        <div class="word-main">reading</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈriːdɪŋ/</td>
+                    <td><span class="pos">n.</span> 阅读</td>
+                    <td class="example">Reading is important.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">43</td>
+                    <td>
+                        <div class="word-main">improve</div>
+                        
+                    </td>
+                    <td class="phonetic">/ɪmˈpruːv/</td>
+                    <td><span class="pos">v.</span> 提高；改善</td>
+                    <td class="example">Reading improves skills.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">44</td>
+                    <td>
+                        <div class="word-main">progress</div>
+                        
+                    </td>
+                    <td class="phonetic">/ˈprəʊɡres/</td>
+                    <td><span class="pos">n.</span> 进步</td>
+                    <td class="example">He makes progress every day.</td>
+                </tr>
+                
+            </tbody>
+        </table>
+            
+        <h3 class="sub-section-title">💬 短语</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="index">#</th>
+                    <th style="width: 250px;">短语</th>
+                    <th style="width: 200px;">含义</th>
+                    <th>例句</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td class="index">1</td>
+                    <td class="word-main">give sth. to sb.</td>
+                    <td>把某物给某人（实际给到）</td>
+                    <td class="example">The teacher gives a book to sb.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">2</td>
+                    <td class="word-main">day by day</td>
+                    <td>一天天地；逐渐地</td>
+                    <td class="example">The weather is getting worse day by day.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">3</td>
+                    <td class="word-main">turn off sth.</td>
+                    <td>关掉某物</td>
+                    <td class="example">Remember to turn off the light.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">4</td>
+                    <td class="word-main">leave sw.</td>
+                    <td>离开某地</td>
+                    <td class="example">When we leave home, we should turn off the light.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">5</td>
+                    <td class="word-main">go out</td>
+                    <td>外出</td>
+                    <td class="example">When we go out, we can walk or ride a bike.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">6</td>
+                    <td class="word-main">for example</td>
+                    <td>例如</td>
+                    <td class="example">For example, we can plant trees.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">7</td>
+                    <td class="word-main">talk with sb.</td>
+                    <td>与某人交谈</td>
+                    <td class="example">She talked with sb. after class.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">8</td>
+                    <td class="word-main">talk to sb.</td>
+                    <td>和某人说话</td>
+                    <td class="example">The teacher talked to sb.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">9</td>
+                    <td class="word-main">talk about sth.</td>
+                    <td>谈论某事</td>
+                    <td class="example">They talked about the plan.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">10</td>
+                    <td class="word-main">ask sb. to do sth.</td>
+                    <td>请求某人做某事</td>
+                    <td class="example">She asked sb. to close the door.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">11</td>
+                    <td class="word-main">ask sb. for sth.</td>
+                    <td>向某人要某物</td>
+                    <td class="example">He asked sb. for help.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">12</td>
+                    <td class="word-main">give a speech</td>
+                    <td>做演讲</td>
+                    <td class="example">She will give a speech tomorrow.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">13</td>
+                    <td class="word-main">on a website</td>
+                    <td>在网站上</td>
+                    <td class="example">They share ideas on a website.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">14</td>
+                    <td class="word-main">a foreign language</td>
+                    <td>外语</td>
+                    <td class="example">He is learning a foreign language.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">15</td>
+                    <td class="word-main">in science class</td>
+                    <td>在科学课上</td>
+                    <td class="example">We did an experiment in science class.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">16</td>
+                    <td class="word-main">keep quiet</td>
+                    <td>保持安静</td>
+                    <td class="example">Please keep quiet in class.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">17</td>
+                    <td class="word-main">to do sth.</td>
+                    <td>去做某事</td>
+                    <td class="example">We plan to finish the work today.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">18</td>
+                    <td class="word-main">without doing sth.</td>
+                    <td>没有做某事</td>
+                    <td class="example">She left without telling anyone.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">19</td>
+                    <td class="word-main">write down sth.</td>
+                    <td>写下某物</td>
+                    <td class="example">Please write down the answer.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">20</td>
+                    <td class="word-main">on the top of sth.</td>
+                    <td>在……的顶部；在……的前列</td>
+                    <td class="example">The school is on the top of the list.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">21</td>
+                    <td class="word-main">volunteer to do sth.</td>
+                    <td>志愿做某事</td>
+                    <td class="example">She volunteers to help others.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">22</td>
+                    <td class="word-main">spend time doing sth.</td>
+                    <td>花费时间做某事</td>
+                    <td class="example">They spend time studying English.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">23</td>
+                    <td class="word-main">grow up</td>
+                    <td>长大</td>
+                    <td class="example">Children grow up fast.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">24</td>
+                    <td class="word-main">spend the whole summer doing sth.</td>
+                    <td>整个夏天都在做某事</td>
+                    <td class="example">He spent the whole summer working on a farm.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">25</td>
+                    <td class="word-main">fresh air</td>
+                    <td>新鲜空气</td>
+                    <td class="example">The mountains have fresh air.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">26</td>
+                    <td class="word-main">low-cost house</td>
+                    <td>低成本的房子</td>
+                    <td class="example">They build low-cost houses.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">27</td>
+                    <td class="word-main">teach sb. how to do sth.</td>
+                    <td>教某人如何做某事</td>
+                    <td class="example">She teaches children how to read.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">28</td>
+                    <td class="word-main">have trouble doing sth.</td>
+                    <td>做某事有困难</td>
+                    <td class="example">She has trouble understanding English.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">29</td>
+                    <td class="word-main">in reading</td>
+                    <td>在阅读方面</td>
+                    <td class="example">Some children have trouble in reading.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">30</td>
+                    <td class="word-main">reading books</td>
+                    <td>读书</td>
+                    <td class="example">Reading books makes people better.</td>
+                </tr>
+                
+            </tbody>
+        </table>
+            
+        <h3 class="sub-section-title">📐 句型</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="index">#</th>
+                    <th style="width: 300px;">句型</th>
+                    <th style="width: 200px;">含义</th>
+                    <th>例句</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td class="index">1</td>
+                    <td class="word-main">more and more + adj.</td>
+                    <td>越来越……</td>
+                    <td class="example">The environment becomes more and more important.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">2</td>
+                    <td class="word-main">It is + adj. + for sb. to do sth.</td>
+                    <td>对某人来说做某事是……的</td>
+                    <td class="example">It is important for us to protect the environment.</td>
+                </tr>
+                
+            </tbody>
+        </table>
+            
+            <!-- ==================== 第二部分：语法知识 ==================== -->
+            <div class="section-header" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); margin-top: 40px;">
+                <span class="icon">📖</span>
+                <h2>语法知识</h2>
+                <span class="desc">需要理解的语法规则</span>
+            </div>
+            
+            
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>1. 动名词作主语</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当动词以动名词形式出现并在句中表示“一件事、一个行为”时，可以整体充当主语，通常表示抽象、概括性的动作或行为。此时整个动名词短语被视为一件事情，在语法上相当于名词。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">doing sth. + 谓语</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>表示一种行为或习惯：Protecting sth. is important.</li><li>表示抽象概念或活动：Saving energy helps the environment.</li><li>用于表达一般性事实或观点：Planting trees improves the air.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Protect the environment becomes important.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Protecting the environment becomes important.</span>
+                            <div class="mistake-explanation">作主语时，动词需要变为动名词形式。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Protecting the environment is necessary.</li><li>Saving energy is a good habit.</li><li>Planting trees makes the air cleaner.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>2. 第三人称单数的一般现在时</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">在一般现在时中，当主语是第三人称单数（如 he / she / it 或表示“一件事”的主语）时，谓语动词需要根据规则加 -s 或 -es，用来表示习惯、事实或普遍真理。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">第三人称单数主语 + 动词-s/es</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>描述客观事实：The environment becomes worse.</li><li>描述习惯性行为：He turns off the light.</li><li>描述普遍观点：Protecting sth. matters a lot.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Protecting the environment become important.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Protecting the environment becomes important.</span>
+                            <div class="mistake-explanation">第三人称单数主语后，谓语动词要加 -s。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>It becomes more and more serious.</li><li>She saves energy every day.</li><li>Protecting nature helps everyone.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>3. more and more 结构</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">“more and more + 形容词”用于表示程度的不断加深或变化，强调事物随着时间推移发生的渐进变化，常用于描述趋势。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">more and more + adj.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>描述变化趋势：The weather is getting more and more terrible.</li><li>描述重要性增强：It becomes more and more important.</li><li>描述程度递增：Life is more and more convenient.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ It is more important and more important.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ It is more and more important.</span>
+                            <div class="mistake-explanation">固定结构应使用 more and more。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>The environment is becoming more and more important.</li><li>Cities are getting more and more crowded.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>4. 并列句与连接词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">英语中如果出现两个完整的句子，不能仅用逗号连接，而需要使用并列连词（如 and, but, so）或其他连接手段，使句子结构完整、逻辑清楚。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">句子 A + 并列连词 + 句子 B</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>表示顺承关系：We protect the environment, and we make life better.</li><li>表示因果关系：The environment is polluted, so we should act now.</li><li>避免逗号连接两个完整句子。</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ We protect the environment, it makes our life better.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ We protect the environment, and it makes our life better.</span>
+                            <div class="mistake-explanation">两个完整句子之间需要连接词。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>We save energy, and we reduce pollution.</li><li>We plant trees, and the air becomes cleaner.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>5. tell / talk / speak 的用法区别</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">tell、talk、speak 都与“说”有关，但用法不同。tell 强调“告诉”，通常涉及信息的传递；talk 强调双方交流；speak 更偏向正式表达或能力。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">tell sb. sth. / tell sb. to do sth.; talk to/with sb.; speak to sb.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>tell：强调结果和信息内容</li><li>talk：强调交流过程</li><li>speak：多用于正式场合或语言能力</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ He told me doing sth.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ He told me to do sth.</span>
+                            <div class="mistake-explanation">tell 后不能直接接 doing 形式。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>The teacher tells sb. to do sth.</li><li>They talk with sb. about sth.</li><li>She speaks to the class clearly.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>6. tell / say / speak / talk 的区别</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">这四个动词都与“说”有关，但侧重点不同。tell 强调把信息告诉别人，常接双宾语或 to do；say 强调说的内容；speak 强调说话方式或语言；talk 强调双方交流。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">tell sb. sth. / tell sb. to do sth.; say sth.; speak + language; talk to/with sb.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>tell 用于指示或命令</li><li>say 强调具体内容</li><li>speak 常与语言搭配</li><li>talk 强调交流过程</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ He told me doing sth.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ He told me to do sth.</span>
+                            <div class="mistake-explanation">tell 后不能直接接 doing。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>She tells sb. the truth.</li><li>He said it was easy.</li><li>They talk with sb. about work.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>7. 一般过去时</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">一般过去时用于描述过去某个时间发生的动作或存在的状态，通常与 yesterday、last night 等时间状语连用。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">主语 + 动词过去式</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>描述过去发生的事情</li><li>叙述故事或经历</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Yesterday I eat rice.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Yesterday I ate rice.</span>
+                            <div class="mistake-explanation">过去时间要使用动词过去式。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>I did my homework yesterday.</li><li>She spoke at the meeting.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>8. 现在完成时</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">现在完成时用于表示过去发生但对现在有影响的动作，或从过去持续到现在的经历或状态。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">have/has + 过去分词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>表示已经完成的动作</li><li>表示经历</li><li>表示结果对现在的影响</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I have ate rice.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I have eaten rice.</span>
+                            <div class="mistake-explanation">现在完成时要使用过去分词。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>I have done my homework.</li><li>She has spoken to the teacher.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>9. 被动语态</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">被动语态用于强调动作的承受者，而不是动作的执行者，常用于不知道或不必说明动作发出者的情况。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">be + 过去分词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>强调结果</li><li>强调承受者</li><li>常用于说明事实</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ The apple ate by me.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ The apple was eaten by me.</span>
+                            <div class="mistake-explanation">被动语态需要 be + 过去分词。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>The house is controlled by a system.</li><li>The apple was eaten by sb.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>10. 过去分词的三种用法</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">过去分词既可以与完成时连用，也可以构成被动语态，还可以单独作形容词修饰名词。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">have + 过去分词 / be + 过去分词 / 过去分词 + 名词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>完成时中表示已完成</li><li>被动语态中表示被动</li><li>作形容词修饰名词</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ The eaten apple was tasty.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ The eaten apple was tasty.</span>
+                            <div class="mistake-explanation">此处 eaten 作形容词，结构是正确的。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>I have finished the work.</li><li>The room is cleaned.</li><li>The eaten apple is on the table.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>11. It is + adj. + to do sth.</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">该结构用于对某个行为作出评价，真正的动作由不定式短语表达，常用于说明“做某事是怎样的”。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">It is + adj. + to do sth.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>评价行为的重要性：It is essential to prepare well.</li><li>说明难易程度：It is easy to do sth.</li><li>表达感受或态度：It is surprising to see sth.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ It is essential prepare well.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ It is essential to prepare well.</span>
+                            <div class="mistake-explanation">该结构中必须使用 to do 形式。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>It is important to study hard.</li><li>It is surprising to see the result.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>12. 介词后接名词或动名词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">介词后面不能直接接动词原形，通常接名词；当表示动作含义时，需使用动名词形式。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">介词 + 名词 / doing</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>without 后表示缺少某种行为：without doing sth.</li><li>in / on / for 后接名词：in class, on a website</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ without do homework</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ without doing homework</span>
+                            <div class="mistake-explanation">介词后不能接动词原形。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>He left without saying goodbye.</li><li>They talked about protecting the environment.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>13. 动名词作主语（整体概念）</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当一个动作被整体看作“一件事”时，可使用动名词短语作主语，表达抽象或概括性的行为。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">doing sth. + 谓语</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>表达普遍观点：Preparing well is essential.</li><li>描述一般事实：Doing experiments is interesting.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Prepare well is essential.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Preparing well is essential.</span>
+                            <div class="mistake-explanation">作主语时应使用动名词形式。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Preparing well is essential for success.</li><li>Doing experiments helps learning.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>14. see sb. do sth. 与 see sb. doing sth.</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">see sb. do sth. 强调整个动作过程；see sb. doing sth. 强调动作正在进行。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">see sb. do sth. / see sb. doing sth.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>看到完整过程：see sb. do sth.</li><li>看到正在发生的动作：see sb. doing sth.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I saw him to speak English.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I saw him speak English.</span>
+                            <div class="mistake-explanation">see 后不用 to do。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>I saw him enter the room.</li><li>I saw her speaking English.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>15. invite sb. to do sth.</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">invite 表示邀请，后接不定式，说明邀请对方去做的事情。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">invite sb. to do sth.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>邀请参加活动</li><li>邀请去做某事</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ They invited him doing sth.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ They invited him to do sth.</span>
+                            <div class="mistake-explanation">invite 后只能接 to do。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>She invited sb. to join the team.</li><li>They invited sb. to have dinner.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>16. 不定式 to do 的正确用法</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">不定式 to do 用于表示目的、计划或将要发生的动作，是动词的非谓语形式之一，不能使用 to doing。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">to + 动词原形</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>表示目的：to get help</li><li>表示计划或打算：plan to do sth.</li><li>用于某些动词之后：want / decide / ask to do sth.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ to doing homework</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ to do homework</span>
+                            <div class="mistake-explanation">to 后必须接动词原形。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>She hopes to win.</li><li>We decided to leave early.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>17. 一般疑问句的构成（无助动词时）</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当陈述句中没有 be 动词或助动词时，变一般疑问句需要借助 do / does / did 放在句首，原句动词还原为原形。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">Do/Does/Did + 主语 + 动词原形</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>一般现在时：Do / Does</li><li>一般过去时：Did</li><li>回答用 Yes / No</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Does he likes apples?</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Does he like apples?</span>
+                            <div class="mistake-explanation">疑问句中动词需还原为原形。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Do you like apples?</li><li>Did she finish the work?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>18. 第三人称单数</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">第三人称单数指 he / she / it 或单个的人或物，在一般现在时中，其谓语动词需加 -s 或 -es。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">第三人称单数主语 + 动词-s/es</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>描述事实：It works well.</li><li>描述习惯：He gets up early.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ He go to school.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ He goes to school.</span>
+                            <div class="mistake-explanation">第三人称单数主语后动词要加 s。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>She likes music.</li><li>The oven works well.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>19. 宾语从句</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">宾语从句是在句中作宾语的从句，整体相当于一个名词，用来说明“是什么、做什么”等内容。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">主句 + 引导词 + 从句</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>作动词宾语</li><li>回答名词性问题</li><li>可用于间接提问</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I don’t know what does he want.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I don’t know what he wants.</span>
+                            <div class="mistake-explanation">宾语从句中语序要用陈述语序。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>I know what he wants.</li><li>She asked what we needed.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>20. 画线部分提问的方法</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">对画线部分提问时，需要先判断画线内容的性质，选用合适的疑问词，再将其余部分改为一般疑问句语序。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">疑问词 + 一般疑问句</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>名词用 what / who</li><li>时间用 when</li><li>地点用 where</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ What you do yesterday?</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ What did you do yesterday?</span>
+                            <div class="mistake-explanation">疑问句需要借助助动词 did。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>What did he buy?</li><li>Where do you live?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>21. 一般疑问句的构成（无 be / 助动词）</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当陈述句中没有 be 动词或助动词时，变一般疑问句需要借助 do / does / did 放在句首，原句中的实义动词还原为原形。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">Do / Does / Did + 主语 + 动词原形</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>一般现在时用 do / does</li><li>一般过去时用 did</li><li>动词还原为原形</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Does he grows fast?</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Does he grow fast?</span>
+                            <div class="mistake-explanation">疑问句中动词要还原为原形。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Do they like sports?</li><li>Did she finish her work?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>22. without 合并句子</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">使用介词 without 合并句子时，需要将其中一个句子转化为名词性结构，通常用动名词形式，且省略主语。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">主句 + without doing sth.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>表示在没有某种行为的情况下</li><li>合并两个有相同主语的句子</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ They cook meals without waste food.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ They cook meals without wasting food.</span>
+                            <div class="mistake-explanation">without 后要用动名词形式。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>He left without saying anything.</li><li>They work without wasting time.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>23. 并列句中省略主语</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当两个分句的主语相同时，后一个分句中的主语可以省略，以避免重复。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">主语 + 动词 … and + 动词 …</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>主语相同可省略</li><li>常用于 and / but 连接的并列句</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ She likes apples and she likes oranges.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ She likes apples and likes oranges.</span>
+                            <div class="mistake-explanation">两个分句主语相同，后一个可省略。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>He went home and finished his homework.</li><li>She opened the door and walked in.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>24. 名词与动词的拼写区分（-e）</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">英语中部分名词与对应动词在拼写上通过是否加 -e 来区分，且读音也会发生变化。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">名词（无 e） / 动词（加 e）</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>bath / bathe</li><li>breath / breathe</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I need a deep breathe.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I need a deep breath.</span>
+                            <div class="mistake-explanation">breath 是名词，breathe 是动词。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Take a deep breath.</li><li>Please breathe slowly.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>25. 阅读理解中的信息交叉定位</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">在阅读理解中，当题干包含两个或以上关键信息时，需要在文章中分别定位这些信息，并找到它们交叉出现的段落或句子，答案通常就在该交叉位置附近。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">关键词 A + 关键词 B → 交叉定位</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>人物 + 时间：Alice + summer</li><li>人物 + 行为：young people + volunteer</li><li>地点 + 行为：USA + help others</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ 只找到人物就直接选答案</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ 同时确认人物和时间/行为等信息</span>
+                            <div class="mistake-explanation">单一信息不足以锁定正确答案。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Find Alice and summer in the same paragraph.</li><li>Look for young people and volunteer together.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>26. 后置定语</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当修饰名词的成分较长或为短语、从句时，通常放在名词后面，起到限定和说明名词的作用，这种修饰方式称为后置定语。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">名词 + 修饰成分</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>介词短语作后置定语：the apple on the tree</li><li>从句作后置定语：families that are not rich</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ the on the tree apple</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ the apple on the tree</span>
+                            <div class="mistake-explanation">较复杂的修饰成分需后置。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>The house near the river is old.</li><li>Families that need help live here.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>27. 定语从句</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">定语从句是用来修饰名词的从句，通常放在被修饰的名词后面，由关系词引导，用来说明名词的特征或身份。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">名词 + 关系词 + 从句</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>修饰人或物</li><li>补充说明名词信息</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Families are not rich live here.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Families that are not rich live here.</span>
+                            <div class="mistake-explanation">需要用关系词连接从句。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>People who help others are kind.</li><li>Houses that are low-cost sell well.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>28. 双宾语结构</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">有些动词可以同时带两个宾语，一个表示人，一个表示事物，通常表示“给某人某物”或“教某人某事”。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">动词 + 间接宾语 + 直接宾语</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>teach sb. sth.</li><li>give sb. sth.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ He teaches how to build houses people.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ He teaches people how to build houses.</span>
+                            <div class="mistake-explanation">间接宾语通常放在直接宾语之前。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>She gives sb. advice.</li><li>He teaches children skills.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>29. 定语从句（后置定语）</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当一个从句用来修饰名词，并放在名词后面时，称为定语从句。定语从句整体相当于形容词，用来限定或说明名词的特征。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">名词 + 关系词 + 从句</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>修饰人或物</li><li>使句意更具体</li><li>常出现在阅读理解中</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Children have trouble in reading need help.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Children who have trouble in reading need help.</span>
+                            <div class="mistake-explanation">修饰名词时需要用关系词引导从句。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Children who like reading learn faster.</li><li>The students that need help are here.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>30. 后置定语与最近修饰原则</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">英语中较长的修饰成分通常放在名词后面，且默认修饰距离最近的名词，这称为最近修饰原则。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">名词 + 修饰成分</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>避免歧义</li><li>常见于短语或从句作定语</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ the running yellow apple</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ the yellow apple running</span>
+                            <div class="mistake-explanation">修饰关系需清晰，避免歧义。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>The apple on the table is mine.</li><li>Children with trouble need help.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>31. 第三人称单数与主谓一致</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当主语为第三人称单数或表示“一件事”时，谓语动词在一般现在时中需使用第三人称单数形式。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">第三人称单数主语 + 动词-s/es</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>主语为不可数概念</li><li>动名词短语作主语</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Reading books make people better.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Reading books makes people better.</span>
+                            <div class="mistake-explanation">动名词作主语视为单数。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Reading helps children.</li><li>Learning English takes time.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>32. 翻译中的顺译与逆译</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">简单句通常顺译；当句子中包含介词、连词或较长修饰成分时，常需要从后往前翻译，以保证语义清晰。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">先处理修饰成分，再翻译主干</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>含介词短语</li><li>含从句</li><li>句子较长时</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ 逐词直译导致语义混乱</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ 先找主干再处理修饰</span>
+                            <div class="mistake-explanation">翻译应以语义清楚为原则。</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Children with trouble in reading need help.</li><li>Books that are useful help students.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        </main>
+        
+        <footer>
+            <p>🤖 由 Sorryios AI 智能生成 | 英语课堂笔记系统 v3.1</p>
+            <p>词汇过滤：61 → 44（移除 17 个基础词）</p>
+        </footer>
+    </div>
+</body>
+</html>

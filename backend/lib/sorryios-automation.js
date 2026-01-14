@@ -810,10 +810,26 @@ class SorryiosAutomation {
                             .substring(0, 50000);  // 限制长度
                     };
                     
-                    // 方法1：ChatGPT/OpenAI风格 - 查找assistant消息
+                    // 🆕 方法0：优先从代码块中提取JSON（最可靠）
                     const assistantMessages = document.querySelectorAll('[data-message-author-role="assistant"]');
                     if (assistantMessages.length > 0) {
                         const lastAssistant = assistantMessages[assistantMessages.length - 1];
+                        // 查找代码块 - <pre><code> 结构
+                        const codeBlocks = lastAssistant.querySelectorAll('pre code, pre');
+                        for (const codeBlock of codeBlocks) {
+                            const codeText = codeBlock.innerText || codeBlock.textContent || '';
+                            // 检查是否是JSON（以 { 开头或包含JSON特征）
+                            if (codeText.trim().startsWith('{') && codeText.includes('"vocabulary"')) {
+                                console.log('[提取] 从代码块中提取JSON成功');
+                                return {
+                                    text: codeText.trim(),
+                                    html: codeBlock.innerHTML || '',
+                                    fromCodeBlock: true
+                                };
+                            }
+                        }
+                        
+                        // 方法1：没有代码块，从 markdown 区域提取
                         const markdownDiv = lastAssistant.querySelector('[class*="markdown"]');
                         if (markdownDiv) {
                             const text = markdownDiv.innerText || markdownDiv.textContent || '';
