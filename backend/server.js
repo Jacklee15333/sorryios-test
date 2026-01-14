@@ -189,8 +189,17 @@ try {
     console.warn('[Server] ✗ 路由 grammar-api 不存在，跳过');
 }
 
+let vocabularyApiRouter;
+try {
+    vocabularyApiRouter = require('./routes/vocabulary-api');
+    console.log('[Server] ✓ 加载路由: vocabulary-api');
+} catch (e) {
+    console.warn('[Server] ✗ 路由 vocabulary-api 不存在，跳过');
+}
+
 // 注册路由 (注意顺序：具体路径要在通配符路径之前)
 if (grammarApiRouter) app.use('/api/grammar', grammarApiRouter);  // 放在前面，避免被task拦截
+if (vocabularyApiRouter) app.use('/api/vocabulary', vocabularyApiRouter);  // 词库路由
 if (uploadRouter) app.use('/api', uploadRouter);
 if (taskRouter) app.use('/api', taskRouter);
 if (reportRouter) app.use('/api', reportRouter);
@@ -223,11 +232,21 @@ app.get('/grammar-admin', (req, res) => {
     }
 });
 
+// 词库管理页面
+app.get('/vocabulary-admin', (req, res) => {
+    const vocabularyAdminPath = path.join(__dirname, 'public/vocabulary-admin.html');
+    if (fs.existsSync(vocabularyAdminPath)) {
+        res.sendFile(vocabularyAdminPath);
+    } else {
+        res.status(404).send('词库管理页面不存在，请先复制 vocabulary-admin.html 到 public 目录');
+    }
+});
+
 // 根路径
 app.get('/', (req, res) => {
     res.json({
         name: 'Sorryios AI 智能笔记系统',
-        version: '3.2',
+        version: '3.3',
         endpoints: {
             health: '/api/health',
             upload: '/api/upload',
@@ -288,7 +307,7 @@ requiredDirs.forEach(dir => {
 
 server.listen(PORT, HOST, () => {
     console.log('\n' + '='.repeat(60));
-    console.log('  Sorryios AI 智能笔记系统 v3.2');
+    console.log('  Sorryios AI 智能笔记系统 v3.3');
     console.log('='.repeat(60));
     console.log(`  🚀 服务器启动成功！`);
     console.log(`  📡 地址: http://localhost:${PORT}`);
@@ -297,12 +316,14 @@ server.listen(PORT, HOST, () => {
     console.log('  📌 可用页面:');
     console.log(`     - 管理后台: http://localhost:${PORT}/admin`);
     console.log(`     - 语法库管理: http://localhost:${PORT}/grammar-admin`);
+    console.log(`     - 词库管理: http://localhost:${PORT}/vocabulary-admin`);
     console.log('');
     console.log('  📌 API 接口:');
     console.log(`     - 健康检查: http://localhost:${PORT}/api/health`);
     console.log(`     - 文件上传: POST http://localhost:${PORT}/api/upload`);
     console.log(`     - 任务查询: GET http://localhost:${PORT}/api/task/:id`);
     console.log(`     - 语法库: http://localhost:${PORT}/api/grammar`);
+    console.log(`     - 词库: http://localhost:${PORT}/api/vocabulary`);
     console.log('='.repeat(60) + '\n');
 });
 
