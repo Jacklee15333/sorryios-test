@@ -1,0 +1,1000 @@
+{
+  "vocabulary": {
+    "words": [
+      {
+        "word": "importance",
+        "phonetic": "/ɪmˈpɔːrtəns/",
+        "pos": "n.",
+        "meaning": "重要性",
+        "forms": {},
+        "example": "The importance of sth. is clear to everyone.",
+        "note": ""
+      },
+      {
+        "word": "environment",
+        "phonetic": "/ɪnˈvaɪrənmənt/",
+        "pos": "n.",
+        "meaning": "环境",
+        "forms": {},
+        "example": "We should protect the environment.",
+        "note": ""
+      },
+      {
+        "word": "become",
+        "phonetic": "/bɪˈkʌm/",
+        "pos": "v.",
+        "meaning": "变得",
+        "forms": {
+          "past": "became",
+          "past_participle": "become"
+        },
+        "example": "Life becomes better with effort.",
+        "note": "不规则动词"
+      },
+      {
+        "word": "important",
+        "phonetic": "/ɪmˈpɔːrtənt/",
+        "pos": "adj.",
+        "meaning": "重要的",
+        "forms": {},
+        "example": "This is very important to sb.",
+        "note": ""
+      },
+      {
+        "word": "speech",
+        "phonetic": "/spiːtʃ/",
+        "pos": "n.",
+        "meaning": "演讲",
+        "forms": {},
+        "example": "He gave a speech in public.",
+        "note": ""
+      },
+      {
+        "word": "proper",
+        "phonetic": "/ˈprɒpər/",
+        "pos": "adj.",
+        "meaning": "合适的，恰当的",
+        "forms": {},
+        "example": "Proper preparation is important.",
+        "note": ""
+      },
+      {
+        "word": "essential",
+        "phonetic": "/ɪˈsenʃl/",
+        "pos": "adj.",
+        "meaning": "必要的，极其重要的",
+        "forms": {},
+        "example": "Water is essential to life.",
+        "note": ""
+      },
+      {
+        "word": "experiment",
+        "phonetic": "/ɪkˈsperɪmənt/",
+        "pos": "n.",
+        "meaning": "实验",
+        "forms": {},
+        "example": "The experiment was successful.",
+        "note": "注意与 experience 区分"
+      },
+      {
+        "word": "preparation",
+        "phonetic": "/ˌprepəˈreɪʃn/",
+        "pos": "n.",
+        "meaning": "准备",
+        "forms": {},
+        "example": "Good preparation leads to success.",
+        "note": "来自动词 prepare"
+      },
+      {
+        "word": "experience",
+        "phonetic": "/ɪkˈspɪəriəns/",
+        "pos": "n.",
+        "meaning": "经历；经验",
+        "forms": {},
+        "example": "He has rich experience.",
+        "note": ""
+      },
+      {
+        "word": "foreign",
+        "phonetic": "/ˈfɒrɪn/",
+        "pos": "adj.",
+        "meaning": "外国的",
+        "forms": {},
+        "example": "She learns a foreign language.",
+        "note": ""
+      },
+      {
+        "word": "foreigner",
+        "phonetic": "/ˈfɒrɪnər/",
+        "pos": "n.",
+        "meaning": "外国人",
+        "forms": {},
+        "example": "The foreigner asked for help.",
+        "note": ""
+      },
+      {
+        "word": "language",
+        "phonetic": "/ˈlæŋɡwɪdʒ/",
+        "pos": "n.",
+        "meaning": "语言",
+        "forms": {},
+        "example": "English is an international language.",
+        "note": ""
+      },
+      {
+        "word": "fluently",
+        "phonetic": "/ˈfluːəntli/",
+        "pos": "adv.",
+        "meaning": "流利地",
+        "forms": {},
+        "example": "She speaks English fluently.",
+        "note": ""
+      },
+      {
+        "word": "manage",
+        "phonetic": "/ˈmænɪdʒ/",
+        "pos": "v.",
+        "meaning": "管理，经营",
+        "forms": {},
+        "example": "He manages the company.",
+        "note": ""
+      },
+      {
+        "word": "management",
+        "phonetic": "/ˈmænɪdʒmənt/",
+        "pos": "n.",
+        "meaning": "管理；管理层",
+        "forms": {},
+        "example": "Women should enter management.",
+        "note": ""
+      },
+      {
+        "word": "without",
+        "phonetic": "/wɪˈðaʊt/",
+        "pos": "prep.",
+        "meaning": "没有",
+        "forms": {},
+        "example": "He left without money.",
+        "note": "介词"
+      },
+      {
+        "word": "smart",
+        "phonetic": "/smɑːrt/",
+        "pos": "adj.",
+        "meaning": "智能的；聪明的",
+        "forms": {},
+        "example": "This is a smart system.",
+        "note": ""
+      },
+      {
+        "word": "grow",
+        "phonetic": "/ɡrəʊ/",
+        "pos": "v.",
+        "meaning": "生长；增长",
+        "forms": {
+          "past": "grew",
+          "past_participle": "grown"
+        },
+        "example": "Plants grow fast in summer.",
+        "note": "不规则动词"
+      },
+      {
+        "word": "volunteer",
+        "phonetic": "/ˌvɒlənˈtɪər/",
+        "pos": "n./v.",
+        "meaning": "志愿者；自愿做",
+        "forms": {},
+        "example": "Many students volunteer to help others.",
+        "note": "名词和动词同形"
+      },
+      {
+        "word": "top",
+        "phonetic": "/tɒp/",
+        "pos": "n.",
+        "meaning": "顶部；顶端",
+        "forms": {},
+        "example": "The shop is at the top of the list.",
+        "note": ""
+      },
+      {
+        "word": "bath",
+        "phonetic": "/bɑːθ/",
+        "pos": "n.",
+        "meaning": "洗澡；浴缸",
+        "forms": {},
+        "example": "She takes a bath every day.",
+        "note": ""
+      },
+      {
+        "word": "bathe",
+        "phonetic": "/beɪð/",
+        "pos": "v.",
+        "meaning": "洗澡",
+        "forms": {},
+        "example": "He bathes the baby.",
+        "note": "名词 bath + e → 动词"
+      },
+      {
+        "word": "rich",
+        "phonetic": "/rɪtʃ/",
+        "pos": "adj.",
+        "meaning": "富有的",
+        "forms": {},
+        "example": "The rich live differently.",
+        "note": ""
+      },
+      {
+        "word": "double",
+        "phonetic": "/ˈdʌbl/",
+        "pos": "adj.",
+        "meaning": "双倍的",
+        "forms": {},
+        "example": "They have double reading time.",
+        "note": ""
+      },
+      {
+        "word": "trouble",
+        "phonetic": "/ˈtrʌbl/",
+        "pos": "n.",
+        "meaning": "困难；麻烦",
+        "forms": {},
+        "example": "He has trouble in reading.",
+        "note": ""
+      },
+      {
+        "word": "progress",
+        "phonetic": "/ˈprəʊɡres/",
+        "pos": "n.",
+        "meaning": "进步",
+        "forms": {},
+        "example": "Reading brings progress.",
+        "note": ""
+      },
+      {
+        "word": "relative",
+        "phonetic": "/ˈrelətɪv/",
+        "pos": "adj.",
+        "meaning": "相关的",
+        "forms": {},
+        "example": "This detail is relative to the topic.",
+        "note": ""
+      }
+    ],
+    "phrases": [
+      {
+        "phrase": "turn off sth.",
+        "meaning": "关掉某物",
+        "example": "Please turn off the light."
+      },
+      {
+        "phrase": "for example",
+        "meaning": "例如",
+        "example": "For example, we can save energy."
+      },
+      {
+        "phrase": "talk to sb.",
+        "meaning": "与某人交谈",
+        "example": "She wants to talk to her teacher."
+      },
+      {
+        "phrase": "talk with sb.",
+        "meaning": "和某人交谈",
+        "example": "He talked with his friend."
+      },
+      {
+        "phrase": "talk about sth./sb.",
+        "meaning": "谈论某事/某人",
+        "example": "They are talking about the plan."
+      },
+      {
+        "phrase": "ask sb. to do sth.",
+        "meaning": "请求/要求某人做某事",
+        "example": "The teacher asked us to finish the work."
+      },
+      {
+        "phrase": "ask sb. for sth.",
+        "meaning": "向某人要某物",
+        "example": "He asked his friend for help."
+      },
+      {
+        "phrase": "for sb.",
+        "meaning": "对某人来说",
+        "example": "This rule is important for us."
+      },
+      {
+        "phrase": "invite sb. to do sth.",
+        "meaning": "邀请某人做某事",
+        "example": "They invited me to join them."
+      },
+      {
+        "phrase": "share sth. on sth.",
+        "meaning": "在某处分享某物",
+        "example": "They share ideas on a website."
+      },
+      {
+        "phrase": "without sth.",
+        "meaning": "没有某物",
+        "example": "He left without money."
+      },
+      {
+        "phrase": "on the top of sth.",
+        "meaning": "在……的顶端",
+        "example": "The name is on the top of the list."
+      },
+      {
+        "phrase": "spend time/money doing sth.",
+        "meaning": "花费时间/金钱做某事",
+        "example": "They spend time helping others."
+      },
+      {
+        "phrase": "volunteer to do sth.",
+        "meaning": "自愿做某事",
+        "example": "She volunteers to work in summer."
+      },
+      {
+        "phrase": "in summer",
+        "meaning": "在夏天",
+        "example": "He travels in summer."
+      },
+      {
+        "phrase": "spend time doing sth.",
+        "meaning": "花费时间做某事",
+        "example": "He spends time reading."
+      },
+      {
+        "phrase": "have trouble in sth.",
+        "meaning": "在某方面有困难",
+        "example": "The child has trouble in reading."
+      }
+    ],
+    "patterns": [
+      {
+        "pattern": "more and more adj.",
+        "meaning": "越来越……",
+        "example": "The air is getting more and more polluted."
+      },
+      {
+        "pattern": "It is adj. for sb. to do sth.",
+        "meaning": "对某人来说做某事是……的",
+        "example": "It is essential for us to prepare well."
+      },
+      {
+        "pattern": "It is adj. to do sth.",
+        "meaning": "做某事是……的",
+        "example": "It is easy to make mistakes."
+      },
+      {
+        "pattern": "Young people in sw.",
+        "meaning": "某地的年轻人",
+        "example": "Young people in the city like sports."
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "title": "动名词作主语",
+      "definition": "当动词以动名词形式出现并充当句子开头时，整体表示“一件事”或“一个行为”，在句中起名词作用，常用于表达一般性、抽象性的行为或习惯性动作。",
+      "structure": "doing sth. + 谓语",
+      "usage": [
+        "表示抽象行为：Protecting sth. is important.",
+        "强调一件事本身：Learning English takes time."
+      ],
+      "mistakes": [
+        {
+          "wrong": "Protect the environment becomes important.",
+          "correct": "Protecting the environment becomes important.",
+          "explanation": "作主语时需要用动名词形式"
+        }
+      ],
+      "examples": [
+        "Protecting the environment becomes important.",
+        "Saving energy helps everyone."
+      ]
+    },
+    {
+      "title": "第三人称单数",
+      "definition": "当主语表示单个人、单个事物或一件事时，在一般现在时中，谓语动词需要使用第三人称单数形式。",
+      "structure": "第三人称单数主语 + 动词-s/es",
+      "usage": [
+        "描述客观事实：It works well.",
+        "描述普遍真理：Protecting sth. matters."
+      ],
+      "mistakes": [
+        {
+          "wrong": "Protecting the environment become important.",
+          "correct": "Protecting the environment becomes important.",
+          "explanation": "主语是一件事，谓语动词要用第三人称单数"
+        }
+      ],
+      "examples": [
+        "It makes our life better.",
+        "Protecting nature helps us."
+      ]
+    },
+    {
+      "title": "连接词连接并列句",
+      "definition": "当表达两个完整意思时，需要使用连接词把它们连接起来，避免只用逗号导致句子结构不完整或意义不清。",
+      "structure": "句子 + and/but/so + 句子",
+      "usage": [
+        "补充说明：We save energy, and we protect nature.",
+        "表示因果：We protect sth., so life improves."
+      ],
+      "mistakes": [
+        {
+          "wrong": "We should protect the environment, our life will be better.",
+          "correct": "We should protect the environment, and our life will be better.",
+          "explanation": "两个完整句子之间需要连接词"
+        }
+      ],
+      "examples": [
+        "We should protect nature, and it helps everyone.",
+        "He studied hard, so he passed."
+      ]
+    },
+    {
+      "title": "tell / talk / speak 用法区别",
+      "definition": "这三个词都与交流有关，但侧重点不同。tell 强调传递信息并常带双宾语；talk 强调交谈过程；speak 强调说话能力或正式场合。",
+      "structure": "tell sb. sth. / tell sb. to do sth.; talk to/with sb.; speak to/about sth.",
+      "usage": [
+        "传递信息：tell sb. sth.",
+        "交谈互动：talk with sb.",
+        "正式或能力：speak English"
+      ],
+      "mistakes": [
+        {
+          "wrong": "He told me doing it.",
+          "correct": "He told me to do it.",
+          "explanation": "tell 后接动作时用 to do 形式"
+        }
+      ],
+      "examples": [
+        "She told me the news.",
+        "They talked about the plan.",
+        "He speaks English well."
+      ]
+    },
+    {
+      "title": "tell / talk / speak / say 的区别",
+      "definition": "这四个动词都与“说”有关，但侧重点不同。tell 强调传递信息，通常需要宾语；talk 强调交谈过程；speak 强调说话的方式或语言；say 强调具体说的内容。",
+      "structure": "tell sb. sth. / tell sb. to do sth.; talk to/with sb.; speak + language; say + 内容",
+      "usage": [
+        "传递信息：tell sb. sth.",
+        "互动交流：talk with sb.",
+        "语言能力：speak English",
+        "陈述内容：say that..."
+      ],
+      "mistakes": [
+        {
+          "wrong": "He told me doing it.",
+          "correct": "He told me to do it.",
+          "explanation": "tell 后接动作要用 to do 形式"
+        }
+      ],
+      "examples": [
+        "She told me a story.",
+        "They talked about the plan.",
+        "He speaks Chinese.",
+        "She said it was true."
+      ]
+    },
+    {
+      "title": "一般过去时",
+      "definition": "一般过去时用于描述过去某一具体时间发生的动作或存在的状态，谓语动词需要使用过去式形式。",
+      "structure": "主语 + 动词过去式",
+      "usage": [
+        "描述过去发生的动作：I ate rice yesterday.",
+        "叙述过去的经历：He gave a speech."
+      ],
+      "mistakes": [
+        {
+          "wrong": "Yesterday I eat rice.",
+          "correct": "Yesterday I ate rice.",
+          "explanation": "表示过去时间时动词要用过去式"
+        }
+      ],
+      "examples": [
+        "She finished her homework.",
+        "He spoke in public."
+      ]
+    },
+    {
+      "title": "过去分词的三种用法",
+      "definition": "过去分词不仅可以表示完成的动作，还可以用于被动表达和充当形容词，功能比一般过去时更丰富。",
+      "structure": "have/has + 过去分词；be + 过去分词；过去分词 + 名词",
+      "usage": [
+        "现在完成：have done sth.",
+        "被动表达：be done",
+        "作形容词：a broken window"
+      ],
+      "mistakes": [
+        {
+          "wrong": "The apple ate by me.",
+          "correct": "The apple was eaten by me.",
+          "explanation": "被动表达需要 be + 过去分词"
+        }
+      ],
+      "examples": [
+        "I have finished my work.",
+        "The room is cleaned.",
+        "The eaten apple was on the table."
+      ]
+    },
+    {
+      "title": "被动语态",
+      "definition": "被动语态用于强调动作的承受者，而不是动作的执行者，常用于不知道或不强调执行者的情况。",
+      "structure": "be + 过去分词 (+ by sb.)",
+      "usage": [
+        "强调结果：The work is done.",
+        "不强调执行者：The house is controlled by a system."
+      ],
+      "mistakes": [
+        {
+          "wrong": "The house is control by sb.",
+          "correct": "The house is controlled by sb.",
+          "explanation": "被动语态中动词要用过去分词形式"
+        }
+      ],
+      "examples": [
+        "The apple is eaten by me.",
+        "The room was cleaned yesterday."
+      ]
+    },
+    {
+      "title": "介词后接名词",
+      "definition": "介词后面只能接名词或名词性结构，不能直接接动词原形。如果表达动作含义，通常使用动名词形式。",
+      "structure": "介词 + 名词 / doing",
+      "usage": [
+        "表示方式或条件：without doing sth.",
+        "表示地点或范围：in sth."
+      ],
+      "mistakes": [
+        {
+          "wrong": "without do homework",
+          "correct": "without doing homework",
+          "explanation": "介词后不能接动词原形"
+        }
+      ],
+      "examples": [
+        "He left without saying anything.",
+        "She studied in a library."
+      ]
+    },
+    {
+      "title": "see 的两种宾语补足结构",
+      "definition": "see 后可以接不带 to 的动词原形或动名词作宾语补足语，前者强调动作全过程，后者强调动作正在进行。",
+      "structure": "see sb. do sth. / see sb. doing sth.",
+      "usage": [
+        "看到全过程：see sb. do sth.",
+        "看到正在发生：see sb. doing sth."
+      ],
+      "mistakes": [
+        {
+          "wrong": "I saw him to speak English.",
+          "correct": "I saw him speak English.",
+          "explanation": "see 后接动词原形不带 to"
+        }
+      ],
+      "examples": [
+        "I saw him enter the room.",
+        "I saw her talking with a friend."
+      ]
+    },
+    {
+      "title": "ask / invite 的结构区别",
+      "definition": "ask 和 invite 后接表示动作时，都使用 to do 形式，不能接 doing，因为动作尚未发生。",
+      "structure": "ask/invite sb. to do sth.",
+      "usage": [
+        "请求行为：ask sb. to do sth.",
+        "邀请行为：invite sb. to do sth."
+      ],
+      "mistakes": [
+        {
+          "wrong": "invite sb. doing sth.",
+          "correct": "invite sb. to do sth.",
+          "explanation": "邀请表示未发生的动作，用 to do"
+        }
+      ],
+      "examples": [
+        "They invited us to join them.",
+        "She asked me to stay quiet."
+      ]
+    },
+    {
+      "title": "It 作形式主语的强调结构",
+      "definition": "It 可作形式主语，把真正的动作放在后面的不定式中，使句子结构更平衡，常用于评价或感受。",
+      "structure": "It is adj. to do sth.",
+      "usage": [
+        "表达评价：It is surprising to see sth.",
+        "强调感受：It is interesting to learn languages."
+      ],
+      "mistakes": [
+        {
+          "wrong": "To see him speak fluently is surprising.",
+          "correct": "It is surprising to see him speak fluently.",
+          "explanation": "形式主语结构更自然常用"
+        }
+      ],
+      "examples": [
+        "It is surprising to see a child speak fluently.",
+        "It is important to prepare well."
+      ]
+    },
+    {
+      "title": "to do 与 to doing 的区别",
+      "definition": "在英语中，表示将要发生或尚未发生的动作时，通常使用不定式形式；而动名词形式更偏向于名词化的动作概念。某些动词和结构只能接不定式。",
+      "structure": "动词 + to do sth.",
+      "usage": [
+        "表示将来的动作：plan to do sth.",
+        "表示目的：want to do sth."
+      ],
+      "mistakes": [
+        {
+          "wrong": "invite sb. doing sth.",
+          "correct": "invite sb. to do sth.",
+          "explanation": "invite 后只能接不定式表示未发生的动作"
+        }
+      ],
+      "examples": [
+        "They want to learn English.",
+        "She decided to try again."
+      ]
+    },
+    {
+      "title": "介词后接名词或动名词",
+      "definition": "介词后面只能接名词或名词性结构，不能直接接动词原形；如果表示动作含义，需使用动名词形式。",
+      "structure": "介词 + 名词 / doing",
+      "usage": [
+        "表示方式：by doing sth.",
+        "表示条件：without doing sth."
+      ],
+      "mistakes": [
+        {
+          "wrong": "without do homework",
+          "correct": "without doing homework",
+          "explanation": "介词后不能接动词原形"
+        }
+      ],
+      "examples": [
+        "He left without saying goodbye.",
+        "She improved by practicing daily."
+      ]
+    },
+    {
+      "title": "一般疑问句的构成",
+      "definition": "一般疑问句通常通过把助动词或系动词提前到句首来构成，用于询问是否发生某事。",
+      "structure": "助动词/系动词 + 主语 + 动词",
+      "usage": [
+        "一般现在时提问：Do/Does + 主语 + 动词",
+        "一般过去时提问：Did + 主语 + 动词原形"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Does he like apples?",
+          "correct": "Does he like apples?",
+          "explanation": "动词原形不加变化"
+        }
+      ],
+      "examples": [
+        "Do you like music?",
+        "Did she finish the work?"
+      ]
+    },
+    {
+      "title": "画线部分提问的步骤",
+      "definition": "对句子中的画线部分提问时，需要先判断画线内容的类型，选择合适的疑问词，并把剩余部分改为一般疑问句语序。",
+      "structure": "疑问词 + 一般疑问句",
+      "usage": [
+        "名词提问：What/Who + 一般疑问句",
+        "时间提问：When + 一般疑问句"
+      ],
+      "mistakes": [
+        {
+          "wrong": "What the oven tells us?",
+          "correct": "What does the oven tell us?",
+          "explanation": "一般疑问句需要助动词提前"
+        }
+      ],
+      "examples": [
+        "What does he want?",
+        "Who did you meet?"
+      ]
+    },
+    {
+      "title": "一般疑问句的构成（助动词 do）",
+      "definition": "当句子中没有系动词或情态动词时，一般疑问句需要借助助动词 do/does/did 放在句首，谓语动词还原为动词原形。",
+      "structure": "Do/Does/Did + 主语 + 动词原形",
+      "usage": [
+        "一般现在时提问：Do you like music?",
+        "第三人称单数提问：Does he work here?",
+        "一般过去时提问：Did they finish it?"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Does he likes apples?",
+          "correct": "Does he like apples?",
+          "explanation": "助动词出现后，谓语动词必须用原形"
+        }
+      ],
+      "examples": [
+        "Do you know the answer?",
+        "Does she live here?",
+        "Did he grow flowers last year?"
+      ]
+    },
+    {
+      "title": "合并句子（介词 without）",
+      "definition": "使用介词 without 合并句子时，需把其中一个句子转化为名词性结构，通常去掉主语，并把动词变为动名词形式。",
+      "structure": "主句 + without doing sth.",
+      "usage": [
+        "表示否定条件：finish work without making mistakes",
+        "表示方式：solve problems without asking for help"
+      ],
+      "mistakes": [
+        {
+          "wrong": "They cook meals without waste food.",
+          "correct": "They cook meals without wasting food.",
+          "explanation": "without 后要接动名词形式"
+        }
+      ],
+      "examples": [
+        "They work without wasting time.",
+        "The system runs without stopping."
+      ]
+    },
+    {
+      "title": "并列连词 and 的省略主语规则",
+      "definition": "当两个并列句的主语相同且语义清楚时，后一句中的主语可以省略，以避免重复。",
+      "structure": "主语 + 谓语 + and + 谓语",
+      "usage": [
+        "并列动作：He came and sat down.",
+        "并列结果：She studied hard and passed the exam."
+      ],
+      "mistakes": [
+        {
+          "wrong": "He likes apples and he likes oranges.",
+          "correct": "He likes apples and likes oranges.",
+          "explanation": "并列句主语相同时可省略"
+        }
+      ],
+      "examples": [
+        "She opened the door and walked in.",
+        "He finished his work and went home."
+      ]
+    },
+    {
+      "title": "阅读理解中的关键词定位",
+      "definition": "在阅读理解中，通过题干中的关键信息（如人物、地点、时间）回原文定位相关句子，可快速找到答案。",
+      "structure": "关键词 → 原文定位 → 比较选项",
+      "usage": [
+        "人物定位：name",
+        "地点定位：place",
+        "时间定位：time"
+      ],
+      "mistakes": [],
+      "examples": [
+        "Find 'young people in the USA' in the passage.",
+        "Locate 'summer' and 'Alice' together."
+      ]
+    },
+    {
+      "title": "阅读理解中的信息交叉定位",
+      "definition": "当题目中同时出现两条或以上信息（如人物+时间、人物+地点）时，需要在原文中找到这些信息的交叉位置，答案通常就在该位置附近。",
+      "structure": "关键词A + 关键词B → 原文交叉点",
+      "usage": [
+        "人物+时间：name + summer",
+        "人物+地点：name + place"
+      ],
+      "mistakes": [
+        {
+          "wrong": "只找到一个关键词就选答案",
+          "correct": "同时找到两个或以上关键词再判断",
+          "explanation": "单一信息容易误选"
+        }
+      ],
+      "examples": [
+        "Find 'Alice' and 'summer' together.",
+        "Locate 'young people' and 'USA'."
+      ]
+    },
+    {
+      "title": "宾语从句",
+      "definition": "当一个完整的句子在主句中充当宾语时，这个句子叫作宾语从句，通常由连接词引导。",
+      "structure": "主语 + 谓语 + that/wh- + 从句",
+      "usage": [
+        "陈述事实：know that...",
+        "表达信息：find out what..."
+      ],
+      "mistakes": [
+        {
+          "wrong": "We know Jason is who.",
+          "correct": "We know who Jason is.",
+          "explanation": "宾语从句语序应为陈述语序"
+        }
+      ],
+      "examples": [
+        "We know that he is 18.",
+        "She knows what he wants."
+      ]
+    },
+    {
+      "title": "后置定语",
+      "definition": "当修饰名词的成分较复杂（如短语或从句）时，通常放在名词后面，这种修饰成分叫后置定语。",
+      "structure": "名词 + 定语（短语/从句）",
+      "usage": [
+        "介词短语后置：the apples on the tree",
+        "定语从句后置：the families that are not rich"
+      ],
+      "mistakes": [
+        {
+          "wrong": "on the tree apples",
+          "correct": "the apples on the tree",
+          "explanation": "复杂修饰语需后置"
+        }
+      ],
+      "examples": [
+        "The book on the desk is mine.",
+        "Families that need help get support."
+      ]
+    },
+    {
+      "title": "定语从句",
+      "definition": "用一个从句来修饰名词，这个从句叫定语从句，通常放在被修饰名词之后，用关系词引导。",
+      "structure": "名词 + that/which/who + 从句",
+      "usage": [
+        "修饰人：who/that",
+        "修饰物：that/which"
+      ],
+      "mistakes": [
+        {
+          "wrong": "The families are not rich live here.",
+          "correct": "The families that are not rich live here.",
+          "explanation": "需要关系词连接定语从句"
+        }
+      ],
+      "examples": [
+        "The people who help others are kind.",
+        "The houses that they built are cheap."
+      ]
+    },
+    {
+      "title": "双宾语结构",
+      "definition": "某些动词可以同时带两个宾语，一个表示人，一个表示事物，通常表示“把某物给某人”。",
+      "structure": "动词 + sb. + sth.",
+      "usage": [
+        "teach sb. sth.",
+        "give sb. sth."
+      ],
+      "mistakes": [
+        {
+          "wrong": "He teaches how to build houses people.",
+          "correct": "He teaches people how to build houses.",
+          "explanation": "人通常作间接宾语"
+        }
+      ],
+      "examples": [
+        "She teaches students English.",
+        "He gave me a book."
+      ]
+    },
+    {
+      "title": "定语从句的就近修饰原则",
+      "definition": "定语从句用于修饰名词，通常紧跟在被修饰的名词之后，优先修饰最近的名词，以保证意义清晰、指向明确。",
+      "structure": "名词 + that/which/who + 从句",
+      "usage": [
+        "修饰人：the children who need help",
+        "修饰物：the books that are useful"
+      ],
+      "mistakes": [
+        {
+          "wrong": "The teacher teaches children have trouble in reading.",
+          "correct": "The teacher teaches children who have trouble in reading.",
+          "explanation": "缺少关系词，导致修饰关系不清"
+        }
+      ],
+      "examples": [
+        "She helps students who need support.",
+        "They built houses that cost less."
+      ]
+    },
+    {
+      "title": "后置定语的类型",
+      "definition": "当修饰成分较复杂时，定语会放在名词后面，常见形式包括介词短语和定语从句。",
+      "structure": "名词 + 介词短语 / 名词 + 定语从句",
+      "usage": [
+        "介词短语：the apples on the tree",
+        "定语从句：the families that are not rich"
+      ],
+      "mistakes": [
+        {
+          "wrong": "on the tree apples",
+          "correct": "the apples on the tree",
+          "explanation": "复杂修饰成分需要后置"
+        }
+      ],
+      "examples": [
+        "The room with windows is bright.",
+        "People who work hard succeed."
+      ]
+    },
+    {
+      "title": "翻译中的从后往前策略",
+      "definition": "当句子中包含介词、连词或从句等复杂结构时，翻译时可先处理这些修饰成分，再回到主干，有助于理解整体意思。",
+      "structure": "修饰成分 → 主干",
+      "usage": [
+        "介词短语较多的句子",
+        "包含从句的长句"
+      ],
+      "mistakes": [
+        {
+          "wrong": "逐词直译导致语序混乱",
+          "correct": "先译修饰成分再译主干",
+          "explanation": "符合英语信息结构"
+        }
+      ],
+      "examples": [
+        "Children with trouble in reading need help.",
+        "Houses for families that are not rich are built."
+      ]
+    },
+    {
+      "title": "动名词作主语与谓语一致",
+      "definition": "动名词短语作主语时，整体表示“一件事”，在意义上通常视为单数，因此谓语动词用第三人称单数形式。",
+      "structure": "doing sth. + 谓语（三单）",
+      "usage": [
+        "抽象行为：Reading books makes progress.",
+        "习惯性行为：Studying daily helps a lot."
+      ],
+      "mistakes": [
+        {
+          "wrong": "Reading books make progress.",
+          "correct": "Reading books makes progress.",
+          "explanation": "动名词短语作主语，谓语用第三人称单数"
+        }
+      ],
+      "examples": [
+        "Reading books makes people better.",
+        "Exercising regularly improves health."
+      ]
+    },
+    {
+      "title": "主谓宾分析法",
+      "definition": "理解句子时先找主语、谓语和宾语，再识别修饰成分，有助于准确判断句子结构与语法形式。",
+      "structure": "主语 + 谓语 + 宾语 (+ 修饰)",
+      "usage": [
+        "写作构句",
+        "改错与选择题"
+      ],
+      "mistakes": [
+        {
+          "wrong": "忽略主语直接判断动词形式",
+          "correct": "先确定主语再选动词形式",
+          "explanation": "动词形式由主语决定"
+        }
+      ],
+      "examples": [
+        "Reading books makes progress.",
+        "Books make people better."
+      ]
+    }
+  ],
+  "summary": {
+    "total_words": 28,
+    "total_phrases": 17,
+    "total_patterns": 4,
+    "total_grammar": 30,
+    "filter_stats": {
+      "original": 39,
+      "final": 28,
+      "removed": 11
+    }
+  },
+  "metadata": {
+    "taskId": "e0f89f7f-b356-4e06-beeb-88703a55cbd9",
+    "originalFile": "1æ7æ¥è¯¾å ç¬è®°.txt",
+    "processedAt": "2026-01-14T05:38:53.431Z",
+    "totalSegments": 7,
+    "successCount": 7,
+    "failCount": 0,
+    "browserRestarts": 1
+  }
+}

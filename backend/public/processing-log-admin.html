@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>处理日志 - Sorryios AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        /* 返回链接 */
+        .back-link { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            color: #92400e; 
+            text-decoration: none; 
+            margin-bottom: 16px; 
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        /* 头部 */
+        .header { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 24px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+            border: 1px solid #fde68a;
+        }
+        .header h1 { color: #92400e; font-size: 26px; margin-bottom: 8px; }
+        .header p { color: #a16207; font-size: 14px; }
+        
+        /* 统计卡片 */
+        .stats-row { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 16px; 
+            margin-top: 20px; 
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #fcd34d;
+        }
+        .stat-card .label { font-size: 13px; color: #92400e; margin-bottom: 4px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: #78350f; }
+        .stat-card .sub { font-size: 12px; color: #a16207; margin-top: 4px; }
+        
+        /* 标签页 */
+        .tabs { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 6px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06); 
+            display: flex; 
+            gap: 6px;
+            border: 1px solid #fde68a;
+        }
+        .tab-btn { 
+            flex: 1; 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            background: transparent; 
+            color: #92400e; 
+        }
+        .tab-btn:hover { background: #fef3c7; }
+        .tab-btn.active { 
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); 
+            color: #78350f; 
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+        .tab-btn .badge {
+            display: inline-block;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+        .tab-btn.active .badge {
+            background: #78350f;
+            color: #fef3c7;
+        }
+        
+        /* 内容区 */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* 列表容器 */
+        .list-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid #fde68a;
+            overflow: hidden;
+        }
+        
+        /* 工具栏 */
+        .toolbar {
+            padding: 16px 20px;
+            border-bottom: 1px solid #fef3c7;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .toolbar .title {
+            font-weight: 600;
+            color: #78350f;
+            font-size: 15px;
+        }
+        .toolbar .spacer { flex: 1; }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+        }
+        .btn-success { background: #34d399; color: #064e3b; }
+        .btn-success:hover { background: #10b981; }
+        .btn-danger { background: #f87171; color: #7f1d1d; }
+        .btn-danger:hover { background: #ef4444; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-secondary:hover { background: #d1d5db; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        
+        /* 任务卡片 */
+        .task-card {
+            padding: 16px 20px;
+            border-bottom: 1px solid #fef3c7;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .task-card:hover { background: #fffbeb; }
+        .task-card:last-child { border-bottom: none; }
+        .task-card .task-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .task-card .task-id {
+            font-family: monospace;
+            font-size: 13px;
+            color: #92400e;
+            background: #fef3c7;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .task-card .task-user {
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .task-card .task-time {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .task-card .task-file {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .task-card .task-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+        }
+        .task-card .task-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .task-card .task-stats .exact { color: #10b981; }
+        .task-card .task-stats .fuzzy { color: #f59e0b; }
+        .task-card .task-stats .unmatched { color: #ef4444; }
+        
+        /* 匹配项卡片 */
+        .match-item {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .match-item:last-child { border-bottom: none; }
+        .match-item:hover { background: #fffbeb; }
+        
+        .match-item .item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .match-item .item-icon.exact { background: #d1fae5; }
+        .match-item .item-icon.fuzzy { background: #fef3c7; }
+        .match-item .item-icon.unmatched { background: #fee2e2; }
+        
+        .match-item .item-content { flex: 1; min-width: 0; }
+        .match-item .item-original {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+        .match-item .item-matched {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+        .match-item .item-matched .arrow { color: #fbbf24; }
+        .match-item .item-matched .matched-text { color: #059669; font-weight: 500; }
+        .match-item .item-matched .score {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .match-item .item-type {
+            font-size: 11px;
+            color: #94a3b8;
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .match-item .item-ai-content {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #475569;
+            border-left: 3px solid #fbbf24;
+        }
+        .match-item .item-ai-content .ai-label {
+            font-size: 11px;
+            color: #f59e0b;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .match-item .item-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        
+        /* 状态标签 */
+        .status-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.confirmed { background: #d1fae5; color: #065f46; }
+        .status-badge.rejected { background: #fee2e2; color: #991b1b; }
+        .status-badge.imported { background: #dbeafe; color: #1e40af; }
+        .status-badge.ignored { background: #f3f4f6; color: #6b7280; }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+        .empty-state h3 { color: #64748b; margin-bottom: 8px; }
+        
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #92400e;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .modal.active { display: flex; align-items: flex-start; justify-content: center; }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 700px;
+            margin: 40px 0;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #fef3c7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 { color: #78350f; font-size: 18px; }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+        .modal-close:hover { color: #475569; }
+        .modal-body { padding: 20px 24px; }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #fef3c7;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* 表单 */
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #fbbf24;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        /* 信息块 */
+        .info-block {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+        .info-block .info-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        .info-block .info-value {
+            font-size: 15px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            z-index: 2000;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .match-item { flex-direction: column; }
+            .match-item .item-actions { width: 100%; justify-content: flex-start; margin-top: 8px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/admin" class="back-link">← 返回管理后台</a>
+        
+        <div class="header">
+            <h1>📋 处理日志</h1>
+            <p>查看 AI 处理记录，审核匹配结果，完善入库未匹配数据</p>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="label">今日任务</div>
+                    <div class="value" id="statTodayTasks">0</div>
+                    <div class="sub">已处理的任务数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">待审核匹配</div>
+                    <div class="value" id="statPendingMatches">0</div>
+                    <div class="sub">85-99% 模糊匹配</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">待完善入库</div>
+                    <div class="value" id="statPendingUnmatched">0</div>
+                    <div class="sub">未匹配 + AI 生成</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">今日入库</div>
+                    <div class="value" id="statTodayImported">0</div>
+                    <div class="sub">新增到词库/语法库</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tasks')">
+                📁 任务列表
+            </button>
+            <button class="tab-btn" onclick="switchTab('pending-matches')">
+                🟡 待审核匹配
+                <span class="badge" id="badgePendingMatches" style="display:none">0</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('pending-unmatched')">
+                ❌ 待完善入库
+                <span class="badge" id="badgePendingUnmatched" style="display:none">0</span>
+            </button>
+        </div>
+        
+        <!-- 任务列表 -->
+        <div id="tab-tasks" class="tab-content active">
+            <div class="list-container">
+                <div class="toolbar">
+                    <span class="title">最近处理任务</span>
+                    <span class="spacer"></span>
+                    <button class="btn btn-secondary btn-sm" onclick="loadTasks()">🔄 刷新</button>
+                </div>
+                <div id="tasksList">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 待审核匹配 -->
+        <div id="tab-pending-matches" class="tab-content">
+            <div class="list-container">
+                <div class="toolbar">
+                    <span class="title">待审核的模糊匹配 (85-99%)</span>
+                    <span class="spacer"></span>
+                    <button class="btn btn-success btn-sm" onclick="confirmAllMatches()">✓ 全部确认</button>
+                    <button class="btn btn-secondary btn-sm" onclick="loadPendingMatches()">🔄 刷新</button>
+                </div>
+                <div id="pendingMatchesList">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 待完善入库 -->
+        <div id="tab-pending-unmatched" class="tab-content">
+            <div class="list-container">
+                <div class="toolbar">
+                    <span class="title">待完善入库的数据</span>
+                    <span class="spacer"></span>
+                    <button class="btn btn-secondary btn-sm" onclick="loadPendingUnmatched()">🔄 刷新</button>
+                </div>
+                <div id="pendingUnmatchedList">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 编辑弹窗 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="editModalTitle">编辑内容</h2>
+                <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editItemId">
+                <input type="hidden" id="editItemType">
+                
+                <div class="info-block">
+                    <div class="info-label">原始文本</div>
+                    <div class="info-value" id="editOriginalText"></div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>类型</label>
+                        <select id="editTargetType">
+                            <option value="word">📝 单词</option>
+                            <option value="phrase">📚 短语</option>
+                            <option value="pattern">📋 句型</option>
+                            <option value="grammar">📖 语法</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>分类</label>
+                        <input type="text" id="editCategory" placeholder="如：动词、时态">
+                    </div>
+                </div>
+                
+                <!-- 词汇字段 -->
+                <div id="vocabFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>音标</label>
+                            <input type="text" id="editPhonetic" placeholder="/ɪnˈvaɪrənmənt/">
+                        </div>
+                        <div class="form-group">
+                            <label>词性</label>
+                            <input type="text" id="editPos" placeholder="n. / v. / adj.">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>含义 *</label>
+                        <input type="text" id="editMeaning" placeholder="中文含义">
+                    </div>
+                    <div class="form-group">
+                        <label>例句</label>
+                        <textarea id="editExample" placeholder="英文例句"></textarea>
+                    </div>
+                </div>
+                
+                <!-- 语法字段 -->
+                <div id="grammarFields" style="display:none">
+                    <div class="form-group">
+                        <label>定义 *</label>
+                        <textarea id="editDefinition" placeholder="语法定义"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>结构</label>
+                        <input type="text" id="editStructure" placeholder="如：have/has + done">
+                    </div>
+                    <div class="form-group">
+                        <label>用法说明</label>
+                        <textarea id="editUsage" placeholder="多个用法用换行分隔"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>例句</label>
+                        <textarea id="editExamples" placeholder="多个例句用换行分隔"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>易错点</label>
+                        <textarea id="editMistakes" placeholder="多个易错点用换行分隔"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveEdit()">💾 保存</button>
+                <button class="btn btn-success" onclick="saveAndImport()">📥 保存并入库</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 任务详情弹窗 -->
+    <div class="modal" id="taskDetailModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>任务详情</h2>
+                <button class="modal-close" onclick="closeModal('taskDetailModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="taskDetailContent">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        const API_BASE = '/api/processing-log';
+        
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadTasks();
+        });
+        
+        // 加载统计
+        async function loadStats() {
+            try {
+                const res = await fetch(API_BASE + '/stats');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('statTodayTasks').textContent = data.data.today.tasks;
+                    document.getElementById('statPendingMatches').textContent = data.data.pending.pendingMatches;
+                    document.getElementById('statPendingUnmatched').textContent = 
+                        data.data.pending.pendingUnmatched + data.data.pending.editedUnmatched;
+                    document.getElementById('statTodayImported').textContent = data.data.today.imported;
+                    
+                    // 更新标签页徽章
+                    updateBadge('badgePendingMatches', data.data.pending.pendingMatches);
+                    updateBadge('badgePendingUnmatched', 
+                        data.data.pending.pendingUnmatched + data.data.pending.editedUnmatched);
+                }
+            } catch (e) {
+                console.error('加载统计失败:', e);
+            }
+        }
+        
+        function updateBadge(id, count) {
+            const badge = document.getElementById(id);
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        // 切换标签页
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+            
+            // 加载对应数据
+            if (tab === 'tasks') loadTasks();
+            else if (tab === 'pending-matches') loadPendingMatches();
+            else if (tab === 'pending-unmatched') loadPendingUnmatched();
+        }
+        
+        // 加载任务列表
+        async function loadTasks() {
+            const container = document.getElementById('tasksList');
+            container.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const res = await fetch(API_BASE + '/tasks?limit=50');
+                const data = await res.json();
+                
+                if (!data.success || !data.data.length) {
+                    container.innerHTML = '<div class="empty-state"><h3>暂无任务</h3><p>还没有处理过任何任务</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = data.data.map(task => `
+                    <div class="task-card" onclick="viewTaskDetail('${task.task_id}')">
+                        <div class="task-header">
+                            <span class="task-id">${task.task_id.substring(0, 8)}...</span>
+                            <span class="task-user">${escapeHtml(task.username || '匿名')}</span>
+                            <span class="task-time">${formatTime(task.created_at)}</span>
+                        </div>
+                        <div class="task-file">📄 ${escapeHtml(task.file_name || '未知文件')}</div>
+                        <div class="task-stats">
+                            <span class="exact">✅ 精确匹配 ${task.exact_match_count || 0}</span>
+                            <span class="fuzzy">🟡 模糊匹配 ${task.fuzzy_match_count || 0}</span>
+                            <span class="unmatched">❌ 未匹配 ${task.unmatched_count || 0}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
+            }
+        }
+        
+        // 查看任务详情
+        async function viewTaskDetail(taskId) {
+            const modal = document.getElementById('taskDetailModal');
+            const content = document.getElementById('taskDetailContent');
+            modal.classList.add('active');
+            content.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const res = await fetch(API_BASE + '/tasks/' + taskId);
+                const data = await res.json();
+                
+                if (!data.success) {
+                    content.innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
+                    return;
+                }
+                
+                const { task, exactMatches, fuzzyMatches, unmatchedItems, summary } = data.data;
+                
+                content.innerHTML = `
+                    <div class="info-block">
+                        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+                            <div><span class="info-label">任务ID</span><div class="info-value">${task.task_id}</div></div>
+                            <div><span class="info-label">用户</span><div class="info-value">${escapeHtml(task.username)}</div></div>
+                            <div><span class="info-label">时间</span><div class="info-value">${formatTime(task.created_at)}</div></div>
+                            <div><span class="info-label">文件</span><div class="info-value">${escapeHtml(task.file_name)}</div></div>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+                        <span style="padding:6px 12px;background:#d1fae5;color:#065f46;border-radius:6px;font-size:13px;">
+                            ✅ 精确匹配 ${summary.exactMatch}
+                        </span>
+                        <span style="padding:6px 12px;background:#fef3c7;color:#92400e;border-radius:6px;font-size:13px;">
+                            🟡 模糊匹配 ${summary.fuzzyMatch} (待审核 ${summary.pendingReview})
+                        </span>
+                        <span style="padding:6px 12px;background:#fee2e2;color:#991b1b;border-radius:6px;font-size:13px;">
+                            ❌ 未匹配 ${summary.unmatched} (待完善 ${summary.pendingImport})
+                        </span>
+                    </div>
+                    
+                    ${fuzzyMatches.length > 0 ? `
+                        <h4 style="color:#92400e;margin-bottom:12px;">🟡 模糊匹配 (待审核)</h4>
+                        <div style="background:#fffbeb;border-radius:8px;padding:12px;margin-bottom:20px;">
+                            ${fuzzyMatches.filter(m => m.status === 'pending').map(m => `
+                                <div style="padding:8px 0;border-bottom:1px solid #fef3c7;display:flex;align-items:center;gap:12px;">
+                                    <span style="font-weight:500;">${escapeHtml(m.original_text)}</span>
+                                    <span style="color:#fbbf24;">→</span>
+                                    <span style="color:#059669;">${escapeHtml(m.matched_text)}</span>
+                                    <span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-size:11px;">
+                                        ${(m.match_score * 100).toFixed(0)}%
+                                    </span>
+                                    <span style="flex:1;"></span>
+                                    <button class="btn btn-success btn-sm" onclick="confirmMatch(${m.id})">✓ 确认</button>
+                                    <button class="btn btn-danger btn-sm" onclick="rejectMatch(${m.id})">✗ 错误</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${unmatchedItems.filter(u => u.status === 'pending' || u.status === 'edited').length > 0 ? `
+                        <h4 style="color:#ef4444;margin-bottom:12px;">❌ 未匹配 (待完善)</h4>
+                        <div style="background:#fef2f2;border-radius:8px;padding:12px;">
+                            ${unmatchedItems.filter(u => u.status === 'pending' || u.status === 'edited').map(u => `
+                                <div style="padding:8px 0;border-bottom:1px solid #fee2e2;">
+                                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                                        <span style="font-weight:500;">${escapeHtml(u.original_text)}</span>
+                                        <span class="item-type">${getTypeLabel(u.item_type)}</span>
+                                        <span style="flex:1;"></span>
+                                        <button class="btn btn-primary btn-sm" onclick="editUnmatched(${u.id})">✎ 编辑</button>
+                                        <button class="btn btn-success btn-sm" onclick="importUnmatched(${u.id})">📥 入库</button>
+                                    </div>
+                                    ${u.ai_generated ? `
+                                        <div style="font-size:12px;color:#64748b;background:#fff;padding:8px;border-radius:4px;">
+                                            <span style="color:#f59e0b;font-weight:500;">AI生成:</span>
+                                            ${formatAIContent(u.ai_generated)}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+            } catch (e) {
+                content.innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
+            }
+        }
+        
+        // 加载待审核匹配
+        async function loadPendingMatches() {
+            const container = document.getElementById('pendingMatchesList');
+            container.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const res = await fetch(API_BASE + '/pending-matches');
+                const data = await res.json();
+                
+                if (!data.success || !data.data.length) {
+                    container.innerHTML = '<div class="empty-state"><h3>🎉 太棒了！</h3><p>没有待审核的模糊匹配</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = data.data.map(m => `
+                    <div class="match-item">
+                        <div class="item-icon fuzzy">🟡</div>
+                        <div class="item-content">
+                            <div class="item-original">${escapeHtml(m.original_text)}</div>
+                            <div class="item-matched">
+                                <span class="arrow">→</span>
+                                <span class="matched-text">${escapeHtml(m.matched_text)}</span>
+                                <span class="score">${(m.match_score * 100).toFixed(0)}%</span>
+                                <span class="item-type">${getTypeLabel(m.item_type)}</span>
+                            </div>
+                            <div style="font-size:12px;color:#94a3b8;">
+                                来自: ${escapeHtml(m.username || '匿名')} · ${escapeHtml(m.file_name || '')}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-success btn-sm" onclick="confirmMatch(${m.id})">✓ 确认正确</button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectMatch(${m.id})">✗ 标记错误</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
+            }
+        }
+        
+        // 加载待完善入库
+        async function loadPendingUnmatched() {
+            const container = document.getElementById('pendingUnmatchedList');
+            container.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const res = await fetch(API_BASE + '/pending-unmatched');
+                const data = await res.json();
+                
+                if (!data.success || !data.data.length) {
+                    container.innerHTML = '<div class="empty-state"><h3>🎉 太棒了！</h3><p>没有待完善的数据</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = data.data.map(u => `
+                    <div class="match-item">
+                        <div class="item-icon unmatched">❌</div>
+                        <div class="item-content">
+                            <div class="item-original">${escapeHtml(u.original_text)}</div>
+                            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                                <span class="item-type">${getTypeLabel(u.item_type)}</span>
+                                <span class="status-badge ${u.status}">${getStatusLabel(u.status)}</span>
+                            </div>
+                            ${u.ai_generated ? `
+                                <div class="item-ai-content">
+                                    <div class="ai-label">AI 生成内容</div>
+                                    ${formatAIContent(u.ai_generated)}
+                                </div>
+                            ` : ''}
+                            <div style="font-size:12px;color:#94a3b8;margin-top:6px;">
+                                来自: ${escapeHtml(u.username || '匿名')} · ${escapeHtml(u.file_name || '')}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-primary btn-sm" onclick="editUnmatched(${u.id})">✎ 编辑</button>
+                            <button class="btn btn-success btn-sm" onclick="importUnmatched(${u.id})">📥 完善入库</button>
+                            <button class="btn btn-secondary btn-sm" onclick="ignoreUnmatched(${u.id})">🗑 忽略</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
+            }
+        }
+        
+        // 确认匹配
+        async function confirmMatch(id) {
+            try {
+                const res = await fetch(API_BASE + '/matches/' + id + '/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reviewedBy: 'admin' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('已确认', 'success');
+                    loadStats();
+                    loadPendingMatches();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+        
+        // 标记匹配错误
+        async function rejectMatch(id) {
+            if (!confirm('确定标记此匹配为错误？')) return;
+            
+            try {
+                const res = await fetch(API_BASE + '/matches/' + id + '/reject', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reviewedBy: 'admin' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('已标记为错误', 'success');
+                    loadStats();
+                    loadPendingMatches();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+        
+        // 批量确认所有匹配
+        async function confirmAllMatches() {
+            if (!confirm('确定将所有待审核的模糊匹配标记为正确？')) return;
+            
+            // 获取所有待审核项并逐个确认
+            try {
+                const res = await fetch(API_BASE + '/pending-matches');
+                const data = await res.json();
+                if (data.success && data.data.length > 0) {
+                    for (const item of data.data) {
+                        await fetch(API_BASE + '/matches/' + item.id + '/confirm', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reviewedBy: 'admin' })
+                        });
+                    }
+                    showToast(`已确认 ${data.data.length} 条记录`, 'success');
+                    loadStats();
+                    loadPendingMatches();
+                } else {
+                    showToast('没有待确认的记录', 'success');
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+        
+        // 编辑未匹配项
+        async function editUnmatched(id) {
+            try {
+                const res = await fetch(API_BASE + '/unmatched/' + id);
+                const data = await res.json();
+                if (!data.success) {
+                    showToast('加载失败', 'error');
+                    return;
+                }
+                
+                const item = data.data;
+                const content = item.edited_content || item.ai_generated || {};
+                
+                document.getElementById('editItemId').value = id;
+                document.getElementById('editItemType').value = item.item_type;
+                document.getElementById('editOriginalText').textContent = item.original_text;
+                document.getElementById('editTargetType').value = item.item_type;
+                document.getElementById('editCategory').value = content.category || '';
+                
+                // 根据类型显示不同字段
+                if (item.item_type === 'grammar') {
+                    document.getElementById('vocabFields').style.display = 'none';
+                    document.getElementById('grammarFields').style.display = 'block';
+                    document.getElementById('editDefinition').value = content.definition || '';
+                    document.getElementById('editStructure').value = content.structure || '';
+                    document.getElementById('editUsage').value = Array.isArray(content.usage) ? content.usage.join('\n') : (content.usage || '');
+                    document.getElementById('editExamples').value = Array.isArray(content.examples) ? content.examples.join('\n') : (content.examples || '');
+                    document.getElementById('editMistakes').value = Array.isArray(content.mistakes) ? content.mistakes.join('\n') : (content.mistakes || '');
+                } else {
+                    document.getElementById('vocabFields').style.display = 'block';
+                    document.getElementById('grammarFields').style.display = 'none';
+                    document.getElementById('editPhonetic').value = content.phonetic || '';
+                    document.getElementById('editPos').value = content.pos || '';
+                    document.getElementById('editMeaning').value = content.meaning || '';
+                    document.getElementById('editExample').value = content.example || '';
+                }
+                
+                document.getElementById('editModal').classList.add('active');
+            } catch (e) {
+                showToast('加载失败', 'error');
+            }
+        }
+        
+        // 类型切换时更新表单
+        document.getElementById('editTargetType')?.addEventListener('change', function() {
+            if (this.value === 'grammar') {
+                document.getElementById('vocabFields').style.display = 'none';
+                document.getElementById('grammarFields').style.display = 'block';
+            } else {
+                document.getElementById('vocabFields').style.display = 'block';
+                document.getElementById('grammarFields').style.display = 'none';
+            }
+        });
+        
+        // 保存编辑
+        async function saveEdit() {
+            const id = document.getElementById('editItemId').value;
+            const targetType = document.getElementById('editTargetType').value;
+            
+            let editedContent = {
+                category: document.getElementById('editCategory').value.trim()
+            };
+            
+            if (targetType === 'grammar') {
+                editedContent.definition = document.getElementById('editDefinition').value.trim();
+                editedContent.structure = document.getElementById('editStructure').value.trim();
+                editedContent.usage = document.getElementById('editUsage').value.trim().split('\n').filter(s => s.trim());
+                editedContent.examples = document.getElementById('editExamples').value.trim().split('\n').filter(s => s.trim());
+                editedContent.mistakes = document.getElementById('editMistakes').value.trim().split('\n').filter(s => s.trim());
+            } else {
+                editedContent.phonetic = document.getElementById('editPhonetic').value.trim();
+                editedContent.pos = document.getElementById('editPos').value.trim();
+                editedContent.meaning = document.getElementById('editMeaning').value.trim();
+                editedContent.example = document.getElementById('editExample').value.trim();
+            }
+            
+            try {
+                const res = await fetch(API_BASE + '/unmatched/' + id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ editedContent })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('保存成功', 'success');
+                    closeModal('editModal');
+                    loadPendingUnmatched();
+                } else {
+                    showToast(data.error || '保存失败', 'error');
+                }
+            } catch (e) {
+                showToast('保存失败', 'error');
+            }
+        }
+        
+        // 保存并入库
+        async function saveAndImport() {
+            await saveEdit();
+            const id = document.getElementById('editItemId').value;
+            const targetType = document.getElementById('editTargetType').value;
+            await doImport(id, targetType);
+        }
+        
+        // 直接入库
+        async function importUnmatched(id) {
+            if (!confirm('确定将此数据入库？')) return;
+            await doImport(id);
+        }
+        
+        async function doImport(id, targetType = null) {
+            try {
+                const res = await fetch(API_BASE + '/unmatched/' + id + '/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ targetType, reviewedBy: 'admin' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`入库成功！已添加到 ${data.importedTo}`, 'success');
+                    closeModal('editModal');
+                    loadStats();
+                    loadPendingUnmatched();
+                } else {
+                    showToast(data.error || '入库失败', 'error');
+                }
+            } catch (e) {
+                showToast('入库失败', 'error');
+            }
+        }
+        
+        // 忽略
+        async function ignoreUnmatched(id) {
+            if (!confirm('确定忽略此数据？')) return;
+            
+            try {
+                const res = await fetch(API_BASE + '/unmatched/' + id + '/ignore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reviewedBy: 'admin' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('已忽略', 'success');
+                    loadStats();
+                    loadPendingUnmatched();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+        
+        // 工具函数
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + type + ' show';
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function getTypeLabel(type) {
+            const labels = {
+                'word': '单词',
+                'phrase': '短语',
+                'pattern': '句型',
+                'grammar': '语法'
+            };
+            return labels[type] || type;
+        }
+        
+        function getStatusLabel(status) {
+            const labels = {
+                'pending': '待完善',
+                'edited': '已编辑',
+                'imported': '已入库',
+                'ignored': '已忽略'
+            };
+            return labels[status] || status;
+        }
+        
+        function formatAIContent(content) {
+            if (!content) return '';
+            const parts = [];
+            if (content.meaning) parts.push(`含义: ${content.meaning}`);
+            if (content.definition) parts.push(`定义: ${content.definition}`);
+            if (content.example) parts.push(`例句: ${content.example}`);
+            if (content.structure) parts.push(`结构: ${content.structure}`);
+            if (content.phonetic) parts.push(`音标: ${content.phonetic}`);
+            if (content.pos) parts.push(`词性: ${content.pos}`);
+            return parts.join(' · ') || JSON.stringify(content).substring(0, 100);
+        }
+    </script>
+</body>
+</html>

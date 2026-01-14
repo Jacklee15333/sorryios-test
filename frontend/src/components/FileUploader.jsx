@@ -12,16 +12,17 @@ function generateDefaultTitle() {
 
 /**
  * 文件上传组件 - 支持拖拽 + 自定义标题
+ * 【v2.2】添加用户认证
  */
 function FileUploader({ onUploadStart, onUploadSuccess, onUploadError, disabled }) {
     const [isDragging, setIsDragging] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     
-    // 【新增】自定义标题
+    // 自定义标题
     const [customTitle, setCustomTitle] = useState(generateDefaultTitle());
 
-    // 【新增】每次选择新文件时，重置标题为默认值
+    // 每次选择新文件时，重置标题为默认值
     useEffect(() => {
         if (selectedFile) {
             setCustomTitle(generateDefaultTitle());
@@ -98,12 +99,19 @@ function FileUploader({ onUploadStart, onUploadSuccess, onUploadError, disabled 
             const formData = new FormData();
             formData.append('file', selectedFile);
             
-            // 【新增】添加自定义标题
+            // 添加自定义标题
             const titleToUse = customTitle.trim() || generateDefaultTitle();
             formData.append('customTitle', titleToUse);
 
+            // 【v2.2 关键修复】获取 token 并添加到请求头
+            const token = localStorage.getItem('token');
+            
             const response = await fetch('/api/upload', {
                 method: 'POST',
+                headers: {
+                    // 【v2.2】添加认证头，让后端知道是哪个用户上传的
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: formData
             });
 
@@ -186,7 +194,7 @@ function FileUploader({ onUploadStart, onUploadSuccess, onUploadError, disabled 
                 </div>
             </div>
 
-            {/* 【新增】标题输入框 - 选择文件后显示 */}
+            {/* 标题输入框 - 选择文件后显示 */}
             {selectedFile && (
                 <div className="mt-4 fade-in">
                     <label className="block text-sm font-medium text-gray-700 mb-2">

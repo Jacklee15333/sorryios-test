@@ -1,11 +1,14 @@
 /**
- * 英语课堂报告生成器 v3.1
+ * 英语课堂报告生成器 v3.2
  * 
- * 更新：简化为2大类展示（词汇基础 + 语法知识）
+ * 【v3.2 更新】
+ * - 简化分类：词汇（合并单词+短语+句型）+ 语法
+ * - 统一用"词汇"表格展示所有词汇内容
+ * - 每项带有类型标签（单词/短语/句型）
  * 
  * @author Sorryios AI Team
- * @version 3.1.0
- * @date 2026-01-13
+ * @version 3.2.0
+ * @date 2026-01-14
  */
 
 const fs = require('fs');
@@ -24,13 +27,77 @@ class EnglishReportGenerator {
     }
 
     /**
-     * 生成HTML报告（新版2大类结构）
+     * 合并所有词汇为统一列表
+     */
+    mergeVocabulary(vocabulary) {
+        const merged = [];
+        
+        // 添加单词
+        if (vocabulary.words && vocabulary.words.length > 0) {
+            for (const w of vocabulary.words) {
+                merged.push({
+                    type: 'word',
+                    name: w.word || '',
+                    phonetic: w.phonetic || '',
+                    pos: w.pos || '',
+                    meaning: w.meaning || '',
+                    example: w.example || '',
+                    forms: w.forms || null,
+                    note: w.note || '',
+                    _source: w._source
+                });
+            }
+        }
+        
+        // 添加短语
+        if (vocabulary.phrases && vocabulary.phrases.length > 0) {
+            for (const p of vocabulary.phrases) {
+                merged.push({
+                    type: 'phrase',
+                    name: p.phrase || '',
+                    phonetic: '',
+                    pos: '',
+                    meaning: p.meaning || '',
+                    example: p.example || '',
+                    forms: null,
+                    note: '',
+                    _source: p._source
+                });
+            }
+        }
+        
+        // 添加句型
+        if (vocabulary.patterns && vocabulary.patterns.length > 0) {
+            for (const p of vocabulary.patterns) {
+                merged.push({
+                    type: 'pattern',
+                    name: p.pattern || '',
+                    phonetic: '',
+                    pos: '',
+                    meaning: p.meaning || '',
+                    example: p.example || '',
+                    forms: null,
+                    note: '',
+                    _source: p._source
+                });
+            }
+        }
+        
+        return merged;
+    }
+
+    /**
+     * 生成HTML报告（v3.2 简化版：词汇+语法两大类）
      */
     generateHTML(data, title = '英语课堂学习笔记') {
         const timestamp = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-        const summary = data.summary || {};
         const vocabulary = data.vocabulary || { words: [], phrases: [], patterns: [] };
         const grammar = data.grammar || [];
+        
+        // 合并词汇
+        const mergedVocab = this.mergeVocabulary(vocabulary);
+        const totalVocab = mergedVocab.length;
+        const totalGrammar = grammar.length;
         
         return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -63,7 +130,6 @@ class EnglishReportGenerator {
             overflow: hidden;
         }
         
-        /* 头部 */
         header {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
@@ -84,29 +150,28 @@ class EnglishReportGenerator {
         header .stats {
             display: flex;
             justify-content: center;
-            gap: 30px;
+            gap: 40px;
             margin-top: 20px;
             flex-wrap: wrap;
         }
         
         header .stat-item {
             background: rgba(255,255,255,0.1);
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 15px 30px;
+            border-radius: 10px;
         }
         
         header .stat-item .number {
-            font-size: 1.8em;
+            font-size: 2em;
             font-weight: bold;
             color: #ffd700;
         }
         
         header .stat-item .label {
-            font-size: 0.85em;
+            font-size: 0.9em;
             opacity: 0.8;
         }
         
-        /* 导出栏 */
         .export-bar {
             background: #f8f9fa;
             padding: 15px 40px;
@@ -131,12 +196,10 @@ class EnglishReportGenerator {
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
-        /* 主体 */
         main {
             padding: 40px;
         }
         
-        /* 大分类标题 */
         .section-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -163,19 +226,6 @@ class EnglishReportGenerator {
             margin-left: auto;
         }
         
-        /* 子分类标题 */
-        .sub-section-title {
-            font-size: 1.2em;
-            color: #2c3e50;
-            margin: 30px 0 15px 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        /* 表格样式 */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -207,12 +257,24 @@ class EnglishReportGenerator {
             color: #999;
         }
         
-        /* 单词行（带变形） */
-        .word-main {
+        .vocab-name {
             font-weight: bold;
             color: #2c3e50;
             font-size: 1.05em;
         }
+        
+        .type-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+        
+        .type-tag.word { background: #e8f5e9; color: #2e7d32; }
+        .type-tag.phrase { background: #e3f2fd; color: #1565c0; }
+        .type-tag.pattern { background: #fff3e0; color: #ef6c00; }
         
         .word-forms {
             margin-top: 5px;
@@ -248,7 +310,6 @@ class EnglishReportGenerator {
             font-size: 0.9em;
         }
         
-        /* 语法卡片 */
         .grammar-card {
             background: #f8f9fa;
             border-radius: 12px;
@@ -258,11 +319,10 @@ class EnglishReportGenerator {
         }
         
         .grammar-card-header {
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
             padding: 15px 20px;
-            font-size: 1.1em;
-            font-weight: 600;
+            font-weight: bold;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -276,8 +336,12 @@ class EnglishReportGenerator {
             margin-bottom: 15px;
         }
         
+        .grammar-item:last-child {
+            margin-bottom: 0;
+        }
+        
         .grammar-item-title {
-            font-weight: 600;
+            font-weight: bold;
             color: #2c3e50;
             margin-bottom: 8px;
             display: flex;
@@ -286,12 +350,12 @@ class EnglishReportGenerator {
         }
         
         .grammar-item-content {
-            padding-left: 25px;
+            padding-left: 24px;
             color: #555;
         }
         
         .grammar-item-content ul {
-            margin: 5px 0;
+            margin: 0;
             padding-left: 20px;
         }
         
@@ -299,13 +363,12 @@ class EnglishReportGenerator {
             margin: 5px 0;
         }
         
-        /* 易错点 */
         .mistake-item {
-            background: #fff5f5;
-            border-left: 4px solid #e74c3c;
-            padding: 10px 15px;
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
             margin: 8px 0;
-            border-radius: 0 8px 8px 0;
+            border-left: 4px solid #e74c3c;
         }
         
         .mistake-wrong {
@@ -313,61 +376,61 @@ class EnglishReportGenerator {
             text-decoration: line-through;
         }
         
+        .mistake-arrow {
+            margin: 0 10px;
+            color: #999;
+        }
+        
         .mistake-correct {
             color: #27ae60;
             font-weight: bold;
         }
         
-        .mistake-arrow {
-            color: #999;
-            margin: 0 10px;
-        }
-        
         .mistake-explanation {
+            margin-top: 8px;
             color: #666;
             font-size: 0.9em;
-            margin-top: 5px;
         }
         
-        /* 例句框 */
         .examples-box {
-            background: #e8f4fd;
+            background: #fff;
+            padding: 15px;
             border-radius: 8px;
-            padding: 12px 15px;
-            margin-top: 10px;
+            border: 1px solid #e0e0e0;
         }
         
-        .examples-box li {
-            color: #2980b9;
+        .examples-box ul {
+            margin: 0;
         }
         
-        /* 页脚 */
+        .section-divider {
+            height: 40px;
+        }
+        
         footer {
             background: #f8f9fa;
             padding: 20px 40px;
             text-align: center;
-            color: #666;
+            color: #999;
             font-size: 0.9em;
             border-top: 1px solid #eee;
         }
         
-        /* 打印样式 */
         @media print {
-            body { background: white; padding: 0; }
-            .container { box-shadow: none; border-radius: 0; }
-            .export-bar { display: none; }
-            header { background: #1a1a2e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .section-header { background: #667eea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .grammar-card-header { background: #9b59b6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        }
-        
-        /* 响应式 */
-        @media (max-width: 768px) {
-            header .stats { gap: 15px; }
-            .export-bar { padding: 15px 20px; }
-            main { padding: 20px; }
-            .data-table { font-size: 0.85em; }
-            .data-table th, .data-table td { padding: 8px 10px; }
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .export-bar {
+                display: none;
+            }
+            .section-header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
@@ -375,113 +438,99 @@ class EnglishReportGenerator {
     <div class="container">
         <header>
             <h1>📖 ${title}</h1>
-            <div class="meta">
-                <p>生成时间: ${timestamp}</p>
-            </div>
+            <div class="meta">生成时间: ${timestamp}</div>
             <div class="stats">
                 <div class="stat-item">
-                    <div class="number">${summary.total_words || 0}</div>
-                    <div class="label">单词</div>
+                    <div class="number">${totalVocab}</div>
+                    <div class="label">词汇</div>
                 </div>
                 <div class="stat-item">
-                    <div class="number">${summary.total_phrases || 0}</div>
-                    <div class="label">短语</div>
-                </div>
-                <div class="stat-item">
-                    <div class="number">${summary.total_patterns || 0}</div>
-                    <div class="label">句型</div>
-                </div>
-                <div class="stat-item">
-                    <div class="number">${summary.total_grammar || 0}</div>
-                    <div class="label">语法点</div>
+                    <div class="number">${totalGrammar}</div>
+                    <div class="label">语法</div>
                 </div>
             </div>
         </header>
         
         <div class="export-bar">
-            <button class="export-btn pdf" onclick="window.print()">📄 导出PDF / 打印</button>
-            <span style="color: #666; line-height: 36px; margin-left: 10px;">提示：点击打印后选择"另存为PDF"即可导出PDF文件</span>
+            <button class="export-btn pdf" onclick="window.print()">🖨️ 打印/导出PDF</button>
         </div>
         
         <main>
-            <!-- ==================== 第一部分：词汇基础 ==================== -->
-            <div class="section-header">
-                <span class="icon">📚</span>
-                <h2>词汇基础</h2>
-                <span class="desc">需要记住的单词、短语、句型</span>
-            </div>
+            <section>
+                <div class="section-header">
+                    <span class="icon">📚</span>
+                    <h2>词汇</h2>
+                    <span class="desc">共 ${totalVocab} 项</span>
+                </div>
+                ${this.renderMergedVocabulary(mergedVocab)}
+            </section>
             
-            ${this.renderWords(vocabulary.words)}
-            ${this.renderPhrases(vocabulary.phrases)}
-            ${this.renderPatterns(vocabulary.patterns)}
+            <div class="section-divider"></div>
             
-            <!-- ==================== 第二部分：语法知识 ==================== -->
-            <div class="section-header" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); margin-top: 40px;">
-                <span class="icon">📖</span>
-                <h2>语法知识</h2>
-                <span class="desc">需要理解的语法规则</span>
-            </div>
-            
-            ${this.renderGrammar(grammar)}
+            <section>
+                <div class="section-header">
+                    <span class="icon">📖</span>
+                    <h2>语法</h2>
+                    <span class="desc">共 ${totalGrammar} 项</span>
+                </div>
+                ${this.renderGrammar(grammar)}
+            </section>
         </main>
         
         <footer>
-            <p>🤖 由 Sorryios AI 智能生成 | 英语课堂笔记系统 v3.1</p>
-            ${summary.filter_stats ? `<p>词汇过滤：${summary.filter_stats.original} → ${summary.filter_stats.final}（移除 ${summary.filter_stats.removed} 个基础词）</p>` : ''}
+            由 Sorryios AI 智能生成 | ${timestamp}
         </footer>
     </div>
 </body>
 </html>`;
     }
 
-    /**
-     * 渲染单词表格
-     */
-    renderWords(words) {
-        if (!words || words.length === 0) {
-            return '<p style="color: #999; padding: 20px;">暂无单词</p>';
+    renderMergedVocabulary(vocabList) {
+        if (!vocabList || vocabList.length === 0) {
+            return '<p style="color: #999; padding: 20px;">暂无词汇内容</p>';
         }
         
         return `
-        <h3 class="sub-section-title">📝 单词</h3>
         <table class="data-table">
             <thead>
                 <tr>
                     <th class="index">#</th>
-                    <th style="width: 180px;">单词</th>
-                    <th style="width: 100px;">音标</th>
+                    <th style="width: 280px;">词汇</th>
+                    <th style="width: 80px;">音标</th>
                     <th style="width: 200px;">含义</th>
                     <th>例句</th>
                 </tr>
             </thead>
             <tbody>
-                ${words.map((w, i) => `
+                ${vocabList.map((v, i) => `
                 <tr>
                     <td class="index">${i + 1}</td>
                     <td>
-                        <div class="word-main">${w.word || ''}</div>
-                        ${this.renderWordForms(w.forms)}
+                        <span class="vocab-name">${v.name}</span>
+                        ${this.renderWordForms(v.forms)}
                     </td>
-                    <td class="phonetic">${w.phonetic || ''}</td>
-                    <td><span class="pos">${w.pos || ''}</span> ${w.meaning || ''}</td>
-                    <td class="example">${w.example || ''}</td>
+                    <td class="phonetic">${v.phonetic || ''}</td>
+                    <td><span class="pos">${v.pos || ''}</span> ${v.meaning || ''}</td>
+                    <td class="example">${v.example || ''}</td>
                 </tr>
                 `).join('')}
             </tbody>
         </table>`;
     }
 
-    /**
-     * 渲染单词变形
-     */
+    getTypeTag(type) {
+        // 不再显示类型标签
+        return '';
+    }
+
     renderWordForms(forms) {
         if (!forms) return '';
         
         const formItems = [];
         if (forms.past) formItems.push(`<div class="word-form-item">${forms.past}<span class="word-form-label">过去式</span></div>`);
-        if (forms.past_participle) formItems.push(`<div class="word-form-item">${forms.past_participle}<span class="word-form-label">过去分词</span></div>`);
+        if (forms.past_participle || forms.pp) formItems.push(`<div class="word-form-item">${forms.past_participle || forms.pp}<span class="word-form-label">过去分词</span></div>`);
         if (forms.third_person) formItems.push(`<div class="word-form-item">${forms.third_person}<span class="word-form-label">三单</span></div>`);
-        if (forms.present_participle) formItems.push(`<div class="word-form-item">${forms.present_participle}<span class="word-form-label">现在分词</span></div>`);
+        if (forms.present_participle || forms.ing) formItems.push(`<div class="word-form-item">${forms.present_participle || forms.ing}<span class="word-form-label">现在分词</span></div>`);
         if (forms.comparative) formItems.push(`<div class="word-form-item">${forms.comparative}<span class="word-form-label">比较级</span></div>`);
         if (forms.superlative) formItems.push(`<div class="word-form-item">${forms.superlative}<span class="word-form-label">最高级</span></div>`);
         
@@ -490,73 +539,6 @@ class EnglishReportGenerator {
         return `<div class="word-forms">${formItems.join('')}</div>`;
     }
 
-    /**
-     * 渲染短语表格
-     */
-    renderPhrases(phrases) {
-        if (!phrases || phrases.length === 0) {
-            return '';
-        }
-        
-        return `
-        <h3 class="sub-section-title">💬 短语</h3>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th class="index">#</th>
-                    <th style="width: 250px;">短语</th>
-                    <th style="width: 200px;">含义</th>
-                    <th>例句</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${phrases.map((p, i) => `
-                <tr>
-                    <td class="index">${i + 1}</td>
-                    <td class="word-main">${p.phrase || ''}</td>
-                    <td>${p.meaning || ''}</td>
-                    <td class="example">${p.example || ''}</td>
-                </tr>
-                `).join('')}
-            </tbody>
-        </table>`;
-    }
-
-    /**
-     * 渲染句型表格
-     */
-    renderPatterns(patterns) {
-        if (!patterns || patterns.length === 0) {
-            return '';
-        }
-        
-        return `
-        <h3 class="sub-section-title">📐 句型</h3>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th class="index">#</th>
-                    <th style="width: 300px;">句型</th>
-                    <th style="width: 200px;">含义</th>
-                    <th>例句</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${patterns.map((p, i) => `
-                <tr>
-                    <td class="index">${i + 1}</td>
-                    <td class="word-main">${p.pattern || ''}</td>
-                    <td>${p.meaning || ''}</td>
-                    <td class="example">${p.example || ''}</td>
-                </tr>
-                `).join('')}
-            </tbody>
-        </table>`;
-    }
-
-    /**
-     * 渲染语法卡片
-     */
     renderGrammar(grammar) {
         if (!grammar || grammar.length === 0) {
             return '<p style="color: #999; padding: 20px;">暂无语法知识点</p>';
@@ -622,65 +604,30 @@ class EnglishReportGenerator {
         `).join('');
     }
 
-    /**
-     * 生成Markdown报告
-     */
     generateMarkdown(data, title = '英语课堂学习笔记') {
         const timestamp = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-        const summary = data.summary || {};
         const vocabulary = data.vocabulary || { words: [], phrases: [], patterns: [] };
         const grammar = data.grammar || [];
+        
+        const mergedVocab = this.mergeVocabulary(vocabulary);
         
         let md = `# 📖 ${title}\n\n`;
         md += `> 生成时间: ${timestamp}\n\n`;
         md += `## 📊 统计\n\n`;
-        md += `| 单词 | 短语 | 句型 | 语法点 |\n|------|------|------|--------|\n`;
-        md += `| ${summary.total_words || 0} | ${summary.total_phrases || 0} | ${summary.total_patterns || 0} | ${summary.total_grammar || 0} |\n\n`;
+        md += `| 词汇 | 语法 |\n|------|------|\n`;
+        md += `| ${mergedVocab.length} | ${grammar.length} |\n\n`;
         
-        // 词汇基础
-        md += `---\n\n# 📚 词汇基础\n\n`;
+        md += `---\n\n# 📚 词汇\n\n`;
         
-        // 单词
-        if (vocabulary.words && vocabulary.words.length > 0) {
-            md += `## 📝 单词\n\n`;
-            md += `| # | 单词 | 音标 | 含义 | 例句 |\n|---|------|------|------|------|\n`;
-            vocabulary.words.forEach((w, i) => {
-                let wordCell = w.word || '';
-                if (w.forms) {
-                    const formParts = [];
-                    if (w.forms.past) formParts.push(w.forms.past);
-                    if (w.forms.past_participle) formParts.push(w.forms.past_participle);
-                    if (formParts.length > 0) {
-                        wordCell += ` (${formParts.join('/')})`;
-                    }
-                }
-                md += `| ${i + 1} | ${wordCell} | ${w.phonetic || ''} | ${w.pos || ''} ${w.meaning || ''} | ${w.example || ''} |\n`;
+        if (mergedVocab.length > 0) {
+            md += `| # | 词汇 | 含义 | 例句 |\n|---|------|------|------|\n`;
+            mergedVocab.forEach((v, i) => {
+                md += `| ${i + 1} | ${v.name} | ${v.meaning || ''} | ${v.example || ''} |\n`;
             });
             md += '\n';
         }
         
-        // 短语
-        if (vocabulary.phrases && vocabulary.phrases.length > 0) {
-            md += `## 💬 短语\n\n`;
-            md += `| # | 短语 | 含义 | 例句 |\n|---|------|------|------|\n`;
-            vocabulary.phrases.forEach((p, i) => {
-                md += `| ${i + 1} | ${p.phrase || ''} | ${p.meaning || ''} | ${p.example || ''} |\n`;
-            });
-            md += '\n';
-        }
-        
-        // 句型
-        if (vocabulary.patterns && vocabulary.patterns.length > 0) {
-            md += `## 📐 句型\n\n`;
-            md += `| # | 句型 | 含义 | 例句 |\n|---|------|------|------|\n`;
-            vocabulary.patterns.forEach((p, i) => {
-                md += `| ${i + 1} | ${p.pattern || ''} | ${p.meaning || ''} | ${p.example || ''} |\n`;
-            });
-            md += '\n';
-        }
-        
-        // 语法知识
-        md += `---\n\n# 📖 语法知识\n\n`;
+        md += `---\n\n# 📖 语法\n\n`;
         
         if (grammar && grammar.length > 0) {
             grammar.forEach((g, i) => {
@@ -714,9 +661,6 @@ class EnglishReportGenerator {
         return md;
     }
 
-    /**
-     * 保存HTML报告
-     */
     saveHTML(data, filename = null, title = '英语课堂学习笔记') {
         const html = this.generateHTML(data, title);
         const outputFilename = filename || `report_${Date.now()}.html`;
@@ -728,9 +672,6 @@ class EnglishReportGenerator {
         return outputPath;
     }
 
-    /**
-     * 保存Markdown报告
-     */
     saveMarkdown(data, filename = null, title = '英语课堂学习笔记') {
         const md = this.generateMarkdown(data, title);
         const outputFilename = filename || `report_${Date.now()}.md`;
@@ -742,9 +683,6 @@ class EnglishReportGenerator {
         return outputPath;
     }
 
-    /**
-     * 保存JSON
-     */
     saveJSON(data, filename = null) {
         const outputFilename = filename || `report_${Date.now()}.json`;
         const outputPath = path.join(this.outputDir, outputFilename);
@@ -755,9 +693,6 @@ class EnglishReportGenerator {
         return outputPath;
     }
 
-    /**
-     * 保存所有格式
-     */
     saveAll(data, baseName = null, title = '英语课堂学习笔记') {
         const base = baseName || `report_${Date.now()}`;
         

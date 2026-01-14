@@ -1,24 +1,30 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './components/LoginPage';
-import UserStatsPanel from './components/UserStatsPanel';
 import FileUploader from './components/FileUploader';
 import ProgressTracker from './components/ProgressTracker';
 import ReportViewer from './components/ReportViewer';
 import useTaskProgress from './hooks/useTaskProgress';
 
 /**
- * 主应用内容组件（需要在 AuthProvider 内部）
+ * 主应用内容组件 - 全屏侧边栏布局
+ * v4.2.0: 新布局，类似管理后台
  */
 function AppContent() {
     const { user, loading, logout, isAuthenticated } = useAuth();
     
-    // 应用状态：upload | processing | report
-    const [appState, setAppState] = useState('upload');
+    // 当前页面: upload | processing | report | history | filter | settings
+    const [currentPage, setCurrentPage] = useState('upload');
     const [currentTaskId, setCurrentTaskId] = useState(null);
     const [taskInfo, setTaskInfo] = useState(null);
-    const [showUserStats, setShowUserStats] = useState(false);
-    const [showUserMenu, setShowUserMenu] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [lastCompletedTask, setLastCompletedTask] = useState(null);  // 🆕 最后完成的任务
+
+    // 学习数据
+    const [stats, setStats] = useState(null);
+    const [masteredWords, setMasteredWords] = useState([]);
+    const [masteredStats, setMasteredStats] = useState(null);
+    const [taskHistory, setTaskHistory] = useState([]);
 
     // WebSocket 进度订阅
     const { progress, connected } = useTaskProgress(currentTaskId);
@@ -27,18 +33,65 @@ function AppContent() {
     useEffect(() => {
         if (progress) {
             setTaskInfo(progress);
-
-            // 任务完成时自动切换到报告页面
             if (progress.status === 'completed') {
-                setTimeout(() => setAppState('report'), 500);
+                // 🆕 任务完成：保存任务信息，返回上传页显示"查看报告"按钮
+                setLastCompletedTask({
+                    id: currentTaskId,
+                    title: taskInfo?.customTitle || progress.customTitle || '课堂笔记'
+                });
+                loadUserData();  // 刷新数据
+                setTimeout(() => setCurrentPage('upload'), 500);
             }
         }
     }, [progress]);
 
+    // 加载用户数据
+    useEffect(() => {
+        if (isAuthenticated) {
+            loadUserData();
+        }
+    }, [isAuthenticated]);
+
+    const loadUserData = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            
+            // 加载学习统计
+            const statsRes = await fetch('/api/user/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (statsRes.ok) {
+                const data = await statsRes.json();
+                setStats(data);
+                setTaskHistory(data.recentTasks || []);
+            }
+
+            // 加载已掌握词汇统计
+            const masteredStatsRes = await fetch('/api/user-mastered/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (masteredStatsRes.ok) {
+                const data = await masteredStatsRes.json();
+                setMasteredStats(data.stats);
+            }
+
+            // 加载已掌握词汇列表
+            const masteredListRes = await fetch('/api/user-mastered/list', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (masteredListRes.ok) {
+                const data = await masteredListRes.json();
+                setMasteredWords(data.words || []);
+            }
+        } catch (err) {
+            console.error('加载数据失败:', err);
+        }
+    };
+
     // 加载中
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin h-12 w-12 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                     <p className="text-gray-600">加载中...</p>
@@ -52,224 +105,490 @@ function AppContent() {
         return <LoginPage />;
     }
 
-    // 上传开始
-    const handleUploadStart = () => {
-        console.log('上传开始');
-    };
-
     // 上传成功
     const handleUploadSuccess = (data) => {
-        console.log('上传成功:', data);
+        setLastCompletedTask(null);  // 🆕 清除之前的完成提示
         setCurrentTaskId(data.task.id);
         setTaskInfo({
             id: data.task.id,
             status: data.task.status,
             progress: 0,
             currentStep: '任务已创建，等待处理...',
-            file: data.task.file
+            file: data.task.file,
+            customTitle: data.task.customTitle  // 🆕 保存标题
         });
-        setAppState('processing');
+        setCurrentPage('processing');
     };
 
-    // 上传失败
-    const handleUploadError = (error) => {
-        alert('上传失败: ' + error);
-    };
-
-    // 取消/重置
-    const handleReset = async () => {
-        // 如果任务正在处理，尝试取消
-        if (currentTaskId && taskInfo?.status === 'processing') {
-            try {
-                const token = localStorage.getItem('token');
-                await fetch(`/api/task/${currentTaskId}/cancel`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-            } catch (e) {
-                console.error('取消任务失败:', e);
-            }
-        }
-
-        setAppState('upload');
+    // 重置
+    const handleReset = () => {
+        setCurrentPage('upload');
         setCurrentTaskId(null);
         setTaskInfo(null);
+        setLastCompletedTask(null);  // 🆕 清除完成提示
+        loadUserData();
     };
 
     // 查看报告
-    const handleViewReport = () => {
-        setAppState('report');
+    const handleViewReport = (taskId = null) => {
+        if (taskId) setCurrentTaskId(taskId);
+        setCurrentPage('report');
     };
 
-    // 登出处理
-    const handleLogout = () => {
-        setShowUserMenu(false);
-        logout();
+    // 移除已掌握词汇
+    const handleRemoveMastered = async (word, wordType) => {
+        try {
+            const token = localStorage.getItem('token');
+            await fetch('/api/user-mastered/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ word, wordType })
+            });
+            loadUserData();
+        } catch (err) {
+            console.error('移除失败:', err);
+        }
     };
+
+    // 清空所有已掌握词汇
+    const handleClearAll = async () => {
+        if (!confirm('确定要清空所有已掌握词汇吗？')) return;
+        try {
+            const token = localStorage.getItem('token');
+            await fetch('/api/user-mastered/clear', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadUserData();
+        } catch (err) {
+            console.error('清空失败:', err);
+        }
+    };
+
+    // 侧边栏菜单
+    const menuItems = [
+        { id: 'upload', icon: '📤', label: '上传笔记', badge: null },
+        { id: 'history', icon: '📋', label: '历史记录', badge: taskHistory.length || null },
+        { id: 'filter', icon: '🔧', label: '过滤器', badge: masteredStats?.total || null },
+        { id: 'settings', icon: '⚙️', label: '设置', badge: null },
+    ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
-            {/* 顶部导航 */}
-            <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
-                <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="min-h-screen bg-gray-100 flex">
+            {/* 侧边栏 */}
+            <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-slate-800 text-white flex flex-col transition-all duration-300`}>
+                {/* Logo */}
+                <div className="p-4 border-b border-slate-700">
                     <div className="flex items-center gap-3">
-                        <span className="text-3xl">🤖</span>
-                        <div>
-                            <h1 className="text-xl font-bold text-gray-800">AI 智能笔记助手</h1>
-                            <p className="text-xs text-gray-500">课堂笔记自动化处理系统</p>
+                        <span className="text-2xl">🤖</span>
+                        {!sidebarCollapsed && (
+                            <div>
+                                <h1 className="font-bold text-lg">Sorryios AI</h1>
+                                <p className="text-xs text-slate-400">智能笔记助手 v4.2</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* 用户信息 */}
+                <div className="p-4 border-b border-slate-700">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-lg font-bold">
+                            {(user?.username || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        {!sidebarCollapsed && (
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{user?.nickname || user?.username}</p>
+                                <p className="text-xs text-slate-400">@{user?.username}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* 统计卡片 */}
+                {!sidebarCollapsed && (
+                    <div className="p-4 border-b border-slate-700">
+                        <div className="grid grid-cols-2 gap-2 text-center">
+                            <div className="bg-slate-700/50 rounded-lg p-2">
+                                <div className="text-lg font-bold text-indigo-400">{stats?.totalTasks || 0}</div>
+                                <div className="text-xs text-slate-400">处理文件</div>
+                            </div>
+                            <div className="bg-slate-700/50 rounded-lg p-2">
+                                <div className="text-lg font-bold text-green-400">{masteredStats?.total || 0}</div>
+                                <div className="text-xs text-slate-400">已掌握</div>
+                            </div>
                         </div>
                     </div>
+                )}
+
+                {/* 菜单 */}
+                <nav className="flex-1 p-2">
+                    {menuItems.map(item => (
+                        <button
+                            key={item.id}
+                            onClick={() => setCurrentPage(item.id)}
+                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg mb-1 transition-colors ${
+                                currentPage === item.id
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'text-slate-300 hover:bg-slate-700'
+                            }`}
+                        >
+                            <span className="text-xl">{item.icon}</span>
+                            {!sidebarCollapsed && (
+                                <>
+                                    <span className="flex-1 text-left">{item.label}</span>
+                                    {item.badge && (
+                                        <span className="bg-slate-600 text-xs px-2 py-0.5 rounded-full">
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                </>
+                            )}
+                        </button>
+                    ))}
+                </nav>
+
+                {/* 底部 */}
+                <div className="p-2 border-t border-slate-700">
+                    <button
+                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-700 transition-colors"
+                    >
+                        <span className="text-xl">{sidebarCollapsed ? '→' : '←'}</span>
+                        {!sidebarCollapsed && <span>收起侧边栏</span>}
+                    </button>
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-slate-700 transition-colors mt-1"
+                    >
+                        <span className="text-xl">🚪</span>
+                        {!sidebarCollapsed && <span>退出登录</span>}
+                    </button>
+                </div>
+            </aside>
+
+            {/* 主内容区 */}
+            <main className="flex-1 flex flex-col min-h-screen">
+                {/* 顶部栏 */}
+                <header className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-800">
+                            {currentPage === 'upload' && '📤 上传笔记'}
+                            {currentPage === 'processing' && '⏳ 处理中'}
+                            {currentPage === 'report' && '📊 查看报告'}
+                            {currentPage === 'history' && '📋 历史记录'}
+                            {currentPage === 'filter' && '🔧 过滤器管理'}
+                            {currentPage === 'settings' && '⚙️ 设置'}
+                        </h2>
+                        <p className="text-sm text-gray-500">
+                            {currentPage === 'upload' && '上传课堂录音转文字文件，AI 自动提取关键词'}
+                            {currentPage === 'processing' && '正在处理文件，请稍候...'}
+                            {currentPage === 'report' && '查看和管理提取结果'}
+                            {currentPage === 'history' && '查看所有处理过的文件'}
+                            {currentPage === 'filter' && '管理已掌握的词汇，下次生成时自动过滤'}
+                            {currentPage === 'settings' && '账户信息和系统设置'}
+                        </p>
+                    </div>
                     <div className="flex items-center gap-4">
-                        {/* 连接状态 */}
                         <div className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
-                            <span className="text-xs text-gray-500">
-                                {connected ? '已连接' : '未连接'}
-                            </span>
+                            <span className="text-sm text-gray-500">{connected ? '已连接' : '未连接'}</span>
                         </div>
+                    </div>
+                </header>
 
-                        {/* 用户菜单 */}
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-2 px-3 py-2 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-colors"
-                            >
-                                <span className="w-7 h-7 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm">
-                                    {(user?.nickname || user?.username || 'U').charAt(0).toUpperCase()}
-                                </span>
-                                <span className="text-sm font-medium text-gray-700 max-w-[80px] truncate">
-                                    {user?.nickname || user?.username}
-                                </span>
-                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
+                {/* 内容区 */}
+                <div className="flex-1 p-6 overflow-auto">
+                    {/* 上传页面 */}
+                    {currentPage === 'upload' && (
+                        <div className="max-w-2xl mx-auto">
+                            <div className="bg-white rounded-xl shadow-sm p-6">
+                                <FileUploader
+                                    onUploadStart={() => setLastCompletedTask(null)}
+                                    onUploadSuccess={handleUploadSuccess}
+                                    onUploadError={(err) => alert('上传失败: ' + err)}
+                                />
+                            </div>
 
-                            {/* 下拉菜单 */}
-                            {showUserMenu && (
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-20">
+                            {/* 🆕 任务完成提示 */}
+                            {lastCompletedTask && (
+                                <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+                                    <div className="text-5xl mb-4">🎉</div>
+                                    <h3 className="text-xl font-bold text-green-800 mb-2">处理完成！</h3>
+                                    <p className="text-green-600 mb-4">
+                                        {lastCompletedTask.title || '课堂笔记'} 已成功生成报告
+                                    </p>
                                     <button
-                                        onClick={() => {
-                                            setShowUserMenu(false);
-                                            setShowUserStats(true);
-                                        }}
-                                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                        onClick={() => handleViewReport(lastCompletedTask.id)}
+                                        className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all"
                                     >
-                                        <span>📊</span> 学习数据
-                                    </button>
-                                    <hr className="my-1 border-gray-100" />
-                                    <button
-                                        onClick={handleLogout}
-                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                    >
-                                        <span>🚪</span> 退出登录
+                                        📊 查看报告
                                     </button>
                                 </div>
                             )}
+
+                            {/* 功能说明 */}
+                            <div className="mt-6 grid grid-cols-3 gap-4">
+                                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+                                    <div className="text-2xl mb-2">📝</div>
+                                    <div className="font-medium text-gray-700">智能分段</div>
+                                    <div className="text-xs text-gray-500 mt-1">自动切分长文本</div>
+                                </div>
+                                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+                                    <div className="text-2xl mb-2">🤖</div>
+                                    <div className="font-medium text-gray-700">AI 分析</div>
+                                    <div className="text-xs text-gray-500 mt-1">提取关键词汇语法</div>
+                                </div>
+                                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+                                    <div className="text-2xl mb-2">📊</div>
+                                    <div className="font-medium text-gray-700">生成报告</div>
+                                    <div className="text-xs text-gray-500 mt-1">多格式导出下载</div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* 处理中 */}
+                    {currentPage === 'processing' && taskInfo && (
+                        <div className="max-w-2xl mx-auto">
+                            {taskInfo.status === 'completed' ? (
+                                /* 完成状态 */
+                                <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                                    <div className="text-6xl mb-4">🎉</div>
+                                    <h3 className="text-2xl font-bold text-green-600 mb-2">处理完成！</h3>
+                                    <p className="text-gray-500 mb-6">报告已生成，点击下方按钮查看</p>
+                                    <button
+                                        onClick={() => setCurrentPage('report')}
+                                        className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all"
+                                    >
+                                        📊 查看报告
+                                    </button>
+                                </div>
+                            ) : (
+                                /* 处理中状态 */
+                                <>
+                                    <div className="bg-white rounded-xl shadow-sm p-6">
+                                        <ProgressTracker
+                                            task={taskInfo}
+                                            onCancel={handleReset}
+                                            onViewReport={() => setCurrentPage('report')}
+                                        />
+                                    </div>
+                                    <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                        <p className="text-sm text-blue-700">
+                                            💡 处理过程中会自动打开浏览器与 AI 交互，请不要关闭浏览器窗口。
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* 报告页面 */}
+                    {currentPage === 'report' && currentTaskId && (
+                        <div>
+                            <ReportViewer taskId={currentTaskId} onBack={handleReset} />
+                        </div>
+                    )}
+
+                    {/* 历史记录 */}
+                    {currentPage === 'history' && (
+                        <div className="bg-white rounded-xl shadow-sm">
+                            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                                <h3 className="font-bold text-gray-800">处理历史</h3>
+                                <span className="text-sm text-gray-500">共 {taskHistory.length} 条</span>
+                            </div>
+                            {taskHistory.length > 0 ? (
+                                <div className="divide-y divide-gray-100">
+                                    {taskHistory.map((task, index) => (
+                                        <div key={task.id || index} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-2xl">
+                                                    {task.status === 'completed' ? '✅' : task.status === 'failed' ? '❌' : '⏳'}
+                                                </span>
+                                                <div>
+                                                    <p className="font-medium text-gray-800">{task.title || task.fileName || '未命名'}</p>
+                                                    <p className="text-sm text-gray-500">{new Date(task.createdAt).toLocaleString('zh-CN')}</p>
+                                                </div>
+                                            </div>
+                                            {task.status === 'completed' && (
+                                                <button
+                                                    onClick={() => handleViewReport(task.id)}
+                                                    className="px-4 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-sm"
+                                                >
+                                                    查看报告
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-12 text-center text-gray-500">
+                                    <span className="text-4xl block mb-4">📭</span>
+                                    <p>暂无处理记录</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* 过滤器管理 */}
+                    {currentPage === 'filter' && (
+                        <div className="space-y-6">
+                            {/* 统计 */}
+                            <div className="grid grid-cols-4 gap-4">
+                                <div className="bg-white rounded-xl p-4 shadow-sm">
+                                    <div className="text-3xl font-bold text-blue-600">{masteredStats?.words || 0}</div>
+                                    <div className="text-sm text-gray-500">单词</div>
+                                </div>
+                                <div className="bg-white rounded-xl p-4 shadow-sm">
+                                    <div className="text-3xl font-bold text-green-600">{masteredStats?.phrases || 0}</div>
+                                    <div className="text-sm text-gray-500">短语</div>
+                                </div>
+                                <div className="bg-white rounded-xl p-4 shadow-sm">
+                                    <div className="text-3xl font-bold text-purple-600">{masteredStats?.patterns || 0}</div>
+                                    <div className="text-sm text-gray-500">句型</div>
+                                </div>
+                                <div className="bg-white rounded-xl p-4 shadow-sm">
+                                    <div className="text-3xl font-bold text-orange-600">{masteredStats?.grammars || 0}</div>
+                                    <div className="text-sm text-gray-500">语法</div>
+                                </div>
+                            </div>
+
+                            {/* 列表 */}
+                            <div className="bg-white rounded-xl shadow-sm">
+                                <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                                    <div>
+                                        <h3 className="font-bold text-gray-800">已掌握词汇</h3>
+                                        <p className="text-sm text-gray-500">这些词汇在生成报告时可自动过滤</p>
+                                    </div>
+                                    {masteredWords.length > 0 && (
+                                        <button
+                                            onClick={handleClearAll}
+                                            className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm"
+                                        >
+                                            清空全部
+                                        </button>
+                                    )}
+                                </div>
+                                {masteredWords.length > 0 ? (
+                                    <div className="divide-y divide-gray-100 max-h-[500px] overflow-auto">
+                                        {masteredWords.map((item, index) => (
+                                            <div key={index} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`text-xs px-2 py-1 rounded-full ${
+                                                        item.word_type === 'word' ? 'bg-blue-100 text-blue-600' :
+                                                        item.word_type === 'phrase' ? 'bg-green-100 text-green-600' :
+                                                        item.word_type === 'pattern' ? 'bg-purple-100 text-purple-600' :
+                                                        'bg-orange-100 text-orange-600'
+                                                    }`}>
+                                                        {item.word_type === 'word' ? '单词' :
+                                                         item.word_type === 'phrase' ? '短语' :
+                                                         item.word_type === 'pattern' ? '句型' : '语法'}
+                                                    </span>
+                                                    <span className="font-medium text-gray-800">{item.word}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-sm text-gray-400">
+                                                        {new Date(item.created_at).toLocaleDateString('zh-CN')}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => handleRemoveMastered(item.word, item.word_type)}
+                                                        className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-600 rounded text-sm"
+                                                    >
+                                                        移除
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-12 text-center text-gray-500">
+                                        <span className="text-4xl block mb-4">📝</span>
+                                        <p>暂无已掌握词汇</p>
+                                        <p className="text-sm mt-2">在报告中点击"已掌握"按钮添加</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 设置 */}
+                    {currentPage === 'settings' && (
+                        <div className="max-w-2xl space-y-6">
+                            {/* 账户信息 */}
+                            <div className="bg-white rounded-xl shadow-sm">
+                                <div className="p-4 border-b border-gray-100">
+                                    <h3 className="font-bold text-gray-800">👤 账户信息</h3>
+                                </div>
+                                <div className="p-4 space-y-4">
+                                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                        <span className="text-gray-600">用户名</span>
+                                        <span className="font-medium text-gray-800">{user?.username}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                        <span className="text-gray-600">昵称</span>
+                                        <span className="font-medium text-gray-800">{user?.nickname || user?.username}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                        <span className="text-gray-600">角色</span>
+                                        <span className={`px-2 py-1 rounded-full text-xs ${
+                                            user?.role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                                        }`}>
+                                            {user?.role === 'admin' ? '管理员' : '普通用户'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between py-2">
+                                        <span className="text-gray-600">注册时间</span>
+                                        <span className="font-medium text-gray-800">
+                                            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('zh-CN') : '未知'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 数据管理 */}
+                            <div className="bg-white rounded-xl shadow-sm">
+                                <div className="p-4 border-b border-gray-100">
+                                    <h3 className="font-bold text-gray-800">🗄️ 数据管理</h3>
+                                </div>
+                                <div className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="font-medium text-gray-800">清空已掌握词汇</p>
+                                            <p className="text-sm text-gray-500">重置所有已标记为"已掌握"的词汇</p>
+                                        </div>
+                                        <button
+                                            onClick={handleClearAll}
+                                            className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm"
+                                        >
+                                            清空
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 关于 */}
+                            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6">
+                                <h3 className="font-bold text-gray-800 mb-4">ℹ️ 关于</h3>
+                                <div className="space-y-2 text-sm text-gray-600">
+                                    <p><span className="font-medium">应用名称：</span>Sorryios AI 智能笔记助手</p>
+                                    <p><span className="font-medium">版本：</span>v4.2.0</p>
+                                    <p><span className="font-medium">功能：</span>课堂笔记自动化处理系统</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </header>
-
-            {/* 点击其他区域关闭菜单 */}
-            {showUserMenu && (
-                <div
-                    className="fixed inset-0 z-5"
-                    onClick={() => setShowUserMenu(false)}
-                />
-            )}
-
-            {/* 主内容区 */}
-            <main className="max-w-2xl mx-auto px-4 py-8">
-                {/* 上传状态 */}
-                {appState === 'upload' && (
-                    <div className="fade-in">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                                上传课堂笔记
-                            </h2>
-                            <p className="text-gray-600">
-                                支持语音转文字的 txt 文件，AI 将自动分析并生成结构化报告
-                            </p>
-                        </div>
-                        <FileUploader
-                            onUploadStart={handleUploadStart}
-                            onUploadSuccess={handleUploadSuccess}
-                            onUploadError={handleUploadError}
-                        />
-
-                        {/* 功能说明 */}
-                        <div className="mt-8 grid grid-cols-3 gap-4">
-                            <div className="bg-white/60 rounded-xl p-4 text-center">
-                                <div className="text-2xl mb-2">📝</div>
-                                <div className="text-sm font-medium text-gray-700">智能分段</div>
-                                <div className="text-xs text-gray-500 mt-1">自动切分长文本</div>
-                            </div>
-                            <div className="bg-white/60 rounded-xl p-4 text-center">
-                                <div className="text-2xl mb-2">🤖</div>
-                                <div className="text-sm font-medium text-gray-700">AI 分析</div>
-                                <div className="text-xs text-gray-500 mt-1">提取关键信息</div>
-                            </div>
-                            <div className="bg-white/60 rounded-xl p-4 text-center">
-                                <div className="text-2xl mb-2">📊</div>
-                                <div className="text-sm font-medium text-gray-700">生成报告</div>
-                                <div className="text-xs text-gray-500 mt-1">多格式导出</div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 处理状态 */}
-                {appState === 'processing' && taskInfo && (
-                    <div className="fade-in">
-                        <div className="text-center mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                                正在处理
-                            </h2>
-                            <p className="text-gray-600">
-                                {taskInfo.file?.name || '文件处理中'}
-                            </p>
-                        </div>
-                        <ProgressTracker
-                            task={taskInfo}
-                            onCancel={handleReset}
-                            onViewReport={handleViewReport}
-                        />
-
-                        {/* 提示信息 */}
-                        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                            <p className="text-sm text-blue-700">
-                                💡 <span className="font-medium">提示：</span>
-                                处理过程中会自动打开浏览器与 AI 交互，请不要关闭浏览器窗口。
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* 报告状态 */}
-                {appState === 'report' && currentTaskId && (
-                    <ReportViewer
-                        taskId={currentTaskId}
-                        onBack={handleReset}
-                    />
-                )}
             </main>
-
-            {/* 底部 */}
-            <footer className="text-center py-6 text-gray-500 text-sm">
-                <p>Sorryios AI 智能笔记系统 v1.0</p>
-            </footer>
-
-            {/* 用户学习数据面板 */}
-            {showUserStats && (
-                <UserStatsPanel onClose={() => setShowUserStats(false)} />
-            )}
         </div>
     );
 }
 
 /**
- * 主应用组件（包裹 AuthProvider）
+ * 主应用组件
  */
 function App() {
     return (

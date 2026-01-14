@@ -1,21 +1,19 @@
 /**
- * 任务队列管理器 - 内存版
+ * 任务队列管理器 - 数据库持久化版
  * 
  * 功能：
  * - 任务创建、查询、更新
  * - 队列管理（FIFO）
  * - 进度回调
- * 
- * 【v2.1 更新】支持自定义标题
- * 
- * 后续可升级为 Redis + Bull 实现持久化
+ * - 【v2.2】数据库持久化 + 用户关联
  */
 
 const { v4: uuidv4 } = require('uuid');
+const { TaskDB } = require('./database');
 
 class TaskQueue {
     constructor() {
-        // 任务存储 Map<taskId, TaskObject>
+        // 任务存储 Map<taskId, TaskObject>（内存缓存）
         this.tasks = new Map();
         
         // 待处理队列
@@ -32,6 +30,30 @@ class TaskQueue {
         
         // 任务处理函数（由 aiProcessor 注入）
         this.processor = null;
+
+        // 【v2.2】启动时恢复未完成的任务
+        this._recoverPendingTasks();
+    }
+
+    /**
+     * 【v2.2】恢复未完成的任务
+     */
+    _recoverPendingTasks() {
+        try {
+            // 查找数据库中 pending 和 processing 状态的任务
+            const { db } = require('./database');
+            const pendingTasks = db.prepare(`
+                SELECT * FROM tasks WHERE status IN ('pending', 'processing') ORDER BY created_at ASC
+            `).all();
+
+            if (pendingTasks.length > 0) {
+                console.log(`📋 发现 ${pendingTasks.length} 个未完成任务`);
+                // 暂时不自动恢复，只是加载到内存
+                // 可以在管理后台手动重试
+            }
+        } catch (e) {
+            console.log('[TaskQueue] 恢复任务失败:', e.message);
+        }
     }
 
     /**
@@ -50,7 +72,7 @@ class TaskQueue {
 
     /**
      * 创建新任务
-     * 【v2.1 更新】支持 customTitle 参数
+     * 【v2.2 更新】支持 userId 参数，写入数据库
      */
     createTask(fileInfo) {
         const taskId = uuidv4();
@@ -72,8 +94,11 @@ class TaskQueue {
                 mimeType: fileInfo.mimeType
             },
             
-            // 【新增】自定义标题
+            // 【v2.1】自定义标题
             customTitle: fileInfo.customTitle || null,
+            
+            // 【v2.2】用户ID
+            userId: fileInfo.userId || null,
             
             // 结果
             result: null,           // 处理完成后的报告路径
@@ -85,12 +110,32 @@ class TaskQueue {
             completedAt: null
         };
 
+        // 【v2.2】写入数据库
+        try {
+            TaskDB.create({
+                id: taskId,
+                user_id: fileInfo.userId || null,
+                title: fileInfo.customTitle || fileInfo.originalName,
+                status: 'pending',
+                file_name: fileInfo.originalName,
+                file_size: fileInfo.size,
+                file_type: 'txt'
+            });
+            console.log(`💾 任务已存入数据库: ${taskId}, 用户: ${fileInfo.userId || '匿名'}`);
+        } catch (e) {
+            console.error('❌ 任务写入数据库失败:', e.message);
+        }
+
+        // 存入内存
         this.tasks.set(taskId, task);
         this.queue.push(taskId);
         
         console.log(`📝 任务已创建: ${taskId}`);
         if (task.customTitle) {
             console.log(`   标题: ${task.customTitle}`);
+        }
+        if (task.userId) {
+            console.log(`   用户: ${task.userId}`);
         }
         
         // 尝试处理队列
@@ -103,7 +148,54 @@ class TaskQueue {
      * 获取任务
      */
     getTask(taskId) {
-        return this.tasks.get(taskId) || null;
+        // 先从内存获取
+        let task = this.tasks.get(taskId);
+        
+        // 如果内存没有，尝试从数据库获取
+        if (!task) {
+            try {
+                const dbTask = TaskDB.getById(taskId);
+                if (dbTask) {
+                    task = this._dbTaskToMemoryTask(dbTask);
+                    this.tasks.set(taskId, task);
+                }
+            } catch (e) {
+                console.log('[TaskQueue] 从数据库获取任务失败:', e.message);
+            }
+        }
+        
+        return task || null;
+    }
+
+    /**
+     * 【v2.2】数据库任务转内存格式
+     */
+    _dbTaskToMemoryTask(dbTask) {
+        return {
+            id: dbTask.id,
+            status: dbTask.status,
+            progress: dbTask.progress || 0,
+            currentStep: dbTask.status === 'completed' ? '处理完成' : '等待处理',
+            totalSegments: dbTask.segments_total || 0,
+            processedSegments: dbTask.segments_processed || 0,
+            file: {
+                originalName: dbTask.file_name,
+                savedPath: null,
+                size: dbTask.file_size,
+                mimeType: 'text/plain'
+            },
+            customTitle: dbTask.title,
+            userId: dbTask.user_id,
+            result: dbTask.output_html ? {
+                html: dbTask.output_html,
+                md: dbTask.output_md,
+                json: dbTask.output_json
+            } : null,
+            error: dbTask.error_message,
+            createdAt: dbTask.created_at,
+            startedAt: dbTask.started_at,
+            completedAt: dbTask.completed_at
+        };
     }
 
     /**
@@ -127,12 +219,43 @@ class TaskQueue {
 
     /**
      * 更新任务状态
+     * 【v2.2】同步更新数据库
      */
     updateTask(taskId, updates) {
         const task = this.tasks.get(taskId);
         if (!task) return null;
 
         Object.assign(task, updates);
+        
+        // 【v2.2】同步更新数据库
+        try {
+            if (updates.status) {
+                TaskDB.updateStatus(taskId, updates.status, updates.progress);
+            } else if (updates.progress !== undefined) {
+                TaskDB.updateProgress(taskId, updates.progress, updates.processedSegments);
+            }
+            
+            // 如果是开始处理
+            if (updates.status === 'processing' && updates.totalSegments) {
+                TaskDB.markStarted(taskId, updates.totalSegments);
+            }
+            
+            // 如果是完成
+            if (updates.status === 'completed' && updates.result) {
+                TaskDB.markCompleted(taskId, {
+                    html: updates.result.html || updates.result.htmlPath || '',
+                    md: updates.result.md || updates.result.mdPath || '',
+                    json: updates.result.json || updates.result.jsonPath || ''
+                });
+            }
+            
+            // 如果是失败
+            if (updates.status === 'failed' && updates.error) {
+                TaskDB.markFailed(taskId, updates.error);
+            }
+        } catch (e) {
+            console.log('[TaskQueue] 更新数据库失败:', e.message);
+        }
         
         // 触发进度回调
         if (this.progressCallback) {
@@ -184,6 +307,14 @@ class TaskQueue {
         // 只能删除已完成/失败/取消的任务
         if (['completed', 'failed', 'cancelled'].includes(task.status)) {
             this.tasks.delete(taskId);
+            
+            // 【v2.2】同步删除数据库
+            try {
+                TaskDB.delete(taskId);
+            } catch (e) {
+                console.log('[TaskQueue] 删除数据库记录失败:', e.message);
+            }
+            
             return true;
         }
 

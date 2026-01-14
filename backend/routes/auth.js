@@ -1,6 +1,8 @@
 /**
  * 认证路由 - 处理用户登录、注册、信息获取
  * 文件位置: backend/routes/auth.js
+ * 
+ * v4.1.0: 修复路由路径
  */
 
 const express = require('express');
@@ -36,7 +38,7 @@ async function authMiddleware(req, res, next) {
 /**
  * POST /api/auth/register - 用户注册
  */
-router.post('/register', async (req, res) => {
+router.post('/auth/register', async (req, res) => {
     try {
         const { username, password, nickname } = req.body;
 
@@ -72,7 +74,7 @@ router.post('/register', async (req, res) => {
 /**
  * POST /api/auth/login - 用户登录
  */
-router.post('/login', async (req, res) => {
+router.post('/auth/login', async (req, res) => {
     try {
         const { username, password } = req.body;
 

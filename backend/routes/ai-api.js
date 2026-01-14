@@ -19,11 +19,15 @@ const fs = require('fs');
 const multer = require('multer');
 
 // 导入处理器模块
+const aiProcessor = require('../services/aiProcessor');
 const { 
   JsonExtractor, 
   ResultMerger,
   CONFIG
-} = require('../services/aiProcessor');
+} = aiProcessor;
+
+// 初始化 AI 处理器（设置任务处理器）
+aiProcessor.init();
 
 // 文件上传配置
 const upload = multer({

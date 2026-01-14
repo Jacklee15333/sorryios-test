@@ -530,35 +530,142 @@ class SorryiosAutomation {
         await inputElement.click();
         await sleep(500);
         
-        // 清空输入框
-        await inputElement.fill('');
-        await sleep(300);
-        
-        // 输入消息 - 使用多种方式确保输入成功
+        // 🆕 v1.2 修复：添加详细日志，修复输入问题
         log('正在输入消息...');
+        log(`[输入调试] 消息长度: ${message.length} 字符`);
         
-        // 方式1：使用fill
-        await inputElement.fill(message);
-        await sleep(500);
+        let inputSuccess = false;
         
-        // 验证是否输入成功
-        let inputSuccess = await this.verifyInputContent(message);
-        
-        if (!inputSuccess) {
-            log('fill方式输入失败，尝试type方式...');
-            await inputElement.click();
-            await inputElement.fill('');
-            await sleep(300);
-            // 方式2：使用type逐字输入
-            await inputElement.type(message, { delay: 10 });
-            await sleep(500);
-            inputSuccess = await this.verifyInputContent(message);
+        // 方式1：使用 Playwright 原生 fill（最可靠）
+        try {
+            log('[输入调试] 方式1: 尝试 Playwright fill...');
+            
+            // 重新获取输入框（确保元素引用有效）
+            const freshInput = await this.page.$('#prompt-textarea') || 
+                               await this.page.$('textarea[placeholder]') ||
+                               await this.page.$('textarea');
+            
+            if (freshInput) {
+                log('[输入调试] 找到输入框，准备清空...');
+                await freshInput.click();
+                await sleep(200);
+                
+                // 使用键盘全选+删除来清空（比fill('')更可靠）
+                await this.page.keyboard.press('Control+A');
+                await this.page.keyboard.press('Backspace');
+                await sleep(200);
+                
+                log('[输入调试] 开始fill输入...');
+                await freshInput.fill(message);
+                await sleep(500);
+                
+                // 验证
+                const verifyResult = await this.page.evaluate(() => {
+                    const input = document.querySelector('#prompt-textarea') || 
+                                  document.querySelector('textarea[placeholder]') ||
+                                  document.querySelector('textarea');
+                    if (!input) return { found: false, length: 0, preview: '' };
+                    const val = input.value || input.textContent || '';
+                    return { 
+                        found: true, 
+                        length: val.length, 
+                        preview: val.substring(0, 50) 
+                    };
+                });
+                
+                log(`[输入调试] fill后验证: found=${verifyResult.found}, length=${verifyResult.length}, preview="${verifyResult.preview}"`);
+                
+                if (verifyResult.length > 10) {
+                    inputSuccess = true;
+                    log('[输入调试] ✅ 方式1成功');
+                }
+            } else {
+                log('[输入调试] ❌ 找不到输入框元素');
+            }
+        } catch (e) {
+            log(`[输入调试] ❌ 方式1出错: ${e.message}`);
         }
         
+        // 方式2：如果fill失败，尝试 evaluate 直接设置
         if (!inputSuccess) {
-            log('输入验证失败，但继续尝试发送...');
-        } else {
+            try {
+                log('[输入调试] 方式2: 尝试 evaluate 直接设置...');
+                
+                const evalResult = await this.page.evaluate((msg) => {
+                    const input = document.querySelector('#prompt-textarea') || 
+                                  document.querySelector('textarea[placeholder]') ||
+                                  document.querySelector('textarea');
+                    if (!input) return { success: false, error: '找不到输入框' };
+                    
+                    try {
+                        // 聚焦
+                        input.focus();
+                        
+                        // 尝试使用 nativeInputValueSetter（绕过React受控组件）
+                        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                            window.HTMLTextAreaElement.prototype, 'value'
+                        ).set;
+                        nativeInputValueSetter.call(input, msg);
+                        
+                        // 触发事件
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        
+                        return { 
+                            success: true, 
+                            length: input.value.length,
+                            preview: input.value.substring(0, 50)
+                        };
+                    } catch (e) {
+                        return { success: false, error: e.message };
+                    }
+                }, message);
+                
+                log(`[输入调试] evaluate结果: ${JSON.stringify(evalResult)}`);
+                
+                if (evalResult.success && evalResult.length > 10) {
+                    inputSuccess = true;
+                    log('[输入调试] ✅ 方式2成功');
+                }
+            } catch (e) {
+                log(`[输入调试] ❌ 方式2出错: ${e.message}`);
+            }
+        }
+        
+        // 方式3：最后备选 - type 逐字输入
+        if (!inputSuccess) {
+            try {
+                log('[输入调试] 方式3: 尝试 type 逐字输入...');
+                
+                const freshInput = await this.page.$('#prompt-textarea') || 
+                                   await this.page.$('textarea[placeholder]') ||
+                                   await this.page.$('textarea');
+                
+                if (freshInput) {
+                    await freshInput.click();
+                    await this.page.keyboard.press('Control+A');
+                    await this.page.keyboard.press('Backspace');
+                    await sleep(200);
+                    
+                    // 使用较快的 delay
+                    log(`[输入调试] 开始type输入 (delay=5ms)，预计耗时: ${Math.round(message.length * 5 / 1000)}秒`);
+                    await freshInput.type(message, { delay: 5 });
+                    await sleep(300);
+                    
+                    inputSuccess = await this.verifyInputContent(message);
+                    log(`[输入调试] type后验证: ${inputSuccess ? '✅成功' : '❌失败'}`);
+                }
+            } catch (e) {
+                log(`[输入调试] ❌ 方式3出错: ${e.message}`);
+            }
+        }
+        
+        log(`[输入调试] 最终结果: ${inputSuccess ? '✅ 输入成功' : '❌ 输入失败'}`);
+        
+        if (inputSuccess) {
             log('消息已输入到输入框');
+        } else {
+            log('输入验证失败，但继续尝试发送...', 'WARN');
         }
         
         // 尝试发送消息

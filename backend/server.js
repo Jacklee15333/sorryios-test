@@ -1,13 +1,8 @@
 /**
  * Sorryios AI 智能笔记系统 - 后端服务器
  * 
- * 功能：
- * - 文件上传和处理
- * - AI 分析任务队列
- * - WebSocket 实时进度推送
- * - 用户认证
- * - 语法库管理
- * - 报告生成和下载
+ * 版本: v4.1.0
+ * 更新: 添加用户已掌握词汇API
  */
 
 const express = require('express');
@@ -63,30 +58,54 @@ const wsClients = new Map();
 wss.on('connection', (ws, req) => {
     const clientId = Date.now().toString();
     wsClients.set(clientId, ws);
-    console.log(`[WebSocket] 客户端连接: ${clientId}`);
+    
+    // 获取连接来源信息
+    const origin = req.headers.origin || '未知';
+    const referer = req.headers.referer || '未知';
+    
+    // 详细日志
+    console.log('\n' + '─'.repeat(50));
+    console.log(`[WebSocket] ✅ 新连接`);
+    console.log(`   客户端ID: ${clientId}`);
+    console.log(`   来源Origin: ${origin}`);
+    console.log(`   来源页面: ${referer}`);
+    console.log(`   当前连接数: ${wsClients.size}`);
+    console.log('─'.repeat(50));
 
     ws.on('message', (message) => {
+        const msgStr = message.toString();
+        console.log(`[WebSocket] 📥 收到消息 [${clientId}]: ${msgStr.substring(0, 100)}`);
+        
         try {
-            const data = JSON.parse(message);
-            console.log(`[WebSocket] 收到消息:`, data);
+            const data = JSON.parse(msgStr);
             
             // 处理订阅任务进度
             if (data.type === 'subscribe' && data.taskId) {
                 ws.taskId = data.taskId;
+                console.log(`[WebSocket] 📌 订阅任务: ${data.taskId}`);
+            }
+            // ping/pong 心跳
+            else if (data.type === 'ping') {
+                ws.send(JSON.stringify({ type: 'pong' }));
+                console.log(`[WebSocket] 💓 心跳响应 [${clientId}]`);
+            }
+            // 取消订阅
+            else if (data.type === 'unsubscribe') {
+                ws.taskId = null;
             }
         } catch (e) {
-            console.error('[WebSocket] 消息解析错误:', e);
+            console.log(`[WebSocket] ⚠️ 非JSON消息 [${clientId}]: "${msgStr.substring(0, 50)}..."`);
         }
     });
 
-    ws.on('close', () => {
+    ws.on('close', (code, reason) => {
         wsClients.delete(clientId);
-        console.log(`[WebSocket] 客户端断开: ${clientId}`);
+        console.log(`[WebSocket] ❌ 连接断开 [${clientId}] 码:${code} 剩余:${wsClients.size}`);
     });
 
     ws.on('error', (error) => {
-        console.error(`[WebSocket] 错误:`, error);
         wsClients.delete(clientId);
+        console.log(`[WebSocket] ❌ 错误 [${clientId}]:`, error.message);
     });
 
     // 发送连接成功消息
@@ -124,95 +143,44 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        version: '3.2'
+        version: '4.1.0',
+        wsClients: wsClients.size
     });
 });
 
-// 导入路由模块
-let uploadRouter, taskRouter, reportRouter, adminRouter, chunkApiRouter, aiApiRouter, authRouter, grammarApiRouter;
-
-try {
-    uploadRouter = require('./routes/upload');
-    console.log('[Server] ✓ 加载路由: upload');
-} catch (e) {
-    console.warn('[Server] ✗ 路由 upload 不存在，跳过');
+// 路由加载函数
+function loadRoute(name, routePath, mountPath) {
+    try {
+        const router = require(routePath);
+        const actualRouter = router.router || router;
+        app.use(mountPath, actualRouter);
+        console.log(`[Server] ✓ 加载路由: ${name}`);
+        return actualRouter;
+    } catch (e) {
+        console.warn(`[Server] ✗ 路由 ${name} 加载失败: ${e.message}`);
+        return null;
+    }
 }
 
-try {
-    taskRouter = require('./routes/task');
-    console.log('[Server] ✓ 加载路由: task');
-} catch (e) {
-    console.warn('[Server] ✗ 路由 task 不存在，跳过');
-}
+// 加载所有路由
+loadRoute('upload', './routes/upload', '/api');
+loadRoute('task', './routes/task', '/api');
+loadRoute('report', './routes/report', '/api');
+loadRoute('admin', './routes/admin', '/api/admin');
+loadRoute('chunk-api', './routes/chunk-api', '/api/chunk');
+loadRoute('ai-api', './routes/ai-api', '/api/ai');
+loadRoute('auth', './routes/auth', '/api');  // 修复：挂载到 /api（auth.js 里已包含 /auth 和 /user 前缀）
+loadRoute('grammar-api', './routes/grammar-api', '/api/grammar');
+loadRoute('vocabulary-api', './routes/vocabulary-api', '/api/vocabulary');
+loadRoute('processing-log-api', './routes/processing-log-api', '/api/processing-log');
 
-try {
-    reportRouter = require('./routes/report');
-    console.log('[Server] ✓ 加载路由: report');
-} catch (e) {
-    console.warn('[Server] ✗ 路由 report 不存在，跳过');
-}
-
-try {
-    adminRouter = require('./routes/admin');
-    console.log('[Server] ✓ 加载路由: admin');
-} catch (e) {
-    console.warn('[Server] ✗ 路由 admin 不存在，跳过');
-}
-
-try {
-    chunkApiRouter = require('./routes/chunk-api');
-    console.log('[Server] ✓ 加载路由: chunk-api');
-} catch (e) {
-    console.warn('[Server] ✗ 路由 chunk-api 不存在，跳过');
-}
-
-try {
-    aiApiRouter = require('./routes/ai-api');
-    console.log('[Server] ✓ 加载路由: ai-api');
-} catch (e) {
-    console.warn('[Server] ✗ 路由 ai-api 不存在，跳过');
-}
-
-try {
-    const authModule = require('./routes/auth');
-    // auth.js 可能导出 { router, authMiddleware } 或直接导出 router
-    authRouter = authModule.router || authModule;
-    console.log('[Server] ✓ 加载路由: auth');
-} catch (e) {
-    console.warn('[Server] ✗ 路由 auth 不存在，跳过');
-}
-
-try {
-    grammarApiRouter = require('./routes/grammar-api');
-    console.log('[Server] ✓ 加载路由: grammar-api');
-} catch (e) {
-    console.warn('[Server] ✗ 路由 grammar-api 不存在，跳过');
-}
-
-let vocabularyApiRouter;
-try {
-    vocabularyApiRouter = require('./routes/vocabulary-api');
-    console.log('[Server] ✓ 加载路由: vocabulary-api');
-} catch (e) {
-    console.warn('[Server] ✗ 路由 vocabulary-api 不存在，跳过');
-}
-
-// 注册路由 (注意顺序：具体路径要在通配符路径之前)
-if (grammarApiRouter) app.use('/api/grammar', grammarApiRouter);  // 放在前面，避免被task拦截
-if (vocabularyApiRouter) app.use('/api/vocabulary', vocabularyApiRouter);  // 词库路由
-if (uploadRouter) app.use('/api', uploadRouter);
-if (taskRouter) app.use('/api', taskRouter);
-if (reportRouter) app.use('/api', reportRouter);
-if (adminRouter) app.use('/api/admin', adminRouter);
-if (chunkApiRouter) app.use('/api/chunk', chunkApiRouter);
-if (aiApiRouter) app.use('/api/ai', aiApiRouter);
-if (authRouter) app.use('/', authRouter);  // auth 路由包含 /api/auth 和 /api/user
+// 🆕 v4.1.0: 用户已掌握词汇API
+loadRoute('user-mastered-api', './routes/user-mastered-api', '/api/user-mastered');
 
 // ============================================
 // 页面路由
 // ============================================
 
-// 管理后台
 app.get('/admin', (req, res) => {
     const adminPath = path.join(__dirname, 'public/admin.html');
     if (fs.existsSync(adminPath)) {
@@ -222,38 +190,43 @@ app.get('/admin', (req, res) => {
     }
 });
 
-// 语法库管理页面
 app.get('/grammar-admin', (req, res) => {
     const grammarAdminPath = path.join(__dirname, 'public/grammar-admin.html');
     if (fs.existsSync(grammarAdminPath)) {
         res.sendFile(grammarAdminPath);
     } else {
-        res.status(404).send('语法库管理页面不存在，请先复制 grammar-admin.html 到 public 目录');
+        res.status(404).send('语法库管理页面不存在');
     }
 });
 
-// 词库管理页面
 app.get('/vocabulary-admin', (req, res) => {
     const vocabularyAdminPath = path.join(__dirname, 'public/vocabulary-admin.html');
     if (fs.existsSync(vocabularyAdminPath)) {
         res.sendFile(vocabularyAdminPath);
     } else {
-        res.status(404).send('词库管理页面不存在，请先复制 vocabulary-admin.html 到 public 目录');
+        res.status(404).send('词库管理页面不存在');
     }
 });
 
-// 根路径
+app.get('/processing-log-admin', (req, res) => {
+    const processingLogAdminPath = path.join(__dirname, 'public/processing-log-admin.html');
+    if (fs.existsSync(processingLogAdminPath)) {
+        res.sendFile(processingLogAdminPath);
+    } else {
+        res.status(404).send('处理日志管理页面不存在');
+    }
+});
+
 app.get('/', (req, res) => {
     res.json({
         name: 'Sorryios AI 智能笔记系统',
-        version: '3.3',
+        version: '4.1.0',
         endpoints: {
             health: '/api/health',
             upload: '/api/upload',
             task: '/api/task/:id',
             admin: '/admin',
-            grammarAdmin: '/grammar-admin',
-            grammar: '/api/grammar'
+            userMastered: '/api/user-mastered'
         }
     });
 });
@@ -262,7 +235,6 @@ app.get('/', (req, res) => {
 // 错误处理
 // ============================================
 
-// 404 处理
 app.use((req, res, next) => {
     res.status(404).json({
         success: false,
@@ -271,7 +243,6 @@ app.use((req, res, next) => {
     });
 });
 
-// 全局错误处理
 app.use((err, req, res, next) => {
     console.error('[Server] 错误:', err);
     res.status(500).json({
@@ -307,7 +278,7 @@ requiredDirs.forEach(dir => {
 
 server.listen(PORT, HOST, () => {
     console.log('\n' + '='.repeat(60));
-    console.log('  Sorryios AI 智能笔记系统 v3.3');
+    console.log('  Sorryios AI 智能笔记系统 v4.1.0');
     console.log('='.repeat(60));
     console.log(`  🚀 服务器启动成功！`);
     console.log(`  📡 地址: http://localhost:${PORT}`);
@@ -317,6 +288,7 @@ server.listen(PORT, HOST, () => {
     console.log(`     - 管理后台: http://localhost:${PORT}/admin`);
     console.log(`     - 语法库管理: http://localhost:${PORT}/grammar-admin`);
     console.log(`     - 词库管理: http://localhost:${PORT}/vocabulary-admin`);
+    console.log(`     - 处理日志: http://localhost:${PORT}/processing-log-admin`);
     console.log('');
     console.log('  📌 API 接口:');
     console.log(`     - 健康检查: http://localhost:${PORT}/api/health`);
@@ -324,6 +296,8 @@ server.listen(PORT, HOST, () => {
     console.log(`     - 任务查询: GET http://localhost:${PORT}/api/task/:id`);
     console.log(`     - 语法库: http://localhost:${PORT}/api/grammar`);
     console.log(`     - 词库: http://localhost:${PORT}/api/vocabulary`);
+    console.log(`     - 处理日志: http://localhost:${PORT}/api/processing-log`);
+    console.log(`     - 已掌握词汇: http://localhost:${PORT}/api/user-mastered`);
     console.log('='.repeat(60) + '\n');
 });
 
@@ -333,12 +307,7 @@ server.listen(PORT, HOST, () => {
 
 process.on('SIGINT', () => {
     console.log('\n[Server] 正在关闭服务器...');
-    
-    // 关闭 WebSocket 连接
-    wsClients.forEach((ws) => {
-        ws.close();
-    });
-    
+    wsClients.forEach((ws) => ws.close());
     server.close(() => {
         console.log('[Server] 服务器已关闭');
         process.exit(0);
@@ -347,12 +316,9 @@ process.on('SIGINT', () => {
 
 process.on('SIGTERM', () => {
     console.log('\n[Server] 收到终止信号，正在关闭...');
-    server.close(() => {
-        process.exit(0);
-    });
+    server.close(() => process.exit(0));
 });
 
-// 未捕获的异常处理
 process.on('uncaughtException', (err) => {
     console.error('[Server] 未捕获的异常:', err);
 });

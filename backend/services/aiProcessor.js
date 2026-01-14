@@ -1,15 +1,12 @@
 /**
- * AI 处理器服务 - 英语课堂专用版 v3.1
+ * AI 处理器服务 - 英语课堂专用版 v4.3.1
  * 
- * 【v3.1 更新】
- * 1. 使用英语课堂专用提示词（2大类：词汇基础 + 语法知识）
- * 2. 使用专用报告生成器（漂亮的HTML样式）
- * 3. 支持单词变形、短语模板、语法卡片
- * 4. 保留断点续传、自动重启等功能
+ * 【v4.3.1 更新】
+ * - 修复 normalizeItemCase 分割逻辑（处理 sth. sb. 等缩写）
  * 
  * @author Sorryios AI Team
- * @version 3.1.0
- * @date 2026-01-13
+ * @version 4.3.1
+ * @date 2026-01-14
  */
 
 const fs = require('fs');
@@ -21,94 +18,99 @@ const EnglishReportGenerator = require('./english-report-generator');
 
 const taskQueue = require('./taskQueue');
 
+// 处理日志服务
+let matchingService = null;
+let processingLogService = null;
+try {
+    const { getMatchingService } = require('./matchingService');
+    const { getProcessingLogService } = require('./processingLogService');
+    matchingService = getMatchingService();
+    processingLogService = getProcessingLogService();
+    console.log('[AIProcessor] ✓ 处理日志服务已加载');
+} catch (e) {
+    console.warn('[AIProcessor] ✗ 处理日志服务未加载');
+}
+
 // ============================================
 // 配置
 // ============================================
 
 const CONFIG = {
     maxSegmentLength: 6000,
-    requestInterval: 15000,      // 片段间等待时间 15秒
+    requestInterval: 15000,
     outputDir: path.join(__dirname, '../outputs'),
     progressDir: path.join(__dirname, '../data/progress'),
+    maxRetries: 2,
+    browserRestartDelay: 5000,
+    maxBrowserRestarts: 5,
     
-    // 重试配置
-    maxRetries: 2,               // 单个片段最大重试次数
-    browserRestartDelay: 5000,   // 浏览器重启等待：5秒
-    maxBrowserRestarts: 5,       // 最大浏览器重启次数
-    
-    // ============================================
-    // 🆕 v3.2 英语课堂专用提示词（精简版）
-    // ============================================
-    systemPrompt: `直接输出JSON，第一个字符是{，最后一个字符是}
-禁止：开头语（好的/以下是/根据）、结尾语、\`\`\`代码块
+    extractionPrompt: `直接输出JSON，第一个字符是{，最后一个字符是}
+禁止：开头语、结尾语、\`\`\`代码块、任何解释说明
 
-⚠️⚠️⚠️【最重要规则：含语法术语必须放grammar，不能放phrases/patterns】⚠️⚠️⚠️
-以下词语是语法术语，只要出现在内容或含义中，必须归入grammar：
-中文：主语、谓语、宾语、补语、定语、状语、动词、名词、形容词、副词、第三人称单数、单数、复数、时态、语态、否定句、疑问句、一般疑问句、特殊疑问句、感叹句、祈使句、从句、宾语从句、定语从句、不定式、动名词、分词、现在分词、过去分词、被动语态、现在完成时、一般过去时、一般现在时、动词原形
-英文：subject, predicate, object, verb, noun, adjective, adverb, third person singular, tense, clause, infinitive, gerund, participle, passive voice
+你是英语教学助手，从课堂录音内容中找出【学生不懂、需要记住的】词汇。
 
-❌ 这些必须放grammar（绝对不能放phrases/patterns）：
-- "to do sth. 不定式" → 含"不定式"，必须放grammar！
-- "do/does/did + 主语 + 动词原形" → 含"主语、动词原形"，放grammar
-- "第三人称单数 + v.-s" → 含"第三人称单数"，放grammar  
-- "doing sth. + v.-s 动名词短语作主语" → 含"动名词、主语"，放grammar
-- "some → any（否定句/疑问句）" → 含"否定句、疑问句"，放grammar
-- "doesn't have sth. 一般现在时否定" → 含"一般现在时"，放grammar
-- "v.-ing 现在分词" → 含"现在分词"，放grammar
-- "have/has + done 现在完成时" → 含"现在完成时"，放grammar
+⚠️ 重要：这是老师上课的录音转文字，你要先理解内容，判断哪些是教学重点！
 
-✅ 这些可以放phrases/patterns（不含任何语法术语）：
-- "look forward to doing sth. 期待做某事" → 放phrases
-- "so...that... 如此...以至于..." → 放patterns
-- "help sb. (to) do sth. 帮助某人做某事" → 放phrases
+【✅ 需要提取的情况】
+- 老师专门讲解、解释含义的词汇（如："environment，环境，记一下"）
+- 老师强调重点的词汇（如："这个词很重要"、"考试会考"）
+- 老师给出中文翻译的词汇（如："protect，保护"）
+- 老师纠正发音/拼写的词汇
+- 学生问"什么意思"、"怎么读"的词汇
+- 老师反复强调的词汇
 
-你是英语教学助手，提取课堂内容分为【词汇基础】和【语法知识】两类。
+【❌ 不要提取的情况】
+- 只是例句中随便出现的简单词（如例句 "The apple is red" 中的 apple, red）
+- 老师随口带过、没有解释的词
+- 小学基础词汇（is, are, have, the, a, this, that, it, they...）
+- 作为背景出现、不是教学重点的词
+- 中文讲解中偶尔蹦出的英文
 
 【分类规则】
-1. 词汇基础（需要"记住"）：
-   - 单词：提供音标、词性、含义、例句；不规则动词列出变形
-   - 短语：固定搭配模板，不含语法术语（如 look forward to doing sth.）
-   - 句型：句子模板，不含语法术语（如 so...that...）
+1. words: 重点单词（英文原形，小写）
+2. phrases: 固定短语搭配
+3. patterns: 句型模板（如 so...that...）
+4. grammar: 语法知识点名称（必须用中文）
 
-2. 语法知识（需要"理解"）：
-   - 时态、语态、从句、句子成分等语法规则
-   - 词汇辨析（如 tell/say/speak 的区别）
-   - ⚠️ 任何含语法术语的内容
-   
-⚠️【语法卡片要求】
-- definition：详细解释这个语法点是什么，不要太简略
-- structure：给出清晰的结构公式
-- usage：列出2-4个常见用法场景，结合你的语法知识补充完整
-- mistakes：列出1-2个学生常见错误，格式必须是 {"wrong":"错误写法","correct":"正确写法","explanation":"解释"}，如果没有易错点就写空数组 []
-- examples：给出2-3个典型例句
+⚠️【介词特别注意】
+- 单独出现的介词（on, off, up, down, in, out, to, for...）要检查前后文！
+- 很可能是动词短语的一部分被语音识别分开了
+- 例如：turn off, go out, look for, put on 等
+- 如果是短语的一部分，提取完整短语，不要单独提取介词
 
-【其他规则】
-规则A：短语/句型必须泛化为通用模板
-⚠️ AI必须主动判断，把具体内容泛化为通用形式！
-- 具体名词 → sb./sth./sw.
-- 具体动词 → do/doing
-- 具体形容词 → adj.
-- 具体时间/金额 → time/money
+⚠️【短语必须模板化】
+- 短语必须使用通用模板，不能太具体！
+- ✅ 正确：protect sth., clean sth., speak sth.
+- ❌ 错误：protect the environment, clean the air, speak English（这些是例句，不是短语）
+- ❌ 错误：in summer, in the morning（太具体，不是固定搭配）
+- 模板规则：
+  - 具体名词 → sb./sth.
+  - 具体动词 → do/doing
+  - 具体地点/时间 → 不提取，除非是固定搭配
 
-❌ 错误（太具体）→ ✅ 正确（通用模板）：
-- "help sb. make progress" → "help sb. (to) do sth." （make progress 是具体动作）
-- "spend the whole summer" → "spend time/money (in) doing sth." （the whole summer 是具体时间）
-- "low-cost house" → "low-cost" 或不收录（house 是具体名词，low-cost 本身就是形容词）
-- "protect the environment" → "protect sth."
-- "turn off the light" → "turn off sth."
-- "build houses for families" → "build sth. for sb."
-- "share ideas on a website" → "share sth. on sth."
+⚠️【语法分类规则】含以下术语的必须放grammar：
+主语、谓语、宾语、动词、名词、形容词、副词、第三人称单数、时态、语态、从句、不定式、动名词、分词、被动语态
 
-规则B：使用标准缩写
-sb.=某人  sth.=某事  sw.=某地  doing=动名词  to do=不定式  adj.=形容词
-
-规则C：短语和句型必须有例句！
-
-【输出格式】直接输出（无代码块）：
-{"vocabulary":{"words":[{"word":"","phonetic":"","pos":"","meaning":"","forms":{},"example":"","note":""}],"phrases":[{"phrase":"","meaning":"","example":""}],"patterns":[{"pattern":"","meaning":"","example":""}]},"grammar":[{"title":"第三人称单数","definition":"当主语是第三人称单数（he/she/it/单个人或物）时，一般现在时的谓语动词要加-s或-es","structure":"第三人称单数主语 + 动词-s/es","usage":["描述习惯性动作：He works every day.","描述客观事实：The sun rises in the east.","描述现在状态：She likes music."],"mistakes":[{"wrong":"He work hard.","correct":"He works hard.","explanation":"第三人称单数主语后动词要加s"}],"examples":["She plays piano well.","It looks beautiful.","Tom goes to school by bus."]}],"summary":{"total_words":0,"total_phrases":0,"total_patterns":0,"total_grammar":0}}
+【输出格式】：
+{"words":["environment"],"phrases":["look forward to doing sth."],"patterns":["so...that..."],"grammar":["现在完成时"]}
 
 【待分析内容】
----`
+---`,
+
+    detailPrompt: `直接输出JSON，第一个字符是{，最后一个字符是}
+禁止：开头语、结尾语、\`\`\`代码块
+
+请为以下词汇/语法生成详细信息。
+
+【输出格式】
+{"vocabulary":{"words":[{"word":"","phonetic":"","pos":"","meaning":"","example":""}],"phrases":[{"phrase":"","meaning":"","example":""}],"patterns":[{"pattern":"","meaning":"","example":""}]},"grammar":[{"title":"","definition":"","structure":"","usage":[],"examples":[]}]}
+
+【需要生成详情的内容】
+---`,
+
+    get systemPrompt() {
+        return this.extractionPrompt;
+    }
 };
 
 // ============================================
@@ -117,64 +119,466 @@ sb.=某人  sth.=某事  sw.=某地  doing=动名词  to do=不定式  adj.=形�
 
 class JsonExtractor {
     static extract(response) {
-        if (!response || typeof response !== 'string') {
-            console.error('[JsonExtractor] 响应为空或非字符串');
-            return null;
-        }
-
+        if (!response || typeof response !== 'string') return null;
         const text = response.trim();
-
-        // 方法1：直接解析
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            // 静默失败，尝试其他方法
-        }
-
-        // 方法2：提取 {...} 部分
+        try { return JSON.parse(text); } catch (e) {}
         const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            try {
-                const result = JSON.parse(jsonMatch[0]);
-                console.log('[JsonExtractor] ✓ JSON提取成功');
-                return result;
-            } catch (e) {
-                // 继续尝试
-            }
-        }
-
-        // 方法3：提取 ```json ... ``` 代码块
+        if (jsonMatch) { try { return JSON.parse(jsonMatch[0]); } catch (e) {} }
         const codeBlockMatch = text.match(/```json?\s*([\s\S]*?)```/);
-        if (codeBlockMatch) {
-            try {
-                const result = JSON.parse(codeBlockMatch[1].trim());
-                console.log('[JsonExtractor] ✓ JSON提取成功（代码块）');
-                return result;
-            } catch (e) {
-                // 继续尝试
-            }
-        }
-
-        // 方法4：尝试修复常见问题
+        if (codeBlockMatch) { try { return JSON.parse(codeBlockMatch[1].trim()); } catch (e) {} }
         try {
-            let fixed = text;
-            fixed = fixed.replace(/^[^{]*/, '');
-            fixed = fixed.replace(/[^}]*$/, '');
-            fixed = fixed.replace(/'/g, '"');
-            fixed = fixed.replace(/,\s*}/g, '}');
-            fixed = fixed.replace(/,\s*]/g, ']');
-            
-            const result = JSON.parse(fixed);
-            console.log('[JsonExtractor] ✓ JSON修复成功');
-            return result;
-        } catch (e) {
-            // 最后失败
-        }
-
+            let fixed = text.replace(/^[^{]*/, '').replace(/[^}]*$/, '').replace(/'/g, '"').replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+            return JSON.parse(fixed);
+        } catch (e) {}
         console.error('[JsonExtractor] ✗ JSON解析失败');
         return null;
     }
 }
+
+// ============================================
+// 关键词标准化器 v4.3.1
+// ============================================
+
+class KeywordNormalizer {
+    constructor() {
+        this.grammarMapping = {
+            'present perfect': '现在完成时', 'present perfect tense': '现在完成时',
+            'simple past': '一般过去时', 'past tense': '一般过去时', 'past': '一般过去时',
+            'simple present': '一般现在时', 'present tense': '一般现在时',
+            'past continuous': '过去进行时', 'present continuous': '现在进行时',
+            'future tense': '一般将来时', 'past perfect': '过去完成时',
+            'passive voice': '被动语态', 'passive': '被动语态', 'active voice': '主动语态',
+            'infinitive': '不定式', 'to do': '不定式', 'to do sth': '不定式', 'to do sth.': '不定式',
+            'gerund': '动名词', 'v-ing': '动名词', 'v-ing as subject': '动名词作主语',
+            'participle': '分词', 'present participle': '现在分词', 'past participle': '过去分词',
+            'clause': '从句', 'attributive clause': '定语从句', 'relative clause': '定语从句',
+            'object clause': '宾语从句', 'adverbial clause': '状语从句',
+            'subject': '主语', 'predicate': '谓语', 'object': '宾语',
+            'complement': '补语', 'attributive': '定语', 'adverbial': '状语',
+            'verb': '动词', 'noun': '名词', 'adjective': '形容词', 'adverb': '副词',
+            'third person singular': '第三人称单数',
+            'modal verb': '情态动词', 'auxiliary verb': '助动词', 'auxiliary': '助动词',
+            'negative sentence': '否定句', 'negative': '否定句',
+            'comparative': '比较级', 'superlative': '最高级',
+        };
+        
+        this.grammarKeywords = {
+            chinese: ['主语', '谓语', '宾语', '补语', '定语', '状语', '同位语',
+                '动词', '名词', '形容词', '副词', '代词', '介词', '连词',
+                '时态', '语态', '现在时', '过去时', '将来时', '完成时', '进行时',
+                '一般现在时', '一般过去时', '一般将来时', '现在进行时', '过去进行时',
+                '现在完成时', '过去完成时', '被动语态', '主动语态',
+                '从句', '定语从句', '宾语从句', '状语从句', '主语从句',
+                '不定式', '动名词', '分词', '现在分词', '过去分词',
+                '第三人称', '单数', '复数', '原形',
+                '否定句', '疑问句', '感叹句', '祈使句',
+                '比较级', '最高级', '情态动词', '助动词', '系动词',
+                '目的状语', '结果状语', '表语', '宾补'],
+            english: ['subject', 'predicate', 'object', 'complement', 'attributive', 'adverbial',
+                'verb', 'noun', 'adjective', 'adverb', 'tense', 'voice',
+                'passive', 'active', 'clause', 'infinitive', 'gerund', 'participle',
+                'singular', 'plural', 'negative', 'comparative', 'superlative', 'modal', 'auxiliary']
+        };
+        
+        // 语法模式：这些词/短语本身就是语法内容（加强版）
+        this.grammarPatterns = [
+            /^to do\b/i,                    // to do 开头
+            /^to do sth\.?$/i,              // to do sth.
+            /to do sth/i,                   // 任何位置的 to do sth（关键！）
+            /^v-?ing/i,                     // v-ing 或 ving 开头
+            /\bv-?s\b/i,                    // v-s 或 vs
+            /doing sth\.?/i,                // doing sth（任何位置）
+            /做.*语/,                        // 做...语
+            /作.*语/,                        // 作...语
+            /sb\.\s*do/i,                   // sb. do
+            /sth\.\s*to\s*do/i,             // sth. to do
+        ];
+        
+        this.properNouns = new Set([
+            'english', 'chinese', 'french', 'german', 'spanish', 'japanese', 'korean',
+            'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+            'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december',
+            'china', 'america', 'usa', 'uk', 'england', 'france', 'germany', 'japan', 'korea', 'russia', 'italy', 'spain', 'canada', 'australia',
+            'beijing', 'shanghai', 'london', 'paris', 'tokyo', 'new york',
+            'christmas', 'easter', 'halloween', 'thanksgiving', 'internet', 'wifi', 'tv'
+        ]);
+    }
+
+    normalize(keywords) {
+        console.log('\n[KeywordNormalizer] ═══════════════════════════════════════');
+        console.log('[KeywordNormalizer] 阶段5.1: 标准化处理');
+        console.log('[KeywordNormalizer] ═══════════════════════════════════════');
+        
+        const original = {
+            words: keywords.words?.length || 0,
+            phrases: keywords.phrases?.length || 0,
+            patterns: keywords.patterns?.length || 0,
+            grammar: keywords.grammar?.length || 0
+        };
+        console.log(`[KeywordNormalizer] 输入: 单词${original.words}, 短语${original.phrases}, 句型${original.patterns}, 语法${original.grammar}`);
+        
+        let result = this.correctClassification(keywords);
+        result = this.normalizeCase(result);
+        result = this.normalizeAbbreviations(result);
+        result.grammar = this.convertGrammarToChinese(result.grammar);
+        result = this.deduplicate(result);
+        result = this.filterInvalid(result);
+        
+        console.log(`[KeywordNormalizer] 输出: 单词${result.words.length}, 短语${result.phrases.length}, 句型${result.patterns.length}, 语法${result.grammar.length}`);
+        console.log('[KeywordNormalizer] ═══════════════════════════════════════\n');
+        
+        return result;
+    }
+
+    /**
+     * 阶段8.1: 最终标准化
+     */
+    finalNormalize(mergedData) {
+        console.log('\n[FinalNormalizer] ═══════════════════════════════════════');
+        console.log('[FinalNormalizer] 阶段8.1: 最终标准化');
+        console.log('[FinalNormalizer] ═══════════════════════════════════════');
+        
+        const original = {
+            words: mergedData.vocabulary.words?.length || 0,
+            phrases: mergedData.vocabulary.phrases?.length || 0,
+            patterns: mergedData.vocabulary.patterns?.length || 0,
+            grammar: mergedData.grammar?.length || 0
+        };
+        console.log(`[FinalNormalizer] 输入: 单词${original.words}, 短语${original.phrases}, 句型${original.patterns}, 语法${original.grammar}`);
+        
+        const result = JSON.parse(JSON.stringify(mergedData));
+        
+        // 步骤1: 检查名称是否为语法
+        console.log('[FinalNormalizer] → 步骤1: 检查名称是否为语法内容');
+        const movedFromName = [];
+        
+        result.vocabulary.words = result.vocabulary.words.filter(item => {
+            if (this.isGrammarPattern(item.word)) {
+                console.log(`[FinalNormalizer]   单词→语法: "${item.word}"`);
+                movedFromName.push({ title: this.convertToGrammarTitle(item.word), definition: item.meaning || '', _source: item._source });
+                return false;
+            }
+            return true;
+        });
+        
+        result.vocabulary.phrases = result.vocabulary.phrases.filter(item => {
+            if (this.isGrammarPattern(item.phrase)) {
+                console.log(`[FinalNormalizer]   短语→语法: "${item.phrase}"`);
+                movedFromName.push({ title: this.convertToGrammarTitle(item.phrase), definition: item.meaning || '', _source: item._source });
+                return false;
+            }
+            return true;
+        });
+        
+        result.vocabulary.patterns = result.vocabulary.patterns.filter(item => {
+            if (this.isGrammarPattern(item.pattern)) {
+                console.log(`[FinalNormalizer]   句型→语法: "${item.pattern}"`);
+                movedFromName.push({ title: this.convertToGrammarTitle(item.pattern), definition: item.meaning || '', _source: item._source });
+                return false;
+            }
+            return true;
+        });
+        
+        console.log(`[FinalNormalizer]   因名称移动: ${movedFromName.length} 项`);
+        
+        // 步骤2: 检查含义中的语法词
+        console.log('[FinalNormalizer] → 步骤2: 检查含义中的语法词');
+        const movedFromMeaning = [];
+        
+        result.vocabulary.words = result.vocabulary.words.filter(item => {
+            if (this.containsGrammarKeyword(item.meaning || '')) {
+                console.log(`[FinalNormalizer]   单词→语法(含义): "${item.word}"`);
+                movedFromMeaning.push({ title: this.extractGrammarTitle(item.word, item.meaning), definition: item.meaning, _source: item._source });
+                return false;
+            }
+            return true;
+        });
+        
+        result.vocabulary.phrases = result.vocabulary.phrases.filter(item => {
+            if (this.containsGrammarKeyword(item.meaning || '')) {
+                console.log(`[FinalNormalizer]   短语→语法(含义): "${item.phrase}"`);
+                movedFromMeaning.push({ title: this.extractGrammarTitle(item.phrase, item.meaning), definition: item.meaning, _source: item._source });
+                return false;
+            }
+            return true;
+        });
+        
+        result.vocabulary.patterns = result.vocabulary.patterns.filter(item => {
+            if (this.containsGrammarKeyword(item.meaning || '')) {
+                console.log(`[FinalNormalizer]   句型→语法(含义): "${item.pattern}"`);
+                movedFromMeaning.push({ title: this.extractGrammarTitle(item.pattern, item.meaning), definition: item.meaning, _source: item._source });
+                return false;
+            }
+            return true;
+        });
+        
+        console.log(`[FinalNormalizer]   因含义移动: ${movedFromMeaning.length} 项`);
+        result.grammar.push(...movedFromName, ...movedFromMeaning);
+        
+        // 步骤3: 标准化大小写
+        console.log('[FinalNormalizer] → 步骤3: 标准化大小写');
+        
+        result.vocabulary.words = result.vocabulary.words.map(item => {
+            if (item.word) {
+                const oldWord = item.word;
+                item.word = this.normalizeItemCase(item.word);
+                if (oldWord !== item.word) console.log(`[FinalNormalizer]   "${oldWord}" → "${item.word}"`);
+            }
+            return item;
+        });
+        
+        result.vocabulary.phrases = result.vocabulary.phrases.map(item => {
+            if (item.phrase) {
+                const oldPhrase = item.phrase;
+                item.phrase = this.normalizeItemCase(item.phrase);
+                if (oldPhrase !== item.phrase) console.log(`[FinalNormalizer]   "${oldPhrase}" → "${item.phrase}"`);
+            }
+            return item;
+        });
+        
+        result.vocabulary.patterns = result.vocabulary.patterns.map(item => {
+            if (item.pattern) {
+                const oldPattern = item.pattern;
+                item.pattern = this.normalizeItemCase(item.pattern);
+                if (oldPattern !== item.pattern) console.log(`[FinalNormalizer]   "${oldPattern}" → "${item.pattern}"`);
+            }
+            return item;
+        });
+        
+        // 步骤4: 去重
+        console.log('[FinalNormalizer] → 步骤4: 去重');
+        const beforeDedupe = {
+            words: result.vocabulary.words.length,
+            phrases: result.vocabulary.phrases.length,
+            patterns: result.vocabulary.patterns.length,
+            grammar: result.grammar.length
+        };
+        
+        result.vocabulary.words = this.dedupeObjects(result.vocabulary.words, 'word');
+        result.vocabulary.phrases = this.dedupeObjects(result.vocabulary.phrases, 'phrase');
+        result.vocabulary.patterns = this.dedupeObjects(result.vocabulary.patterns, 'pattern');
+        result.grammar = this.dedupeObjects(result.grammar, 'title');
+        
+        console.log(`[FinalNormalizer]   单词: ${beforeDedupe.words} → ${result.vocabulary.words.length}`);
+        console.log(`[FinalNormalizer]   短语: ${beforeDedupe.phrases} → ${result.vocabulary.phrases.length}`);
+        console.log(`[FinalNormalizer]   句型: ${beforeDedupe.patterns} → ${result.vocabulary.patterns.length}`);
+        console.log(`[FinalNormalizer]   语法: ${beforeDedupe.grammar} → ${result.grammar.length}`);
+        
+        // 更新统计
+        result.summary = {
+            total_words: result.vocabulary.words.length,
+            total_phrases: result.vocabulary.phrases.length,
+            total_patterns: result.vocabulary.patterns.length,
+            total_grammar: result.grammar.length
+        };
+        
+        console.log('[FinalNormalizer] ───────────────────────────────────────');
+        console.log(`[FinalNormalizer] 最终: 单词${result.vocabulary.words.length}, 短语${result.vocabulary.phrases.length}, 句型${result.vocabulary.patterns.length}, 语法${result.grammar.length}`);
+        console.log('[FinalNormalizer] ═══════════════════════════════════════\n');
+        
+        return result;
+    }
+
+    isGrammarPattern(text) {
+        if (!text) return false;
+        for (const pattern of this.grammarPatterns) {
+            if (pattern.test(text)) return true;
+        }
+        const lowerText = text.toLowerCase().trim();
+        if (this.grammarMapping[lowerText]) return true;
+        return false;
+    }
+
+    convertToGrammarTitle(text) {
+        const lowerText = text.toLowerCase().trim();
+        if (this.grammarMapping[lowerText]) return this.grammarMapping[lowerText];
+        if (/^to do\b/i.test(text)) return '不定式';
+        if (/^v-?ing/i.test(text)) return '动名词';
+        return text;
+    }
+
+    containsGrammarKeyword(text) {
+        if (!text) return false;
+        for (const keyword of this.grammarKeywords.chinese) {
+            if (text.includes(keyword)) return true;
+        }
+        return false;
+    }
+
+    extractGrammarTitle(word, meaning) {
+        for (const keyword of this.grammarKeywords.chinese) {
+            if (meaning.includes(keyword)) {
+                const match = meaning.match(new RegExp(`[（(]([^）)]*${keyword}[^）)]*)[）)]`));
+                if (match) return match[1].trim();
+                return keyword;
+            }
+        }
+        return `${word}（${meaning}）`;
+    }
+
+    /**
+     * 🆕 v4.3.1 修复：标准化大小写（正确处理 sth. sb. 等缩写）
+     */
+    normalizeItemCase(text) {
+        if (!text || typeof text !== 'string') return '';
+        
+        // 1. 保护 ... 和缩写（sth. sb. sw.）- 使用不会被 toLowerCase 影响的标记
+        let result = text;
+        result = result.replace(/\.\.\./g, '\x00ELLIPSIS\x00');
+        result = result.replace(/\b(sth|sb|sw)\./gi, (match) => match.toLowerCase().replace('.', '\x00DOT\x00'));
+        
+        // 2. 按空格分割
+        const words = result.split(/(\s+)/);
+        
+        // 3. 处理每个单词
+        const normalized = words.map(word => {
+            if (/^\s+$/.test(word)) return word; // 保留空格
+            
+            // 跳过包含保护标记的部分
+            if (word.includes('\x00')) return word;
+            
+            // 移除标点来检查是否是专有名词
+            const cleanWord = word.replace(/[.,;:!?'"()]/g, '').toLowerCase();
+            
+            // 专有名词首字母大写
+            if (this.properNouns.has(cleanWord)) {
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            }
+            
+            return word.toLowerCase();
+        });
+        
+        result = normalized.join('');
+        
+        // 4. 恢复保护的内容
+        result = result.replace(/\x00ELLIPSIS\x00/g, '...');
+        result = result.replace(/\x00DOT\x00/g, '.');
+        
+        return result.trim();
+    }
+
+    dedupeObjects(array, keyField) {
+        if (!Array.isArray(array) || array.length === 0) return [];
+        const seen = new Map();
+        return array.filter(item => {
+            if (!item || !item[keyField]) return false;
+            const key = String(item[keyField]).toLowerCase().trim();
+            if (seen.has(key)) return false;
+            seen.set(key, item);
+            return true;
+        });
+    }
+
+    correctClassification(keywords) {
+        const result = { words: [], phrases: [], patterns: [], grammar: [...(keywords.grammar || [])] };
+        for (const word of (keywords.words || [])) {
+            if (this.isGrammarContent(word)) result.grammar.push(word);
+            else result.words.push(word);
+        }
+        for (const phrase of (keywords.phrases || [])) {
+            if (this.isGrammarContent(phrase)) result.grammar.push(phrase);
+            else result.phrases.push(phrase);
+        }
+        for (const pattern of (keywords.patterns || [])) {
+            if (this.isGrammarContent(pattern)) result.grammar.push(pattern);
+            else result.patterns.push(pattern);
+        }
+        return result;
+    }
+
+    isGrammarContent(text) {
+        if (!text) return false;
+        const lowerText = text.toLowerCase();
+        for (const keyword of this.grammarKeywords.chinese) { if (text.includes(keyword)) return true; }
+        for (const keyword of this.grammarKeywords.english) {
+            if (new RegExp(`\\b${keyword}\\b`, 'i').test(lowerText)) return true;
+        }
+        if (this.grammarMapping[lowerText]) return true;
+        for (const pattern of this.grammarPatterns) { if (pattern.test(text)) return true; }
+        return false;
+    }
+
+    normalizeCase(keywords) {
+        return {
+            words: (keywords.words || []).map(word => {
+                const lower = word.toLowerCase().trim();
+                if (this.properNouns.has(lower)) return this.capitalizeFirst(lower);
+                return lower;
+            }),
+            phrases: (keywords.phrases || []).map(phrase => this.normalizeItemCase(phrase)),
+            patterns: (keywords.patterns || []).map(pattern => this.normalizeItemCase(pattern)),
+            grammar: keywords.grammar || []
+        };
+    }
+
+    capitalizeFirst(str) {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
+
+    normalizeAbbreviations(keywords) {
+        const abbrs = { 'something': 'sth.', 'somebody': 'sb.', 'someone': 'sb.', 'somewhere': 'sw.', 'sth': 'sth.', 'sb': 'sb.', 'sw': 'sw.' };
+        const normalize = (text) => {
+            if (!text) return '';
+            let result = text;
+            for (const [full, abbr] of Object.entries(abbrs)) {
+                result = result.replace(new RegExp(`\\b${full}\\b`, 'gi'), abbr);
+            }
+            return result.replace(/\.{2,}/g, '.').replace(/\s+/g, ' ').trim();
+        };
+        return {
+            words: (keywords.words || []).map(normalize),
+            phrases: (keywords.phrases || []).map(normalize),
+            patterns: (keywords.patterns || []).map(normalize),
+            grammar: keywords.grammar || []
+        };
+    }
+
+    convertGrammarToChinese(grammarList) {
+        if (!grammarList || grammarList.length === 0) return [];
+        return grammarList.map(grammar => {
+            if (!grammar) return null;
+            if (/[\u4e00-\u9fa5]/.test(grammar)) return grammar.trim();
+            const lowerGrammar = grammar.toLowerCase().trim();
+            if (this.grammarMapping[lowerGrammar]) return this.grammarMapping[lowerGrammar];
+            for (const [en, cn] of Object.entries(this.grammarMapping)) {
+                if (lowerGrammar.includes(en)) return cn;
+            }
+            return grammar.trim();
+        }).filter(Boolean);
+    }
+
+    deduplicate(keywords) {
+        const dedupeArray = (arr) => {
+            if (!arr || arr.length === 0) return [];
+            const seen = new Set();
+            return arr.filter(item => {
+                if (!item) return false;
+                const key = item.toLowerCase().trim();
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        };
+        return {
+            words: dedupeArray(keywords.words),
+            phrases: dedupeArray(keywords.phrases),
+            patterns: dedupeArray(keywords.patterns),
+            grammar: dedupeArray(keywords.grammar)
+        };
+    }
+
+    filterInvalid(keywords) {
+        return {
+            words: (keywords.words || []).filter(w => w && w.length >= 2 && !/\s/.test(w) && !/[\u4e00-\u9fa5]/.test(w) && /[a-zA-Z]/.test(w)),
+            phrases: (keywords.phrases || []).filter(p => p && p.length >= 3 && !/[\u4e00-\u9fa5]/.test(p) && p.split(/\s+/).filter(w => w.length > 0).length >= 2),
+            patterns: (keywords.patterns || []).filter(p => p && p.length >= 3 && !/[\u4e00-\u9fa5]/.test(p)),
+            grammar: (keywords.grammar || []).filter(g => g && g.trim().length > 0)
+        };
+    }
+}
+
+const keywordNormalizer = new KeywordNormalizer();
 
 // ============================================
 // 结果合并器
@@ -182,275 +586,58 @@ class JsonExtractor {
 
 class ResultMerger {
     static createEmptyResult() {
-        return {
-            vocabulary: {
-                words: [],
-                phrases: [],
-                patterns: []
-            },
-            grammar: [],
-            summary: {
-                total_words: 0,
-                total_phrases: 0,
-                total_patterns: 0,
-                total_grammar: 0
-            }
-        };
+        return { vocabulary: { words: [], phrases: [], patterns: [] }, grammar: [], summary: { total_words: 0, total_phrases: 0, total_patterns: 0, total_grammar: 0 } };
     }
 
-    static dedupeByKey(array, key) {
-        if (!Array.isArray(array)) return [];
-        const seen = new Set();
-        return array.filter(item => {
-            if (!item || !item[key]) return false;
-            const value = String(item[key]).toLowerCase();
-            if (seen.has(value)) return false;
-            seen.add(value);
-            return true;
-        });
-    }
-
-    static merge(results) {
-        if (!results || results.length === 0) {
-            return this.createEmptyResult();
-        }
-
-        if (results.length === 1) {
-            return results[0];
-        }
-
-        console.log(`[ResultMerger] 合并 ${results.length} 个结果`);
-
-        const merged = this.createEmptyResult();
-
+    static mergeKeywords(results) {
+        const merged = { words: [], phrases: [], patterns: [], grammar: [] };
         for (const result of results) {
             if (!result) continue;
-
-            if (result.vocabulary) {
-                if (result.vocabulary.words) {
-                    merged.vocabulary.words.push(...result.vocabulary.words);
-                }
-                if (result.vocabulary.phrases) {
-                    merged.vocabulary.phrases.push(...result.vocabulary.phrases);
-                }
-                if (result.vocabulary.patterns) {
-                    merged.vocabulary.patterns.push(...result.vocabulary.patterns);
-                }
-            }
-
-            if (result.grammar && Array.isArray(result.grammar)) {
-                merged.grammar.push(...result.grammar);
-            }
+            if (Array.isArray(result.words)) merged.words.push(...result.words);
+            else if (result.vocabulary?.words) merged.words.push(...result.vocabulary.words.map(w => w.word || w).filter(Boolean));
+            if (Array.isArray(result.phrases)) merged.phrases.push(...result.phrases);
+            else if (result.vocabulary?.phrases) merged.phrases.push(...result.vocabulary.phrases.map(p => p.phrase || p).filter(Boolean));
+            if (Array.isArray(result.patterns)) merged.patterns.push(...result.patterns);
+            else if (result.vocabulary?.patterns) merged.patterns.push(...result.vocabulary.patterns.map(p => p.pattern || p).filter(Boolean));
+            if (Array.isArray(result.grammar)) merged.grammar.push(...result.grammar.map(g => typeof g === 'string' ? g : g?.title).filter(Boolean));
         }
-
-        // 去重
-        merged.vocabulary.words = this.dedupeByKey(merged.vocabulary.words, 'word');
-        merged.vocabulary.phrases = this.dedupeByKey(merged.vocabulary.phrases, 'phrase');
-        merged.vocabulary.patterns = this.dedupeByKey(merged.vocabulary.patterns, 'pattern');
-        merged.grammar = this.dedupeByKey(merged.grammar, 'title');
-
-        // 更新统计
-        merged.summary = {
-            total_words: merged.vocabulary.words.length,
-            total_phrases: merged.vocabulary.phrases.length,
-            total_patterns: merged.vocabulary.patterns.length,
-            total_grammar: merged.grammar.length
-        };
-
+        console.log(`[ResultMerger] 合并: 单词${merged.words.length}, 短语${merged.phrases.length}, 句型${merged.patterns.length}, 语法${merged.grammar.length}`);
         return merged;
     }
 }
 
 // ============================================
-// 单词过滤器（过滤小学词汇和黑名单）
+// 单词过滤器
 // ============================================
 
 class WordFilter {
     constructor() {
         this.elementaryWords = new Set();
         this.blacklistWords = new Set();
-        this.loadWordLists();
-    }
-
-    loadWordLists() {
         const elementaryPath = path.join(__dirname, '../data/elementary_words.json');
         const blacklistPath = path.join(__dirname, '../data/blacklist_words.json');
-
-        try {
-            if (fs.existsSync(elementaryPath)) {
-                const data = JSON.parse(fs.readFileSync(elementaryPath, 'utf-8'));
-                this.elementaryWords = new Set(data.words.map(w => w.toLowerCase()));
-                console.log(`[WordFilter] 加载小学词汇: ${this.elementaryWords.size} 个`);
-            }
-        } catch (e) {
-            console.warn('[WordFilter] 加载小学词汇失败:', e.message);
-        }
-
-        try {
-            if (fs.existsSync(blacklistPath)) {
-                const data = JSON.parse(fs.readFileSync(blacklistPath, 'utf-8'));
-                this.blacklistWords = new Set(data.words.map(w => w.toLowerCase()));
-                console.log(`[WordFilter] 加载黑名单词汇: ${this.blacklistWords.size} 个`);
-            }
-        } catch (e) {
-            console.warn('[WordFilter] 加载黑名单词汇失败:', e.message);
-        }
+        try { if (fs.existsSync(elementaryPath)) { this.elementaryWords = new Set(JSON.parse(fs.readFileSync(elementaryPath, 'utf-8')).words.map(w => w.toLowerCase())); console.log(`[WordFilter] 加载小学词汇: ${this.elementaryWords.size} 个`); } } catch (e) {}
+        try { if (fs.existsSync(blacklistPath)) { this.blacklistWords = new Set(JSON.parse(fs.readFileSync(blacklistPath, 'utf-8')).words.map(w => w.toLowerCase())); console.log(`[WordFilter] 加载黑名单: ${this.blacklistWords.size} 个`); } } catch (e) {}
     }
 
     filter(data) {
-        if (!data || !data.vocabulary) return data;
-
+        console.log('\n[WordFilter] ═══════════════════════════════════════');
+        console.log('[WordFilter] 阶段8: 过滤基础词汇');
+        console.log('[WordFilter] ═══════════════════════════════════════');
+        if (!data?.vocabulary) return data;
         let filtered = JSON.parse(JSON.stringify(data));
-        const originalCount = filtered.vocabulary.words ? filtered.vocabulary.words.length : 0;
-
+        const originalCount = filtered.vocabulary.words?.length || 0;
         if (filtered.vocabulary.words) {
             filtered.vocabulary.words = filtered.vocabulary.words.filter(item => {
                 const word = (item.word || '').toLowerCase();
-                if (this.elementaryWords.has(word)) return false;
-                if (this.blacklistWords.has(word)) return false;
-                if (word.length < 2) return false;
-                return true;
+                return !this.elementaryWords.has(word) && !this.blacklistWords.has(word) && word.length >= 2;
             });
         }
-
-        if (filtered.vocabulary.phrases) {
-            filtered.vocabulary.phrases = filtered.vocabulary.phrases.filter(item => {
-                const phrase = (item.phrase || '').trim();
-                const wordCount = phrase.split(/\s+/).length;
-                return wordCount >= 2;
-            });
-        }
-
-        if (filtered.vocabulary.patterns) {
-            filtered.vocabulary.patterns = filtered.vocabulary.patterns.filter(item => {
-                const pattern = (item.pattern || '').trim();
-                const wordCount = pattern.split(/\s+/).length;
-                return wordCount >= 2;
-            });
-        }
-
-        const finalCount = filtered.vocabulary.words ? filtered.vocabulary.words.length : 0;
-        filtered.summary = {
-            total_words: finalCount,
-            total_phrases: filtered.vocabulary.phrases ? filtered.vocabulary.phrases.length : 0,
-            total_patterns: filtered.vocabulary.patterns ? filtered.vocabulary.patterns.length : 0,
-            total_grammar: filtered.grammar ? filtered.grammar.length : 0,
-            filter_stats: {
-                original: originalCount,
-                final: finalCount,
-                removed: originalCount - finalCount
-            }
-        };
-
-        console.log(`[WordFilter] 过滤完成: ${originalCount} → ${finalCount} (移除 ${originalCount - finalCount} 个)`);
-
+        const finalCount = filtered.vocabulary.words?.length || 0;
+        console.log(`[WordFilter] 单词: ${originalCount} → ${finalCount} (移除 ${originalCount - finalCount} 个)`);
+        filtered.summary = { total_words: finalCount, total_phrases: filtered.vocabulary.phrases?.length || 0, total_patterns: filtered.vocabulary.patterns?.length || 0, total_grammar: filtered.grammar?.length || 0 };
+        console.log('[WordFilter] ═══════════════════════════════════════\n');
         return filtered;
-    }
-}
-
-// ============================================
-// 标题处理函数
-// ============================================
-
-function generateDefaultTitle() {
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const day = now.getDate();
-    return `${month}月${day}日英语课堂笔记`;
-}
-
-function isGarbled(str) {
-    if (!str) return true;
-    const garbledPattern = /[\u00c0-\u00ff]{2,}|Ã|â|ã|å|æ|ç|è|é|ê|ë|ì|í|î|ï/;
-    if (garbledPattern.test(str)) return true;
-    const chineseChars = (str.match(/[\u4e00-\u9fa5]/g) || []).length;
-    const totalChars = str.length;
-    if (totalChars > 5 && chineseChars === 0) return true;
-    return false;
-}
-
-function tryFixGarbledName(garbledStr) {
-    try {
-        const buffer = Buffer.from(garbledStr, 'latin1');
-        const fixed = buffer.toString('utf8');
-        if (/[\u4e00-\u9fa5]/.test(fixed)) {
-            console.log(`✅ 文件名修复成功: "${garbledStr}" -> "${fixed}"`);
-            return fixed;
-        }
-    } catch (e) {}
-    try {
-        const decoded = decodeURIComponent(garbledStr);
-        if (/[\u4e00-\u9fa5]/.test(decoded)) {
-            console.log(`✅ 文件名URI解码成功: "${garbledStr}" -> "${decoded}"`);
-            return decoded;
-        }
-    } catch (e) {}
-    return null;
-}
-
-function getFinalTitle(task) {
-    const { file, customTitle } = task;
-    
-    if (customTitle && customTitle.trim()) {
-        console.log(`📝 使用自定义标题: "${customTitle}"`);
-        return customTitle.trim();
-    }
-    
-    const baseName = path.basename(file.originalName, path.extname(file.originalName));
-    
-    if (!isGarbled(baseName)) {
-        console.log(`📄 使用文件名作为标题: "${baseName}"`);
-        return baseName;
-    }
-    
-    console.log(`⚠️ 检测到文件名可能是乱码: "${baseName}"`);
-    
-    const fixedName = tryFixGarbledName(baseName);
-    if (fixedName) {
-        return path.basename(fixedName, path.extname(fixedName));
-    }
-    
-    const defaultTitle = generateDefaultTitle();
-    console.log(`📝 使用默认标题: "${defaultTitle}"`);
-    return defaultTitle;
-}
-
-// ============================================
-// 进度管理
-// ============================================
-
-function getProgressFilePath(taskId) {
-    return path.join(CONFIG.progressDir, `${taskId}.json`);
-}
-
-function saveProgress(taskId, progressData) {
-    if (!fs.existsSync(CONFIG.progressDir)) {
-        fs.mkdirSync(CONFIG.progressDir, { recursive: true });
-    }
-    const filePath = getProgressFilePath(taskId);
-    fs.writeFileSync(filePath, JSON.stringify(progressData, null, 2), 'utf-8');
-    console.log(`💾 进度已保存: ${progressData.completedCount}/${progressData.totalSegments} 片段`);
-}
-
-function loadProgress(taskId) {
-    const filePath = getProgressFilePath(taskId);
-    if (fs.existsSync(filePath)) {
-        try {
-            const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-            console.log(`📂 加载已保存进度: 已完成 ${data.completedCount}/${data.totalSegments} 片段`);
-            return data;
-        } catch (e) {
-            console.error('加载进度失败:', e.message);
-        }
-    }
-    return null;
-}
-
-function clearProgress(taskId) {
-    const filePath = getProgressFilePath(taskId);
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log(`🗑️ 进度文件已清理`);
     }
 }
 
@@ -458,122 +645,38 @@ function clearProgress(taskId) {
 // 辅助函数
 // ============================================
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function generateDefaultTitle() { const now = new Date(); return `${now.getMonth() + 1}月${now.getDate()}日英语课堂笔记`; }
+function isGarbled(str) { if (!str) return true; if (/[\u00c0-\u00ff]{2,}|Ã|â|ã/.test(str)) return true; return str.length > 5 && !(str.match(/[\u4e00-\u9fa5]/g) || []).length; }
+function getFinalTitle(task) {
+    if (task.customTitle?.trim()) return task.customTitle.trim();
+    const baseName = path.basename(task.file.originalName, path.extname(task.file.originalName));
+    if (!isGarbled(baseName)) return baseName;
+    return generateDefaultTitle();
 }
-
-function withTimeout(promise, ms, errorMsg = '操作超时') {
-    let timeoutId;
-    const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error(errorMsg)), ms);
-    });
-    
-    return Promise.race([
-        promise.finally(() => clearTimeout(timeoutId)),
-        timeoutPromise
-    ]);
-}
+function getProgressFilePath(taskId) { return path.join(CONFIG.progressDir, `${taskId}.json`); }
+function saveProgress(taskId, progressData) { if (!fs.existsSync(CONFIG.progressDir)) fs.mkdirSync(CONFIG.progressDir, { recursive: true }); fs.writeFileSync(getProgressFilePath(taskId), JSON.stringify(progressData, null, 2), 'utf-8'); console.log(`💾 进度已保存: ${progressData.completedCount}/${progressData.totalSegments}`); }
+function loadProgress(taskId) { const filePath = getProgressFilePath(taskId); if (fs.existsSync(filePath)) { try { const data = JSON.parse(fs.readFileSync(filePath, 'utf-8')); console.log(`📂 加载进度: ${data.completedCount}/${data.totalSegments}`); return data; } catch (e) {} } return null; }
+function clearProgress(taskId) { const filePath = getProgressFilePath(taskId); if (fs.existsSync(filePath)) { fs.unlinkSync(filePath); console.log(`🗑️ 进度已清理`); } }
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function withTimeout(promise, ms, errorMsg = '超时') { let timeoutId; const timeoutPromise = new Promise((_, reject) => { timeoutId = setTimeout(() => reject(new Error(errorMsg)), ms); }); return Promise.race([promise.finally(() => clearTimeout(timeoutId)), timeoutPromise]); }
 
 // ============================================
 // 浏览器管理
 // ============================================
 
-async function initBrowser() {
-    console.log('🌐 初始化浏览器...');
-    const automation = new SorryiosAutomation();
-    
-    await withTimeout(
-        automation.init(),
-        60000,
-        '浏览器启动超时 (60秒)'
-    );
-    console.log('🌐 浏览器已启动');
-    
-    await withTimeout(
-        automation.login(),
-        60000,
-        '登录超时 (60秒)'
-    );
-    console.log('🔐 登录成功');
-    
-    await withTimeout(
-        automation.selectIdleAccount(),
-        30000,
-        '选择账号超时 (30秒)'
-    );
-    console.log('✅ AI账号已就绪');
-    
-    return automation;
-}
-
-async function closeBrowser(automation) {
-    if (automation) {
-        try {
-            await automation.close();
-            console.log('🔒 浏览器已关闭');
-        } catch (e) {
-            console.error('关闭浏览器失败:', e.message);
-            try {
-                const { exec } = require('child_process');
-                exec('taskkill /F /IM chromium.exe /T', () => {});
-                exec('taskkill /F /IM chrome.exe /T', () => {});
-            } catch (e2) {}
-        }
-    }
-    await sleep(2000);
-}
-
-// ============================================
-// 片段处理
-// ============================================
-
+async function initBrowser() { console.log('🌐 初始化浏览器...'); const automation = new SorryiosAutomation(); await withTimeout(automation.init(), 60000, '浏览器启动超时'); await withTimeout(automation.login(), 60000, '登录超时'); await withTimeout(automation.selectIdleAccount(), 30000, '选择账号超时'); console.log('✅ AI账号已就绪'); return automation; }
+async function closeBrowser(automation) { if (automation) { try { await automation.close(); console.log('🔒 浏览器已关闭'); } catch (e) { try { require('child_process').exec('taskkill /F /IM chromium.exe /T', () => {}); } catch (e2) {} } } await sleep(2000); }
 async function processSegmentWithRetry(automation, message, index, total) {
-    const maxRetries = CONFIG.maxRetries;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
         try {
-            console.log(`📤 发送片段 ${index + 1}/${total} (尝试 ${attempt}/${maxRetries})`);
-            
-            const responsePromise = automation.sendMessage(message);
-            const response = await withTimeout(
-                responsePromise,
-                300000,  // 5分钟超时
-                `片段 ${index + 1} 响应超时`
-            );
-            
-            const responseText = typeof response === 'object' ? response.text : response;
-            
-            // 解析JSON
-            const parsed = JsonExtractor.extract(responseText);
-            
-            if (parsed) {
-                console.log(`✅ 片段 ${index + 1} 处理成功`);
-                return {
-                    index: index,
-                    success: true,
-                    output: parsed,
-                    outputRaw: responseText,
-                    attempt: attempt
-                };
-            } else {
-                throw new Error('JSON解析失败');
-            }
-            
-        } catch (error) {
-            console.error(`❌ 片段 ${index + 1} 尝试 ${attempt} 失败:`, error.message);
-            
-            if (attempt < maxRetries) {
-                console.log(`⏳ 等待 ${CONFIG.browserRestartDelay / 1000} 秒后重试...`);
-                await sleep(CONFIG.browserRestartDelay);
-            }
-        }
+            console.log(`📤 发送片段 ${index + 1}/${total} (尝试 ${attempt}/${CONFIG.maxRetries})`);
+            const response = await withTimeout(automation.sendMessage(message), 300000, `片段 ${index + 1} 超时`);
+            const parsed = JsonExtractor.extract(typeof response === 'object' ? response.text : response);
+            if (parsed) { console.log(`✅ 片段 ${index + 1} 成功`); return { index, success: true, output: parsed, attempt }; }
+            throw new Error('JSON解析失败');
+        } catch (error) { console.error(`❌ 片段 ${index + 1} 尝试 ${attempt} 失败:`, error.message); if (attempt < CONFIG.maxRetries) await sleep(CONFIG.browserRestartDelay); }
     }
-    
-    return {
-        index: index,
-        success: false,
-        error: `所有 ${maxRetries} 次尝试都失败`
-    };
+    return { index, success: false, error: `所有尝试都失败` };
 }
 
 // ============================================
@@ -582,252 +685,125 @@ async function processSegmentWithRetry(automation, message, index, total) {
 
 async function processTask(task, onProgress) {
     const { id: taskId, file } = task;
-    
-    console.log('\n' + '='.repeat(60));
-    console.log('🎓 英语课堂智能分析系统 v3.1');
-    console.log('='.repeat(60));
-    console.log(`📁 任务ID: ${taskId}`);
-    console.log(`📄 文件: ${file.originalName}`);
-    console.log('='.repeat(60) + '\n');
+    console.log('\n' + '='.repeat(60)); console.log('🎓 英语课堂智能分析系统 v4.3.1'); console.log('='.repeat(60)); console.log(`📁 任务ID: ${taskId}`); console.log(`📄 文件: ${file.originalName}`); console.log('='.repeat(60) + '\n');
 
-    let automation = null;
-    let results = [];
-    let segmentTexts = [];
-    let totalSegments = 0;
-    let startIndex = 0;
-    let needNewConversation = false;
-    let browserRestartCount = 0;
-    
-    // 初始化过滤器
+    let automation = null; let results = []; let segmentTexts = []; let totalSegments = 0; let startIndex = 0; let needNewConversation = false; let browserRestartCount = 0;
     const wordFilter = new WordFilter();
 
     try {
-        // ========== 阶段1: 读取文件 ==========
         onProgress({ currentStep: '读取文件...', progress: 5 });
-
-        const content = fs.readFileSync(file.savedPath, 'utf-8');
-        console.log(`📄 文件读取完成: ${content.length} 字符`);
-
-        // ========== 阶段2: 文本分段 ==========
-        onProgress({ currentStep: '智能分段中...', progress: 10 });
-
-        const splitter = new TextSplitter({
-            maxSegmentLength: CONFIG.maxSegmentLength,
-            minSegmentLength: 200
-        });
-        const segments = splitter.split(content);
-        segmentTexts = segments.map(s => typeof s === 'object' ? s.content : s);
-        totalSegments = segmentTexts.length;
-
-        console.log(`📝 分段完成: ${totalSegments} 段`);
-
-        // ========== 阶段3: 检查已保存进度 ==========
+        const content = fs.readFileSync(file.savedPath, 'utf-8'); console.log(`📄 文件: ${content.length} 字符`);
+        onProgress({ currentStep: '智能分段...', progress: 10 });
+        const splitter = new TextSplitter({ maxSegmentLength: CONFIG.maxSegmentLength, minSegmentLength: 200 });
+        segmentTexts = splitter.split(content).map(s => typeof s === 'object' ? s.content : s); totalSegments = segmentTexts.length; console.log(`📝 分段: ${totalSegments} 段`);
         const savedProgress = loadProgress(taskId);
-        if (savedProgress && savedProgress.results && savedProgress.completedCount > 0) {
-            results = savedProgress.results;
-            startIndex = savedProgress.completedCount;
-            needNewConversation = true;
-            
-            console.log(`📂 从片段 ${startIndex + 1} 继续处理`);
-            
-            onProgress({
-                currentStep: `恢复进度: 从片段 ${startIndex + 1} 继续...`,
-                progress: 15 + Math.round((startIndex / totalSegments) * 60),
-                totalSegments: totalSegments,
-                processedSegments: startIndex
-            });
-        } else {
-            results = new Array(totalSegments).fill(null);
-            
-            onProgress({
-                currentStep: `已分割为 ${totalSegments} 段`,
-                progress: 15,
-                totalSegments: totalSegments,
-                processedSegments: 0
-            });
-        }
+        if (savedProgress?.results?.length > 0 && savedProgress.completedCount > 0) { results = savedProgress.results; startIndex = savedProgress.completedCount; needNewConversation = true; }
+        else { results = new Array(totalSegments).fill(null); }
 
-        // ========== 阶段4: 逐个处理片段 ==========
-        const progressPerSegment = 60 / totalSegments;
+        console.log('\n' + '─'.repeat(60)); console.log('📌 阶段4: AI提取关键词'); console.log('─'.repeat(60));
         let currentIndex = startIndex;
-        
         while (currentIndex < totalSegments) {
             if (!automation) {
-                if (browserRestartCount >= CONFIG.maxBrowserRestarts) {
-                    throw new Error(`浏览器重启次数过多 (${CONFIG.maxBrowserRestarts}次)，任务终止`);
-                }
-                
-                const stepMsg = browserRestartCount > 0 
-                    ? `重启浏览器 (第${browserRestartCount + 1}次)...` 
-                    : '启动浏览器...';
-                    
-                onProgress({ currentStep: stepMsg, progress: 18 });
-                
-                try {
-                    automation = await initBrowser();
-                    browserRestartCount++;
-                    needNewConversation = true;
-                } catch (browserError) {
-                    console.error('❌ 浏览器初始化失败:', browserError.message);
-                    await sleep(CONFIG.browserRestartDelay);
-                    continue;
-                }
+                if (browserRestartCount >= CONFIG.maxBrowserRestarts) throw new Error(`浏览器重启次数过多`);
+                onProgress({ currentStep: browserRestartCount > 0 ? `重启浏览器...` : '启动浏览器...', progress: 18 });
+                try { automation = await initBrowser(); browserRestartCount++; needNewConversation = true; } catch (e) { await sleep(CONFIG.browserRestartDelay); continue; }
             }
-            
-            onProgress({
-                currentStep: `处理第 ${currentIndex + 1}/${totalSegments} 段...`,
-                progress: Math.round(25 + (currentIndex * progressPerSegment)),
-                processedSegments: currentIndex
-            });
-            
-            // 构建消息（首次包含系统提示词）
-            let message;
-            if (needNewConversation) {
-                message = `${CONFIG.systemPrompt}\n${segmentTexts[currentIndex]}\n---`;
-                needNewConversation = false;
-            } else {
-                // 后续片段也需要提示词，确保输出JSON
-                message = `继续分析以下内容，按相同的JSON格式输出：\n\n${segmentTexts[currentIndex]}`;
-            }
-            
+            onProgress({ currentStep: `提取关键词 ${currentIndex + 1}/${totalSegments}...`, progress: Math.round(20 + (currentIndex / totalSegments) * 40) });
+            const message = needNewConversation ? `${CONFIG.extractionPrompt}\n${segmentTexts[currentIndex]}\n---` : `继续提取，JSON格式：\n\n${segmentTexts[currentIndex]}`;
+            needNewConversation = false;
             try {
-                const result = await processSegmentWithRetry(
-                    automation,
-                    message,
-                    currentIndex,
-                    totalSegments
-                );
-                
-                result.input = segmentTexts[currentIndex];
-                results[currentIndex] = result;
-                
-                const completedCount = results.filter(r => r && r.success).length;
-                
-                saveProgress(taskId, {
-                    taskId: taskId,
-                    totalSegments: totalSegments,
-                    completedCount: currentIndex + 1,
-                    successCount: completedCount,
-                    results: results,
-                    lastUpdated: new Date().toISOString()
-                });
-                
-                currentIndex++;
-                
-                if (currentIndex < totalSegments) {
-                    console.log(`⏳ 等待 ${CONFIG.requestInterval / 1000} 秒后处理下一片段...`);
-                    await sleep(CONFIG.requestInterval);
-                }
-                
-            } catch (segmentError) {
-                console.error(`❌ 片段处理出错:`, segmentError.message);
-                
-                console.log('🔄 检测到异常，准备重启浏览器...');
-                await closeBrowser(automation);
-                automation = null;
-                needNewConversation = true;
-                await sleep(CONFIG.browserRestartDelay);
-            }
+                const result = await processSegmentWithRetry(automation, message, currentIndex, totalSegments);
+                result.input = segmentTexts[currentIndex]; results[currentIndex] = result;
+                saveProgress(taskId, { taskId, totalSegments, completedCount: currentIndex + 1, successCount: results.filter(r => r?.success).length, results, lastUpdated: new Date().toISOString() });
+                currentIndex++; if (currentIndex < totalSegments) { console.log(`⏳ 等待 ${CONFIG.requestInterval / 1000} 秒...`); await sleep(CONFIG.requestInterval); }
+            } catch (e) { await closeBrowser(automation); automation = null; needNewConversation = true; await sleep(CONFIG.browserRestartDelay); }
         }
 
-        // ========== 阶段5: 合并结果 ==========
-        onProgress({ currentStep: '合并分析结果...', progress: 85 });
-        
-        const successResults = results
-            .filter(r => r && r.success && r.output)
-            .map(r => r.output);
-        
-        let mergedData = ResultMerger.merge(successResults);
+        console.log('\n' + '─'.repeat(60)); console.log('📌 阶段5: 合并关键词'); console.log('─'.repeat(60));
+        onProgress({ currentStep: '合并关键词...', progress: 62 });
+        const successResults = results.filter(r => r?.success && r.output).map(r => r.output);
+        const rawKeywords = ResultMerger.mergeKeywords(successResults);
+        onProgress({ currentStep: '标准化处理...', progress: 63 });
+        const extractedKeywords = keywordNormalizer.normalize(rawKeywords);
 
-        // ========== 阶段6: 过滤词汇 ==========
-        onProgress({ currentStep: '过滤基础词汇...', progress: 88 });
-        
+        console.log('\n' + '─'.repeat(60)); console.log('📌 阶段6: 匹配数据库'); console.log('─'.repeat(60));
+        onProgress({ currentStep: '匹配数据库...', progress: 65 });
+        let mergedData = ResultMerger.createEmptyResult(); let unmatchedKeywords = { words: [], phrases: [], patterns: [], grammar: [] };
+        if (matchingService) {
+            try {
+                const matchResult = matchingService.batchMatch(extractedKeywords);
+                const stats = matchingService.getMatchStats(matchResult);
+                console.log(`[阶段6] 精确: ${stats.exactMatch}, 模糊: ${stats.fuzzyMatch}, 未匹配: ${stats.unmatched}`);
+                for (const match of matchResult.matched) {
+                    if (match.matched_data) {
+                        const item = { ...match.matched_data, _source: 'database', _matchScore: match.score };
+                        if (match.item_type === 'word') mergedData.vocabulary.words.push(item);
+                        else if (match.item_type === 'phrase') mergedData.vocabulary.phrases.push(item);
+                        else if (match.item_type === 'pattern') mergedData.vocabulary.patterns.push(item);
+                        else if (match.item_type === 'grammar') mergedData.grammar.push(item);
+                    }
+                }
+                for (const unmatched of matchResult.unmatched) {
+                    if (unmatched.item_type === 'word') unmatchedKeywords.words.push(unmatched.original_text);
+                    else if (unmatched.item_type === 'phrase') unmatchedKeywords.phrases.push(unmatched.original_text);
+                    else if (unmatched.item_type === 'pattern') unmatchedKeywords.patterns.push(unmatched.original_text);
+                    else if (unmatched.item_type === 'grammar') unmatchedKeywords.grammar.push(unmatched.original_text);
+                }
+                console.log(`[阶段6] 从数据库: ${matchResult.matched.length}, 需AI: ${matchResult.unmatched.length}`);
+            } catch (e) { console.warn('[阶段6] 匹配失败:', e.message); unmatchedKeywords = extractedKeywords; }
+        } else { unmatchedKeywords = extractedKeywords; }
+
+        const totalUnmatched = unmatchedKeywords.words.length + unmatchedKeywords.phrases.length + unmatchedKeywords.patterns.length + unmatchedKeywords.grammar.length;
+        if (totalUnmatched > 0) {
+            console.log('\n' + '─'.repeat(60)); console.log(`📌 阶段7: AI生成详情 (${totalUnmatched}项)`); console.log('─'.repeat(60));
+            onProgress({ currentStep: `AI生成详情 (${totalUnmatched}项)...`, progress: 70 });
+            const detailContent = [];
+            if (unmatchedKeywords.words.length > 0) detailContent.push(`【单词】${unmatchedKeywords.words.join(', ')}`);
+            if (unmatchedKeywords.phrases.length > 0) detailContent.push(`【短语】${unmatchedKeywords.phrases.join(', ')}`);
+            if (unmatchedKeywords.patterns.length > 0) detailContent.push(`【句型】${unmatchedKeywords.patterns.join(', ')}`);
+            if (unmatchedKeywords.grammar.length > 0) detailContent.push(`【语法】${unmatchedKeywords.grammar.join(', ')}`);
+            try {
+                if (!automation) { automation = await initBrowser(); browserRestartCount++; }
+                const detailResult = await processSegmentWithRetry(automation, `${CONFIG.detailPrompt}\n${detailContent.join('\n')}\n---`, 0, 1);
+                if (detailResult.success && detailResult.output) {
+                    const aiData = detailResult.output;
+                    if (aiData.vocabulary?.words) { mergedData.vocabulary.words.push(...aiData.vocabulary.words.map(w => ({ ...w, _source: 'ai' }))); console.log(`[阶段7] AI单词: ${aiData.vocabulary.words.length}`); }
+                    if (aiData.vocabulary?.phrases) { mergedData.vocabulary.phrases.push(...aiData.vocabulary.phrases.map(p => ({ ...p, _source: 'ai' }))); console.log(`[阶段7] AI短语: ${aiData.vocabulary.phrases.length}`); }
+                    if (aiData.vocabulary?.patterns) { mergedData.vocabulary.patterns.push(...aiData.vocabulary.patterns.map(p => ({ ...p, _source: 'ai' }))); console.log(`[阶段7] AI句型: ${aiData.vocabulary.patterns.length}`); }
+                    if (aiData.grammar?.length) { mergedData.grammar.push(...aiData.grammar.map(g => ({ ...g, _source: 'ai' }))); console.log(`[阶段7] AI语法: ${aiData.grammar.length}`); }
+                    console.log(`[阶段7] ✅ AI生成完成`);
+                }
+            } catch (e) { console.error('[阶段7] ❌', e.message); }
+        } else { console.log('\n📌 阶段7: 跳过（全部从数据库获取）'); }
+
         mergedData = wordFilter.filter(mergedData);
+        mergedData = keywordNormalizer.finalNormalize(mergedData);
 
-        // ========== 阶段7: 生成报告 ==========
-        onProgress({ currentStep: '生成精美报告...', progress: 92 });
-
-        const timestamp = Date.now();
-        const finalTitle = getFinalTitle(task);
-        
-        const taskShortId = taskId.slice(0, 8);
-        const outputSubDir = `task_${taskShortId}_${timestamp}`;
-        const outputPath = path.join(CONFIG.outputDir, outputSubDir);
-        
-        if (!fs.existsSync(outputPath)) {
-            fs.mkdirSync(outputPath, { recursive: true });
-        }
-
-        // 使用英语专用报告生成器
+        console.log('\n' + '─'.repeat(60)); console.log('📌 阶段9: 生成报告'); console.log('─'.repeat(60));
+        onProgress({ currentStep: '生成报告...', progress: 92 });
+        const timestamp = Date.now(); const finalTitle = getFinalTitle(task);
+        const outputSubDir = `task_${taskId.slice(0, 8)}_${timestamp}`; const outputPath = path.join(CONFIG.outputDir, outputSubDir);
+        if (!fs.existsSync(outputPath)) fs.mkdirSync(outputPath, { recursive: true });
         const reportGenerator = new EnglishReportGenerator({ outputDir: outputPath });
-        
-        // 添加元数据
-        mergedData.metadata = {
-            taskId: taskId,
-            originalFile: file.originalName,
-            processedAt: new Date().toISOString(),
-            totalSegments: totalSegments,
-            successCount: successResults.length,
-            failCount: totalSegments - successResults.length,
-            browserRestarts: browserRestartCount
-        };
+        mergedData.metadata = { taskId, originalFile: file.originalName, processedAt: new Date().toISOString(), totalSegments, successCount: successResults.length, failCount: totalSegments - successResults.length, browserRestarts: browserRestartCount };
+        reportGenerator.saveAll(mergedData, 'report', finalTitle);
 
-        // 生成所有格式的报告
-        const reports = reportGenerator.saveAll(mergedData, 'report', finalTitle);
+        console.log('\n' + '═'.repeat(60)); console.log('📊 报告生成完成！'); console.log('═'.repeat(60));
+        console.log(`   📁 路径: ${outputPath}`); console.log(`   📝 标题: ${finalTitle}`);
+        console.log('   ────────────────────────────');
+        console.log(`   📚 单词: ${mergedData.summary.total_words}`); console.log(`   📖 短语: ${mergedData.summary.total_phrases}`);
+        console.log(`   📋 句型: ${mergedData.summary.total_patterns}`); console.log(`   📑 语法: ${mergedData.summary.total_grammar}`);
+        console.log('   ────────────────────────────');
+        console.log(`   📊 总计: ${mergedData.summary.total_words + mergedData.summary.total_phrases + mergedData.summary.total_patterns + mergedData.summary.total_grammar} 项`);
+        console.log('═'.repeat(60) + '\n');
 
-        console.log(`\n📊 报告已生成: ${outputPath}`);
-        console.log(`   标题: ${finalTitle}`);
-        console.log(`   单词: ${mergedData.summary.total_words}`);
-        console.log(`   短语: ${mergedData.summary.total_phrases}`);
-        console.log(`   句型: ${mergedData.summary.total_patterns}`);
-        console.log(`   语法: ${mergedData.summary.total_grammar}`);
-
-        clearProgress(taskId);
-
-        onProgress({ currentStep: '处理完成！', progress: 100 });
-
-        return {
-            outputDir: outputSubDir,
-            title: finalTitle,
-            files: {
-                html: `${outputSubDir}/report.html`,
-                markdown: `${outputSubDir}/report.md`,
-                json: `${outputSubDir}/report.json`
-            },
-            stats: {
-                totalSegments: totalSegments,
-                successCount: successResults.length,
-                failCount: totalSegments - successResults.length,
-                totalCharacters: content.length,
-                browserRestarts: browserRestartCount,
-                vocabulary: {
-                    words: mergedData.summary.total_words,
-                    phrases: mergedData.summary.total_phrases,
-                    patterns: mergedData.summary.total_patterns,
-                    grammar: mergedData.summary.total_grammar
-                }
-            }
-        };
-
+        clearProgress(taskId); onProgress({ currentStep: '处理完成！', progress: 100 });
+        return { outputDir: outputSubDir, title: finalTitle, files: { html: `${outputSubDir}/report.html`, markdown: `${outputSubDir}/report.md`, json: `${outputSubDir}/report.json` }, stats: { totalSegments, successCount: successResults.length, failCount: totalSegments - successResults.length, totalCharacters: content.length, browserRestarts: browserRestartCount, vocabulary: mergedData.summary } };
     } catch (error) {
         const completedCount = results.filter(r => r).length;
-        if (completedCount > 0) {
-            saveProgress(taskId, {
-                taskId: taskId,
-                totalSegments: totalSegments,
-                completedCount: completedCount,
-                successCount: results.filter(r => r?.success).length,
-                results: results,
-                lastUpdated: new Date().toISOString(),
-                error: error.message
-            });
-            console.log(`💾 错误发生，进度已保存 (${completedCount}/${totalSegments})，可重新上传文件继续`);
-        }
+        if (completedCount > 0) saveProgress(taskId, { taskId, totalSegments, completedCount, successCount: results.filter(r => r?.success).length, results, lastUpdated: new Date().toISOString(), error: error.message });
         throw error;
-        
-    } finally {
-        await closeBrowser(automation);
-    }
+    } finally { await closeBrowser(automation); }
 }
 
 // ============================================
@@ -835,60 +811,11 @@ async function processTask(task, onProgress) {
 // ============================================
 
 function init() {
-    if (!fs.existsSync(CONFIG.outputDir)) {
-        fs.mkdirSync(CONFIG.outputDir, { recursive: true });
-    }
-    
-    if (!fs.existsSync(CONFIG.progressDir)) {
-        fs.mkdirSync(CONFIG.progressDir, { recursive: true });
-    }
-
+    if (!fs.existsSync(CONFIG.outputDir)) fs.mkdirSync(CONFIG.outputDir, { recursive: true });
+    if (!fs.existsSync(CONFIG.progressDir)) fs.mkdirSync(CONFIG.progressDir, { recursive: true });
     taskQueue.setProcessor(processTask);
-    
-    checkUnfinishedTasks();
-    
-    console.log('');
-    console.log('='.repeat(60));
-    console.log('  🎓 英语课堂智能分析系统 v3.1 已就绪');
-    console.log('  📚 输出结构：词汇基础(单词/短语/句型) + 语法知识(卡片)');
-    console.log('='.repeat(60));
-    console.log('');
+    try { if (fs.existsSync(CONFIG.progressDir)) { const files = fs.readdirSync(CONFIG.progressDir).filter(f => f.endsWith('.json')); if (files.length > 0) console.log(`\n📋 发现 ${files.length} 个未完成任务`); } } catch (e) {}
+    console.log('\n' + '='.repeat(60)); console.log('  🎓 英语课堂智能分析系统 v4.3.1 已就绪'); console.log('  🆕 v4.3.1: 修复大小写标准化'); console.log('='.repeat(60) + '\n');
 }
 
-function checkUnfinishedTasks() {
-    try {
-        if (!fs.existsSync(CONFIG.progressDir)) return;
-        
-        const files = fs.readdirSync(CONFIG.progressDir);
-        const progressFiles = files.filter(f => f.endsWith('.json'));
-        
-        if (progressFiles.length > 0) {
-            console.log(`\n📋 发现 ${progressFiles.length} 个未完成的任务:`);
-            progressFiles.forEach(f => {
-                try {
-                    const data = JSON.parse(fs.readFileSync(path.join(CONFIG.progressDir, f), 'utf-8'));
-                    const taskShortId = f.replace('.json', '').slice(0, 8);
-                    console.log(`   - 任务 ${taskShortId}...: ${data.completedCount || 0}/${data.totalSegments} 片段已完成`);
-                } catch (e) {}
-            });
-            console.log(`   💡 重新上传相同任务的文件可继续处理\n`);
-        }
-    } catch (e) {}
-}
-
-// ============================================
-// 导出
-// ============================================
-
-module.exports = {
-    init,
-    processTask,
-    CONFIG,
-    loadProgress,
-    clearProgress,
-    getFinalTitle,
-    generateDefaultTitle,
-    JsonExtractor,
-    ResultMerger,
-    WordFilter
-};
+module.exports = { init, processTask, CONFIG, loadProgress, clearProgress, getFinalTitle, generateDefaultTitle, JsonExtractor, ResultMerger, WordFilter, KeywordNormalizer, keywordNormalizer };
