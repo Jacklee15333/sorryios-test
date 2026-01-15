@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 
 /**
- * 报告查看组件 v3.0
- * - 全屏布局，内容充实
- * - 支持"已掌握"和"识别错误"操作
+ * 报告查看组件 v4.1
+ * - 网页版样式（蓝紫色渐变）
+ * - 表格形式显示
+ * - 带确认对话框
+ * - 显示学生姓名
+ * - 正确的下载文件名
  */
 function ReportViewer({ taskId, onBack }) {
     const [report, setReport] = useState(null);
@@ -13,6 +16,10 @@ function ReportViewer({ taskId, onBack }) {
     const [activeTab, setActiveTab] = useState('vocabulary');
     const [hiddenItems, setHiddenItems] = useState(new Set());
     const [actionLoading, setActionLoading] = useState(null);
+    const [userInfo, setUserInfo] = useState(null);
+    
+    // 确认对话框状态
+    const [confirmDialog, setConfirmDialog] = useState(null);
 
     // 获取报告信息
     useEffect(() => {
@@ -21,8 +28,13 @@ function ReportViewer({ taskId, onBack }) {
         const fetchReport = async () => {
             try {
                 setLoading(true);
+                const token = localStorage.getItem('token');
                 
-                const response = await fetch(`/api/report/${taskId}`);
+                const response = await fetch(`/api/report/${taskId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 const data = await response.json();
 
                 if (!response.ok || !data.success) {
@@ -30,6 +42,11 @@ function ReportViewer({ taskId, onBack }) {
                 }
 
                 setReport(data.report);
+                
+                // 获取用户信息
+                if (data.user) {
+                    setUserInfo(data.user);
+                }
 
                 // 获取报告JSON数据
                 if (data.report?.files?.json?.preview) {
@@ -48,39 +65,53 @@ function ReportViewer({ taskId, onBack }) {
         fetchReport();
     }, [taskId]);
 
-    // 标记为已掌握
-    const handleMastered = async (item, type) => {
+    // 显示确认对话框
+    const showConfirm = (type, item, itemType) => {
         const word = item.word || item.phrase || item.pattern || item.title;
-        const itemKey = `${type}-${word}`;
-        
-        setActionLoading(itemKey);
-        
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/user-mastered/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ word, wordType: type })
-            });
-
-            if (response.ok) {
-                setHiddenItems(prev => new Set([...prev, itemKey]));
-            }
-        } catch (e) {
-            console.error('标记已掌握失败:', e);
-        } finally {
-            setActionLoading(null);
-        }
+        setConfirmDialog({
+            type,
+            word,
+            item,
+            itemType,
+            message: type === 'mastered' 
+                ? `确定将「${word}」标记为已掌握吗？\n\n标记后会记录到你的词库，下次生成报告时将自动过滤。`
+                : `确定将「${word}」标记为识别错误吗？\n\n标记后仅从当前报告中隐藏。`
+        });
     };
 
-    // 标记为识别错误
-    const handleWrongRecognition = (item, type) => {
-        const word = item.word || item.phrase || item.pattern || item.title;
-        const itemKey = `${type}-${word}`;
-        setHiddenItems(prev => new Set([...prev, itemKey]));
+    // 确认操作
+    const handleConfirm = async () => {
+        if (!confirmDialog) return;
+        
+        const { type, item, itemType, word } = confirmDialog;
+        const itemKey = `${itemType}-${word}`;
+        
+        if (type === 'mastered') {
+            setActionLoading(itemKey);
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/user-mastered/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ word, wordType: itemType })
+                });
+
+                if (response.ok) {
+                    setHiddenItems(prev => new Set([...prev, itemKey]));
+                }
+            } catch (e) {
+                console.error('标记已掌握失败:', e);
+            } finally {
+                setActionLoading(null);
+            }
+        } else {
+            setHiddenItems(prev => new Set([...prev, itemKey]));
+        }
+        
+        setConfirmDialog(null);
     };
 
     // 统计数量
@@ -97,7 +128,7 @@ function ReportViewer({ taskId, onBack }) {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                    <div className="animate-spin h-10 w-10 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                     <p className="text-gray-600">加载报告中...</p>
                 </div>
             </div>
@@ -126,6 +157,16 @@ function ReportViewer({ taskId, onBack }) {
     const { files } = report;
     const vocabulary = reportData.vocabulary || { words: [], phrases: [], patterns: [] };
     const grammar = reportData.grammar || [];
+    
+    // 获取正确的标题 - 优先使用 report.title（用户输入的标题）
+    const title = report.title || reportData.metadata?.title || '课堂笔记';
+    const processedAt = reportData.metadata?.processedAt;
+    
+    // 学生姓名 - 优先使用昵称，否则使用用户名
+    const studentName = userInfo?.nickname || userInfo?.username || report.userName || '';
+    
+    // 生成下载文件名（去除特殊字符）
+    const safeFileName = title.replace(/[\\/:*?"<>|]/g, '_');
 
     // 计算可见数量
     const visibleWords = getVisibleCount(vocabulary.words, 'word', 'word');
@@ -135,182 +176,298 @@ function ReportViewer({ taskId, onBack }) {
     const totalVocab = visibleWords + visiblePhrases + visiblePatterns;
 
     return (
-        <div className="space-y-6">
-            {/* 顶部统计 */}
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white">
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 className="text-2xl font-bold">📊 学习报告</h2>
-                        <p className="text-white/80 text-sm mt-1">
-                            {reportData.metadata?.originalFile || reportData.metadata?.title || '课堂笔记'}
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <a
-                            href={files.html.preview}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition-colors"
-                        >
-                            🌐 网页版
-                        </a>
-                        <a
-                            href={files.html.download}
-                            download
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition-colors"
-                        >
-                            ⬇️ 下载
-                        </a>
-                        <button
-                            onClick={onBack}
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition-colors"
-                        >
-                            ← 返回
-                        </button>
+        <div className="min-h-screen" style={{ backgroundColor: '#e8f4fc' }}>
+            {/* 确认对话框 */}
+            {confirmDialog && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+                        <div className={`p-4 ${confirmDialog.type === 'mastered' ? 'bg-green-500' : 'bg-red-500'} text-white`}>
+                            <h3 className="text-lg font-bold">
+                                {confirmDialog.type === 'mastered' ? '✓ 确认已掌握' : '✗ 确认识别错误'}
+                            </h3>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-gray-700 whitespace-pre-line">{confirmDialog.message}</p>
+                        </div>
+                        <div className="px-6 pb-6 flex gap-3">
+                            <button
+                                onClick={() => setConfirmDialog(null)}
+                                className="flex-1 py-2.5 px-4 rounded-lg text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                            >
+                                取消
+                            </button>
+                            <button
+                                onClick={handleConfirm}
+                                className={`flex-1 py-2.5 px-4 rounded-lg text-white transition-colors ${
+                                    confirmDialog.type === 'mastered' 
+                                        ? 'bg-green-500 hover:bg-green-600' 
+                                        : 'bg-red-500 hover:bg-red-600'
+                                }`}
+                            >
+                                确认
+                            </button>
+                        </div>
                     </div>
                 </div>
+            )}
 
-                {/* 统计卡片 */}
-                <div className="grid grid-cols-4 gap-4">
-                    <div className="bg-white/10 rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold">{visibleWords}</div>
-                        <div className="text-sm text-white/80">单词</div>
+            {/* 顶部标题区 - 网页版样式 */}
+            <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white">
+                <div className="max-w-5xl mx-auto px-6 py-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <span className="text-3xl">📖</span>
+                            <h1 className="text-2xl font-bold">{title}</h1>
+                        </div>
+                        <div className="flex gap-2">
+                            <a
+                                href={files.html.preview}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition-colors backdrop-blur"
+                            >
+                                🌐 网页版
+                            </a>
+                            <a
+                                href={files.html.download}
+                                download={`${safeFileName}.html`}
+                                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition-colors backdrop-blur"
+                            >
+                                ⬇️ 下载
+                            </a>
+                            <button
+                                onClick={onBack}
+                                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm transition-colors backdrop-blur"
+                            >
+                                ← 返回
+                            </button>
+                        </div>
                     </div>
-                    <div className="bg-white/10 rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold">{visiblePhrases}</div>
-                        <div className="text-sm text-white/80">短语</div>
+                    
+                    {/* 生成时间和学生姓名 */}
+                    <div className="text-white/70 text-sm mb-6 space-y-1">
+                        {processedAt && (
+                            <p>生成时间: {new Date(processedAt).toLocaleString('zh-CN')}</p>
+                        )}
+                        {studentName && (
+                            <p>学生姓名: {studentName}</p>
+                        )}
                     </div>
-                    <div className="bg-white/10 rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold">{visiblePatterns}</div>
-                        <div className="text-sm text-white/80">句型</div>
-                    </div>
-                    <div className="bg-white/10 rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold">{visibleGrammar}</div>
-                        <div className="text-sm text-white/80">语法</div>
+
+                    {/* 统计卡片 */}
+                    <div className="flex justify-center gap-4">
+                        <div className="bg-white/10 backdrop-blur rounded-xl px-8 py-4 text-center">
+                            <div className="text-3xl font-bold">{totalVocab}</div>
+                            <div className="text-sm text-white/80">词汇</div>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur rounded-xl px-8 py-4 text-center">
+                            <div className="text-3xl font-bold">{visibleGrammar}</div>
+                            <div className="text-sm text-white/80">语法</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* 标签页 */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="border-b border-gray-200">
-                    <div className="flex">
-                        <button
-                            onClick={() => setActiveTab('vocabulary')}
-                            className={`flex-1 py-4 px-6 text-sm font-medium transition-all ${
-                                activeTab === 'vocabulary'
-                                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50'
-                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }`}
-                        >
-                            📚 词汇 ({totalVocab})
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('grammar')}
-                            className={`flex-1 py-4 px-6 text-sm font-medium transition-all ${
-                                activeTab === 'grammar'
-                                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50'
-                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }`}
-                        >
-                            📖 语法 ({visibleGrammar})
-                        </button>
-                    </div>
+            {/* 主内容区 */}
+            <div className="max-w-5xl mx-auto px-6 py-6">
+                {/* 标签页 */}
+                <div className="bg-white rounded-t-xl border-b border-gray-200 flex">
+                    <button
+                        onClick={() => setActiveTab('vocabulary')}
+                        className={`flex-1 py-4 px-6 text-sm font-medium transition-all ${
+                            activeTab === 'vocabulary'
+                                ? 'text-blue-600 border-b-2 border-blue-600'
+                                : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        📚 词汇 ({totalVocab})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('grammar')}
+                        className={`flex-1 py-4 px-6 text-sm font-medium transition-all ${
+                            activeTab === 'grammar'
+                                ? 'text-blue-600 border-b-2 border-blue-600'
+                                : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        📖 语法 ({visibleGrammar})
+                    </button>
                 </div>
 
                 {/* 操作提示 */}
-                <div className="bg-blue-50 px-6 py-3 border-b border-blue-100">
-                    <p className="text-sm text-blue-600">
-                        💡 点击 <span className="font-medium text-green-600">[已掌握]</span> 会记录到你的词库，下次不再显示；
-                        点击 <span className="font-medium text-red-600">[识别错误]</span> 只会从当前报告隐藏
-                    </p>
+                <div className="bg-blue-50 px-6 py-3 text-sm text-blue-700">
+                    💡 点击 <span className="font-medium text-green-600">[✓ 已掌握]</span> 会记录到你的词库，下次不再显示；
+                    点击 <span className="font-medium text-red-600">[✗ 识别错误]</span> 只会从当前报告隐藏
                 </div>
 
                 {/* 内容区域 */}
-                <div className="p-6">
+                <div className="bg-white rounded-b-xl shadow-sm">
                     {activeTab === 'vocabulary' && (
-                        <div className="space-y-6">
-                            {/* 单词 */}
+                        <div className="divide-y divide-gray-100">
+                            {/* 单词表格 */}
                             {vocabulary.words?.length > 0 && (
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                        <span className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">📝</span>
-                                        单词 ({visibleWords})
-                                    </h3>
-                                    <div className="grid gap-3">
-                                        {vocabulary.words.map((item, index) => {
-                                            const itemKey = `word-${item.word}`;
-                                            if (hiddenItems.has(itemKey)) return null;
-                                            
-                                            return (
-                                                <VocabItem
-                                                    key={index}
-                                                    item={item}
-                                                    type="word"
-                                                    nameField="word"
-                                                    onMastered={() => handleMastered(item, 'word')}
-                                                    onWrong={() => handleWrongRecognition(item, 'word')}
-                                                    loading={actionLoading === itemKey}
-                                                />
-                                            );
-                                        })}
+                                <div className="p-6">
+                                    <div className="bg-blue-600 text-white px-4 py-3 rounded-t-lg flex items-center gap-2">
+                                        <span>📝</span>
+                                        <span className="font-medium">单词</span>
+                                        <span className="ml-auto text-sm">共 {visibleWords} 项</span>
                                     </div>
+                                    <table className="w-full">
+                                        <thead className="bg-blue-50 text-blue-800 text-sm">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left w-12">#</th>
+                                                <th className="px-4 py-3 text-left">词汇</th>
+                                                <th className="px-4 py-3 text-left">音标</th>
+                                                <th className="px-4 py-3 text-left">含义</th>
+                                                <th className="px-4 py-3 text-left">例句</th>
+                                                <th className="px-4 py-3 text-center w-48">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {vocabulary.words.map((item, index) => {
+                                                const itemKey = `word-${item.word}`;
+                                                if (hiddenItems.has(itemKey)) return null;
+                                                
+                                                return (
+                                                    <tr key={index} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 text-gray-400">{index + 1}</td>
+                                                        <td className="px-4 py-3 font-medium text-gray-800">{item.word}</td>
+                                                        <td className="px-4 py-3 text-purple-500 text-sm">{item.phonetic || '-'}</td>
+                                                        <td className="px-4 py-3 text-gray-600">
+                                                            {item.pos && <span className="text-blue-500">{item.pos} </span>}
+                                                            {item.meaning}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-500 text-sm italic">{item.example || '-'}</td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex justify-center gap-2">
+                                                                <button
+                                                                    onClick={() => showConfirm('mastered', item, 'word')}
+                                                                    disabled={actionLoading === itemKey}
+                                                                    className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors disabled:opacity-50"
+                                                                >
+                                                                    {actionLoading === itemKey ? '...' : '✓ 已掌握'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => showConfirm('wrong', item, 'word')}
+                                                                    className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+                                                                >
+                                                                    ✗ 识别错误
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </div>
                             )}
 
-                            {/* 短语 */}
+                            {/* 短语表格 */}
                             {vocabulary.phrases?.length > 0 && (
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                        <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">💬</span>
-                                        短语 ({visiblePhrases})
-                                    </h3>
-                                    <div className="grid gap-3">
-                                        {vocabulary.phrases.map((item, index) => {
-                                            const itemKey = `phrase-${item.phrase}`;
-                                            if (hiddenItems.has(itemKey)) return null;
-                                            
-                                            return (
-                                                <VocabItem
-                                                    key={index}
-                                                    item={item}
-                                                    type="phrase"
-                                                    nameField="phrase"
-                                                    onMastered={() => handleMastered(item, 'phrase')}
-                                                    onWrong={() => handleWrongRecognition(item, 'phrase')}
-                                                    loading={actionLoading === itemKey}
-                                                />
-                                            );
-                                        })}
+                                <div className="p-6">
+                                    <div className="bg-green-600 text-white px-4 py-3 rounded-t-lg flex items-center gap-2">
+                                        <span>💬</span>
+                                        <span className="font-medium">短语</span>
+                                        <span className="ml-auto text-sm">共 {visiblePhrases} 项</span>
                                     </div>
+                                    <table className="w-full">
+                                        <thead className="bg-green-50 text-green-800 text-sm">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left w-12">#</th>
+                                                <th className="px-4 py-3 text-left">短语</th>
+                                                <th className="px-4 py-3 text-left">含义</th>
+                                                <th className="px-4 py-3 text-left">例句</th>
+                                                <th className="px-4 py-3 text-center w-48">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {vocabulary.phrases.map((item, index) => {
+                                                const itemKey = `phrase-${item.phrase}`;
+                                                if (hiddenItems.has(itemKey)) return null;
+                                                
+                                                return (
+                                                    <tr key={index} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 text-gray-400">{index + 1}</td>
+                                                        <td className="px-4 py-3 font-medium text-gray-800">{item.phrase}</td>
+                                                        <td className="px-4 py-3 text-gray-600">{item.meaning}</td>
+                                                        <td className="px-4 py-3 text-gray-500 text-sm italic">{item.example || '-'}</td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex justify-center gap-2">
+                                                                <button
+                                                                    onClick={() => showConfirm('mastered', item, 'phrase')}
+                                                                    disabled={actionLoading === itemKey}
+                                                                    className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors disabled:opacity-50"
+                                                                >
+                                                                    {actionLoading === itemKey ? '...' : '✓ 已掌握'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => showConfirm('wrong', item, 'phrase')}
+                                                                    className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+                                                                >
+                                                                    ✗ 识别错误
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </div>
                             )}
 
-                            {/* 句型 */}
+                            {/* 句型表格 */}
                             {vocabulary.patterns?.length > 0 && (
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                        <span className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">📐</span>
-                                        句型 ({visiblePatterns})
-                                    </h3>
-                                    <div className="grid gap-3">
-                                        {vocabulary.patterns.map((item, index) => {
-                                            const itemKey = `pattern-${item.pattern}`;
-                                            if (hiddenItems.has(itemKey)) return null;
-                                            
-                                            return (
-                                                <VocabItem
-                                                    key={index}
-                                                    item={item}
-                                                    type="pattern"
-                                                    nameField="pattern"
-                                                    onMastered={() => handleMastered(item, 'pattern')}
-                                                    onWrong={() => handleWrongRecognition(item, 'pattern')}
-                                                    loading={actionLoading === itemKey}
-                                                />
-                                            );
-                                        })}
+                                <div className="p-6">
+                                    <div className="bg-purple-600 text-white px-4 py-3 rounded-t-lg flex items-center gap-2">
+                                        <span>📐</span>
+                                        <span className="font-medium">句型</span>
+                                        <span className="ml-auto text-sm">共 {visiblePatterns} 项</span>
                                     </div>
+                                    <table className="w-full">
+                                        <thead className="bg-purple-50 text-purple-800 text-sm">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left w-12">#</th>
+                                                <th className="px-4 py-3 text-left">句型</th>
+                                                <th className="px-4 py-3 text-left">含义</th>
+                                                <th className="px-4 py-3 text-left">例句</th>
+                                                <th className="px-4 py-3 text-center w-48">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {vocabulary.patterns.map((item, index) => {
+                                                const itemKey = `pattern-${item.pattern}`;
+                                                if (hiddenItems.has(itemKey)) return null;
+                                                
+                                                return (
+                                                    <tr key={index} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 text-gray-400">{index + 1}</td>
+                                                        <td className="px-4 py-3 font-medium text-gray-800">{item.pattern}</td>
+                                                        <td className="px-4 py-3 text-gray-600">{item.meaning}</td>
+                                                        <td className="px-4 py-3 text-gray-500 text-sm italic">{item.example || '-'}</td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex justify-center gap-2">
+                                                                <button
+                                                                    onClick={() => showConfirm('mastered', item, 'pattern')}
+                                                                    disabled={actionLoading === itemKey}
+                                                                    className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors disabled:opacity-50"
+                                                                >
+                                                                    {actionLoading === itemKey ? '...' : '✓ 已掌握'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => showConfirm('wrong', item, 'pattern')}
+                                                                    className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+                                                                >
+                                                                    ✗ 识别错误
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </div>
                             )}
 
@@ -321,17 +478,18 @@ function ReportViewer({ taskId, onBack }) {
                     )}
 
                     {activeTab === 'grammar' && (
-                        <div className="space-y-4">
+                        <div className="p-6 space-y-4">
                             {grammar.map((item, index) => {
                                 const itemKey = `grammar-${item.title}`;
                                 if (hiddenItems.has(itemKey)) return null;
                                 
                                 return (
-                                    <GrammarItem
+                                    <GrammarCard
                                         key={index}
                                         item={item}
-                                        onMastered={() => handleMastered(item, 'grammar')}
-                                        onWrong={() => handleWrongRecognition(item, 'grammar')}
+                                        index={index}
+                                        onMastered={() => showConfirm('mastered', item, 'grammar')}
+                                        onWrong={() => showConfirm('wrong', item, 'grammar')}
                                         loading={actionLoading === itemKey}
                                     />
                                 );
@@ -349,99 +507,51 @@ function ReportViewer({ taskId, onBack }) {
 }
 
 /**
- * 词汇项组件
+ * 语法卡片组件
  */
-function VocabItem({ item, type, nameField, onMastered, onWrong, loading }) {
-    const name = item[nameField] || '';
-    const meaning = item.meaning || '';
-    const phonetic = item.phonetic || '';
-    const pos = item.pos || '';
-    const example = item.example || '';
-
-    return (
-        <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group">
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 flex-wrap">
-                    <span className="font-bold text-gray-800 text-lg">{name}</span>
-                    {phonetic && <span className="text-purple-500">{phonetic}</span>}
-                    {pos && <span className="text-blue-500 text-sm bg-blue-50 px-2 py-0.5 rounded">{pos}</span>}
-                </div>
-                {meaning && (
-                    <p className="text-gray-600 mt-1">{meaning}</p>
-                )}
-                {example && (
-                    <p className="text-gray-400 text-sm mt-2 italic">📌 {example}</p>
-                )}
-            </div>
-            
-            {/* 操作按钮 */}
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                <button
-                    onClick={onMastered}
-                    disabled={loading}
-                    className="px-3 py-1.5 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors disabled:opacity-50"
-                    title="已掌握（记录并隐藏）"
-                >
-                    {loading ? '...' : '✓ 已掌握'}
-                </button>
-                <button
-                    onClick={onWrong}
-                    className="px-3 py-1.5 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
-                    title="识别错误（仅隐藏）"
-                >
-                    ✗ 错误
-                </button>
-            </div>
-        </div>
-    );
-}
-
-/**
- * 语法项组件
- */
-function GrammarItem({ item, onMastered, onWrong, loading }) {
+function GrammarCard({ item, index, onMastered, onWrong, loading }) {
     const [expanded, setExpanded] = useState(false);
 
     return (
-        <div className="bg-gray-50 rounded-xl overflow-hidden">
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
             {/* 标题行 */}
             <div 
-                className="flex items-center gap-4 p-4 cursor-pointer hover:bg-gray-100 transition-colors group"
+                className="flex items-center gap-4 p-4 cursor-pointer hover:bg-gray-50 transition-colors bg-gradient-to-r from-orange-50 to-amber-50"
                 onClick={() => setExpanded(!expanded)}
             >
-                <span className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-xl">
-                    {expanded ? '📖' : '📕'}
+                <span className="w-8 h-8 bg-orange-500 text-white rounded-lg flex items-center justify-center font-bold">
+                    {index + 1}
                 </span>
                 <span className="font-bold text-gray-800 flex-1">{item.title}</span>
                 
                 {/* 操作按钮 */}
                 <div 
-                    className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="flex gap-2"
                     onClick={e => e.stopPropagation()}
                 >
                     <button
                         onClick={onMastered}
                         disabled={loading}
-                        className="px-3 py-1.5 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors disabled:opacity-50"
+                        className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors disabled:opacity-50"
                     >
                         {loading ? '...' : '✓ 已掌握'}
                     </button>
                     <button
                         onClick={onWrong}
-                        className="px-3 py-1.5 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
+                        className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
                     >
-                        ✗ 错误
+                        ✗ 识别错误
                     </button>
                 </div>
                 
-                <span className="text-gray-400">
+                <span className="text-gray-400 ml-2">
                     {expanded ? '▲' : '▼'}
                 </span>
             </div>
 
             {/* 展开内容 */}
             {expanded && (
-                <div className="px-6 pb-6 space-y-3 border-t border-gray-200 bg-white">
+                <div className="px-6 pb-6 space-y-4 border-t border-gray-200 bg-white">
                     {item.definition && (
                         <div className="mt-4">
                             <span className="text-sm text-gray-500 font-medium">📝 定义</span>

@@ -120,18 +120,34 @@ function broadcastTaskProgress(taskId, progress, status, message = '') {
         progress,
         status,
         message,
+        currentStep: message,  // 🔧 同时发送两个字段，兼容前端
         timestamp: new Date().toISOString()
     });
 
-    wsClients.forEach((ws) => {
-        if (ws.readyState === WebSocket.OPEN && (!ws.taskId || ws.taskId === taskId)) {
+    let sentCount = 0;
+    wsClients.forEach((ws, clientId) => {
+        if (ws.readyState === WebSocket.OPEN) {
+            // 🔧 修改：发送给所有连接的客户端，让前端自己过滤
             ws.send(data);
+            sentCount++;
         }
     });
+    
+    // 调试：显示发送了多少个客户端
+    if (sentCount > 0) {
+        console.log(`[WebSocket] 📤 推送进度: ${taskId.slice(0,8)} - ${progress}% - ${message.substring(0, 30)} (${sentCount}个客户端)`);
+    }
 }
 
 // 导出广播函数供其他模块使用
 global.broadcastTaskProgress = broadcastTaskProgress;
+
+// 🔧 关键修复：将进度回调注入到 taskQueue
+const taskQueue = require('./services/taskQueue');
+taskQueue.setProgressCallback((taskId, task) => {
+    console.log(`[WebSocket] 📤 推送进度: ${taskId.slice(0,8)} - ${task.progress}% - ${task.currentStep}`);
+    broadcastTaskProgress(taskId, task.progress, task.status, task.currentStep);
+});
 
 // ============================================
 // 路由配置

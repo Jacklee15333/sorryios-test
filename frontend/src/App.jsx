@@ -8,7 +8,7 @@ import useTaskProgress from './hooks/useTaskProgress';
 
 /**
  * 主应用内容组件 - 全屏侧边栏布局
- * v4.2.0: 新布局，类似管理后台
+ * v4.2.2: 修复任务完成后不跳转，在当前页面显示查看报告按钮
  */
 function AppContent() {
     const { user, loading, logout, isAuthenticated } = useAuth();
@@ -18,7 +18,7 @@ function AppContent() {
     const [currentTaskId, setCurrentTaskId] = useState(null);
     const [taskInfo, setTaskInfo] = useState(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [lastCompletedTask, setLastCompletedTask] = useState(null);  // 🆕 最后完成的任务
+    const [lastCompletedTask, setLastCompletedTask] = useState(null);
 
     // 学习数据
     const [stats, setStats] = useState(null);
@@ -26,21 +26,26 @@ function AppContent() {
     const [masteredStats, setMasteredStats] = useState(null);
     const [taskHistory, setTaskHistory] = useState([]);
 
-    // WebSocket 进度订阅
-    const { progress, connected } = useTaskProgress(currentTaskId);
+    // 🔧 修改：添加 logs
+    const { progress, connected, logs } = useTaskProgress(currentTaskId);
 
     // 当收到进度更新时，更新任务信息
     useEffect(() => {
         if (progress) {
-            setTaskInfo(progress);
+            setTaskInfo(prev => ({
+                ...prev,
+                ...progress
+            }));
+            
+            // 🔧 修改：任务完成后不跳转，保持在处理页面显示完成状态
             if (progress.status === 'completed') {
-                // 🆕 任务完成：保存任务信息，返回上传页显示"查看报告"按钮
                 setLastCompletedTask({
                     id: currentTaskId,
                     title: taskInfo?.customTitle || progress.customTitle || '课堂笔记'
                 });
                 loadUserData();  // 刷新数据
-                setTimeout(() => setCurrentPage('upload'), 500);
+                // 🚫 移除自动跳转：setTimeout(() => setCurrentPage('upload'), 500);
+                // 现在用户需要点击"查看报告"按钮
             }
         }
     }, [progress]);
@@ -107,7 +112,7 @@ function AppContent() {
 
     // 上传成功
     const handleUploadSuccess = (data) => {
-        setLastCompletedTask(null);  // 🆕 清除之前的完成提示
+        setLastCompletedTask(null);
         setCurrentTaskId(data.task.id);
         setTaskInfo({
             id: data.task.id,
@@ -115,7 +120,7 @@ function AppContent() {
             progress: 0,
             currentStep: '任务已创建，等待处理...',
             file: data.task.file,
-            customTitle: data.task.customTitle  // 🆕 保存标题
+            customTitle: data.task.customTitle
         });
         setCurrentPage('processing');
     };
@@ -125,7 +130,7 @@ function AppContent() {
         setCurrentPage('upload');
         setCurrentTaskId(null);
         setTaskInfo(null);
-        setLastCompletedTask(null);  // 🆕 清除完成提示
+        setLastCompletedTask(null);
         loadUserData();
     };
 
@@ -313,7 +318,7 @@ function AppContent() {
                                 />
                             </div>
 
-                            {/* 🆕 任务完成提示 */}
+                            {/* 任务完成提示 */}
                             {lastCompletedTask && (
                                 <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-6 text-center">
                                     <div className="text-5xl mb-4">🎉</div>
@@ -351,38 +356,23 @@ function AppContent() {
                         </div>
                     )}
 
-                    {/* 处理中 */}
+                    {/* 🔧 修改：处理中页面 - 不再区分完成状态，统一由 ProgressTracker 处理 */}
                     {currentPage === 'processing' && taskInfo && (
-                        <div className="max-w-2xl mx-auto">
-                            {taskInfo.status === 'completed' ? (
-                                /* 完成状态 */
-                                <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-                                    <div className="text-6xl mb-4">🎉</div>
-                                    <h3 className="text-2xl font-bold text-green-600 mb-2">处理完成！</h3>
-                                    <p className="text-gray-500 mb-6">报告已生成，点击下方按钮查看</p>
-                                    <button
-                                        onClick={() => setCurrentPage('report')}
-                                        className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all"
-                                    >
-                                        📊 查看报告
-                                    </button>
+                        <div className="max-w-3xl mx-auto">
+                            <ProgressTracker
+                                task={taskInfo}
+                                logs={logs}
+                                onCancel={handleReset}
+                                onViewReport={() => setCurrentPage('report')}
+                            />
+                            
+                            {/* 只在处理中显示提示 - Claude 风格 */}
+                            {taskInfo.status !== 'completed' && taskInfo.status !== 'failed' && (
+                                <div className="mt-4 rounded-lg p-4 border border-stone-200 text-center" style={{ backgroundColor: '#faf8f5' }}>
+                                    <p className="text-sm text-stone-600">
+                                        正在处理，请不要关闭浏览器窗口。
+                                    </p>
                                 </div>
-                            ) : (
-                                /* 处理中状态 */
-                                <>
-                                    <div className="bg-white rounded-xl shadow-sm p-6">
-                                        <ProgressTracker
-                                            task={taskInfo}
-                                            onCancel={handleReset}
-                                            onViewReport={() => setCurrentPage('report')}
-                                        />
-                                    </div>
-                                    <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                        <p className="text-sm text-blue-700">
-                                            💡 处理过程中会自动打开浏览器与 AI 交互，请不要关闭浏览器窗口。
-                                        </p>
-                                    </div>
-                                </>
                             )}
                         </div>
                     )}
@@ -575,7 +565,7 @@ function AppContent() {
                                 <h3 className="font-bold text-gray-800 mb-4">ℹ️ 关于</h3>
                                 <div className="space-y-2 text-sm text-gray-600">
                                     <p><span className="font-medium">应用名称：</span>Sorryios AI 智能笔记助手</p>
-                                    <p><span className="font-medium">版本：</span>v4.2.0</p>
+                                    <p><span className="font-medium">版本：</span>v4.2.2</p>
                                     <p><span className="font-medium">功能：</span>课堂笔记自动化处理系统</p>
                                 </div>
                             </div>

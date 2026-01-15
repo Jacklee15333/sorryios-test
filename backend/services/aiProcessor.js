@@ -1,12 +1,13 @@
 /**
- * AI 处理器服务 - 英语课堂专用版 v4.3.1
+ * AI 处理器服务 - 英语课堂专用版 v4.3.2
  * 
- * 【v4.3.1 更新】
- * - 修复 normalizeItemCase 分割逻辑（处理 sth. sb. 等缩写）
+ * 【v4.3.2 更新】
+ * - 添加详细进度日志推送到前端
+ * - 每个阶段都推送详细执行信息
  * 
  * @author Sorryios AI Team
- * @version 4.3.1
- * @date 2026-01-14
+ * @version 4.3.2
+ * @date 2026-01-15
  */
 
 const fs = require('fs');
@@ -666,15 +667,28 @@ function withTimeout(promise, ms, errorMsg = '超时') { let timeoutId; const ti
 
 async function initBrowser() { console.log('🌐 初始化浏览器...'); const automation = new SorryiosAutomation(); await withTimeout(automation.init(), 60000, '浏览器启动超时'); await withTimeout(automation.login(), 60000, '登录超时'); await withTimeout(automation.selectIdleAccount(), 30000, '选择账号超时'); console.log('✅ AI账号已就绪'); return automation; }
 async function closeBrowser(automation) { if (automation) { try { await automation.close(); console.log('🔒 浏览器已关闭'); } catch (e) { try { require('child_process').exec('taskkill /F /IM chromium.exe /T', () => {}); } catch (e2) {} } } await sleep(2000); }
-async function processSegmentWithRetry(automation, message, index, total) {
+async function processSegmentWithRetry(automation, message, index, total, onProgress = null) {
     for (let attempt = 1; attempt <= CONFIG.maxRetries; attempt++) {
         try {
-            console.log(`📤 发送片段 ${index + 1}/${total} (尝试 ${attempt}/${CONFIG.maxRetries})`);
+            const logMsg = `📤 发送片段 ${index + 1}/${total} (尝试 ${attempt}/${CONFIG.maxRetries})`;
+            console.log(logMsg);
+            if (onProgress) onProgress({ currentStep: logMsg });
+            
             const response = await withTimeout(automation.sendMessage(message), 300000, `片段 ${index + 1} 超时`);
             const parsed = JsonExtractor.extract(typeof response === 'object' ? response.text : response);
-            if (parsed) { console.log(`✅ 片段 ${index + 1} 成功`); return { index, success: true, output: parsed, attempt }; }
+            if (parsed) { 
+                const successMsg = `✅ 片段 ${index + 1}/${total} 处理成功`;
+                console.log(successMsg); 
+                if (onProgress) onProgress({ currentStep: successMsg });
+                return { index, success: true, output: parsed, attempt }; 
+            }
             throw new Error('JSON解析失败');
-        } catch (error) { console.error(`❌ 片段 ${index + 1} 尝试 ${attempt} 失败:`, error.message); if (attempt < CONFIG.maxRetries) await sleep(CONFIG.browserRestartDelay); }
+        } catch (error) { 
+            const errorMsg = `❌ 片段 ${index + 1} 尝试 ${attempt} 失败: ${error.message}`;
+            console.error(errorMsg); 
+            if (onProgress) onProgress({ currentStep: errorMsg });
+            if (attempt < CONFIG.maxRetries) await sleep(CONFIG.browserRestartDelay); 
+        }
     }
     return { index, success: false, error: `所有尝试都失败` };
 }
@@ -685,55 +699,142 @@ async function processSegmentWithRetry(automation, message, index, total) {
 
 async function processTask(task, onProgress) {
     const { id: taskId, file } = task;
-    console.log('\n' + '='.repeat(60)); console.log('🎓 英语课堂智能分析系统 v4.3.1'); console.log('='.repeat(60)); console.log(`📁 任务ID: ${taskId}`); console.log(`📄 文件: ${file.originalName}`); console.log('='.repeat(60) + '\n');
+    console.log('\n' + '='.repeat(60)); 
+    console.log('🎓 英语课堂智能分析系统 v4.3.2'); 
+    console.log('='.repeat(60)); 
+    console.log(`📁 任务ID: ${taskId}`); 
+    console.log(`📄 文件: ${file.originalName}`); 
+    console.log('='.repeat(60) + '\n');
 
-    let automation = null; let results = []; let segmentTexts = []; let totalSegments = 0; let startIndex = 0; let needNewConversation = false; let browserRestartCount = 0;
+    let automation = null; 
+    let results = []; 
+    let segmentTexts = []; 
+    let totalSegments = 0; 
+    let startIndex = 0; 
+    let needNewConversation = false; 
+    let browserRestartCount = 0;
     const wordFilter = new WordFilter();
 
     try {
-        onProgress({ currentStep: '读取文件...', progress: 5 });
-        const content = fs.readFileSync(file.savedPath, 'utf-8'); console.log(`📄 文件: ${content.length} 字符`);
-        onProgress({ currentStep: '智能分段...', progress: 10 });
+        // ========== 阶段1-3: 准备工作 ==========
+        onProgress({ currentStep: '📌 阶段1-3: 准备工作', progress: 2 });
+        
+        onProgress({ currentStep: '📄 读取文件...', progress: 5 });
+        const content = fs.readFileSync(file.savedPath, 'utf-8'); 
+        const fileInfo = `📄 文件读取完成: ${content.length} 字符`;
+        console.log(fileInfo);
+        onProgress({ currentStep: fileInfo, progress: 8 });
+        
+        onProgress({ currentStep: '✂️ 智能分段中...', progress: 10 });
         const splitter = new TextSplitter({ maxSegmentLength: CONFIG.maxSegmentLength, minSegmentLength: 200 });
-        segmentTexts = splitter.split(content).map(s => typeof s === 'object' ? s.content : s); totalSegments = segmentTexts.length; console.log(`📝 分段: ${totalSegments} 段`);
+        segmentTexts = splitter.split(content).map(s => typeof s === 'object' ? s.content : s); 
+        totalSegments = segmentTexts.length; 
+        const segmentInfo = `📝 分段完成: ${totalSegments} 段`;
+        console.log(segmentInfo);
+        onProgress({ currentStep: segmentInfo, progress: 12 });
+        
         const savedProgress = loadProgress(taskId);
-        if (savedProgress?.results?.length > 0 && savedProgress.completedCount > 0) { results = savedProgress.results; startIndex = savedProgress.completedCount; needNewConversation = true; }
-        else { results = new Array(totalSegments).fill(null); }
+        if (savedProgress?.results?.length > 0 && savedProgress.completedCount > 0) { 
+            results = savedProgress.results; 
+            startIndex = savedProgress.completedCount; 
+            needNewConversation = true;
+            onProgress({ currentStep: `📂 恢复进度: 已完成 ${startIndex}/${totalSegments} 段`, progress: 15 });
+        } else { 
+            results = new Array(totalSegments).fill(null); 
+        }
 
-        console.log('\n' + '─'.repeat(60)); console.log('📌 阶段4: AI提取关键词'); console.log('─'.repeat(60));
+        // ========== 阶段4: AI提取关键词 ==========
+        console.log('\n' + '─'.repeat(60)); 
+        console.log('📌 阶段4: AI提取关键词'); 
+        console.log('─'.repeat(60));
+        onProgress({ currentStep: '📌 阶段4: AI提取关键词', progress: 18 });
+        
         let currentIndex = startIndex;
         while (currentIndex < totalSegments) {
             if (!automation) {
                 if (browserRestartCount >= CONFIG.maxBrowserRestarts) throw new Error(`浏览器重启次数过多`);
-                onProgress({ currentStep: browserRestartCount > 0 ? `重启浏览器...` : '启动浏览器...', progress: 18 });
-                try { automation = await initBrowser(); browserRestartCount++; needNewConversation = true; } catch (e) { await sleep(CONFIG.browserRestartDelay); continue; }
+                const browserMsg = browserRestartCount > 0 ? `🔄 重启浏览器 (${browserRestartCount + 1}次)...` : '🌐 启动浏览器...';
+                onProgress({ currentStep: browserMsg, progress: 18 });
+                try { 
+                    automation = await initBrowser(); 
+                    browserRestartCount++; 
+                    needNewConversation = true;
+                    onProgress({ currentStep: '✅ AI账号已就绪', progress: 19 });
+                } catch (e) { 
+                    onProgress({ currentStep: `⚠️ 浏览器启动失败: ${e.message}`, progress: 18 });
+                    await sleep(CONFIG.browserRestartDelay); 
+                    continue; 
+                }
             }
-            onProgress({ currentStep: `提取关键词 ${currentIndex + 1}/${totalSegments}...`, progress: Math.round(20 + (currentIndex / totalSegments) * 40) });
+            
+            const progressPercent = Math.round(20 + (currentIndex / totalSegments) * 40);
+            onProgress({ currentStep: `🔄 处理片段 ${currentIndex + 1}/${totalSegments}...`, progress: progressPercent });
+            
             const message = needNewConversation ? `${CONFIG.extractionPrompt}\n${segmentTexts[currentIndex]}\n---` : `继续提取，JSON格式：\n\n${segmentTexts[currentIndex]}`;
             needNewConversation = false;
+            
             try {
-                const result = await processSegmentWithRetry(automation, message, currentIndex, totalSegments);
-                result.input = segmentTexts[currentIndex]; results[currentIndex] = result;
+                const result = await processSegmentWithRetry(automation, message, currentIndex, totalSegments, onProgress);
+                result.input = segmentTexts[currentIndex]; 
+                results[currentIndex] = result;
+                
                 saveProgress(taskId, { taskId, totalSegments, completedCount: currentIndex + 1, successCount: results.filter(r => r?.success).length, results, lastUpdated: new Date().toISOString() });
-                currentIndex++; if (currentIndex < totalSegments) { console.log(`⏳ 等待 ${CONFIG.requestInterval / 1000} 秒...`); await sleep(CONFIG.requestInterval); }
-            } catch (e) { await closeBrowser(automation); automation = null; needNewConversation = true; await sleep(CONFIG.browserRestartDelay); }
+                onProgress({ currentStep: `💾 进度已保存: ${currentIndex + 1}/${totalSegments}`, progress: progressPercent });
+                
+                currentIndex++; 
+                if (currentIndex < totalSegments) { 
+                    const waitMsg = `⏳ 等待 ${CONFIG.requestInterval / 1000} 秒...`;
+                    console.log(waitMsg);
+                    onProgress({ currentStep: waitMsg, progress: progressPercent });
+                    await sleep(CONFIG.requestInterval); 
+                }
+            } catch (e) { 
+                onProgress({ currentStep: `⚠️ 处理异常，准备重启浏览器...`, progress: progressPercent });
+                await closeBrowser(automation); 
+                automation = null; 
+                needNewConversation = true; 
+                await sleep(CONFIG.browserRestartDelay); 
+            }
         }
 
-        console.log('\n' + '─'.repeat(60)); console.log('📌 阶段5: 合并关键词'); console.log('─'.repeat(60));
-        onProgress({ currentStep: '合并关键词...', progress: 62 });
+        // ========== 阶段5: 合并关键词 ==========
+        console.log('\n' + '─'.repeat(60)); 
+        console.log('📌 阶段5: 合并关键词'); 
+        console.log('─'.repeat(60));
+        onProgress({ currentStep: '📌 阶段5: 合并关键词', progress: 62 });
+        
         const successResults = results.filter(r => r?.success && r.output).map(r => r.output);
+        const successInfo = `✅ 成功片段: ${successResults.length}/${totalSegments}`;
+        console.log(successInfo);
+        onProgress({ currentStep: successInfo, progress: 62 });
+        
         const rawKeywords = ResultMerger.mergeKeywords(successResults);
-        onProgress({ currentStep: '标准化处理...', progress: 63 });
+        const mergeInfo = `🔀 合并结果: 单词${rawKeywords.words.length}, 短语${rawKeywords.phrases.length}, 句型${rawKeywords.patterns.length}, 语法${rawKeywords.grammar.length}`;
+        console.log(mergeInfo);
+        onProgress({ currentStep: mergeInfo, progress: 63 });
+        
+        onProgress({ currentStep: '🔧 标准化处理...', progress: 64 });
         const extractedKeywords = keywordNormalizer.normalize(rawKeywords);
 
-        console.log('\n' + '─'.repeat(60)); console.log('📌 阶段6: 匹配数据库'); console.log('─'.repeat(60));
-        onProgress({ currentStep: '匹配数据库...', progress: 65 });
-        let mergedData = ResultMerger.createEmptyResult(); let unmatchedKeywords = { words: [], phrases: [], patterns: [], grammar: [] };
+        // ========== 阶段6: 匹配数据库 ==========
+        console.log('\n' + '─'.repeat(60)); 
+        console.log('📌 阶段6: 匹配数据库'); 
+        console.log('─'.repeat(60));
+        onProgress({ currentStep: '📌 阶段6: 匹配数据库', progress: 65 });
+        
+        let mergedData = ResultMerger.createEmptyResult(); 
+        let unmatchedKeywords = { words: [], phrases: [], patterns: [], grammar: [] };
+        
         if (matchingService) {
             try {
+                onProgress({ currentStep: '🔍 正在匹配数据库...', progress: 66 });
                 const matchResult = matchingService.batchMatch(extractedKeywords);
                 const stats = matchingService.getMatchStats(matchResult);
-                console.log(`[阶段6] 精确: ${stats.exactMatch}, 模糊: ${stats.fuzzyMatch}, 未匹配: ${stats.unmatched}`);
+                
+                const matchInfo = `🔍 匹配结果: 精确${stats.exactMatch}, 模糊${stats.fuzzyMatch}, 未匹配${stats.unmatched}`;
+                console.log(`[阶段6] ${matchInfo}`);
+                onProgress({ currentStep: matchInfo, progress: 67 });
+                
                 for (const match of matchResult.matched) {
                     if (match.matched_data) {
                         const item = { ...match.matched_data, _source: 'database', _matchScore: match.score };
@@ -749,61 +850,174 @@ async function processTask(task, onProgress) {
                     else if (unmatched.item_type === 'pattern') unmatchedKeywords.patterns.push(unmatched.original_text);
                     else if (unmatched.item_type === 'grammar') unmatchedKeywords.grammar.push(unmatched.original_text);
                 }
-                console.log(`[阶段6] 从数据库: ${matchResult.matched.length}, 需AI: ${matchResult.unmatched.length}`);
-            } catch (e) { console.warn('[阶段6] 匹配失败:', e.message); unmatchedKeywords = extractedKeywords; }
-        } else { unmatchedKeywords = extractedKeywords; }
+                
+                const dbInfo = `✅ 从数据库获取: ${matchResult.matched.length} 项`;
+                console.log(`[阶段6] ${dbInfo}`);
+                onProgress({ currentStep: dbInfo, progress: 68 });
+                
+                if (matchResult.unmatched.length > 0) {
+                    const needAiInfo = `⏳ 需要AI生成: ${matchResult.unmatched.length} 项`;
+                    console.log(`[阶段6] ${needAiInfo}`);
+                    onProgress({ currentStep: needAiInfo, progress: 69 });
+                }
+            } catch (e) { 
+                console.warn('[阶段6] 匹配失败:', e.message); 
+                onProgress({ currentStep: `⚠️ 数据库匹配失败: ${e.message}`, progress: 68 });
+                unmatchedKeywords = extractedKeywords; 
+            }
+        } else { 
+            onProgress({ currentStep: '⚠️ 数据库服务未启用，全部由AI生成', progress: 68 });
+            unmatchedKeywords = extractedKeywords; 
+        }
 
+        // ========== 阶段7: AI生成详情 ==========
         const totalUnmatched = unmatchedKeywords.words.length + unmatchedKeywords.phrases.length + unmatchedKeywords.patterns.length + unmatchedKeywords.grammar.length;
         if (totalUnmatched > 0) {
-            console.log('\n' + '─'.repeat(60)); console.log(`📌 阶段7: AI生成详情 (${totalUnmatched}项)`); console.log('─'.repeat(60));
-            onProgress({ currentStep: `AI生成详情 (${totalUnmatched}项)...`, progress: 70 });
+            console.log('\n' + '─'.repeat(60)); 
+            console.log(`📌 阶段7: AI生成详情 (${totalUnmatched}项)`); 
+            console.log('─'.repeat(60));
+            onProgress({ currentStep: `📌 阶段7: AI生成详情 (${totalUnmatched}项)`, progress: 70 });
+            
             const detailContent = [];
-            if (unmatchedKeywords.words.length > 0) detailContent.push(`【单词】${unmatchedKeywords.words.join(', ')}`);
-            if (unmatchedKeywords.phrases.length > 0) detailContent.push(`【短语】${unmatchedKeywords.phrases.join(', ')}`);
-            if (unmatchedKeywords.patterns.length > 0) detailContent.push(`【句型】${unmatchedKeywords.patterns.join(', ')}`);
-            if (unmatchedKeywords.grammar.length > 0) detailContent.push(`【语法】${unmatchedKeywords.grammar.join(', ')}`);
+            if (unmatchedKeywords.words.length > 0) {
+                detailContent.push(`【单词】${unmatchedKeywords.words.join(', ')}`);
+                onProgress({ currentStep: `📝 待生成单词: ${unmatchedKeywords.words.length} 个`, progress: 71 });
+            }
+            if (unmatchedKeywords.phrases.length > 0) {
+                detailContent.push(`【短语】${unmatchedKeywords.phrases.join(', ')}`);
+                onProgress({ currentStep: `📝 待生成短语: ${unmatchedKeywords.phrases.length} 个`, progress: 72 });
+            }
+            if (unmatchedKeywords.patterns.length > 0) {
+                detailContent.push(`【句型】${unmatchedKeywords.patterns.join(', ')}`);
+                onProgress({ currentStep: `📝 待生成句型: ${unmatchedKeywords.patterns.length} 个`, progress: 73 });
+            }
+            if (unmatchedKeywords.grammar.length > 0) {
+                detailContent.push(`【语法】${unmatchedKeywords.grammar.join(', ')}`);
+                onProgress({ currentStep: `📝 待生成语法: ${unmatchedKeywords.grammar.length} 个`, progress: 74 });
+            }
+            
             try {
-                if (!automation) { automation = await initBrowser(); browserRestartCount++; }
-                const detailResult = await processSegmentWithRetry(automation, `${CONFIG.detailPrompt}\n${detailContent.join('\n')}\n---`, 0, 1);
+                if (!automation) { 
+                    onProgress({ currentStep: '🌐 启动浏览器...', progress: 75 });
+                    automation = await initBrowser(); 
+                    browserRestartCount++;
+                    onProgress({ currentStep: '✅ AI账号已就绪', progress: 76 });
+                }
+                
+                onProgress({ currentStep: '📤 发送详情生成请求...', progress: 77 });
+                const detailResult = await processSegmentWithRetry(automation, `${CONFIG.detailPrompt}\n${detailContent.join('\n')}\n---`, 0, 1, onProgress);
+                
                 if (detailResult.success && detailResult.output) {
                     const aiData = detailResult.output;
-                    if (aiData.vocabulary?.words) { mergedData.vocabulary.words.push(...aiData.vocabulary.words.map(w => ({ ...w, _source: 'ai' }))); console.log(`[阶段7] AI单词: ${aiData.vocabulary.words.length}`); }
-                    if (aiData.vocabulary?.phrases) { mergedData.vocabulary.phrases.push(...aiData.vocabulary.phrases.map(p => ({ ...p, _source: 'ai' }))); console.log(`[阶段7] AI短语: ${aiData.vocabulary.phrases.length}`); }
-                    if (aiData.vocabulary?.patterns) { mergedData.vocabulary.patterns.push(...aiData.vocabulary.patterns.map(p => ({ ...p, _source: 'ai' }))); console.log(`[阶段7] AI句型: ${aiData.vocabulary.patterns.length}`); }
-                    if (aiData.grammar?.length) { mergedData.grammar.push(...aiData.grammar.map(g => ({ ...g, _source: 'ai' }))); console.log(`[阶段7] AI语法: ${aiData.grammar.length}`); }
+                    if (aiData.vocabulary?.words) { 
+                        mergedData.vocabulary.words.push(...aiData.vocabulary.words.map(w => ({ ...w, _source: 'ai' }))); 
+                        const msg = `✅ AI生成单词: ${aiData.vocabulary.words.length} 个`;
+                        console.log(`[阶段7] ${msg}`);
+                        onProgress({ currentStep: msg, progress: 80 });
+                    }
+                    if (aiData.vocabulary?.phrases) { 
+                        mergedData.vocabulary.phrases.push(...aiData.vocabulary.phrases.map(p => ({ ...p, _source: 'ai' }))); 
+                        const msg = `✅ AI生成短语: ${aiData.vocabulary.phrases.length} 个`;
+                        console.log(`[阶段7] ${msg}`);
+                        onProgress({ currentStep: msg, progress: 82 });
+                    }
+                    if (aiData.vocabulary?.patterns) { 
+                        mergedData.vocabulary.patterns.push(...aiData.vocabulary.patterns.map(p => ({ ...p, _source: 'ai' }))); 
+                        const msg = `✅ AI生成句型: ${aiData.vocabulary.patterns.length} 个`;
+                        console.log(`[阶段7] ${msg}`);
+                        onProgress({ currentStep: msg, progress: 84 });
+                    }
+                    if (aiData.grammar?.length) { 
+                        mergedData.grammar.push(...aiData.grammar.map(g => ({ ...g, _source: 'ai' }))); 
+                        const msg = `✅ AI生成语法: ${aiData.grammar.length} 个`;
+                        console.log(`[阶段7] ${msg}`);
+                        onProgress({ currentStep: msg, progress: 86 });
+                    }
                     console.log(`[阶段7] ✅ AI生成完成`);
+                    onProgress({ currentStep: '✅ AI详情生成完成', progress: 88 });
                 }
-            } catch (e) { console.error('[阶段7] ❌', e.message); }
-        } else { console.log('\n📌 阶段7: 跳过（全部从数据库获取）'); }
+            } catch (e) { 
+                console.error('[阶段7] ❌', e.message);
+                onProgress({ currentStep: `❌ AI生成失败: ${e.message}`, progress: 88 });
+            }
+        } else { 
+            console.log('\n📌 阶段7: 跳过（全部从数据库获取）');
+            onProgress({ currentStep: '⏭️ 阶段7: 跳过（全部从数据库获取）', progress: 88 });
+        }
 
+        // ========== 阶段8: 过滤基础词汇 ==========
+        onProgress({ currentStep: '📌 阶段8: 过滤基础词汇', progress: 89 });
+        const beforeFilter = mergedData.vocabulary.words?.length || 0;
         mergedData = wordFilter.filter(mergedData);
+        const afterFilter = mergedData.vocabulary.words?.length || 0;
+        const filterInfo = `🔧 过滤结果: ${beforeFilter} → ${afterFilter} (移除 ${beforeFilter - afterFilter} 个基础词)`;
+        onProgress({ currentStep: filterInfo, progress: 90 });
+        
+        onProgress({ currentStep: '🔧 最终标准化处理...', progress: 91 });
         mergedData = keywordNormalizer.finalNormalize(mergedData);
 
-        console.log('\n' + '─'.repeat(60)); console.log('📌 阶段9: 生成报告'); console.log('─'.repeat(60));
-        onProgress({ currentStep: '生成报告...', progress: 92 });
-        const timestamp = Date.now(); const finalTitle = getFinalTitle(task);
-        const outputSubDir = `task_${taskId.slice(0, 8)}_${timestamp}`; const outputPath = path.join(CONFIG.outputDir, outputSubDir);
+        // ========== 阶段9: 生成报告 ==========
+        console.log('\n' + '─'.repeat(60)); 
+        console.log('📌 阶段9: 生成报告'); 
+        console.log('─'.repeat(60));
+        onProgress({ currentStep: '📌 阶段9: 生成报告', progress: 92 });
+        
+        const timestamp = Date.now(); 
+        const finalTitle = getFinalTitle(task);
+        const outputSubDir = `task_${taskId.slice(0, 8)}_${timestamp}`; 
+        const outputPath = path.join(CONFIG.outputDir, outputSubDir);
+        
         if (!fs.existsSync(outputPath)) fs.mkdirSync(outputPath, { recursive: true });
+        onProgress({ currentStep: `📁 创建输出目录: ${outputSubDir}`, progress: 93 });
+        
         const reportGenerator = new EnglishReportGenerator({ outputDir: outputPath });
         mergedData.metadata = { taskId, originalFile: file.originalName, processedAt: new Date().toISOString(), totalSegments, successCount: successResults.length, failCount: totalSegments - successResults.length, browserRestarts: browserRestartCount };
+        
+        onProgress({ currentStep: '📝 生成 HTML 报告...', progress: 94 });
+        onProgress({ currentStep: '📝 生成 Markdown 报告...', progress: 95 });
+        onProgress({ currentStep: '📝 生成 JSON 数据...', progress: 96 });
         reportGenerator.saveAll(mergedData, 'report', finalTitle);
 
-        console.log('\n' + '═'.repeat(60)); console.log('📊 报告生成完成！'); console.log('═'.repeat(60));
-        console.log(`   📁 路径: ${outputPath}`); console.log(`   📝 标题: ${finalTitle}`);
+        // ========== 完成 ==========
+        console.log('\n' + '═'.repeat(60)); 
+        console.log('📊 报告生成完成！'); 
+        console.log('═'.repeat(60));
+        console.log(`   📁 路径: ${outputPath}`); 
+        console.log(`   📝 标题: ${finalTitle}`);
         console.log('   ────────────────────────────');
-        console.log(`   📚 单词: ${mergedData.summary.total_words}`); console.log(`   📖 短语: ${mergedData.summary.total_phrases}`);
-        console.log(`   📋 句型: ${mergedData.summary.total_patterns}`); console.log(`   📑 语法: ${mergedData.summary.total_grammar}`);
+        console.log(`   📚 单词: ${mergedData.summary.total_words}`); 
+        console.log(`   📖 短语: ${mergedData.summary.total_phrases}`);
+        console.log(`   📋 句型: ${mergedData.summary.total_patterns}`); 
+        console.log(`   📑 语法: ${mergedData.summary.total_grammar}`);
         console.log('   ────────────────────────────');
-        console.log(`   📊 总计: ${mergedData.summary.total_words + mergedData.summary.total_phrases + mergedData.summary.total_patterns + mergedData.summary.total_grammar} 项`);
+        const totalItems = mergedData.summary.total_words + mergedData.summary.total_phrases + mergedData.summary.total_patterns + mergedData.summary.total_grammar;
+        console.log(`   📊 总计: ${totalItems} 项`);
         console.log('═'.repeat(60) + '\n');
 
-        clearProgress(taskId); onProgress({ currentStep: '处理完成！', progress: 100 });
-        return { outputDir: outputSubDir, title: finalTitle, files: { html: `${outputSubDir}/report.html`, markdown: `${outputSubDir}/report.md`, json: `${outputSubDir}/report.json` }, stats: { totalSegments, successCount: successResults.length, failCount: totalSegments - successResults.length, totalCharacters: content.length, browserRestarts: browserRestartCount, vocabulary: mergedData.summary } };
+        onProgress({ currentStep: '═══════════════════════════════', progress: 97 });
+        onProgress({ currentStep: `📊 报告生成完成！`, progress: 98 });
+        onProgress({ currentStep: `📚 单词: ${mergedData.summary.total_words} | 📖 短语: ${mergedData.summary.total_phrases}`, progress: 98 });
+        onProgress({ currentStep: `📋 句型: ${mergedData.summary.total_patterns} | 📑 语法: ${mergedData.summary.total_grammar}`, progress: 99 });
+        onProgress({ currentStep: `🎉 总计: ${totalItems} 项`, progress: 99 });
+        onProgress({ currentStep: '═══════════════════════════════', progress: 99 });
+
+        clearProgress(taskId); 
+        onProgress({ currentStep: '✅ 处理完成！', progress: 100 });
+        
+        return { 
+            outputDir: outputSubDir, 
+            title: finalTitle, 
+            files: { html: `${outputSubDir}/report.html`, markdown: `${outputSubDir}/report.md`, json: `${outputSubDir}/report.json` }, 
+            stats: { totalSegments, successCount: successResults.length, failCount: totalSegments - successResults.length, totalCharacters: content.length, browserRestarts: browserRestartCount, vocabulary: mergedData.summary } 
+        };
     } catch (error) {
         const completedCount = results.filter(r => r).length;
         if (completedCount > 0) saveProgress(taskId, { taskId, totalSegments, completedCount, successCount: results.filter(r => r?.success).length, results, lastUpdated: new Date().toISOString(), error: error.message });
+        onProgress({ currentStep: `❌ 处理失败: ${error.message}`, progress: 0 });
         throw error;
-    } finally { await closeBrowser(automation); }
+    } finally { 
+        await closeBrowser(automation); 
+    }
 }
 
 // ============================================
@@ -815,7 +1029,7 @@ function init() {
     if (!fs.existsSync(CONFIG.progressDir)) fs.mkdirSync(CONFIG.progressDir, { recursive: true });
     taskQueue.setProcessor(processTask);
     try { if (fs.existsSync(CONFIG.progressDir)) { const files = fs.readdirSync(CONFIG.progressDir).filter(f => f.endsWith('.json')); if (files.length > 0) console.log(`\n📋 发现 ${files.length} 个未完成任务`); } } catch (e) {}
-    console.log('\n' + '='.repeat(60)); console.log('  🎓 英语课堂智能分析系统 v4.3.1 已就绪'); console.log('  🆕 v4.3.1: 修复大小写标准化'); console.log('='.repeat(60) + '\n');
+    console.log('\n' + '='.repeat(60)); console.log('  🎓 英语课堂智能分析系统 v4.3.2 已就绪'); console.log('  🆕 v4.3.2: 详细进度日志推送'); console.log('='.repeat(60) + '\n');
 }
 
 module.exports = { init, processTask, CONFIG, loadProgress, clearProgress, getFinalTitle, generateDefaultTitle, JsonExtractor, ResultMerger, WordFilter, KeywordNormalizer, keywordNormalizer };
