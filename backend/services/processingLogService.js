@@ -1,505 +1,305 @@
 /**
- * 处理日志数据库服务
- * 使用独立的 SQLite 数据库存储处理记录
+ * 处理日志服务 v5.3
+ * 文件位置: backend/services/processingLogService.js
  * 
- * 数据库：processing_logs.db
- * 表：
- *   - processing_tasks: 处理任务记录
+ * 📦 v5.3 更新：
+ * - 新增：updateUnmatchedAiContent() 更新未匹配项的AI生成内容
+ * 
+ * 📦 v5.0 更新：
+ * - 改为使用主数据库 sorryios.db
+ * - 删除 processing_tasks 表（与 tasks 重复）
+ * - 匹配统计字段合并到 tasks 表
+ * 
+ * 📦 v5.0.1 修复：
+ * - getTasks 返回数据添加 task_id 字段（兼容前端）
+ * 
+ * 📦 v5.0.2 修复：
+ * - updateTaskStats 参数名转换（兼容 aiProcessor）
+ * 
+ * 📦 v5.1 更新：
+ * - 新增：clearAllData() 清空所有匹配数据
+ * 
+ * 📦 v5.2 修复：
+ * - 修复：clearAllData() 现在也删除 tasks 表的记录
+ * 
+ * 表结构（在 sorryios.db 中）：
  *   - matched_items: 匹配记录（精确+模糊）
  *   - unmatched_items: 未匹配记录
  */
 
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+const { 
+    db, 
+    TaskDB, 
+    MatchedItemDB, 
+    UnmatchedItemDB,
+    getProcessingStats 
+} = require('./database');
 
 class ProcessingLogService {
-    constructor(dbPath = null) {
-        this.dbPath = dbPath || path.join(__dirname, '../data/processing_logs.db');
-        this.db = null;
-        this.init();
-    }
-
-    /**
-     * 初始化数据库
-     */
-    init() {
-        const dir = path.dirname(this.dbPath);
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-
-        this.db = new Database(this.dbPath);
-        this.createTables();
-        console.log('[ProcessingLogService] 日志数据库已初始化:', this.dbPath);
-    }
-
-    /**
-     * 创建表结构
-     */
-    createTables() {
-        // 处理任务记录表
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS processing_tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                task_id TEXT UNIQUE,
-                user_id INTEGER,
-                username TEXT,
-                file_name TEXT,
-                
-                total_items INTEGER DEFAULT 0,
-                exact_match_count INTEGER DEFAULT 0,
-                fuzzy_match_count INTEGER DEFAULT 0,
-                unmatched_count INTEGER DEFAULT 0,
-                
-                status TEXT DEFAULT 'processing',
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-        // 匹配记录表（精确匹配 + 模糊匹配）
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS matched_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                task_id TEXT,
-                
-                item_type TEXT,
-                original_text TEXT,
-                
-                matched_text TEXT,
-                match_score REAL,
-                source_db TEXT,
-                source_table TEXT,
-                source_id INTEGER,
-                matched_data TEXT,
-                
-                status TEXT DEFAULT 'pending',
-                reviewed_at DATETIME,
-                reviewed_by TEXT,
-                notes TEXT,
-                
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                
-                FOREIGN KEY (task_id) REFERENCES processing_tasks(task_id)
-            )
-        `);
-
-        // 未匹配记录表
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS unmatched_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                task_id TEXT,
-                
-                item_type TEXT,
-                original_text TEXT,
-                
-                ai_generated TEXT,
-                
-                status TEXT DEFAULT 'pending',
-                edited_content TEXT,
-                imported_to TEXT,
-                imported_id INTEGER,
-                
-                reviewed_at DATETIME,
-                reviewed_by TEXT,
-                notes TEXT,
-                
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                
-                FOREIGN KEY (task_id) REFERENCES processing_tasks(task_id)
-            )
-        `);
-
-        // 创建索引
-        this.db.exec(`
-            CREATE INDEX IF NOT EXISTS idx_tasks_task_id ON processing_tasks(task_id);
-            CREATE INDEX IF NOT EXISTS idx_tasks_status ON processing_tasks(status);
-            CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON processing_tasks(user_id);
-            CREATE INDEX IF NOT EXISTS idx_matched_task_id ON matched_items(task_id);
-            CREATE INDEX IF NOT EXISTS idx_matched_status ON matched_items(status);
-            CREATE INDEX IF NOT EXISTS idx_unmatched_task_id ON unmatched_items(task_id);
-            CREATE INDEX IF NOT EXISTS idx_unmatched_status ON unmatched_items(status);
-        `);
-
-        console.log('[ProcessingLogService] 数据库表已创建');
+    constructor() {
+        // v5.0: 使用主数据库
+        this.db = db;
+        console.log('[ProcessingLogService] v5.3: 使用主数据库 sorryios.db');
     }
 
     // ============================================
-    // 任务操作
+    // 任务操作（v5.0: 改用 TaskDB）
     // ============================================
 
     /**
      * 创建处理任务
+     * v5.0: 不再创建 processing_tasks 记录，直接使用 tasks 表
      */
     createTask(taskData) {
-        const stmt = this.db.prepare(`
-            INSERT INTO processing_tasks (task_id, user_id, username, file_name, status)
-            VALUES (?, ?, ?, ?, 'processing')
-        `);
-
-        try {
-            const result = stmt.run(
-                taskData.task_id,
-                taskData.user_id || null,
-                taskData.username || '匿名用户',
-                taskData.file_name || ''
-            );
-            return { success: true, id: result.lastInsertRowid };
-        } catch (error) {
-            if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-                return { success: false, error: '任务ID已存在' };
-            }
-            throw error;
+        // tasks 表的记录已在 taskQueue.js 中创建
+        // 这里只需要确保任务存在
+        const task = TaskDB.getById(taskData.task_id);
+        if (task) {
+            return { success: true, id: task.id };
         }
+        return { success: false, error: '任务不存在' };
     }
 
     /**
      * 更新任务统计
+     * v5.0: 更新 tasks 表的统计字段
+     * v5.0.2 修复: 转换参数名以匹配 TaskDB.updateMatchStats
+     * 
+     * aiProcessor 传入: { total_items, exact_match_count, fuzzy_match_count, unmatched_count }
+     * TaskDB 期望: { total, exactMatch, fuzzyMatch, unmatched }
      */
     updateTaskStats(taskId, stats) {
-        const stmt = this.db.prepare(`
-            UPDATE processing_tasks SET
-                total_items = ?,
-                exact_match_count = ?,
-                fuzzy_match_count = ?,
-                unmatched_count = ?,
-                status = ?,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE task_id = ?
-        `);
-
-        const result = stmt.run(
-            stats.total || 0,
-            stats.exactMatch || 0,
-            stats.fuzzyMatch || 0,
-            stats.unmatched || 0,
-            stats.status || 'completed',
-            taskId
-        );
-        return { success: result.changes > 0 };
+        try {
+            // v5.0.2: 转换参数名
+            const convertedStats = {
+                total: stats.total_items || stats.total || 0,
+                exactMatch: stats.exact_match_count || stats.exactMatch || 0,
+                fuzzyMatch: stats.fuzzy_match_count || stats.fuzzyMatch || 0,
+                unmatched: stats.unmatched_count || stats.unmatched || 0
+            };
+            
+            console.log(`[ProcessingLogService] 更新任务统计 ${taskId}:`, convertedStats);
+            TaskDB.updateMatchStats(taskId, convertedStats);
+            return { success: true };
+        } catch (e) {
+            console.error('[ProcessingLogService] 更新统计失败:', e.message);
+            return { success: false, error: e.message };
+        }
     }
 
     /**
      * 获取任务详情
+     * v5.0: 从 tasks 表获取
      */
     getTask(taskId) {
-        const stmt = this.db.prepare('SELECT * FROM processing_tasks WHERE task_id = ?');
-        return stmt.get(taskId);
+        const task = TaskDB.getById(taskId);
+        if (!task) return null;
+        
+        // 返回兼容旧格式的数据
+        return {
+            id: task.id,
+            task_id: task.id,
+            user_id: task.user_id,
+            username: task.username,
+            file_name: task.file_name,
+            total_items: task.total_items || 0,
+            exact_match_count: task.exact_match_count || 0,
+            fuzzy_match_count: task.fuzzy_match_count || 0,
+            unmatched_count: task.unmatched_count || 0,
+            status: task.status,
+            created_at: task.created_at,
+            updated_at: task.completed_at || task.started_at || task.created_at
+        };
     }
 
     /**
      * 获取任务列表
+     * v5.0: 从 tasks 表获取
+     * v5.0.1 修复: 添加 task_id 字段
      */
     getTasks(options = {}) {
-        const { status, userId, limit = 50, offset = 0 } = options;
+        const { status, userId, limit = 50 } = options;
         
-        let sql = 'SELECT * FROM processing_tasks WHERE 1=1';
-        const params = [];
-
-        if (status) {
-            sql += ' AND status = ?';
-            params.push(status);
-        }
+        let tasks;
         if (userId) {
-            sql += ' AND user_id = ?';
-            params.push(userId);
+            tasks = TaskDB.getByUserId(userId, limit);
+        } else {
+            tasks = TaskDB.getAll(limit);
         }
-
-        sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-        params.push(limit, offset);
-
-        const stmt = this.db.prepare(sql);
-        return stmt.all(...params);
+        
+        // 如果指定了状态，过滤
+        if (status) {
+            tasks = tasks.filter(t => t.status === status);
+        }
+        
+        // v5.0.1 修复: 添加 task_id 字段（兼容前端）
+        return tasks.map(task => ({
+            ...task,
+            task_id: task.id  // 添加 task_id 作为 id 的别名
+        }));
     }
 
     /**
      * 获取任务统计
      */
     getTasksSummary() {
-        const total = this.db.prepare('SELECT COUNT(*) as count FROM processing_tasks').get().count;
-        const pending = this.db.prepare(`
-            SELECT COUNT(*) as count FROM processing_tasks 
-            WHERE task_id IN (
-                SELECT DISTINCT task_id FROM matched_items WHERE status = 'pending'
-                UNION
-                SELECT DISTINCT task_id FROM unmatched_items WHERE status = 'pending'
-            )
-        `).get().count;
-        const todayTasks = this.db.prepare(`
-            SELECT COUNT(*) as count FROM processing_tasks 
-            WHERE date(created_at) = date('now')
-        `).get().count;
-
-        return { total, pending, todayTasks };
+        return getProcessingStats();
     }
 
     // ============================================
-    // 匹配记录操作
+    // 匹配记录操作（v5.0: 使用 MatchedItemDB）
     // ============================================
 
     /**
      * 添加匹配记录
      */
     addMatchedItem(item) {
-        const stmt = this.db.prepare(`
-            INSERT INTO matched_items (
-                task_id, item_type, original_text, matched_text, match_score,
-                source_db, source_table, source_id, matched_data, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        // 100% 匹配自动确认，85-99% 待审核
-        const status = item.match_score >= 1.0 ? 'auto_confirmed' : 'pending';
-
-        const result = stmt.run(
-            item.task_id,
-            item.item_type,
-            item.original_text,
-            item.matched_text,
-            item.match_score,
-            item.source_db,
-            item.source_table,
-            item.source_id,
-            JSON.stringify(item.matched_data || {}),
-            status
-        );
-        return { success: true, id: result.lastInsertRowid };
+        return MatchedItemDB.add(item);
     }
 
     /**
      * 批量添加匹配记录
      */
     addMatchedItems(items) {
-        const insert = this.db.prepare(`
-            INSERT INTO matched_items (
-                task_id, item_type, original_text, matched_text, match_score,
-                source_db, source_table, source_id, matched_data, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        const insertMany = this.db.transaction((items) => {
-            for (const item of items) {
-                const status = item.match_score >= 1.0 ? 'auto_confirmed' : 'pending';
-                insert.run(
-                    item.task_id,
-                    item.item_type,
-                    item.original_text,
-                    item.matched_text,
-                    item.match_score,
-                    item.source_db,
-                    item.source_table,
-                    item.source_id,
-                    JSON.stringify(item.matched_data || {}),
-                    status
-                );
-            }
-        });
-
-        insertMany(items);
-        return { success: true, count: items.length };
+        return MatchedItemDB.addBatch(items);
     }
 
     /**
      * 获取任务的匹配记录
      */
     getMatchedItems(taskId, status = null) {
-        let sql = 'SELECT * FROM matched_items WHERE task_id = ?';
-        const params = [taskId];
-
-        if (status) {
-            sql += ' AND status = ?';
-            params.push(status);
-        }
-        sql += ' ORDER BY id';
-
-        const stmt = this.db.prepare(sql);
-        const rows = stmt.all(...params);
-        return rows.map(row => ({
-            ...row,
-            matched_data: JSON.parse(row.matched_data || '{}')
-        }));
+        return MatchedItemDB.getByTaskId(taskId, status);
     }
 
     /**
-     * 确认匹配正确
+     * 确认匹配
      */
     confirmMatch(id, reviewedBy = null) {
-        const stmt = this.db.prepare(`
-            UPDATE matched_items SET
-                status = 'confirmed',
-                reviewed_at = CURRENT_TIMESTAMP,
-                reviewed_by = ?
-            WHERE id = ?
-        `);
-        const result = stmt.run(reviewedBy, id);
-        return { success: result.changes > 0 };
+        return { success: MatchedItemDB.confirm(id, reviewedBy) };
     }
 
     /**
      * 标记匹配错误
      */
     rejectMatch(id, reviewedBy = null, notes = null) {
-        const stmt = this.db.prepare(`
-            UPDATE matched_items SET
-                status = 'rejected',
-                reviewed_at = CURRENT_TIMESTAMP,
-                reviewed_by = ?,
-                notes = ?
-            WHERE id = ?
-        `);
-        const result = stmt.run(reviewedBy, notes, id);
-        return { success: result.changes > 0 };
+        return { success: MatchedItemDB.reject(id, reviewedBy, notes) };
     }
 
     /**
      * 批量确认匹配
      */
     confirmMatchesByTask(taskId, reviewedBy = null) {
-        const stmt = this.db.prepare(`
-            UPDATE matched_items SET
-                status = 'confirmed',
-                reviewed_at = CURRENT_TIMESTAMP,
-                reviewed_by = ?
-            WHERE task_id = ? AND status = 'pending'
-        `);
-        const result = stmt.run(reviewedBy, taskId);
-        return { success: true, count: result.changes };
+        return MatchedItemDB.confirmByTaskId(taskId, reviewedBy);
     }
 
     // ============================================
-    // 未匹配记录操作
+    // 未匹配记录操作（v5.0: 使用 UnmatchedItemDB）
     // ============================================
 
     /**
      * 添加未匹配记录
      */
     addUnmatchedItem(item) {
-        const stmt = this.db.prepare(`
-            INSERT INTO unmatched_items (
-                task_id, item_type, original_text, ai_generated, status
-            ) VALUES (?, ?, ?, ?, 'pending')
-        `);
-
-        const result = stmt.run(
-            item.task_id,
-            item.item_type,
-            item.original_text,
-            JSON.stringify(item.ai_generated || {})
-        );
-        return { success: true, id: result.lastInsertRowid };
+        return UnmatchedItemDB.add(item);
     }
 
     /**
      * 批量添加未匹配记录
      */
     addUnmatchedItems(items) {
-        const insert = this.db.prepare(`
-            INSERT INTO unmatched_items (
-                task_id, item_type, original_text, ai_generated, status
-            ) VALUES (?, ?, ?, ?, 'pending')
-        `);
-
-        const insertMany = this.db.transaction((items) => {
-            for (const item of items) {
-                insert.run(
-                    item.task_id,
-                    item.item_type,
-                    item.original_text,
-                    JSON.stringify(item.ai_generated || {})
-                );
-            }
-        });
-
-        insertMany(items);
-        return { success: true, count: items.length };
+        return UnmatchedItemDB.addBatch(items);
     }
 
     /**
      * 获取任务的未匹配记录
      */
     getUnmatchedItems(taskId, status = null) {
-        let sql = 'SELECT * FROM unmatched_items WHERE task_id = ?';
-        const params = [taskId];
-
-        if (status) {
-            sql += ' AND status = ?';
-            params.push(status);
-        }
-        sql += ' ORDER BY id';
-
-        const stmt = this.db.prepare(sql);
-        const rows = stmt.all(...params);
-        return rows.map(row => ({
-            ...row,
-            ai_generated: JSON.parse(row.ai_generated || '{}'),
-            edited_content: row.edited_content ? JSON.parse(row.edited_content) : null
-        }));
+        return UnmatchedItemDB.getByTaskId(taskId, status);
     }
 
     /**
      * 更新未匹配记录（编辑）
      */
     updateUnmatchedItem(id, editedContent) {
-        const stmt = this.db.prepare(`
-            UPDATE unmatched_items SET
-                edited_content = ?,
-                status = 'edited',
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `);
-        const result = stmt.run(JSON.stringify(editedContent), id);
-        return { success: result.changes > 0 };
+        return { success: UnmatchedItemDB.update(id, editedContent) };
     }
 
     /**
      * 标记为已入库
      */
     markAsImported(id, importedTo, importedId, reviewedBy = null) {
-        const stmt = this.db.prepare(`
-            UPDATE unmatched_items SET
-                status = 'imported',
-                imported_to = ?,
-                imported_id = ?,
-                reviewed_at = CURRENT_TIMESTAMP,
-                reviewed_by = ?,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `);
-        const result = stmt.run(importedTo, importedId, reviewedBy, id);
-        return { success: result.changes > 0 };
+        return { success: UnmatchedItemDB.markImported(id, importedTo, importedId, reviewedBy) };
     }
 
     /**
      * 标记为忽略
      */
     ignoreUnmatchedItem(id, reviewedBy = null, notes = null) {
-        const stmt = this.db.prepare(`
-            UPDATE unmatched_items SET
-                status = 'ignored',
-                reviewed_at = CURRENT_TIMESTAMP,
-                reviewed_by = ?,
-                notes = ?,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `);
-        const result = stmt.run(reviewedBy, notes, id);
-        return { success: result.changes > 0 };
+        return { success: UnmatchedItemDB.ignore(id, reviewedBy, notes) };
     }
 
     /**
      * 获取单个未匹配记录
      */
     getUnmatchedItemById(id) {
-        const stmt = this.db.prepare('SELECT * FROM unmatched_items WHERE id = ?');
-        const row = stmt.get(id);
-        if (!row) return null;
-        return {
-            ...row,
-            ai_generated: JSON.parse(row.ai_generated || '{}'),
-            edited_content: row.edited_content ? JSON.parse(row.edited_content) : null
-        };
+        return UnmatchedItemDB.getById(id);
+    }
+
+    /**
+     * v5.3: 更新未匹配记录的AI生成内容
+     * @param {string} taskId - 任务ID
+     * @param {string} originalText - 原始文本
+     * @param {string} itemType - 类型 (word/phrase/pattern/grammar)
+     * @param {Object} aiContent - AI生成的内容
+     * @returns {Object} { success, updated }
+     */
+    updateUnmatchedAiContent(taskId, originalText, itemType, aiContent) {
+        try {
+            // 先查找记录
+            const stmt = db.prepare(`
+                SELECT id FROM unmatched_items 
+                WHERE task_id = ? AND original_text = ? AND item_type = ?
+                LIMIT 1
+            `);
+            const row = stmt.get(taskId, originalText, itemType);
+            
+            if (!row) {
+                // 如果找不到精确匹配，尝试模糊匹配（忽略大小写）
+                const stmtFuzzy = db.prepare(`
+                    SELECT id FROM unmatched_items 
+                    WHERE task_id = ? AND LOWER(original_text) = LOWER(?) AND item_type = ?
+                    LIMIT 1
+                `);
+                const rowFuzzy = stmtFuzzy.get(taskId, originalText, itemType);
+                
+                if (!rowFuzzy) {
+                    console.warn(`[ProcessingLogService] 未找到记录: ${originalText} (${itemType})`);
+                    return { success: false, error: '记录不存在' };
+                }
+                
+                // 更新找到的记录
+                const updateStmt = db.prepare(`
+                    UPDATE unmatched_items 
+                    SET ai_generated = ?
+                    WHERE id = ?
+                `);
+                updateStmt.run(JSON.stringify(aiContent), rowFuzzy.id);
+                return { success: true, updated: true };
+            }
+            
+            // 更新AI生成内容
+            const updateStmt = db.prepare(`
+                UPDATE unmatched_items 
+                SET ai_generated = ?
+                WHERE id = ?
+            `);
+            updateStmt.run(JSON.stringify(aiContent), row.id);
+            
+            return { success: true, updated: true };
+        } catch (e) {
+            console.error('[ProcessingLogService] 更新AI内容失败:', e.message);
+            return { success: false, error: e.message };
+        }
     }
 
     // ============================================
@@ -510,38 +310,21 @@ class ProcessingLogService {
      * 获取待审核统计
      */
     getPendingStats() {
-        const pendingMatches = this.db.prepare(`
-            SELECT COUNT(*) as count FROM matched_items WHERE status = 'pending'
-        `).get().count;
-
-        const pendingUnmatched = this.db.prepare(`
-            SELECT COUNT(*) as count FROM unmatched_items WHERE status = 'pending'
-        `).get().count;
-
-        const editedUnmatched = this.db.prepare(`
-            SELECT COUNT(*) as count FROM unmatched_items WHERE status = 'edited'
-        `).get().count;
-
-        return {
-            pendingMatches,
-            pendingUnmatched,
-            editedUnmatched,
-            total: pendingMatches + pendingUnmatched + editedUnmatched
-        };
+        return getProcessingStats();
     }
 
     /**
      * 获取今日统计
      */
     getTodayStats() {
-        const tasks = this.db.prepare(`
-            SELECT COUNT(*) as count FROM processing_tasks 
-            WHERE date(created_at) = date('now')
+        const tasks = db.prepare(`
+            SELECT COUNT(*) as count FROM tasks 
+            WHERE date(created_at) = date('now', 'localtime')
         `).get().count;
 
-        const imported = this.db.prepare(`
+        const imported = db.prepare(`
             SELECT COUNT(*) as count FROM unmatched_items 
-            WHERE status = 'imported' AND date(reviewed_at) = date('now')
+            WHERE status = 'imported' AND date(reviewed_at) = date('now', 'localtime')
         `).get().count;
 
         return { tasks, imported };
@@ -551,10 +334,11 @@ class ProcessingLogService {
      * 获取所有待审核的模糊匹配
      */
     getAllPendingMatches(limit = 100) {
-        const stmt = this.db.prepare(`
-            SELECT m.*, t.username, t.file_name
+        const stmt = db.prepare(`
+            SELECT m.*, t.title as file_name, u.username
             FROM matched_items m
-            JOIN processing_tasks t ON m.task_id = t.task_id
+            LEFT JOIN tasks t ON m.task_id = t.id
+            LEFT JOIN users u ON t.user_id = u.id
             WHERE m.status = 'pending'
             ORDER BY m.created_at DESC
             LIMIT ?
@@ -570,10 +354,11 @@ class ProcessingLogService {
      * 获取所有待完善的未匹配项
      */
     getAllPendingUnmatched(limit = 100) {
-        const stmt = this.db.prepare(`
-            SELECT u.*, t.username, t.file_name
+        const stmt = db.prepare(`
+            SELECT u.*, t.title as file_name, us.username
             FROM unmatched_items u
-            JOIN processing_tasks t ON u.task_id = t.task_id
+            LEFT JOIN tasks t ON u.task_id = t.id
+            LEFT JOIN users us ON t.user_id = us.id
             WHERE u.status IN ('pending', 'edited')
             ORDER BY u.created_at DESC
             LIMIT ?
@@ -586,23 +371,57 @@ class ProcessingLogService {
         }));
     }
 
+    // ============================================
+    // v5.2 修复：清空数据（同时删除 tasks 记录）
+    // ============================================
+
+    /**
+     * 清空所有匹配记录、未匹配记录和任务记录
+     * v5.2 修复: 现在也删除 tasks 表的记录
+     * @returns {Object} { matched, unmatched, tasks }
+     */
+    clearAllData() {
+        try {
+            // 获取删除前的数量
+            const matchedCount = db.prepare('SELECT COUNT(*) as count FROM matched_items').get().count;
+            const unmatchedCount = db.prepare('SELECT COUNT(*) as count FROM unmatched_items').get().count;
+            const tasksCount = db.prepare('SELECT COUNT(*) as count FROM tasks').get().count;
+            
+            // 执行删除（顺序很重要，先删子表再删主表）
+            db.prepare('DELETE FROM matched_items').run();
+            db.prepare('DELETE FROM unmatched_items').run();
+            
+            // v5.2 新增：同时删除 tasks 表的记录
+            db.prepare('DELETE FROM tasks').run();
+            
+            console.log(`[ProcessingLogService] 已清空数据: matched=${matchedCount}, unmatched=${unmatchedCount}, tasks=${tasksCount}`);
+            
+            return {
+                matched: matchedCount,
+                unmatched: unmatchedCount,
+                tasks: tasksCount
+            };
+        } catch (e) {
+            console.error('[ProcessingLogService] 清空数据失败:', e.message);
+            throw e;
+        }
+    }
+
     /**
      * 关闭数据库连接
+     * v5.0: 不需要关闭，因为使用主数据库
      */
     close() {
-        if (this.db) {
-            this.db.close();
-            console.log('[ProcessingLogService] 数据库连接已关闭');
-        }
+        console.log('[ProcessingLogService] v5.0: 使用主数据库，由主模块管理连接');
     }
 }
 
 // 单例模式
 let instance = null;
 
-function getProcessingLogService(dbPath = null) {
+function getProcessingLogService() {
     if (!instance) {
-        instance = new ProcessingLogService(dbPath);
+        instance = new ProcessingLogService();
     }
     return instance;
 }

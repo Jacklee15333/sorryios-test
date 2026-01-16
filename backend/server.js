@@ -1,8 +1,8 @@
 /**
  * Sorryios AI 智能笔记系统 - 后端服务器
  * 
- * 版本: v4.1.0
- * 更新: 添加用户已掌握词汇API
+ * 版本: v4.2
+ * 更新: 新增匹配词典功能
  */
 
 const express = require('express');
@@ -159,7 +159,7 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        version: '4.1.0',
+        version: '4.2',
         wsClients: wsClients.size
     });
 });
@@ -178,20 +178,27 @@ function loadRoute(name, routePath, mountPath) {
     }
 }
 
-// 加载所有路由
-loadRoute('upload', './routes/upload', '/api');
-loadRoute('task', './routes/task', '/api');
-loadRoute('report', './routes/report', '/api');
+// ============================================
+// 🔧 v4.1.1 修复：调整路由加载顺序
+// 具体路由必须在通配符路由之前加载！
+// ============================================
+
+// 1️⃣ 首先加载具体路径的路由（这些不会互相冲突）
 loadRoute('admin', './routes/admin', '/api/admin');
 loadRoute('chunk-api', './routes/chunk-api', '/api/chunk');
 loadRoute('ai-api', './routes/ai-api', '/api/ai');
-loadRoute('auth', './routes/auth', '/api');  // 修复：挂载到 /api（auth.js 里已包含 /auth 和 /user 前缀）
 loadRoute('grammar-api', './routes/grammar-api', '/api/grammar');
 loadRoute('vocabulary-api', './routes/vocabulary-api', '/api/vocabulary');
 loadRoute('processing-log-api', './routes/processing-log-api', '/api/processing-log');
-
-// 🆕 v4.1.0: 用户已掌握词汇API
+loadRoute('matching-dict-api', './routes/matching-dict-api', '/api/matching-dict');
 loadRoute('user-mastered-api', './routes/user-mastered-api', '/api/user-mastered');
+
+// 2️⃣ 然后加载挂载到 /api 的路由（这些包含 /:id 通配符）
+// ⚠️ 这些必须放在最后，否则会拦截上面的路由！
+loadRoute('upload', './routes/upload', '/api');
+loadRoute('auth', './routes/auth', '/api');
+loadRoute('report', './routes/report', '/api');
+loadRoute('task', './routes/task', '/api');  // ⚠️ task 包含 /:id，必须最后加载
 
 // ============================================
 // 页面路由
@@ -233,16 +240,26 @@ app.get('/processing-log-admin', (req, res) => {
     }
 });
 
+app.get('/matching-dict-admin', (req, res) => {
+    const matchingDictAdminPath = path.join(__dirname, 'public/matching-dict-admin.html');
+    if (fs.existsSync(matchingDictAdminPath)) {
+        res.sendFile(matchingDictAdminPath);
+    } else {
+        res.status(404).send('匹配词典管理页面不存在');
+    }
+});
+
 app.get('/', (req, res) => {
     res.json({
         name: 'Sorryios AI 智能笔记系统',
-        version: '4.1.0',
+        version: '4.2',
         endpoints: {
             health: '/api/health',
             upload: '/api/upload',
             task: '/api/task/:id',
             admin: '/admin',
-            userMastered: '/api/user-mastered'
+            userMastered: '/api/user-mastered',
+            matchingDict: '/api/matching-dict'
         }
     });
 });
@@ -294,7 +311,8 @@ requiredDirs.forEach(dir => {
 
 server.listen(PORT, HOST, () => {
     console.log('\n' + '='.repeat(60));
-    console.log('  Sorryios AI 智能笔记系统 v4.1.0');
+    console.log('  Sorryios AI 智能笔记系统 v4.2');
+    console.log('  🔧 新增：匹配词典功能');
     console.log('='.repeat(60));
     console.log(`  🚀 服务器启动成功！`);
     console.log(`  📡 地址: http://localhost:${PORT}`);
@@ -305,6 +323,7 @@ server.listen(PORT, HOST, () => {
     console.log(`     - 语法库管理: http://localhost:${PORT}/grammar-admin`);
     console.log(`     - 词库管理: http://localhost:${PORT}/vocabulary-admin`);
     console.log(`     - 处理日志: http://localhost:${PORT}/processing-log-admin`);
+    console.log(`     - 匹配词典: http://localhost:${PORT}/matching-dict-admin`);
     console.log('');
     console.log('  📌 API 接口:');
     console.log(`     - 健康检查: http://localhost:${PORT}/api/health`);

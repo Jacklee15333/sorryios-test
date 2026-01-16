@@ -36,6 +36,13 @@
             box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
             border: 1px solid #fde68a;
         }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
         .header h1 { color: #92400e; font-size: 26px; margin-bottom: 8px; }
         .header p { color: #a16207; font-size: 14px; }
         
@@ -157,6 +164,17 @@
         .btn-secondary:hover { background: #d1d5db; }
         .btn-sm { padding: 5px 10px; font-size: 12px; }
         
+        /* 危险按钮 - 清空数据专用 */
+        .btn-danger-outline {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+        .btn-danger-outline:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
         /* 任务卡片 */
         .task-card {
             padding: 16px 20px;
@@ -198,27 +216,21 @@
             gap: 16px;
             font-size: 12px;
         }
-        .task-card .task-stats span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .task-card .task-stats .exact { color: #10b981; }
-        .task-card .task-stats .fuzzy { color: #f59e0b; }
-        .task-card .task-stats .unmatched { color: #ef4444; }
+        .task-card .task-stats .exact { color: #059669; }
+        .task-card .task-stats .fuzzy { color: #d97706; }
+        .task-card .task-stats .unmatched { color: #dc2626; }
         
         /* 匹配项卡片 */
         .match-item {
-            padding: 14px 20px;
-            border-bottom: 1px solid #f1f5f9;
+            padding: 16px 20px;
+            border-bottom: 1px solid #fef3c7;
             display: flex;
-            align-items: flex-start;
             gap: 16px;
+            align-items: flex-start;
         }
         .match-item:last-child { border-bottom: none; }
         .match-item:hover { background: #fffbeb; }
-        
-        .match-item .item-icon {
+        .item-icon {
             width: 36px;
             height: 36px;
             border-radius: 8px;
@@ -228,134 +240,128 @@
             font-size: 16px;
             flex-shrink: 0;
         }
-        .match-item .item-icon.exact { background: #d1fae5; }
-        .match-item .item-icon.fuzzy { background: #fef3c7; }
-        .match-item .item-icon.unmatched { background: #fee2e2; }
-        
-        .match-item .item-content { flex: 1; min-width: 0; }
-        .match-item .item-original {
+        .item-icon.exact { background: #d1fae5; }
+        .item-icon.fuzzy { background: #fef3c7; }
+        .item-icon.unmatched { background: #fee2e2; }
+        .item-content { flex: 1; min-width: 0; }
+        .item-original {
             font-weight: 600;
             color: #1e293b;
-            font-size: 15px;
             margin-bottom: 4px;
+            word-break: break-word;
         }
-        .match-item .item-matched {
+        .item-matched {
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
             font-size: 13px;
-            color: #64748b;
-            margin-bottom: 6px;
         }
-        .match-item .item-matched .arrow { color: #fbbf24; }
-        .match-item .item-matched .matched-text { color: #059669; font-weight: 500; }
-        .match-item .item-matched .score {
+        .item-matched .arrow { color: #fbbf24; }
+        .item-matched .matched-text { color: #059669; font-weight: 500; }
+        .item-matched .score {
             background: #fef3c7;
             color: #92400e;
-            padding: 1px 6px;
+            padding: 2px 6px;
             border-radius: 4px;
             font-size: 11px;
-            font-weight: 600;
         }
-        .match-item .item-type {
-            font-size: 11px;
-            color: #94a3b8;
-            background: #f1f5f9;
+        .item-type {
+            background: #e5e7eb;
+            color: #374151;
             padding: 2px 8px;
             border-radius: 4px;
-        }
-        .match-item .item-ai-content {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 10px 12px;
-            margin-top: 8px;
-            font-size: 13px;
-            color: #475569;
-            border-left: 3px solid #fbbf24;
-        }
-        .match-item .item-ai-content .ai-label {
             font-size: 11px;
-            color: #f59e0b;
-            font-weight: 600;
-            margin-bottom: 4px;
         }
-        
-        .match-item .item-actions {
+        .item-actions {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             flex-shrink: 0;
         }
         
-        /* 状态标签 */
+        /* AI 生成内容 */
+        .item-ai-content {
+            margin-top: 8px;
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
+        }
+        .ai-label {
+            color: #f59e0b;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        /* 状态徽章 */
         .status-badge {
-            font-size: 11px;
             padding: 2px 8px;
             border-radius: 4px;
-            font-weight: 500;
+            font-size: 11px;
         }
         .status-badge.pending { background: #fef3c7; color: #92400e; }
-        .status-badge.confirmed { background: #d1fae5; color: #065f46; }
-        .status-badge.rejected { background: #fee2e2; color: #991b1b; }
-        .status-badge.imported { background: #dbeafe; color: #1e40af; }
-        .status-badge.ignored { background: #f3f4f6; color: #6b7280; }
+        .status-badge.edited { background: #dbeafe; color: #1e40af; }
+        .status-badge.imported { background: #d1fae5; color: #065f46; }
+        .status-badge.ignored { background: #e5e7eb; color: #374151; }
         
         /* 空状态 */
         .empty-state {
-            text-align: center;
             padding: 60px 20px;
+            text-align: center;
             color: #94a3b8;
         }
-        .empty-state h3 { color: #64748b; margin-bottom: 8px; }
+        .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: #64748b; }
         
         /* 加载状态 */
         .loading {
+            padding: 40px 20px;
             text-align: center;
-            padding: 40px;
-            color: #92400e;
+            color: #94a3b8;
         }
         
-        /* 模态框 */
+        /* 弹窗 */
         .modal {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
             background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
             z-index: 1000;
-            overflow-y: auto;
             padding: 20px;
-            backdrop-filter: blur(4px);
         }
-        .modal.active { display: flex; align-items: flex-start; justify-content: center; }
+        .modal.active { display: flex; }
         .modal-content {
             background: white;
             border-radius: 16px;
             width: 100%;
-            max-width: 700px;
-            margin: 40px 0;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0,0,0,0.2);
         }
         .modal-header {
-            padding: 18px 24px;
+            padding: 20px;
             border-bottom: 1px solid #fef3c7;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
         }
-        .modal-header h2 { color: #78350f; font-size: 18px; }
+        .modal-header h2 { font-size: 18px; color: #78350f; }
         .modal-close {
             background: none;
             border: none;
             font-size: 24px;
-            cursor: pointer;
             color: #94a3b8;
+            cursor: pointer;
         }
-        .modal-close:hover { color: #475569; }
-        .modal-body { padding: 20px 24px; }
+        .modal-close:hover { color: #64748b; }
+        .modal-body { padding: 20px; }
         .modal-footer {
-            padding: 16px 24px;
+            padding: 16px 20px;
             border-top: 1px solid #fef3c7;
             display: flex;
             justify-content: flex-end;
@@ -366,72 +372,93 @@
         .form-group { margin-bottom: 16px; }
         .form-group label {
             display: block;
-            font-weight: 600;
+            font-size: 13px;
+            font-weight: 500;
             color: #374151;
             margin-bottom: 6px;
-            font-size: 13px;
         }
         .form-group input,
         .form-group textarea,
         .form-group select {
             width: 100%;
-            padding: 10px 14px;
+            padding: 10px 12px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
             font-size: 14px;
+            transition: border-color 0.2s;
         }
         .form-group input:focus,
         .form-group textarea:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #fbbf24;
+            border-color: #f59e0b;
         }
         .form-group textarea { min-height: 80px; resize: vertical; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
         /* 信息块 */
         .info-block {
-            background: #f8fafc;
+            background: #fef3c7;
             border-radius: 8px;
             padding: 12px 16px;
             margin-bottom: 16px;
         }
-        .info-block .info-label {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 4px;
+        .info-label {
+            font-size: 11px;
+            color: #92400e;
+            text-transform: uppercase;
         }
-        .info-block .info-value {
-            font-size: 15px;
-            color: #1e293b;
+        .info-value {
             font-weight: 500;
+            color: #78350f;
         }
         
         /* Toast */
         .toast {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 14px 20px;
-            border-radius: 10px;
-            color: white;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 24px;
+            border-radius: 8px;
             font-size: 14px;
-            z-index: 2000;
-            transform: translateX(120%);
-            opacity: 0;
-            transition: all 0.3s;
             font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+            z-index: 2000;
         }
-        .toast.show { transform: translateX(0); opacity: 1; }
-        .toast.success { background: #10b981; }
-        .toast.error { background: #ef4444; }
+        .toast.success { background: #10b981; color: white; }
+        .toast.error { background: #ef4444; color: white; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
         
-        /* 响应式 */
-        @media (max-width: 768px) {
-            .stats-row { grid-template-columns: 1fr 1fr; }
-            .match-item { flex-direction: column; }
-            .match-item .item-actions { width: 100%; justify-content: flex-start; margin-top: 8px; }
-            .form-row { grid-template-columns: 1fr; }
+        /* 清空确认弹窗 */
+        .clear-confirm-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+            margin-top: 16px;
+        }
+        .clear-confirm-input:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        .clear-warning {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .clear-warning h4 {
+            color: #dc2626;
+            margin-bottom: 8px;
+        }
+        .clear-warning p {
+            color: #7f1d1d;
+            font-size: 14px;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -440,14 +467,19 @@
         <a href="/admin" class="back-link">← 返回管理后台</a>
         
         <div class="header">
-            <h1>📋 处理日志</h1>
-            <p>查看 AI 处理记录，审核匹配结果，完善入库未匹配数据</p>
+            <div class="header-top">
+                <div>
+                    <h1>📋 处理日志</h1>
+                    <p>AI 处理结果的审核与管理</p>
+                </div>
+                <button class="btn btn-danger-outline" onclick="openClearModal()">🗑️ 清空数据</button>
+            </div>
             
             <div class="stats-row">
                 <div class="stat-card">
                     <div class="label">今日任务</div>
                     <div class="value" id="statTodayTasks">0</div>
-                    <div class="sub">已处理的任务数</div>
+                    <div class="sub">处理的文件数</div>
                 </div>
                 <div class="stat-card">
                     <div class="label">待审核匹配</div>
@@ -457,37 +489,35 @@
                 <div class="stat-card">
                     <div class="label">待完善入库</div>
                     <div class="value" id="statPendingUnmatched">0</div>
-                    <div class="sub">未匹配 + AI 生成</div>
+                    <div class="sub">AI 生成待审核</div>
                 </div>
                 <div class="stat-card">
                     <div class="label">今日入库</div>
                     <div class="value" id="statTodayImported">0</div>
-                    <div class="sub">新增到词库/语法库</div>
+                    <div class="sub">已入库数据</div>
                 </div>
             </div>
         </div>
         
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('tasks')">
-                📁 任务列表
-            </button>
+            <button class="tab-btn active" onclick="switchTab('tasks')">📝 处理任务</button>
             <button class="tab-btn" onclick="switchTab('pending-matches')">
                 🟡 待审核匹配
-                <span class="badge" id="badgePendingMatches" style="display:none">0</span>
+                <span class="badge" id="badgePendingMatches" style="display:none;">0</span>
             </button>
             <button class="tab-btn" onclick="switchTab('pending-unmatched')">
                 ❌ 待完善入库
-                <span class="badge" id="badgePendingUnmatched" style="display:none">0</span>
+                <span class="badge" id="badgePendingUnmatched" style="display:none;">0</span>
             </button>
         </div>
         
-        <!-- 任务列表 -->
-        <div id="tab-tasks" class="tab-content active">
+        <!-- 处理任务 -->
+        <div class="tab-content active" id="tab-tasks">
             <div class="list-container">
                 <div class="toolbar">
-                    <span class="title">最近处理任务</span>
+                    <span class="title">📝 处理任务列表</span>
                     <span class="spacer"></span>
-                    <button class="btn btn-secondary btn-sm" onclick="loadTasks()">🔄 刷新</button>
+                    <button class="btn btn-secondary" onclick="loadTasks()">🔄 刷新</button>
                 </div>
                 <div id="tasksList">
                     <div class="loading">加载中...</div>
@@ -496,13 +526,13 @@
         </div>
         
         <!-- 待审核匹配 -->
-        <div id="tab-pending-matches" class="tab-content">
+        <div class="tab-content" id="tab-pending-matches">
             <div class="list-container">
                 <div class="toolbar">
                     <span class="title">待审核的模糊匹配 (85-99%)</span>
                     <span class="spacer"></span>
-                    <button class="btn btn-success btn-sm" onclick="confirmAllMatches()">✓ 全部确认</button>
-                    <button class="btn btn-secondary btn-sm" onclick="loadPendingMatches()">🔄 刷新</button>
+                    <button class="btn btn-success" onclick="confirmAllMatches()">✓ 全部确认</button>
+                    <button class="btn btn-secondary" onclick="loadPendingMatches()">🔄 刷新</button>
                 </div>
                 <div id="pendingMatchesList">
                     <div class="loading">加载中...</div>
@@ -511,12 +541,12 @@
         </div>
         
         <!-- 待完善入库 -->
-        <div id="tab-pending-unmatched" class="tab-content">
+        <div class="tab-content" id="tab-pending-unmatched">
             <div class="list-container">
                 <div class="toolbar">
-                    <span class="title">待完善入库的数据</span>
+                    <span class="title">待完善入库 (AI 生成数据)</span>
                     <span class="spacer"></span>
-                    <button class="btn btn-secondary btn-sm" onclick="loadPendingUnmatched()">🔄 刷新</button>
+                    <button class="btn btn-secondary" onclick="loadPendingUnmatched()">🔄 刷新</button>
                 </div>
                 <div id="pendingUnmatchedList">
                     <div class="loading">加载中...</div>
@@ -529,7 +559,7 @@
     <div class="modal" id="editModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="editModalTitle">编辑内容</h2>
+                <h2>✎ 编辑数据</h2>
                 <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -537,41 +567,38 @@
                 <input type="hidden" id="editItemType">
                 
                 <div class="info-block">
-                    <div class="info-label">原始文本</div>
+                    <span class="info-label">原始文本</span>
                     <div class="info-value" id="editOriginalText"></div>
                 </div>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>类型</label>
-                        <select id="editTargetType">
-                            <option value="word">📝 单词</option>
-                            <option value="phrase">📚 短语</option>
-                            <option value="pattern">📋 句型</option>
-                            <option value="grammar">📖 语法</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>分类</label>
-                        <input type="text" id="editCategory" placeholder="如：动词、时态">
-                    </div>
+                <div class="form-group">
+                    <label>目标类型</label>
+                    <select id="editTargetType">
+                        <option value="word">单词</option>
+                        <option value="phrase">短语</option>
+                        <option value="pattern">句型</option>
+                        <option value="grammar">语法</option>
+                    </select>
                 </div>
                 
-                <!-- 词汇字段 -->
+                <div class="form-group">
+                    <label>分类</label>
+                    <input type="text" id="editCategory" placeholder="如：动词短语、名词、现在时态...">
+                </div>
+                
+                <!-- 词汇类字段 -->
                 <div id="vocabFields">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>音标</label>
-                            <input type="text" id="editPhonetic" placeholder="/ɪnˈvaɪrənmənt/">
-                        </div>
-                        <div class="form-group">
-                            <label>词性</label>
-                            <input type="text" id="editPos" placeholder="n. / v. / adj.">
-                        </div>
+                    <div class="form-group">
+                        <label>音标</label>
+                        <input type="text" id="editPhonetic" placeholder="如：/ˈæp.əl/">
                     </div>
                     <div class="form-group">
-                        <label>含义 *</label>
-                        <input type="text" id="editMeaning" placeholder="中文含义">
+                        <label>词性</label>
+                        <input type="text" id="editPos" placeholder="如：n. / v. / adj.">
+                    </div>
+                    <div class="form-group">
+                        <label>含义</label>
+                        <textarea id="editMeaning" placeholder="中文释义"></textarea>
                     </div>
                     <div class="form-group">
                         <label>例句</label>
@@ -579,18 +606,18 @@
                     </div>
                 </div>
                 
-                <!-- 语法字段 -->
-                <div id="grammarFields" style="display:none">
+                <!-- 语法类字段 -->
+                <div id="grammarFields" style="display:none;">
                     <div class="form-group">
-                        <label>定义 *</label>
-                        <textarea id="editDefinition" placeholder="语法定义"></textarea>
+                        <label>定义</label>
+                        <textarea id="editDefinition" placeholder="语法点定义"></textarea>
                     </div>
                     <div class="form-group">
                         <label>结构</label>
-                        <input type="text" id="editStructure" placeholder="如：have/has + done">
+                        <textarea id="editStructure" placeholder="语法结构"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>用法说明</label>
+                        <label>用法</label>
                         <textarea id="editUsage" placeholder="多个用法用换行分隔"></textarea>
                     </div>
                     <div class="form-group">
@@ -603,10 +630,14 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('editModal')">取消</button>
-                <button class="btn btn-primary" onclick="saveEdit()">💾 保存</button>
-                <button class="btn btn-success" onclick="saveAndImport()">📥 保存并入库</button>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <!-- v5.5 新增：左侧排除按钮 -->
+                <button class="btn btn-danger" id="excludeBtn" onclick="openExcludeModal()">🚫 不是短语（排除）</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="closeModal('editModal')">取消</button>
+                    <button class="btn btn-primary" onclick="saveEdit()">💾 保存</button>
+                    <button class="btn btn-success" onclick="saveAndImport()">📥 保存并入库</button>
+                </div>
             </div>
         </div>
     </div>
@@ -624,10 +655,167 @@
         </div>
     </div>
     
+    <!-- 清空数据确认弹窗 -->
+    <div class="modal" id="clearModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2>⚠️ 清空所有数据</h2>
+                <button class="modal-close" onclick="closeModal('clearModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="clear-warning">
+                    <h4>⚠️ 危险操作！</h4>
+                    <p>此操作将清空以下所有数据：</p>
+                    <ul style="margin: 10px 0 0 20px; font-size: 14px; color: #7f1d1d;">
+                        <li>所有待审核的模糊匹配记录</li>
+                        <li>所有待完善入库的数据</li>
+                        <li>所有已处理的匹配记录</li>
+                    </ul>
+                    <p style="margin-top: 12px; font-weight: 600;">此操作不可撤销！</p>
+                </div>
+                
+                <p style="text-align: center; color: #64748b; margin-bottom: 8px;">请输入 <strong style="color: #dc2626;">确认清除</strong> 以继续</p>
+                <input type="text" class="clear-confirm-input" id="clearConfirmInput" placeholder="请输入：确认清除">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('clearModal')">取消</button>
+                <button class="btn btn-danger" onclick="executeClear()">🗑️ 清空数据</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- v3.0: 标记错误弹窗 -->
+    <div class="modal" id="rejectModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>❌ 标记匹配错误</h2>
+                <button class="modal-close" onclick="closeModal('rejectModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rejectMatchId">
+                <input type="hidden" id="rejectOriginalText">
+                <input type="hidden" id="rejectOriginalType">
+                <input type="hidden" id="rejectMatchedText">
+                <input type="hidden" id="rejectSourceDb">
+                <input type="hidden" id="rejectSourceTable">
+                <input type="hidden" id="rejectSourceId">
+                
+                <div class="info-block" style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-size: 13px; color: #92400e; margin-bottom: 4px;">当前匹配</div>
+                    <div style="font-size: 15px;">
+                        <strong id="rejectDisplayOriginal"></strong> → 
+                        <span id="rejectDisplayMatched" style="color: #dc2626;"></span>
+                        <span id="rejectDisplayScore" style="color: #666; font-size: 12px;"></span>
+                    </div>
+                </div>
+                
+                <p style="font-weight: 600; color: #78350f; margin-bottom: 12px;">这个匹配有什么问题？</p>
+                
+                <div class="reject-options" style="display: flex; flex-direction: column; gap: 10px;">
+                    <label class="reject-option" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f9fafb; border-radius: 8px; cursor: pointer; border: 2px solid transparent;">
+                        <input type="radio" name="rejectAction" value="wrong" checked style="width: 18px; height: 18px;">
+                        <div>
+                            <div style="font-weight: 500;">匹配到错误的词条</div>
+                            <div style="font-size: 12px; color: #666;">选择正确的词条，系统会记住</div>
+                        </div>
+                    </label>
+                    
+                    <label class="reject-option" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f9fafb; border-radius: 8px; cursor: pointer; border: 2px solid transparent;">
+                        <input type="radio" name="rejectAction" value="exclude" style="width: 18px; height: 18px;">
+                        <div>
+                            <div style="font-weight: 500;" id="rejectExcludeLabel">不是短语（识别错误）</div>
+                            <div style="font-size: 12px; color: #666;">下次遇到会自动跳过</div>
+                        </div>
+                    </label>
+                    
+                    <label class="reject-option" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f9fafb; border-radius: 8px; cursor: pointer; border: 2px solid transparent;">
+                        <input type="radio" name="rejectAction" value="new" style="width: 18px; height: 18px;">
+                        <div>
+                            <div style="font-weight: 500;">新建词条</div>
+                            <div style="font-size: 12px; color: #666;">词库里没有，需要新建</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <!-- 选择正确词条的区域（默认隐藏） -->
+                <div id="correctMatchSection" style="margin-top: 16px; padding: 12px; background: #f0fdf4; border-radius: 8px;">
+                    <label style="display: block; font-size: 13px; color: #166534; margin-bottom: 8px; font-weight: 500;">请选择或输入正确的词条：</label>
+                    <input type="text" id="correctMatchSearch" placeholder="搜索词库..." style="width: 100%; padding: 10px; border: 1px solid #86efac; border-radius: 6px; margin-bottom: 8px;">
+                    <select id="correctMatchSelect" style="width: 100%; padding: 10px; border: 1px solid #86efac; border-radius: 6px;">
+                        <option value="">-- 请选择 --</option>
+                    </select>
+                </div>
+                
+                <!-- v5.5 新增：新建词条的输入区域（默认隐藏） -->
+                <div id="newEntrySection" style="margin-top: 16px; padding: 12px; background: #fef3c7; border-radius: 8px; display: none;">
+                    <label style="display: block; font-size: 13px; color: #92400e; margin-bottom: 8px; font-weight: 500;">📝 新建词条</label>
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 12px; color: #78350f; margin-bottom: 4px; display: block;">词条内容 <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="newEntryText" placeholder="输入新词条..." style="width: 100%; padding: 10px; border: 1px solid #fcd34d; border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 12px; color: #78350f; margin-bottom: 4px; display: block;">中文含义 <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="newEntryMeaning" placeholder="输入中文含义..." style="width: 100%; padding: 10px; border: 1px solid #fcd34d; border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 12px; color: #78350f; margin-bottom: 4px; display: block;">例句（选填）</label>
+                        <input type="text" id="newEntryExample" placeholder="输入例句..." style="width: 100%; padding: 10px; border: 1px solid #fcd34d; border-radius: 6px;">
+                    </div>
+                    <p style="font-size: 11px; color: #a16207; margin-top: 8px;">💡 创建后会自动建立匹配关系，下次遇到相同词会直接匹配到这个词条</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('rejectModal')">取消</button>
+                <button class="btn btn-danger" onclick="executeReject()">确认</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- v5.5 新增：排除弹窗（从编辑页面触发） -->
+    <div class="modal" id="excludeModal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2>🚫 排除识别错误</h2>
+                <button class="modal-close" onclick="closeModal('excludeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="excludeItemId">
+                <input type="hidden" id="excludeOriginalText">
+                <input type="hidden" id="excludeOriginalType">
+                
+                <div class="info-block" style="background: #fee2e2; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-size: 13px; color: #991b1b; margin-bottom: 4px;">将被排除</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #7f1d1d;" id="excludeDisplayText"></div>
+                    <div style="font-size: 12px; color: #991b1b; margin-top: 4px;" id="excludeDisplayType"></div>
+                </div>
+                
+                <p style="font-size: 14px; color: #374151; margin-bottom: 12px;">
+                    排除后，下次遇到 <strong id="excludeDisplayText2"></strong> 时会自动跳过，不再识别为<span id="excludeDisplayType2"></span>。
+                </p>
+                
+                <div style="background: #f0fdf4; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-weight: 500; color: #166534; margin-bottom: 8px;">📝 提取单词入库（可选）</div>
+                    <div style="font-size: 12px; color: #15803d; margin-bottom: 12px;">勾选需要提取的单词，已在词库中的会自动跳过</div>
+                    <div id="extractWordCheckboxes" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <!-- 动态生成的checkbox列表 -->
+                    </div>
+                    <div id="noWordsToExtract" style="display: none; color: #64748b; font-size: 13px; padding: 8px 0;">
+                        没有可提取的单词
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('excludeModal')">取消</button>
+                <button class="btn btn-danger" onclick="executeExcludeFromEdit()">🚫 确认排除</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="toast" id="toast"></div>
     
     <script>
         const API_BASE = '/api/processing-log';
+        const MATCHING_DICT_API = '/api/matching-dict';  // v3.0: 匹配词典API
         
         // 页面加载
         document.addEventListener('DOMContentLoaded', () => {
@@ -765,9 +953,10 @@
                                     <span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-size:11px;">
                                         ${(m.match_score * 100).toFixed(0)}%
                                     </span>
+                                    <span style="font-size:11px;color:#94a3b8;">${formatTime(m.created_at)}</span>
                                     <span style="flex:1;"></span>
-                                    <button class="btn btn-success btn-sm" onclick="confirmMatch(${m.id})">✓ 确认</button>
-                                    <button class="btn btn-danger btn-sm" onclick="rejectMatch(${m.id})">✗ 错误</button>
+                                    <button class="btn btn-success btn-sm" onclick="confirmMatch(${m.id}, '${escapeJs(m.original_text)}', '${m.item_type}', '${escapeJs(m.matched_text)}', '${m.source_db || 'vocabulary'}', '${m.source_table || ''}', ${m.source_id || 0})">✓ 确认</button>
+                                    <button class="btn btn-danger btn-sm" onclick="rejectMatch(${m.id}, '${escapeJs(m.original_text)}', '${m.item_type}', '${escapeJs(m.matched_text)}', ${m.match_score || 0}, '${m.source_db || 'vocabulary'}', '${m.source_table || ''}', ${m.source_id || 0})">✗ 错误</button>
                                 </div>
                             `).join('')}
                         </div>
@@ -781,6 +970,7 @@
                                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
                                         <span style="font-weight:500;">${escapeHtml(u.original_text)}</span>
                                         <span class="item-type">${getTypeLabel(u.item_type)}</span>
+                                        <span style="font-size:11px;color:#94a3b8;">${formatTime(u.created_at)}</span>
                                         <span style="flex:1;"></span>
                                         <button class="btn btn-primary btn-sm" onclick="editUnmatched(${u.id})">✎ 编辑</button>
                                         <button class="btn btn-success btn-sm" onclick="importUnmatched(${u.id})">📥 入库</button>
@@ -827,12 +1017,12 @@
                                 <span class="item-type">${getTypeLabel(m.item_type)}</span>
                             </div>
                             <div style="font-size:12px;color:#94a3b8;">
-                                来自: ${escapeHtml(m.username || '匿名')} · ${escapeHtml(m.file_name || '')}
+                                来自: ${escapeHtml(m.username || '匿名')} · ${escapeHtml(m.file_name || '')} · <span style="color:#f59e0b;">${formatTime(m.created_at)}</span>
                             </div>
                         </div>
                         <div class="item-actions">
-                            <button class="btn btn-success btn-sm" onclick="confirmMatch(${m.id})">✓ 确认正确</button>
-                            <button class="btn btn-danger btn-sm" onclick="rejectMatch(${m.id})">✗ 标记错误</button>
+                            <button class="btn btn-success btn-sm" onclick="confirmMatch(${m.id}, '${escapeJs(m.original_text)}', '${m.item_type}', '${escapeJs(m.matched_text)}', '${m.source_db || 'vocabulary'}', '${m.source_table || ''}', ${m.source_id || 0})">✓ 确认正确</button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectMatch(${m.id}, '${escapeJs(m.original_text)}', '${m.item_type}', '${escapeJs(m.matched_text)}', ${m.match_score || 0}, '${m.source_db || 'vocabulary'}', '${m.source_table || ''}', ${m.source_id || 0})">✗ 标记错误</button>
                         </div>
                     </div>
                 `).join('');
@@ -871,7 +1061,7 @@
                                 </div>
                             ` : ''}
                             <div style="font-size:12px;color:#94a3b8;margin-top:6px;">
-                                来自: ${escapeHtml(u.username || '匿名')} · ${escapeHtml(u.file_name || '')}
+                                来自: ${escapeHtml(u.username || '匿名')} · ${escapeHtml(u.file_name || '')} · <span style="color:#f59e0b;">${formatTime(u.created_at)}</span>
                             </div>
                         </div>
                         <div class="item-actions">
@@ -887,16 +1077,39 @@
         }
         
         // 确认匹配
-        async function confirmMatch(id) {
+        // v3.0: 同时保存到匹配词典
+        async function confirmMatch(id, originalText, originalType, matchedText, sourceDb, sourceTable, sourceId) {
             try {
+                // 1. 确认匹配
                 const res = await fetch(API_BASE + '/matches/' + id + '/confirm', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ reviewedBy: 'admin' })
                 });
                 const data = await res.json();
+                
                 if (data.success) {
-                    showToast('已确认', 'success');
+                    // 2. v3.0: 保存到匹配词典
+                    try {
+                        await fetch(MATCHING_DICT_API + '/confirm-match', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                original_text: originalText,
+                                original_type: originalType,
+                                target_db: sourceDb ? sourceDb + '.db' : 'vocabulary.db',
+                                target_table: sourceTable,
+                                target_id: sourceId,
+                                target_text: matchedText,
+                                created_by: 'admin'
+                            })
+                        });
+                        console.log('[匹配词典] 已保存:', originalText, '→', matchedText);
+                    } catch (dictErr) {
+                        console.error('[匹配词典] 保存失败:', dictErr);
+                    }
+                    
+                    showToast('已确认并记录到匹配词典', 'success');
                     loadStats();
                     loadPendingMatches();
                 } else {
@@ -908,24 +1121,291 @@
         }
         
         // 标记匹配错误
-        async function rejectMatch(id) {
-            if (!confirm('确定标记此匹配为错误？')) return;
+        // v3.0: 显示选择弹窗
+        function rejectMatch(id, originalText, originalType, matchedText, score, sourceDb, sourceTable, sourceId) {
+            // 填充弹窗数据
+            document.getElementById('rejectMatchId').value = id;
+            document.getElementById('rejectOriginalText').value = originalText;
+            document.getElementById('rejectOriginalType').value = originalType;
+            document.getElementById('rejectMatchedText').value = matchedText;
+            document.getElementById('rejectSourceDb').value = sourceDb || '';
+            document.getElementById('rejectSourceTable').value = sourceTable || '';
+            document.getElementById('rejectSourceId').value = sourceId || '';
+            
+            // 显示信息
+            document.getElementById('rejectDisplayOriginal').textContent = originalText;
+            document.getElementById('rejectDisplayMatched').textContent = matchedText;
+            document.getElementById('rejectDisplayScore').textContent = score ? `(${Math.round(score * 100)}%)` : '';
+            
+            // 更新"不是XX"的标签
+            const typeLabels = {
+                'word': '不是单词（识别错误）',
+                'phrase': '不是短语（识别错误）',
+                'pattern': '不是句型（识别错误）',
+                'grammar': '不是语法（识别错误）'
+            };
+            document.getElementById('rejectExcludeLabel').textContent = typeLabels[originalType] || '不是该类型（识别错误）';
+            
+            // 重置选项
+            document.querySelector('input[name="rejectAction"][value="wrong"]').checked = true;
+            document.getElementById('correctMatchSection').style.display = 'block';
+            
+            // v5.5 新增：重置新建词条区域
+            document.getElementById('newEntrySection').style.display = 'none';
+            document.getElementById('newEntryText').value = originalText;  // 预填原文
+            document.getElementById('newEntryMeaning').value = '';
+            document.getElementById('newEntryExample').value = '';
+            
+            // 加载词库选项
+            loadVocabularyOptions(originalType);
+            
+            // 显示弹窗
+            document.getElementById('rejectModal').classList.add('active');
+            
+            // 监听选项变化
+            document.querySelectorAll('input[name="rejectAction"]').forEach(radio => {
+                radio.onchange = function() {
+                    // v5.5 修改：根据选项显示不同区域
+                    document.getElementById('correctMatchSection').style.display = 
+                        this.value === 'wrong' ? 'block' : 'none';
+                    document.getElementById('newEntrySection').style.display = 
+                        this.value === 'new' ? 'block' : 'none';
+                };
+            });
+        }
+        
+        // 加载词库选项
+        async function loadVocabularyOptions(type) {
+            const select = document.getElementById('correctMatchSelect');
+            select.innerHTML = '<option value="">加载中...</option>';
             
             try {
-                const res = await fetch(API_BASE + '/matches/' + id + '/reject', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reviewedBy: 'admin' })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('已标记为错误', 'success');
-                    loadStats();
-                    loadPendingMatches();
+                let url = '';
+                if (type === 'grammar') {
+                    url = '/api/grammar';
                 } else {
-                    showToast(data.error || '操作失败', 'error');
+                    url = `/api/vocabulary/${type}s`;  // words, phrases, patterns
+                }
+                
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (data.success && data.data) {
+                    const items = data.data.slice(0, 200);  // 限制数量
+                    select.innerHTML = '<option value="">-- 请选择 --</option>' +
+                        items.map(item => {
+                            const text = item.word || item.phrase || item.pattern || item.title;
+                            const db = type === 'grammar' ? 'grammar' : 'vocabulary';
+                            const table = type === 'grammar' ? 'grammar' : (type + 's');
+                            return `<option value="${item.id}|${db}|${table}|${text}">${text}</option>`;
+                        }).join('');
                 }
             } catch (e) {
+                select.innerHTML = '<option value="">加载失败</option>';
+            }
+        }
+        
+        // 执行标记错误操作
+        async function executeReject() {
+            const action = document.querySelector('input[name="rejectAction"]:checked').value;
+            const matchId = document.getElementById('rejectMatchId').value;
+            const originalText = document.getElementById('rejectOriginalText').value;
+            const originalType = document.getElementById('rejectOriginalType').value;
+            
+            try {
+                if (action === 'exclude') {
+                    // 排除：添加到匹配词典
+                    const res = await fetch(MATCHING_DICT_API + '/exclude', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            original_text: originalText,
+                            original_type: originalType,
+                            notes: `不是${getTypeLabel(originalType)}`,
+                            created_by: 'admin'
+                        })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        // 同时标记原匹配为错误
+                        await fetch(API_BASE + '/matches/' + matchId + '/reject', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reviewedBy: 'admin', notes: '已添加到排除名单' })
+                        });
+                        
+                        showToast('已添加到排除名单，下次会自动跳过', 'success');
+                    } else {
+                        showToast(data.error || '操作失败', 'error');
+                        return;
+                    }
+                } else if (action === 'wrong') {
+                    // 选择正确的词条
+                    const selected = document.getElementById('correctMatchSelect').value;
+                    if (!selected) {
+                        showToast('请选择正确的词条', 'error');
+                        return;
+                    }
+                    
+                    const [targetId, targetDb, targetTable, targetText] = selected.split('|');
+                    
+                    // 添加到匹配词典
+                    const res = await fetch(MATCHING_DICT_API + '/confirm-match', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            original_text: originalText,
+                            original_type: originalType,
+                            target_db: targetDb + '.db',
+                            target_table: targetTable,
+                            target_id: parseInt(targetId),
+                            target_text: targetText,
+                            created_by: 'admin'
+                        })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        // 标记原匹配为错误
+                        await fetch(API_BASE + '/matches/' + matchId + '/reject', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reviewedBy: 'admin', notes: '已修正为: ' + targetText })
+                        });
+                        
+                        showToast('已修正并记录到匹配词典', 'success');
+                    } else {
+                        showToast(data.error || '操作失败', 'error');
+                        return;
+                    }
+                } else if (action === 'new') {
+                    // v5.5 重写：新建词条并保存匹配关系
+                    const newText = document.getElementById('newEntryText').value.trim();
+                    const newMeaning = document.getElementById('newEntryMeaning').value.trim();
+                    const newExample = document.getElementById('newEntryExample').value.trim();
+                    
+                    if (!newText) {
+                        showToast('请输入词条内容', 'error');
+                        return;
+                    }
+                    if (!newMeaning) {
+                        showToast('请输入中文含义', 'error');
+                        return;
+                    }
+                    
+                    // 根据类型确定API和数据格式
+                    let apiUrl = '';
+                    let postData = {};
+                    let targetTable = '';
+                    let targetDb = '';
+                    
+                    if (originalType === 'grammar') {
+                        apiUrl = '/api/grammar';
+                        postData = {
+                            title: newText,
+                            keywords: [newText],
+                            definition: newMeaning,
+                            structure: '',
+                            usage: [],
+                            examples: newExample ? [newExample] : [],
+                            mistakes: [],
+                            category: '其他'
+                        };
+                        targetTable = 'grammar';
+                        targetDb = 'grammar';
+                    } else if (originalType === 'phrase') {
+                        apiUrl = '/api/vocabulary/phrases';
+                        postData = {
+                            phrase: newText,
+                            meaning: newMeaning,
+                            example: newExample,
+                            category: '其他'
+                        };
+                        targetTable = 'phrases';
+                        targetDb = 'vocabulary';
+                    } else if (originalType === 'pattern') {
+                        apiUrl = '/api/vocabulary/patterns';
+                        postData = {
+                            pattern: newText,
+                            meaning: newMeaning,
+                            example: newExample,
+                            category: '其他'
+                        };
+                        targetTable = 'patterns';
+                        targetDb = 'vocabulary';
+                    } else {
+                        // 默认当作单词
+                        apiUrl = '/api/vocabulary/words';
+                        postData = {
+                            word: newText,
+                            phonetic: '',
+                            pos: '',
+                            meaning: newMeaning,
+                            example: newExample,
+                            category: '其他'
+                        };
+                        targetTable = 'words';
+                        targetDb = 'vocabulary';
+                    }
+                    
+                    // 1. 创建新词条
+                    const createRes = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(postData)
+                    });
+                    const createData = await createRes.json();
+                    
+                    if (!createData.success) {
+                        showToast(createData.error || '创建词条失败', 'error');
+                        return;
+                    }
+                    
+                    const newId = createData.id;
+                    console.log(`[新建词条] 创建成功: ${newText} (ID: ${newId})`);
+                    
+                    // 2. 保存到匹配词典
+                    const dictRes = await fetch(MATCHING_DICT_API + '/confirm-match', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            original_text: originalText,
+                            original_type: originalType,
+                            target_db: targetDb + '.db',
+                            target_table: targetTable,
+                            target_id: newId,
+                            target_text: newText,
+                            created_by: 'admin'
+                        })
+                    });
+                    const dictData = await dictRes.json();
+                    
+                    if (!dictData.success) {
+                        console.warn('[匹配词典] 保存失败:', dictData.error);
+                        // 词条已创建，即使词典保存失败也继续
+                    } else {
+                        console.log('[匹配词典] 已保存:', originalText, '→', newText);
+                    }
+                    
+                    // 3. 标记原匹配为错误
+                    await fetch(API_BASE + '/matches/' + matchId + '/reject', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            reviewedBy: 'admin', 
+                            notes: '已新建词条: ' + newText 
+                        })
+                    });
+                    
+                    showToast(`新建成功！"${newText}" 已添加到${getTypeLabel(originalType)}库`, 'success');
+                }
+                
+                closeModal('rejectModal');
+                loadStats();
+                loadPendingMatches();
+            } catch (e) {
+                console.error('操作失败:', e);
                 showToast('操作失败', 'error');
             }
         }
@@ -934,7 +1414,6 @@
         async function confirmAllMatches() {
             if (!confirm('确定将所有待审核的模糊匹配标记为正确？')) return;
             
-            // 获取所有待审核项并逐个确认
             try {
                 const res = await fetch(API_BASE + '/pending-matches');
                 const data = await res.json();
@@ -955,6 +1434,55 @@
             } catch (e) {
                 showToast('操作失败', 'error');
             }
+        }
+        
+        /**
+         * v5.5 新增：格式化词性和含义
+         * 将 "n./v." + "工作 / 工作" 格式化为 "n.工作；v.工作"
+         */
+        function formatPosAndMeaning(pos, meaning) {
+            if (!pos || !meaning) {
+                return { pos: pos || '', meaning: meaning || '' };
+            }
+            
+            // 如果词性不包含分隔符，直接返回原始值
+            if (!pos.includes('/') && !pos.includes('、') && !pos.includes(',')) {
+                return { pos, meaning };
+            }
+            
+            // 分割词性（支持 / 、 , 分隔符）
+            const posList = pos.split(/[\/、,]/).map(p => p.trim()).filter(p => p);
+            
+            // 分割含义（支持 / 、 ; 分隔符，但要避免拆分中文分号内的内容）
+            // 优先用 / 分割，因为AI通常用 / 分隔不同词性的含义
+            let meaningList = meaning.split(/\s*\/\s*/).map(m => m.trim()).filter(m => m);
+            
+            // 如果 / 分割后数量不匹配，尝试用其他方式
+            if (meaningList.length !== posList.length) {
+                // 可能整个含义是一体的，不需要分割
+                meaningList = [meaning];
+            }
+            
+            // 如果词性和含义数量匹配，配对合并
+            if (posList.length > 1 && meaningList.length === posList.length) {
+                let combined = [];
+                for (let i = 0; i < posList.length; i++) {
+                    // 确保词性以 . 结尾
+                    let p = posList[i];
+                    if (!p.endsWith('.')) p += '.';
+                    combined.push(`${p}${meaningList[i]}`);
+                }
+                return { pos: '', meaning: combined.join('；') };
+            }
+            
+            // 如果只有一个含义但多个词性，把所有词性放前面
+            if (posList.length > 1 && meaningList.length === 1) {
+                let posStr = posList.map(p => p.endsWith('.') ? p : p + '.').join('/');
+                return { pos: posStr, meaning: meaning };
+            }
+            
+            // 其他情况返回原始值
+            return { pos, meaning };
         }
         
         // 编辑未匹配项
@@ -989,48 +1517,57 @@
                     document.getElementById('vocabFields').style.display = 'block';
                     document.getElementById('grammarFields').style.display = 'none';
                     document.getElementById('editPhonetic').value = content.phonetic || '';
-                    document.getElementById('editPos').value = content.pos || '';
-                    document.getElementById('editMeaning').value = content.meaning || '';
+                    
+                    // v5.5: 自动格式化词性和含义
+                    const formatted = formatPosAndMeaning(content.pos, content.meaning);
+                    document.getElementById('editPos').value = formatted.pos;
+                    document.getElementById('editMeaning').value = formatted.meaning;
+                    
                     document.getElementById('editExample').value = content.example || '';
                 }
                 
                 document.getElementById('editModal').classList.add('active');
+                
+                // v5.5: 更新排除按钮文字
+                const typeLabels = {
+                    'word': '不是单词',
+                    'phrase': '不是短语',
+                    'pattern': '不是句型',
+                    'grammar': '不是语法'
+                };
+                document.getElementById('excludeBtn').textContent = '🚫 ' + (typeLabels[item.item_type] || '排除') + '（排除）';
             } catch (e) {
                 showToast('加载失败', 'error');
             }
         }
         
-        // 类型切换时更新表单
-        document.getElementById('editTargetType')?.addEventListener('change', function() {
-            if (this.value === 'grammar') {
-                document.getElementById('vocabFields').style.display = 'none';
-                document.getElementById('grammarFields').style.display = 'block';
-            } else {
-                document.getElementById('vocabFields').style.display = 'block';
-                document.getElementById('grammarFields').style.display = 'none';
-            }
-        });
-        
         // 保存编辑
         async function saveEdit() {
             const id = document.getElementById('editItemId').value;
+            const itemType = document.getElementById('editItemType').value;
             const targetType = document.getElementById('editTargetType').value;
             
             let editedContent = {
-                category: document.getElementById('editCategory').value.trim()
+                category: document.getElementById('editCategory').value
             };
             
             if (targetType === 'grammar') {
-                editedContent.definition = document.getElementById('editDefinition').value.trim();
-                editedContent.structure = document.getElementById('editStructure').value.trim();
-                editedContent.usage = document.getElementById('editUsage').value.trim().split('\n').filter(s => s.trim());
-                editedContent.examples = document.getElementById('editExamples').value.trim().split('\n').filter(s => s.trim());
-                editedContent.mistakes = document.getElementById('editMistakes').value.trim().split('\n').filter(s => s.trim());
+                editedContent.definition = document.getElementById('editDefinition').value;
+                editedContent.structure = document.getElementById('editStructure').value;
+                editedContent.usage = document.getElementById('editUsage').value.split('\n').filter(s => s.trim());
+                editedContent.examples = document.getElementById('editExamples').value.split('\n').filter(s => s.trim());
+                editedContent.mistakes = document.getElementById('editMistakes').value.split('\n').filter(s => s.trim());
             } else {
-                editedContent.phonetic = document.getElementById('editPhonetic').value.trim();
-                editedContent.pos = document.getElementById('editPos').value.trim();
-                editedContent.meaning = document.getElementById('editMeaning').value.trim();
-                editedContent.example = document.getElementById('editExample').value.trim();
+                editedContent.phonetic = document.getElementById('editPhonetic').value;
+                editedContent.pos = document.getElementById('editPos').value;
+                editedContent.meaning = document.getElementById('editMeaning').value;
+                editedContent.example = document.getElementById('editExample').value;
+            }
+            
+            // v5.5: 新建模式（从排除弹窗触发）
+            if (!id) {
+                // 新建模式，不需要保存到unmatched，返回编辑内容供入库使用
+                return editedContent;
             }
             
             try {
@@ -1042,7 +1579,6 @@
                 const data = await res.json();
                 if (data.success) {
                     showToast('保存成功', 'success');
-                    closeModal('editModal');
                     loadPendingUnmatched();
                 } else {
                     showToast(data.error || '保存失败', 'error');
@@ -1050,13 +1586,74 @@
             } catch (e) {
                 showToast('保存失败', 'error');
             }
+            
+            return editedContent;
         }
         
         // 保存并入库
         async function saveAndImport() {
-            await saveEdit();
             const id = document.getElementById('editItemId').value;
             const targetType = document.getElementById('editTargetType').value;
+            const originalText = document.getElementById('editOriginalText').textContent;
+            
+            // v5.5: 新建模式（从排除弹窗触发）
+            if (!id) {
+                const editedContent = await saveEdit();
+                
+                // 验证必填字段
+                if (!editedContent.meaning) {
+                    showToast('请填写含义', 'error');
+                    return;
+                }
+                
+                try {
+                    // 直接调用词库API创建新单词
+                    const wordRes = await fetch('/api/vocabulary/words', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            word: originalText,
+                            phonetic: editedContent.phonetic || '',
+                            pos: editedContent.pos || '',
+                            meaning: editedContent.meaning,
+                            example: editedContent.example || '',
+                            category: editedContent.category || '其他'
+                        })
+                    });
+                    const wordData = await wordRes.json();
+                    
+                    if (wordData.success) {
+                        showToast(`单词 "${originalText}" 入库成功！`, 'success');
+                        closeModal('editModal', true);  // skipCheck=true 避免重复询问
+                        
+                        // 恢复弹窗标题和排除按钮
+                        document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑数据';
+                        document.getElementById('excludeBtn').style.display = 'block';
+                        
+                        // 继续处理下一个待处理的单词
+                        if (window._pendingNewWords && window._pendingNewWordsIndex < window._pendingNewWords.length) {
+                            setTimeout(() => {
+                                processNextNewWord();
+                            }, 300);
+                        } else {
+                            // 清理状态
+                            window._pendingNewWords = null;
+                            window._pendingNewWordsIndex = 0;
+                            loadStats();
+                            loadPendingUnmatched();
+                        }
+                    } else {
+                        showToast(wordData.error || '入库失败', 'error');
+                    }
+                } catch (e) {
+                    console.error('入库失败:', e);
+                    showToast('入库失败', 'error');
+                }
+                return;
+            }
+            
+            // 正常模式：先保存再入库
+            await saveEdit();
             await doImport(id, targetType);
         }
         
@@ -1110,9 +1707,311 @@
             }
         }
         
+        // ============================================
+        // v5.5 新增：从编辑页面排除（不是短语/单词等）
+        // ============================================
+        
+        /**
+         * 拆分文本为单词列表，过滤占位符
+         * "protect sth." → ["protect"]
+         * "look after sb." → ["look", "after"]
+         */
+        function splitWordsForExtract(text) {
+            if (!text) return [];
+            
+            // 只过滤简写占位符（保留 oneself、done、to do 等真正的单词）
+            const placeholders = ['sth.', 'sth', 'sb.', 'sb', "one's"];
+            
+            // 按空格拆分
+            const words = text.split(/\s+/).map(w => w.trim()).filter(w => w);
+            
+            // 过滤占位符
+            return words.filter(w => {
+                const lower = w.toLowerCase().replace(/[.,;:!?]$/, '');
+                return !placeholders.includes(lower) && !placeholders.includes(w.toLowerCase());
+            });
+        }
+        
+        /**
+         * 打开排除弹窗
+         */
+        function openExcludeModal() {
+            const id = document.getElementById('editItemId').value;
+            const originalText = document.getElementById('editOriginalText').textContent;
+            const itemType = document.getElementById('editItemType').value;
+            
+            // 填充数据
+            document.getElementById('excludeItemId').value = id;
+            document.getElementById('excludeOriginalText').value = originalText;
+            document.getElementById('excludeOriginalType').value = itemType;
+            
+            // 显示信息
+            document.getElementById('excludeDisplayText').textContent = originalText;
+            document.getElementById('excludeDisplayText2').textContent = originalText;
+            
+            const typeLabel = getTypeLabel(itemType);
+            document.getElementById('excludeDisplayType').textContent = `识别为：${typeLabel}`;
+            document.getElementById('excludeDisplayType2').textContent = typeLabel;
+            
+            // 拆分单词并生成checkbox
+            const words = splitWordsForExtract(originalText);
+            const checkboxContainer = document.getElementById('extractWordCheckboxes');
+            const noWordsMsg = document.getElementById('noWordsToExtract');
+            
+            if (words.length === 0) {
+                checkboxContainer.innerHTML = '';
+                checkboxContainer.style.display = 'none';
+                noWordsMsg.style.display = 'block';
+            } else {
+                noWordsMsg.style.display = 'none';
+                checkboxContainer.style.display = 'flex';
+                checkboxContainer.innerHTML = words.map((word, idx) => `
+                    <label style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: white; border: 1px solid #86efac; border-radius: 6px; cursor: pointer;">
+                        <input type="checkbox" name="extractWord" value="${escapeHtml(word)}" style="width: 16px; height: 16px;">
+                        <span style="color: #166534; font-weight: 500;">${escapeHtml(word)}</span>
+                    </label>
+                `).join('');
+            }
+            
+            // 显示弹窗
+            document.getElementById('excludeModal').classList.add('active');
+        }
+        
+        /**
+         * 执行排除操作（批量处理）
+         */
+        async function executeExcludeFromEdit() {
+            const id = document.getElementById('excludeItemId').value;
+            const originalText = document.getElementById('excludeOriginalText').value;
+            const originalType = document.getElementById('excludeOriginalType').value;
+            
+            // 获取勾选的单词
+            const checkedWords = [];
+            document.querySelectorAll('input[name="extractWord"]:checked').forEach(cb => {
+                checkedWords.push(cb.value);
+            });
+            
+            try {
+                // 1. 添加到排除名单
+                const excludeRes = await fetch(MATCHING_DICT_API + '/exclude', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        original_text: originalText,
+                        original_type: originalType,
+                        notes: `不是${getTypeLabel(originalType)}，已排除`,
+                        created_by: 'admin'
+                    })
+                });
+                const excludeData = await excludeRes.json();
+                
+                if (!excludeData.success) {
+                    showToast(excludeData.error || '排除失败', 'error');
+                    return;
+                }
+                
+                console.log(`[排除] 已添加: ${originalText} (${originalType})`);
+                
+                // 2. 标记原记录为已忽略
+                await fetch(API_BASE + '/unmatched/' + id + '/ignore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        reviewedBy: 'admin',
+                        notes: checkedWords.length > 0 
+                            ? `已排除，待提取: ${checkedWords.join(', ')}` 
+                            : '已排除'
+                    })
+                });
+                
+                // 3. 如果有勾选的单词，批量查询词库
+                if (checkedWords.length > 0) {
+                    // 查询词库中已存在的单词
+                    const existingWords = [];
+                    const newWords = [];
+                    
+                    for (const word of checkedWords) {
+                        try {
+                            // 搜索词库
+                            const searchRes = await fetch(`/api/vocabulary/words?search=${encodeURIComponent(word)}&limit=100`);
+                            const searchData = await searchRes.json();
+                            
+                            // 检查是否有精确匹配
+                            let exists = false;
+                            if (searchData.success && searchData.data) {
+                                exists = searchData.data.some(item => 
+                                    item.word && item.word.toLowerCase() === word.toLowerCase()
+                                );
+                            }
+                            
+                            if (exists) {
+                                existingWords.push(word);
+                            } else {
+                                newWords.push(word);
+                            }
+                        } catch (e) {
+                            console.warn(`[查询] 查询失败: ${word}`, e);
+                            newWords.push(word);  // 查询失败当作不存在
+                        }
+                    }
+                    
+                    // 关闭排除弹窗
+                    closeModal('excludeModal');
+                    closeModal('editModal');
+                    
+                    // 提示已存在的单词
+                    if (existingWords.length > 0) {
+                        showToast(`词库已有: ${existingWords.join(', ')}，不需要重复入库`, 'success');
+                    }
+                    
+                    // 处理新单词：逐个打开编辑弹窗
+                    if (newWords.length > 0) {
+                        // 保存待处理的新单词列表
+                        window._pendingNewWords = newWords;
+                        window._pendingNewWordsIndex = 0;
+                        
+                        // 开始处理第一个
+                        setTimeout(() => {
+                            processNextNewWord();
+                        }, 500);
+                    } else {
+                        loadStats();
+                        loadPendingUnmatched();
+                    }
+                } else {
+                    // 没有勾选任何单词，直接完成
+                    closeModal('excludeModal');
+                    closeModal('editModal');
+                    showToast('已排除！下次不会再识别为' + getTypeLabel(originalType), 'success');
+                    loadStats();
+                    loadPendingUnmatched();
+                }
+                
+            } catch (e) {
+                console.error('排除操作失败:', e);
+                showToast('操作失败', 'error');
+            }
+        }
+        
+        /**
+         * 处理下一个新单词（打开编辑弹窗）
+         */
+        function processNextNewWord() {
+            if (!window._pendingNewWords || window._pendingNewWordsIndex >= window._pendingNewWords.length) {
+                // 全部处理完成，清理状态
+                window._pendingNewWords = null;
+                window._pendingNewWordsIndex = 0;
+                showToast('所有单词处理完成！', 'success');
+                loadStats();
+                loadPendingUnmatched();
+                return;
+            }
+            
+            const word = window._pendingNewWords[window._pendingNewWordsIndex];
+            window._pendingNewWordsIndex++;
+            
+            const remaining = window._pendingNewWords.length - window._pendingNewWordsIndex;
+            
+            // 打开编辑弹窗，预填单词
+            document.getElementById('editItemId').value = '';  // 新建模式
+            document.getElementById('editItemType').value = 'word';
+            document.getElementById('editOriginalText').textContent = word;
+            document.getElementById('editTargetType').value = 'word';
+            document.getElementById('editCategory').value = '';
+            
+            // 显示词汇字段
+            document.getElementById('vocabFields').style.display = 'block';
+            document.getElementById('grammarFields').style.display = 'none';
+            document.getElementById('editPhonetic').value = '';
+            document.getElementById('editPos').value = '';
+            document.getElementById('editMeaning').value = '';
+            document.getElementById('editExample').value = '';
+            
+            // 修改弹窗标题提示还有多少个待处理
+            const modalHeader = document.querySelector('#editModal .modal-header h2');
+            if (remaining > 0) {
+                modalHeader.textContent = `✎ 新建单词 (还有 ${remaining} 个待处理)`;
+            } else {
+                modalHeader.textContent = `✎ 新建单词`;
+            }
+            
+            // 隐藏排除按钮（新建模式不需要）
+            document.getElementById('excludeBtn').style.display = 'none';
+            
+            // 显示弹窗
+            document.getElementById('editModal').classList.add('active');
+        }
+        
+        // ============================================
+        // 清空数据功能
+        // ============================================
+        
+        function openClearModal() {
+            document.getElementById('clearConfirmInput').value = '';
+            document.getElementById('clearModal').classList.add('active');
+        }
+        
+        async function executeClear() {
+            const input = document.getElementById('clearConfirmInput').value.trim();
+            
+            if (input !== '确认清除') {
+                showToast('请输入正确的确认文字：确认清除', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch(API_BASE + '/clear-all', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ confirm: '确认清除' })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // v5.2 修复：显示完整的删除数量（包括任务）
+                    const total = (data.deleted.matched || 0) + (data.deleted.unmatched || 0) + (data.deleted.tasks || 0);
+                    showToast(`清空成功！已删除 ${data.deleted.tasks || 0} 个任务、${(data.deleted.matched || 0) + (data.deleted.unmatched || 0)} 条记录`, 'success');
+                    closeModal('clearModal');
+                    loadStats();
+                    loadTasks();
+                    loadPendingMatches();
+                    loadPendingUnmatched();
+                } else {
+                    showToast(data.error || '清空失败', 'error');
+                }
+            } catch (e) {
+                showToast('清空失败: ' + e.message, 'error');
+            }
+        }
+        
+        // ============================================
         // 工具函数
-        function closeModal(id) {
+        // ============================================
+        
+        function closeModal(id, skipCheck = false) {
             document.getElementById(id).classList.remove('active');
+            
+            // v5.5: 关闭编辑弹窗时清理新建模式状态
+            if (id === 'editModal') {
+                // 恢复弹窗标题
+                document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑数据';
+                // 恢复排除按钮
+                document.getElementById('excludeBtn').style.display = 'block';
+                
+                // 如果是用户手动关闭（不是程序调用），且还有待处理的单词，询问是否继续
+                if (!skipCheck && window._pendingNewWords && window._pendingNewWordsIndex < window._pendingNewWords.length) {
+                    const remaining = window._pendingNewWords.length - window._pendingNewWordsIndex;
+                    if (confirm(`还有 ${remaining} 个单词待处理，是否继续？`)) {
+                        setTimeout(() => processNextNewWord(), 100);
+                    } else {
+                        // 用户取消，清理状态
+                        window._pendingNewWords = null;
+                        window._pendingNewWordsIndex = 0;
+                        loadStats();
+                        loadPendingUnmatched();
+                    }
+                }
+            }
         }
         
         function showToast(msg, type) {
@@ -1129,15 +2028,46 @@
             return div.innerHTML;
         }
         
+        // v3.0: 转义JavaScript字符串
+        function escapeJs(text) {
+            if (!text) return '';
+            return text
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"')
+                .replace(/\n/g, '\\n')
+                .replace(/\r/g, '\\r');
+        }
+        
+        /**
+         * 格式化时间 - v5.4 强制使用北京时间（UTC+8）
+         * 数据库存储的是 UTC 时间，直接加8小时转为北京时间
+         */
         function formatTime(dateStr) {
             if (!dateStr) return '';
-            const date = new Date(dateStr);
-            return date.toLocaleString('zh-CN', {
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            
+            let date;
+            
+            if (dateStr.includes('T') || dateStr.includes('Z')) {
+                date = new Date(dateStr);
+            } else {
+                // 数据库存的是 UTC 时间
+                date = new Date(dateStr.replace(' ', 'T') + 'Z');
+            }
+            
+            if (isNaN(date.getTime())) {
+                return dateStr;
+            }
+            
+            // 强制使用北京时间（UTC+8）
+            const beijingTime = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+            
+            const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+            const hour = String(beijingTime.getUTCHours()).padStart(2, '0');
+            const minute = String(beijingTime.getUTCMinutes()).padStart(2, '0');
+            
+            return `${month}/${day} ${hour}:${minute}`;
         }
         
         function getTypeLabel(type) {

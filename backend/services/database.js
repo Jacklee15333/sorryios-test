@@ -1,10 +1,19 @@
 /**
- * database.js - SQLite 数据库模块
+ * database.js - SQLite 数据库模块 v5.0
+ * 
+ * 📦 重构版本：合并了 user_mastered.db 和 processing_logs.db
  * 
  * 表结构：
- * - users: 用户表
- * - tasks: 任务记录表
- * - files: 文件记录表
+ * - users: 用户表（删除了冗余的 total_tasks/total_files）
+ * - tasks: 任务记录表（新增匹配统计字段）
+ * - logs: 系统日志表
+ * - user_mastered_words: 用户已掌握词汇（从 user_mastered.db 合并）
+ * - matched_items: 匹配记录（从 processing_logs.db 合并）
+ * - unmatched_items: 未匹配记录（从 processing_logs.db 合并）
+ * 
+ * 已删除：
+ * - files 表（1对1场景不需要，tasks 表已存文件信息）
+ * - processing_tasks 表（与 tasks 重复）
  */
 
 const Database = require('better-sqlite3');
@@ -27,23 +36,45 @@ db.pragma('foreign_keys = ON');
  * 初始化数据库表
  */
 function initDatabase() {
-    // 用户表
+    // ============================================
+    // 用户表（v5.0 删除了 total_tasks/total_files 冗余字段）
+    // ============================================
     db.exec(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             email TEXT,
+            nickname TEXT,
             role TEXT DEFAULT 'user',
             status TEXT DEFAULT 'active',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            last_login DATETIME,
-            total_tasks INTEGER DEFAULT 0,
-            total_files INTEGER DEFAULT 0
+            last_login DATETIME
         )
     `);
 
-    // 任务表
+    // 检查 users 表字段，自动添加缺失的字段
+    try {
+        const tableInfo = db.prepare("PRAGMA table_info(users)").all();
+        const columns = tableInfo.map(col => col.name);
+        
+        // 如果存在旧字段，保持兼容
+        if (columns.includes('total_tasks') || columns.includes('total_files')) {
+            console.log('[Database] 检测到旧版本 users 表，保持兼容...');
+        }
+        
+        // 如果缺少 nickname 字段，自动添加
+        if (!columns.includes('nickname')) {
+            db.exec(`ALTER TABLE users ADD COLUMN nickname TEXT`);
+            console.log('[Database] 添加字段: users.nickname');
+        }
+    } catch (e) {
+        console.log('[Database] 检查 users 字段时出错:', e.message);
+    }
+
+    // ============================================
+    // 任务表（v5.0 新增匹配统计字段）
+    // ============================================
     db.exec(`
         CREATE TABLE IF NOT EXISTS tasks (
             id TEXT PRIMARY KEY,
@@ -59,33 +90,49 @@ function initDatabase() {
             output_html TEXT,
             output_md TEXT,
             output_json TEXT,
+            
+            -- v5.0 新增：匹配统计字段（从 processing_tasks 合并）
+            total_items INTEGER DEFAULT 0,
+            exact_match_count INTEGER DEFAULT 0,
+            fuzzy_match_count INTEGER DEFAULT 0,
+            unmatched_count INTEGER DEFAULT 0,
+            
             error_message TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             started_at DATETIME,
             completed_at DATETIME,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
         )
     `);
 
-    // 文件记录表
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS files (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            task_id TEXT,
-            original_name TEXT,
-            stored_name TEXT,
-            file_path TEXT,
-            file_size INTEGER,
-            file_type TEXT,
-            mime_type TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (task_id) REFERENCES tasks(id)
-        )
-    `);
+    // 检查 tasks 表是否有新字段，如果没有则添加
+    try {
+        const tableInfo = db.prepare("PRAGMA table_info(tasks)").all();
+        const columns = tableInfo.map(col => col.name);
+        
+        if (!columns.includes('total_items')) {
+            db.exec(`ALTER TABLE tasks ADD COLUMN total_items INTEGER DEFAULT 0`);
+            console.log('[Database] 添加字段: tasks.total_items');
+        }
+        if (!columns.includes('exact_match_count')) {
+            db.exec(`ALTER TABLE tasks ADD COLUMN exact_match_count INTEGER DEFAULT 0`);
+            console.log('[Database] 添加字段: tasks.exact_match_count');
+        }
+        if (!columns.includes('fuzzy_match_count')) {
+            db.exec(`ALTER TABLE tasks ADD COLUMN fuzzy_match_count INTEGER DEFAULT 0`);
+            console.log('[Database] 添加字段: tasks.fuzzy_match_count');
+        }
+        if (!columns.includes('unmatched_count')) {
+            db.exec(`ALTER TABLE tasks ADD COLUMN unmatched_count INTEGER DEFAULT 0`);
+            console.log('[Database] 添加字段: tasks.unmatched_count');
+        }
+    } catch (e) {
+        console.log('[Database] 检查 tasks 字段时出错:', e.message);
+    }
 
+    // ============================================
     // 系统日志表
+    // ============================================
     db.exec(`
         CREATE TABLE IF NOT EXISTS logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,8 +143,103 @@ function initDatabase() {
             message TEXT,
             details TEXT,
             ip_address TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE SET NULL
         )
+    `);
+
+    // ============================================
+    // v5.0 新增：用户已掌握词汇表（从 user_mastered.db 合并）
+    // ============================================
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS user_mastered_words (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            word TEXT NOT NULL,
+            word_type TEXT DEFAULT 'word',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, word, word_type),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
+
+    // ============================================
+    // v5.0 新增：匹配记录表（从 processing_logs.db 合并）
+    // ============================================
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS matched_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id TEXT NOT NULL,
+            item_type TEXT,
+            original_text TEXT,
+            matched_text TEXT,
+            match_score REAL,
+            source_db TEXT,
+            source_table TEXT,
+            source_id INTEGER,
+            matched_data TEXT,
+            status TEXT DEFAULT 'pending',
+            reviewed_at DATETIME,
+            reviewed_by TEXT,
+            notes TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+        )
+    `);
+
+    // ============================================
+    // v5.0 新增：未匹配记录表（从 processing_logs.db 合并）
+    // ============================================
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS unmatched_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id TEXT NOT NULL,
+            item_type TEXT,
+            original_text TEXT,
+            ai_generated TEXT,
+            status TEXT DEFAULT 'pending',
+            edited_content TEXT,
+            imported_to TEXT,
+            imported_id INTEGER,
+            reviewed_at DATETIME,
+            reviewed_by TEXT,
+            notes TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+        )
+    `);
+
+    // ============================================
+    // 创建索引
+    // ============================================
+    db.exec(`
+        -- users 索引
+        CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+        CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
+        
+        -- tasks 索引
+        CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
+        CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+        CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at);
+        
+        -- logs 索引
+        CREATE INDEX IF NOT EXISTS idx_logs_user_id ON logs(user_id);
+        CREATE INDEX IF NOT EXISTS idx_logs_task_id ON logs(task_id);
+        CREATE INDEX IF NOT EXISTS idx_logs_created_at ON logs(created_at);
+        
+        -- user_mastered_words 索引
+        CREATE INDEX IF NOT EXISTS idx_user_mastered_user_id ON user_mastered_words(user_id);
+        CREATE INDEX IF NOT EXISTS idx_user_mastered_word ON user_mastered_words(word);
+        
+        -- matched_items 索引
+        CREATE INDEX IF NOT EXISTS idx_matched_task_id ON matched_items(task_id);
+        CREATE INDEX IF NOT EXISTS idx_matched_status ON matched_items(status);
+        
+        -- unmatched_items 索引
+        CREATE INDEX IF NOT EXISTS idx_unmatched_task_id ON unmatched_items(task_id);
+        CREATE INDEX IF NOT EXISTS idx_unmatched_status ON unmatched_items(status);
     `);
 
     // 创建默认管理员账号（如果不存在）
@@ -121,7 +263,7 @@ const UserDB = {
     // 获取所有用户
     getAll() {
         return db.prepare(`
-            SELECT id, username, email, role, status, created_at, last_login, total_tasks, total_files
+            SELECT id, username, email, nickname, role, status, created_at, last_login
             FROM users ORDER BY created_at DESC
         `).all();
     },
@@ -139,13 +281,14 @@ const UserDB = {
     // 创建用户
     create(data) {
         const stmt = db.prepare(`
-            INSERT INTO users (username, password, email, role, status)
-            VALUES (@username, @password, @email, @role, @status)
+            INSERT INTO users (username, password, email, nickname, role, status)
+            VALUES (@username, @password, @email, @nickname, @role, @status)
         `);
         const result = stmt.run({
             username: data.username,
             password: data.password || '123456',
             email: data.email || '',
+            nickname: data.nickname || '',
             role: data.role || 'user',
             status: data.status || 'active'
         });
@@ -158,6 +301,7 @@ const UserDB = {
         const values = {};
         
         if (data.email !== undefined) { fields.push('email = @email'); values.email = data.email; }
+        if (data.nickname !== undefined) { fields.push('nickname = @nickname'); values.nickname = data.nickname; }
         if (data.role !== undefined) { fields.push('role = @role'); values.role = data.role; }
         if (data.status !== undefined) { fields.push('status = @status'); values.status = data.status; }
         if (data.password !== undefined) { fields.push('password = @password'); values.password = data.password; }
@@ -179,16 +323,6 @@ const UserDB = {
         return db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(id);
     },
 
-    // 增加任务计数
-    incrementTaskCount(id) {
-        return db.prepare('UPDATE users SET total_tasks = total_tasks + 1 WHERE id = ?').run(id);
-    },
-
-    // 增加文件计数
-    incrementFileCount(id) {
-        return db.prepare('UPDATE users SET total_files = total_files + 1 WHERE id = ?').run(id);
-    },
-
     // 验证登录
     authenticate(username, password) {
         const user = db.prepare('SELECT * FROM users WHERE username = ? AND password = ?').get(username, password);
@@ -198,12 +332,22 @@ const UserDB = {
         return user;
     },
 
-    // 获取统计数据
+    // 获取统计数据（v5.0 改用 COUNT 查询）
     getStats() {
         const total = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
         const active = db.prepare("SELECT COUNT(*) as count FROM users WHERE status = 'active'").get().count;
         const admins = db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'admin'").get().count;
         return { total, active, admins };
+    },
+
+    // v5.0 新增：获取用户的任务数
+    getTaskCount(userId) {
+        return db.prepare('SELECT COUNT(*) as count FROM tasks WHERE user_id = ?').get(userId).count;
+    },
+
+    // v5.0 新增：获取用户的已掌握词汇数
+    getMasteredCount(userId) {
+        return db.prepare('SELECT COUNT(*) as count FROM user_mastered_words WHERE user_id = ?').get(userId).count;
     }
 };
 
@@ -215,7 +359,7 @@ const TaskDB = {
     // 获取所有任务
     getAll(limit = 100) {
         return db.prepare(`
-            SELECT t.*, u.username 
+            SELECT t.*, u.username, u.nickname
             FROM tasks t 
             LEFT JOIN users u ON t.user_id = u.id 
             ORDER BY t.created_at DESC 
@@ -300,6 +444,24 @@ const TaskDB = {
         `).run(errorMessage, id);
     },
 
+    // v5.0 新增：更新匹配统计
+    updateMatchStats(id, stats) {
+        return db.prepare(`
+            UPDATE tasks SET 
+                total_items = ?,
+                exact_match_count = ?,
+                fuzzy_match_count = ?,
+                unmatched_count = ?
+            WHERE id = ?
+        `).run(
+            stats.total || 0,
+            stats.exactMatch || 0,
+            stats.fuzzyMatch || 0,
+            stats.unmatched || 0,
+            id
+        );
+    },
+
     // 删除任务
     delete(id) {
         return db.prepare('DELETE FROM tasks WHERE id = ?').run(id).changes > 0;
@@ -331,7 +493,7 @@ const TaskDB = {
     // 获取最近任务
     getRecent(limit = 10) {
         return db.prepare(`
-            SELECT t.*, u.username 
+            SELECT t.*, u.username, u.nickname
             FROM tasks t 
             LEFT JOIN users u ON t.user_id = u.id 
             ORDER BY t.created_at DESC 
@@ -341,58 +503,426 @@ const TaskDB = {
 };
 
 // ============================================
-// 文件操作
+// v5.0 新增：用户已掌握词汇操作
 // ============================================
 
-const FileDB = {
-    // 创建文件记录
-    create(data) {
+const UserMasteredDB = {
+    /**
+     * 添加已掌握词汇
+     */
+    add(userId, word, wordType = 'word') {
+        try {
+            const stmt = db.prepare(`
+                INSERT OR IGNORE INTO user_mastered_words (user_id, word, word_type)
+                VALUES (?, ?, ?)
+            `);
+            const result = stmt.run(userId, word.toLowerCase().trim(), wordType);
+            return result.changes > 0;
+        } catch (e) {
+            console.error('[UserMasteredDB] 添加失败:', e.message);
+            return false;
+        }
+    },
+
+    /**
+     * 批量添加
+     */
+    addBatch(userId, words) {
         const stmt = db.prepare(`
-            INSERT INTO files (user_id, task_id, original_name, stored_name, file_path, file_size, file_type, mime_type)
-            VALUES (@user_id, @task_id, @original_name, @stored_name, @file_path, @file_size, @file_type, @mime_type)
+            INSERT OR IGNORE INTO user_mastered_words (user_id, word, word_type)
+            VALUES (?, ?, ?)
         `);
-        const result = stmt.run({
-            user_id: data.user_id || null,
-            task_id: data.task_id || null,
-            original_name: data.original_name,
-            stored_name: data.stored_name,
-            file_path: data.file_path,
-            file_size: data.file_size || 0,
-            file_type: data.file_type || 'unknown',
-            mime_type: data.mime_type || 'application/octet-stream'
-        });
-        return result.lastInsertRowid;
-    },
-
-    // 获取所有文件
-    getAll(limit = 100) {
-        return db.prepare(`
-            SELECT f.*, u.username 
-            FROM files f 
-            LEFT JOIN users u ON f.user_id = u.id 
-            ORDER BY f.created_at DESC 
-            LIMIT ?
-        `).all(limit);
-    },
-
-    // 根据用户获取文件
-    getByUserId(userId, limit = 50) {
-        return db.prepare('SELECT * FROM files WHERE user_id = ? ORDER BY created_at DESC LIMIT ?')
-            .all(userId, limit);
-    },
-
-    // 获取统计
-    getStats() {
-        const total = db.prepare('SELECT COUNT(*) as count FROM files').get().count;
-        const totalSize = db.prepare('SELECT SUM(file_size) as size FROM files').get().size || 0;
         
-        const byType = db.prepare(`
-            SELECT file_type, COUNT(*) as count 
-            FROM files 
-            GROUP BY file_type
-        `).all();
+        const insertMany = db.transaction((items) => {
+            let count = 0;
+            for (const item of items) {
+                const result = stmt.run(
+                    userId, 
+                    (item.word || item).toLowerCase().trim(), 
+                    item.type || 'word'
+                );
+                if (result.changes > 0) count++;
+            }
+            return count;
+        });
 
-        return { total, totalSize, byType };
+        return insertMany(words);
+    },
+
+    /**
+     * 移除已掌握词汇
+     */
+    remove(userId, word, wordType = null) {
+        if (wordType) {
+            return db.prepare(`
+                DELETE FROM user_mastered_words 
+                WHERE user_id = ? AND word = ? AND word_type = ?
+            `).run(userId, word.toLowerCase().trim(), wordType).changes > 0;
+        }
+        return db.prepare(`
+            DELETE FROM user_mastered_words 
+            WHERE user_id = ? AND word = ?
+        `).run(userId, word.toLowerCase().trim()).changes > 0;
+    },
+
+    /**
+     * 获取所有已掌握词汇
+     */
+    getAll(userId) {
+        return db.prepare(`
+            SELECT word, word_type, created_at 
+            FROM user_mastered_words 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC
+        `).all(userId);
+    },
+
+    /**
+     * 按类型获取
+     */
+    getByType(userId, wordType) {
+        return db.prepare(`
+            SELECT word, created_at 
+            FROM user_mastered_words 
+            WHERE user_id = ? AND word_type = ?
+            ORDER BY created_at DESC
+        `).all(userId, wordType);
+    },
+
+    /**
+     * 检查是否已掌握
+     */
+    isMastered(userId, word, wordType = null) {
+        if (wordType) {
+            return db.prepare(`
+                SELECT 1 FROM user_mastered_words 
+                WHERE user_id = ? AND word = ? AND word_type = ?
+            `).get(userId, word.toLowerCase().trim(), wordType) !== undefined;
+        }
+        return db.prepare(`
+            SELECT 1 FROM user_mastered_words 
+            WHERE user_id = ? AND word = ?
+        `).get(userId, word.toLowerCase().trim()) !== undefined;
+    },
+
+    /**
+     * 获取已掌握词汇集合（用于快速过滤）
+     */
+    getMasteredSet(userId) {
+        const rows = db.prepare(`
+            SELECT word, word_type FROM user_mastered_words WHERE user_id = ?
+        `).all(userId);
+        
+        const set = {
+            words: new Set(),
+            phrases: new Set(),
+            patterns: new Set(),
+            grammar: new Set(),
+            all: new Set()
+        };
+
+        for (const row of rows) {
+            const key = row.word.toLowerCase().trim();
+            set.all.add(key);
+            
+            switch (row.word_type) {
+                case 'word': set.words.add(key); break;
+                case 'phrase': set.phrases.add(key); break;
+                case 'pattern': set.patterns.add(key); break;
+                case 'grammar': set.grammar.add(key); break;
+            }
+        }
+
+        return set;
+    },
+
+    /**
+     * 统计
+     */
+    getStats(userId) {
+        const total = db.prepare(`
+            SELECT COUNT(*) as count FROM user_mastered_words WHERE user_id = ?
+        `).get(userId).count;
+
+        const byType = db.prepare(`
+            SELECT word_type, COUNT(*) as count 
+            FROM user_mastered_words 
+            WHERE user_id = ? 
+            GROUP BY word_type
+        `).all(userId);
+
+        const stats = { total, words: 0, phrases: 0, patterns: 0, grammar: 0 };
+        for (const row of byType) {
+            stats[row.word_type + 's'] = row.count;
+        }
+
+        return stats;
+    },
+
+    /**
+     * 清空
+     */
+    clear(userId) {
+        return db.prepare(`
+            DELETE FROM user_mastered_words WHERE user_id = ?
+        `).run(userId).changes;
+    }
+};
+
+// ============================================
+// v5.0 新增：匹配记录操作
+// ============================================
+
+const MatchedItemDB = {
+    /**
+     * 添加匹配记录
+     */
+    add(item) {
+        const stmt = db.prepare(`
+            INSERT INTO matched_items (
+                task_id, item_type, original_text, matched_text, match_score,
+                source_db, source_table, source_id, matched_data, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        // 100% 匹配自动确认
+        const status = item.match_score >= 1.0 ? 'auto_confirmed' : 'pending';
+
+        const result = stmt.run(
+            item.task_id,
+            item.item_type,
+            item.original_text,
+            item.matched_text,
+            item.match_score,
+            item.source_db,
+            item.source_table,
+            item.source_id,
+            JSON.stringify(item.matched_data || {}),
+            status
+        );
+        return { success: true, id: result.lastInsertRowid };
+    },
+
+    /**
+     * 批量添加
+     */
+    addBatch(items) {
+        const insert = db.prepare(`
+            INSERT INTO matched_items (
+                task_id, item_type, original_text, matched_text, match_score,
+                source_db, source_table, source_id, matched_data, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const insertMany = db.transaction((items) => {
+            for (const item of items) {
+                const status = item.match_score >= 1.0 ? 'auto_confirmed' : 'pending';
+                insert.run(
+                    item.task_id,
+                    item.item_type,
+                    item.original_text,
+                    item.matched_text,
+                    item.match_score,
+                    item.source_db,
+                    item.source_table,
+                    item.source_id,
+                    JSON.stringify(item.matched_data || {}),
+                    status
+                );
+            }
+        });
+
+        insertMany(items);
+        return { success: true, count: items.length };
+    },
+
+    /**
+     * 获取任务的匹配记录
+     */
+    getByTaskId(taskId, status = null) {
+        let sql = 'SELECT * FROM matched_items WHERE task_id = ?';
+        const params = [taskId];
+
+        if (status) {
+            sql += ' AND status = ?';
+            params.push(status);
+        }
+        sql += ' ORDER BY id';
+
+        const rows = db.prepare(sql).all(...params);
+        return rows.map(row => ({
+            ...row,
+            matched_data: JSON.parse(row.matched_data || '{}')
+        }));
+    },
+
+    /**
+     * 确认匹配
+     */
+    confirm(id, reviewedBy = null) {
+        return db.prepare(`
+            UPDATE matched_items SET
+                status = 'confirmed',
+                reviewed_at = CURRENT_TIMESTAMP,
+                reviewed_by = ?
+            WHERE id = ?
+        `).run(reviewedBy, id).changes > 0;
+    },
+
+    /**
+     * 拒绝匹配
+     */
+    reject(id, reviewedBy = null, notes = null) {
+        return db.prepare(`
+            UPDATE matched_items SET
+                status = 'rejected',
+                reviewed_at = CURRENT_TIMESTAMP,
+                reviewed_by = ?,
+                notes = ?
+            WHERE id = ?
+        `).run(reviewedBy, notes, id).changes > 0;
+    },
+
+    /**
+     * 批量确认
+     */
+    confirmByTaskId(taskId, reviewedBy = null) {
+        const result = db.prepare(`
+            UPDATE matched_items SET
+                status = 'confirmed',
+                reviewed_at = CURRENT_TIMESTAMP,
+                reviewed_by = ?
+            WHERE task_id = ? AND status = 'pending'
+        `).run(reviewedBy, taskId);
+        return { success: true, count: result.changes };
+    }
+};
+
+// ============================================
+// v5.0 新增：未匹配记录操作
+// ============================================
+
+const UnmatchedItemDB = {
+    /**
+     * 添加未匹配记录
+     */
+    add(item) {
+        const stmt = db.prepare(`
+            INSERT INTO unmatched_items (
+                task_id, item_type, original_text, ai_generated, status
+            ) VALUES (?, ?, ?, ?, 'pending')
+        `);
+
+        const result = stmt.run(
+            item.task_id,
+            item.item_type,
+            item.original_text,
+            JSON.stringify(item.ai_generated || {})
+        );
+        return { success: true, id: result.lastInsertRowid };
+    },
+
+    /**
+     * 批量添加
+     */
+    addBatch(items) {
+        const insert = db.prepare(`
+            INSERT INTO unmatched_items (
+                task_id, item_type, original_text, ai_generated, status
+            ) VALUES (?, ?, ?, ?, 'pending')
+        `);
+
+        const insertMany = db.transaction((items) => {
+            for (const item of items) {
+                insert.run(
+                    item.task_id,
+                    item.item_type,
+                    item.original_text,
+                    JSON.stringify(item.ai_generated || {})
+                );
+            }
+        });
+
+        insertMany(items);
+        return { success: true, count: items.length };
+    },
+
+    /**
+     * 获取任务的未匹配记录
+     */
+    getByTaskId(taskId, status = null) {
+        let sql = 'SELECT * FROM unmatched_items WHERE task_id = ?';
+        const params = [taskId];
+
+        if (status) {
+            sql += ' AND status = ?';
+            params.push(status);
+        }
+        sql += ' ORDER BY id';
+
+        const rows = db.prepare(sql).all(...params);
+        return rows.map(row => ({
+            ...row,
+            ai_generated: JSON.parse(row.ai_generated || '{}'),
+            edited_content: row.edited_content ? JSON.parse(row.edited_content) : null
+        }));
+    },
+
+    /**
+     * 获取单条记录
+     */
+    getById(id) {
+        const row = db.prepare('SELECT * FROM unmatched_items WHERE id = ?').get(id);
+        if (!row) return null;
+        return {
+            ...row,
+            ai_generated: JSON.parse(row.ai_generated || '{}'),
+            edited_content: row.edited_content ? JSON.parse(row.edited_content) : null
+        };
+    },
+
+    /**
+     * 更新（编辑）
+     */
+    update(id, editedContent) {
+        return db.prepare(`
+            UPDATE unmatched_items SET
+                edited_content = ?,
+                status = 'edited',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `).run(JSON.stringify(editedContent), id).changes > 0;
+    },
+
+    /**
+     * 标记为已导入
+     */
+    markImported(id, importedTo, importedId, reviewedBy = null) {
+        return db.prepare(`
+            UPDATE unmatched_items SET
+                status = 'imported',
+                imported_to = ?,
+                imported_id = ?,
+                reviewed_at = CURRENT_TIMESTAMP,
+                reviewed_by = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `).run(importedTo, importedId, reviewedBy, id).changes > 0;
+    },
+
+    /**
+     * 标记为忽略
+     */
+    ignore(id, reviewedBy = null, notes = null) {
+        return db.prepare(`
+            UPDATE unmatched_items SET
+                status = 'ignored',
+                reviewed_at = CURRENT_TIMESTAMP,
+                reviewed_by = ?,
+                notes = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `).run(reviewedBy, notes, id).changes > 0;
     }
 };
 
@@ -438,9 +968,39 @@ function getDashboardStats() {
     return {
         users: UserDB.getStats(),
         tasks: TaskDB.getStats(),
-        files: FileDB.getStats(),
         recentTasks: TaskDB.getRecent(5),
         recentLogs: LogDB.getRecent(10)
+    };
+}
+
+// ============================================
+// v5.0 新增：处理日志统计（兼容旧 API）
+// ============================================
+
+function getProcessingStats() {
+    const pendingMatches = db.prepare(`
+        SELECT COUNT(*) as count FROM matched_items WHERE status = 'pending'
+    `).get().count;
+
+    const pendingUnmatched = db.prepare(`
+        SELECT COUNT(*) as count FROM unmatched_items WHERE status = 'pending'
+    `).get().count;
+
+    const editedUnmatched = db.prepare(`
+        SELECT COUNT(*) as count FROM unmatched_items WHERE status = 'edited'
+    `).get().count;
+
+    const todayTasks = db.prepare(`
+        SELECT COUNT(*) as count FROM tasks 
+        WHERE date(created_at) = date('now')
+    `).get().count;
+
+    return {
+        pendingMatches,
+        pendingUnmatched,
+        editedUnmatched,
+        total: pendingMatches + pendingUnmatched + editedUnmatched,
+        todayTasks
     };
 }
 
@@ -451,8 +1011,11 @@ module.exports = {
     db,
     UserDB,
     TaskDB,
-    FileDB,
     LogDB,
+    UserMasteredDB,      // v5.0 新增
+    MatchedItemDB,       // v5.0 新增
+    UnmatchedItemDB,     // v5.0 新增
     getDashboardStats,
+    getProcessingStats,  // v5.0 新增
     initDatabase
 };

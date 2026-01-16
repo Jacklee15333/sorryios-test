@@ -1,8 +1,9 @@
 /**
- * 文件上传路由
+ * 文件上传路由 v2.3
  * POST /api/upload
  * 
  * 【v2.2 更新】支持用户关联
+ * 【v2.3 更新】修复中文文件名乱码
  */
 
 const express = require('express');
@@ -20,6 +21,27 @@ const uploadsDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
     console.log('[Upload] 创建 uploads 目录:', uploadsDir);
+}
+
+/**
+ * v2.3: 修复中文文件名编码
+ * multer 的 file.originalname 可能是 latin1 编码的，需要转换为 utf8
+ */
+function decodeFileName(filename) {
+    try {
+        // 尝试从 latin1 解码为 utf8
+        const decoded = Buffer.from(filename, 'latin1').toString('utf8');
+        
+        // 检查解码后是否包含乱码（乱码通常包含替换字符）
+        if (decoded.includes('�')) {
+            return filename; // 如果解码后有乱码，返回原始文件名
+        }
+        
+        return decoded;
+    } catch (e) {
+        console.log('[Upload] 文件名解码失败，使用原始名称:', e.message);
+        return filename;
+    }
 }
 
 // Multer 配置
@@ -109,6 +131,11 @@ router.post('/upload', upload.single('file'), (req, res) => {
 
         const file = req.file;
         
+        // 【v2.3】修复中文文件名乱码
+        const originalName = decodeFileName(file.originalname);
+        console.log(`📝 原始文件名: ${file.originalname}`);
+        console.log(`📝 解码后文件名: ${originalName}`);
+        
         // 【v2.2】获取当前登录用户ID
         const userId = getUserIdFromRequest(req);
         console.log(`👤 用户ID: ${userId || '未登录'}`);
@@ -116,14 +143,14 @@ router.post('/upload', upload.single('file'), (req, res) => {
         // 获取自定义标题，如果没有则使用默认标题
         const customTitle = req.body.customTitle?.trim() || generateDefaultTitle();
         
-        console.log(`📤 文件上传: ${file.originalname} (${file.size} bytes)`);
+        console.log(`📤 文件上传: ${originalName} (${file.size} bytes)`);
         console.log(`📝 报告标题: ${customTitle}`);
         console.log(`📁 保存路径: ${file.path}`);
 
-        // 创建任务，【v2.2】传入用户ID
+        // 创建任务，【v2.2】传入用户ID，【v2.3】使用解码后的文件名
         console.log('>>> 准备创建任务...');
         const task = taskQueue.createTask({
-            originalName: file.originalname,
+            originalName: originalName,  // v2.3: 使用解码后的文件名
             savedPath: file.path,
             size: file.size,
             mimeType: file.mimetype,
@@ -139,7 +166,7 @@ router.post('/upload', upload.single('file'), (req, res) => {
                 id: task.id,
                 status: task.status,
                 file: {
-                    name: file.originalname,
+                    name: originalName,  // v2.3: 返回解码后的文件名
                     size: file.size
                 },
                 customTitle: customTitle,

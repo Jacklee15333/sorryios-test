@@ -1,5 +1,13 @@
 /**
- * 处理日志 API 路由
+ * 处理日志 API 路由 v5.2
+ * 文件位置: backend/routes/processing-log-api.js
+ * 
+ * 📦 v5.1 更新：
+ * - 新增：清空所有数据接口 POST /clear-all
+ * 
+ * 📦 v5.2 修复：
+ * - 清空数据现在也删除 tasks 记录
+ * 
  * 提供处理日志的查询、审核、入库等接口
  */
 
@@ -383,6 +391,43 @@ router.post('/unmatched/:id/ignore', (req, res) => {
         }
     } catch (error) {
         console.error('[ProcessingLog API] 忽略记录失败:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// v5.2 修复：清空数据接口
+// ============================================
+
+/**
+ * POST /api/processing-log/clear-all
+ * 清空所有匹配记录、未匹配记录和任务记录
+ * 需要在 body 中传入 { confirm: "确认清除" } 才能执行
+ */
+router.post('/clear-all', (req, res) => {
+    try {
+        const { confirm } = req.body;
+        
+        // 安全检查：必须输入确认文字
+        if (confirm !== '确认清除') {
+            return res.status(400).json({ 
+                success: false, 
+                error: '请输入正确的确认文字' 
+            });
+        }
+        
+        // 执行清空
+        const result = logService.clearAllData();
+        
+        console.log(`[ProcessingLog API] 数据已清空: 任务 ${result.tasks} 条, 匹配记录 ${result.matched} 条, 未匹配记录 ${result.unmatched} 条`);
+        
+        res.json({
+            success: true,
+            message: '清空成功',
+            deleted: result
+        });
+    } catch (error) {
+        console.error('[ProcessingLog API] 清空数据失败:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

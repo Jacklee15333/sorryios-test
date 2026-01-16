@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>匹配词典管理 - Sorryios AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 50%, #80cbc4 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* 返回链接 */
+        .back-link { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            color: #00695c; 
+            text-decoration: none; 
+            margin-bottom: 16px; 
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        /* 头部 */
+        .header { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 24px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+            border: 1px solid #b2dfdb;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .header h1 { color: #00695c; font-size: 26px; margin-bottom: 8px; }
+        .header p { color: #00897b; font-size: 14px; }
+        
+        /* 统计卡片 */
+        .stats-row { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 16px; 
+            margin-top: 20px; 
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #80cbc4;
+        }
+        .stat-card .label { font-size: 13px; color: #00695c; margin-bottom: 4px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: #004d40; }
+        .stat-card .sub { font-size: 12px; color: #00897b; margin-top: 4px; }
+        
+        /* 工具栏 */
+        .toolbar {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid #b2dfdb;
+        }
+        .toolbar select, .toolbar input {
+            padding: 8px 12px;
+            border: 1px solid #b2dfdb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .toolbar input { width: 200px; }
+        .toolbar .spacer { flex: 1; }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 137, 123, 0.35);
+        }
+        .btn-danger { background: #f87171; color: #7f1d1d; }
+        .btn-danger:hover { background: #ef4444; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-secondary:hover { background: #d1d5db; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        
+        /* 列表容器 */
+        .list-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid #b2dfdb;
+            overflow: hidden;
+        }
+        
+        /* 表格 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e0f2f1;
+        }
+        th {
+            background: #e0f2f1;
+            font-weight: 600;
+            color: #00695c;
+            font-size: 13px;
+        }
+        td { font-size: 14px; color: #333; }
+        tr:hover { background: #f0fdf4; }
+        
+        /* 徽章 */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-match { background: #d1fae5; color: #065f46; }
+        .badge-exclude { background: #fee2e2; color: #991b1b; }
+        .badge-word { background: #dbeafe; color: #1e40af; }
+        .badge-phrase { background: #fef3c7; color: #92400e; }
+        .badge-pattern { background: #f3e8ff; color: #6b21a8; }
+        .badge-grammar { background: #fce7f3; color: #9d174d; }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #00897b;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 { color: #00695c; font-size: 18px; }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #00695c;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #b2dfdb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 24px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
+            transform: translateX(120%);
+            transition: transform 0.3s;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+        }
+        .pagination button {
+            padding: 8px 14px;
+            border: 1px solid #b2dfdb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .pagination button:hover { background: #e0f2f1; }
+        .pagination button.active { background: #26a69a; color: white; border-color: #26a69a; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/admin" class="back-link">← 返回管理后台</a>
+        
+        <!-- 头部 -->
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>📚 匹配词典管理</h1>
+                    <p>管理人工确认的匹配规则，让系统越用越智能</p>
+                </div>
+                <button class="btn btn-primary" onclick="showAddModal()">+ 手动添加规则</button>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="label">总规则数</div>
+                    <div class="value" id="statTotal">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">确认匹配</div>
+                    <div class="value" id="statMatch">0</div>
+                    <div class="sub">✅ match</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">排除名单</div>
+                    <div class="value" id="statExclude">0</div>
+                    <div class="sub">🚫 exclude</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <select id="filterAction" onchange="loadRules()">
+                <option value="">全部动作</option>
+                <option value="match">确认匹配</option>
+                <option value="exclude">排除</option>
+            </select>
+            <select id="filterType" onchange="loadRules()">
+                <option value="">全部类型</option>
+                <option value="word">单词</option>
+                <option value="phrase">短语</option>
+                <option value="pattern">句型</option>
+                <option value="grammar">语法</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="搜索原始词或目标词..." onkeyup="debounceSearch()">
+            <div class="spacer"></div>
+            <button class="btn btn-secondary" onclick="loadRules()">🔄 刷新</button>
+        </div>
+        
+        <!-- 规则列表 -->
+        <div class="list-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>原始词</th>
+                        <th>类型</th>
+                        <th>动作</th>
+                        <th>匹配到</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="rulesTableBody">
+                    <tr><td colspan="7" class="empty-state"><div class="icon">📚</div><p>暂无规则</p></td></tr>
+                </tbody>
+            </table>
+            
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+    
+    <!-- 添加规则弹窗 -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加匹配规则</h3>
+                <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+            </div>
+            <form id="addForm">
+                <div class="form-group">
+                    <label>原始词 *</label>
+                    <input type="text" name="original_text" required placeholder="笔记中出现的词">
+                </div>
+                <div class="form-group">
+                    <label>类型 *</label>
+                    <select name="original_type" required>
+                        <option value="word">单词</option>
+                        <option value="phrase">短语</option>
+                        <option value="pattern">句型</option>
+                        <option value="grammar">语法</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>动作 *</label>
+                    <select name="action" required onchange="toggleTargetFields(this.value)">
+                        <option value="match">确认匹配</option>
+                        <option value="exclude">排除（不是该类型）</option>
+                    </select>
+                </div>
+                <div id="targetFields">
+                    <div class="form-group">
+                        <label>目标数据库</label>
+                        <select name="target_db">
+                            <option value="">请选择</option>
+                            <option value="vocabulary.db">vocabulary.db (词库)</option>
+                            <option value="grammar.db">grammar.db (语法库)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>目标表</label>
+                        <select name="target_table">
+                            <option value="">请选择</option>
+                            <option value="words">words (单词)</option>
+                            <option value="phrases">phrases (短语)</option>
+                            <option value="patterns">patterns (句型)</option>
+                            <option value="grammar">grammar (语法)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>目标ID</label>
+                        <input type="number" name="target_id" placeholder="词库中的ID">
+                    </div>
+                    <div class="form-group">
+                        <label>目标词条内容</label>
+                        <input type="text" name="target_text" placeholder="词库中的内容（方便查看）">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea name="notes" placeholder="可选备注"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addModal')">取消</button>
+                    <button type="submit" class="btn btn-primary">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 确认删除弹窗 -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+                <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+            </div>
+            <p style="margin-bottom: 20px; color: #666;">
+                确定要删除这条匹配规则吗？<br>
+                删除后，系统将重新进行模糊匹配。
+            </p>
+            <input type="hidden" id="deleteRuleId">
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeModal('deleteModal')">取消</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">确认删除</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        const API_BASE = '/api/matching-dict';
+        let currentPage = 1;
+        const pageSize = 20;
+        let searchTimer = null;
+        
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadRules();
+            
+            // 表单提交
+            document.getElementById('addForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await addRule();
+            });
+        });
+        
+        // 加载统计
+        async function loadStats() {
+            try {
+                const res = await fetch(API_BASE + '/stats');
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('statTotal').textContent = data.data.total;
+                    document.getElementById('statMatch').textContent = data.data.match;
+                    document.getElementById('statExclude').textContent = data.data.exclude;
+                }
+            } catch (e) {
+                console.error('加载统计失败:', e);
+            }
+        }
+        
+        // 加载规则列表
+        async function loadRules() {
+            const action = document.getElementById('filterAction').value;
+            const type = document.getElementById('filterType').value;
+            const search = document.getElementById('searchInput').value;
+            
+            const params = new URLSearchParams({
+                limit: pageSize,
+                offset: (currentPage - 1) * pageSize
+            });
+            if (action) params.append('action', action);
+            if (type) params.append('type', type);
+            if (search) params.append('search', search);
+            
+            try {
+                const res = await fetch(API_BASE + '/rules?' + params.toString());
+                const data = await res.json();
+                
+                if (data.success) {
+                    renderRules(data.data);
+                    renderPagination(data.total);
+                }
+            } catch (e) {
+                console.error('加载规则失败:', e);
+                showToast('加载失败', 'error');
+            }
+        }
+        
+        // 渲染规则列表
+        function renderRules(rules) {
+            const tbody = document.getElementById('rulesTableBody');
+            
+            if (!rules || rules.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="empty-state">
+                        <div class="icon">📚</div>
+                        <p>暂无规则</p>
+                    </td></tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = rules.map(rule => `
+                <tr>
+                    <td>${rule.id}</td>
+                    <td><strong>${escapeHtml(rule.original_text)}</strong></td>
+                    <td>${getTypeBadge(rule.original_type)}</td>
+                    <td>${getActionBadge(rule.action)}</td>
+                    <td>${rule.target_text ? escapeHtml(rule.target_text) : '<span style="color:#999">-</span>'}</td>
+                    <td>${formatTime(rule.created_at)}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="showDeleteModal(${rule.id})">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // 渲染分页
+        function renderPagination(total) {
+            const totalPages = Math.ceil(total / pageSize);
+            const container = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">上一页</button>`;
+            
+            for (let i = 1; i <= totalPages && i <= 10; i++) {
+                html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            
+            html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">下一页</button>`;
+            
+            container.innerHTML = html;
+        }
+        
+        // 跳转页面
+        function goToPage(page) {
+            currentPage = page;
+            loadRules();
+        }
+        
+        // 搜索防抖
+        function debounceSearch() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                currentPage = 1;
+                loadRules();
+            }, 300);
+        }
+        
+        // 显示添加弹窗
+        function showAddModal() {
+            document.getElementById('addForm').reset();
+            toggleTargetFields('match');
+            document.getElementById('addModal').classList.add('active');
+        }
+        
+        // 切换目标字段显示
+        function toggleTargetFields(action) {
+            const targetFields = document.getElementById('targetFields');
+            targetFields.style.display = action === 'match' ? 'block' : 'none';
+        }
+        
+        // 添加规则
+        async function addRule() {
+            const form = document.getElementById('addForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            // 清理空值
+            Object.keys(data).forEach(key => {
+                if (data[key] === '') data[key] = null;
+            });
+            
+            try {
+                const res = await fetch(API_BASE + '/rules', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    showToast(result.message || '添加成功', 'success');
+                    closeModal('addModal');
+                    loadStats();
+                    loadRules();
+                } else {
+                    showToast(result.error || '添加失败', 'error');
+                }
+            } catch (e) {
+                showToast('添加失败', 'error');
+            }
+        }
+        
+        // 显示删除确认
+        function showDeleteModal(id) {
+            document.getElementById('deleteRuleId').value = id;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+        
+        // 确认删除
+        async function confirmDelete() {
+            const id = document.getElementById('deleteRuleId').value;
+            
+            try {
+                const res = await fetch(API_BASE + '/rules/' + id, {
+                    method: 'DELETE'
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    showToast('删除成功', 'success');
+                    closeModal('deleteModal');
+                    loadStats();
+                    loadRules();
+                } else {
+                    showToast(result.error || '删除失败', 'error');
+                }
+            } catch (e) {
+                showToast('删除失败', 'error');
+            }
+        }
+        
+        // 关闭弹窗
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        // 工具函数
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            let date;
+            if (dateStr.includes('T') || dateStr.includes('Z')) {
+                date = new Date(dateStr);
+            } else {
+                date = new Date(dateStr.replace(' ', 'T') + 'Z');
+            }
+            if (isNaN(date.getTime())) return dateStr;
+            
+            // 强制使用北京时间（UTC+8）
+            const beijingTime = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+            const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+            const hour = String(beijingTime.getUTCHours()).padStart(2, '0');
+            const minute = String(beijingTime.getUTCMinutes()).padStart(2, '0');
+            return `${month}/${day} ${hour}:${minute}`;
+        }
+        
+        function getTypeBadge(type) {
+            const badges = {
+                'word': '<span class="badge badge-word">单词</span>',
+                'phrase': '<span class="badge badge-phrase">短语</span>',
+                'pattern': '<span class="badge badge-pattern">句型</span>',
+                'grammar': '<span class="badge badge-grammar">语法</span>'
+            };
+            return badges[type] || `<span class="badge">${type}</span>`;
+        }
+        
+        function getActionBadge(action) {
+            const badges = {
+                'match': '<span class="badge badge-match">✅ 确认匹配</span>',
+                'exclude': '<span class="badge badge-exclude">🚫 排除</span>'
+            };
+            return badges[action] || `<span class="badge">${action}</span>`;
+        }
+        
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + type + ' show';
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

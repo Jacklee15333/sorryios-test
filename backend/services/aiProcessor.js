@@ -1,13 +1,21 @@
 /**
- * AI 处理器服务 - 英语课堂专用版 v4.3.2
+ * AI 处理器服务 - 英语课堂专用版 v4.3.4
+ * 
+ * 【v4.3.4 更新】
+ * - 修复：AI生成内容保存到数据库（待完善入库能看到AI内容）
+ * 
+ * 【v4.3.3 更新】
+ * - 修复：阶段6匹配结果保存到数据库
+ * - 新增：matched_items / unmatched_items 记录
+ * - 新增：任务统计字段更新
  * 
  * 【v4.3.2 更新】
  * - 添加详细进度日志推送到前端
  * - 每个阶段都推送详细执行信息
  * 
  * @author Sorryios AI Team
- * @version 4.3.2
- * @date 2026-01-15
+ * @version 4.3.4
+ * @date 2026-01-16
  */
 
 const fs = require('fs');
@@ -860,6 +868,55 @@ async function processTask(task, onProgress) {
                     console.log(`[阶段6] ${needAiInfo}`);
                     onProgress({ currentStep: needAiInfo, progress: 69 });
                 }
+
+                // ========== v5.0: 保存匹配记录到数据库 ==========
+                if (processingLogService) {
+                    try {
+                        // 保存匹配记录
+                        const matchedItems = matchResult.matched.map(m => ({
+                            task_id: taskId,
+                            original_text: m.original_text,
+                            matched_text: m.matched_text,
+                            item_type: m.item_type,
+                            match_score: m.score,
+                            matched_data: m.matched_data,
+                            status: m.score >= 1.0 ? 'confirmed' : 'pending'
+                        }));
+                        
+                        if (matchedItems.length > 0) {
+                            processingLogService.addMatchedItems(matchedItems);
+                            console.log(`[阶段6] 💾 保存匹配记录: ${matchedItems.length} 条`);
+                            onProgress({ currentStep: `💾 保存匹配记录: ${matchedItems.length} 条`, progress: 69 });
+                        }
+                        
+                        // 保存未匹配记录
+                        const unmatchedItemsToSave = matchResult.unmatched.map(u => ({
+                            task_id: taskId,
+                            original_text: u.original_text,
+                            item_type: u.item_type,
+                            ai_generated: null,
+                            status: 'pending'
+                        }));
+                        
+                        if (unmatchedItemsToSave.length > 0) {
+                            processingLogService.addUnmatchedItems(unmatchedItemsToSave);
+                            console.log(`[阶段6] 💾 保存未匹配记录: ${unmatchedItemsToSave.length} 条`);
+                            onProgress({ currentStep: `💾 保存未匹配记录: ${unmatchedItemsToSave.length} 条`, progress: 69 });
+                        }
+                        
+                        // 更新任务统计
+                        processingLogService.updateTaskStats(taskId, {
+                            total_items: matchResult.matched.length + matchResult.unmatched.length,
+                            exact_match_count: matchResult.matched.filter(m => m.score >= 1.0).length,
+                            fuzzy_match_count: matchResult.matched.filter(m => m.score < 1.0).length,
+                            unmatched_count: matchResult.unmatched.length
+                        });
+                        console.log(`[阶段6] 💾 更新任务统计完成`);
+                        
+                    } catch (logError) {
+                        console.warn('[阶段6] 保存日志失败:', logError.message);
+                    }
+                }
             } catch (e) { 
                 console.warn('[阶段6] 匹配失败:', e.message); 
                 onProgress({ currentStep: `⚠️ 数据库匹配失败: ${e.message}`, progress: 68 });
@@ -935,6 +992,60 @@ async function processTask(task, onProgress) {
                     }
                     console.log(`[阶段7] ✅ AI生成完成`);
                     onProgress({ currentStep: '✅ AI详情生成完成', progress: 88 });
+                    
+                    // ========== v4.3.4: 更新数据库中的未匹配记录 ==========
+                    if (processingLogService) {
+                        try {
+                            // 更新单词
+                            if (aiData.vocabulary?.words) {
+                                for (const word of aiData.vocabulary.words) {
+                                    processingLogService.updateUnmatchedAiContent(
+                                        taskId, 
+                                        word.word, 
+                                        'word', 
+                                        word
+                                    );
+                                }
+                            }
+                            // 更新短语
+                            if (aiData.vocabulary?.phrases) {
+                                for (const phrase of aiData.vocabulary.phrases) {
+                                    processingLogService.updateUnmatchedAiContent(
+                                        taskId, 
+                                        phrase.phrase, 
+                                        'phrase', 
+                                        phrase
+                                    );
+                                }
+                            }
+                            // 更新句型
+                            if (aiData.vocabulary?.patterns) {
+                                for (const pattern of aiData.vocabulary.patterns) {
+                                    processingLogService.updateUnmatchedAiContent(
+                                        taskId, 
+                                        pattern.pattern, 
+                                        'pattern', 
+                                        pattern
+                                    );
+                                }
+                            }
+                            // 更新语法
+                            if (aiData.grammar) {
+                                for (const grammar of aiData.grammar) {
+                                    processingLogService.updateUnmatchedAiContent(
+                                        taskId, 
+                                        grammar.title, 
+                                        'grammar', 
+                                        grammar
+                                    );
+                                }
+                            }
+                            console.log(`[阶段7] 💾 AI生成内容已更新到数据库`);
+                            onProgress({ currentStep: '💾 AI生成内容已保存到数据库', progress: 88 });
+                        } catch (updateErr) {
+                            console.warn('[阶段7] 更新AI内容失败:', updateErr.message);
+                        }
+                    }
                 }
             } catch (e) { 
                 console.error('[阶段7] ❌', e.message);
@@ -1029,7 +1140,7 @@ function init() {
     if (!fs.existsSync(CONFIG.progressDir)) fs.mkdirSync(CONFIG.progressDir, { recursive: true });
     taskQueue.setProcessor(processTask);
     try { if (fs.existsSync(CONFIG.progressDir)) { const files = fs.readdirSync(CONFIG.progressDir).filter(f => f.endsWith('.json')); if (files.length > 0) console.log(`\n📋 发现 ${files.length} 个未完成任务`); } } catch (e) {}
-    console.log('\n' + '='.repeat(60)); console.log('  🎓 英语课堂智能分析系统 v4.3.2 已就绪'); console.log('  🆕 v4.3.2: 详细进度日志推送'); console.log('='.repeat(60) + '\n');
+    console.log('\n' + '='.repeat(60)); console.log('  🎓 英语课堂智能分析系统 v4.3.4 已就绪'); console.log('  🆕 v4.3.4: AI生成内容保存到数据库'); console.log('='.repeat(60) + '\n');
 }
 
 module.exports = { init, processTask, CONFIG, loadProgress, clearProgress, getFinalTitle, generateDefaultTitle, JsonExtractor, ResultMerger, WordFilter, KeywordNormalizer, keywordNormalizer };

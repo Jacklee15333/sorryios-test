@@ -1,22 +1,53 @@
 /**
- * 匹配算法服务
- * 提供 85% 相似度匹配功能
+ * 匹配算法服务 v3.0
+ * 文件位置: backend/services/matchingService.js
  * 
- * 匹配策略：
- * 1. 精确匹配 (100%)
- * 2. 包含匹配 (85-99%)
- * 3. 编辑距离相似度 (Levenshtein)
- * 4. 关键词匹配
+ * 📦 v2.0 更新：
+ * - 修复：空字符串匹配bug
+ * - 新增：类型保护
+ * 
+ * 📦 v2.1 更新：
+ * - 新增：词形还原
+ * - 新增：单词边界检查
+ * - 新增：短词保护
+ * 
+ * 📦 v2.2 终极版更新：
+ * - 修复：语法全部匹配到"不定式"的问题
+ * - 修复：plant sth. 匹配到 plan to do 的问题
+ * - 新增：核心词匹配检查（短语的第一个词必须匹配）
+ * - 新增：中文语法专用匹配逻辑
+ * - 新增：词库黑名单（排除会导致误匹配的条目）
+ * - 提高：匹配阈值（更严格）
+ * - 优化：模板清理逻辑
+ * 
+ * 📦 v3.0 匹配词典更新：
+ * - 新增：匹配词典查询（matching.db）
+ * - 流程：先查词典 → 再模糊匹配
+ * - 支持：match（确认匹配）和 exclude（排除）规则
  */
 
 const { getVocabularyService } = require('./vocabularyService');
 const { getGrammarService } = require('./grammarService');
+const { getMatchingDictService } = require('./matchingDictService');
 
 class MatchingService {
     constructor() {
         this.vocabularyService = getVocabularyService();
         this.grammarService = getGrammarService();
-        this.minMatchScore = 0.85; // 最低匹配度阈值
+        
+        // v3.0: 添加匹配词典服务
+        this.matchingDictService = getMatchingDictService();
+        
+        // v2.2: 提高匹配阈值，更严格
+        this.thresholds = {
+            word: 0.90,      // 单词：90%（从85%提高）
+            phrase: 0.85,    // 短语：85%（从80%提高）
+            pattern: 0.85,   // 句型：85%（从80%提高）
+            grammar: 0.80    // 语法：80%（从75%提高）
+        };
+        
+        this.minMatchScore = 0.85;
+        this.debug = false;
         
         // 缓存词库数据
         this.cache = {
@@ -27,32 +58,258 @@ class MatchingService {
             lastUpdate: null
         };
         
+        // v2.2: 词库黑名单 - 这些词条会导致大量误匹配，跳过它们
+        // 如果词库里有这些内容，匹配时会被忽略
+        this.blacklist = {
+            words: [
+                'to do sth.', 'to do sth', 'to do', 'do sth.', 'do sth',
+                'be to do', 'sth.', 'sb.', 'sth', 'sb'
+            ],
+            phrases: [
+                'to do sth.', 'to do sth', 'be to do', 'to do'
+            ],
+            patterns: [],
+            grammar: []
+        };
+        
+        // 模板占位符正则
+        this.templatePattern = /\b(sb\.|sth\.|doing|to do|one's|oneself|\.\.\.)\b/i;
+        
+        // 不规则动词表
+        this.irregularVerbs = {
+            'was': 'be', 'were': 'be', 'been': 'be', 'am': 'be', 'is': 'be', 'are': 'be',
+            'had': 'have', 'has': 'have',
+            'did': 'do', 'does': 'do', 'done': 'do',
+            'said': 'say',
+            'went': 'go', 'gone': 'go',
+            'got': 'get', 'gotten': 'get',
+            'made': 'make',
+            'knew': 'know', 'known': 'know',
+            'thought': 'think',
+            'took': 'take', 'taken': 'take',
+            'saw': 'see', 'seen': 'see',
+            'came': 'come',
+            'gave': 'give', 'given': 'give',
+            'found': 'find',
+            'told': 'tell',
+            'felt': 'feel',
+            'became': 'become',
+            'left': 'leave',
+            'put': 'put',
+            'meant': 'mean',
+            'kept': 'keep',
+            'let': 'let',
+            'began': 'begin', 'begun': 'begin',
+            'showed': 'show', 'shown': 'show',
+            'heard': 'hear',
+            'ran': 'run',
+            'brought': 'bring',
+            'wrote': 'write', 'written': 'write',
+            'sat': 'sit',
+            'stood': 'stand',
+            'lost': 'lose',
+            'paid': 'pay',
+            'met': 'meet',
+            'set': 'set',
+            'learnt': 'learn', 'learned': 'learn',
+            'led': 'lead',
+            'understood': 'understand',
+            'spoke': 'speak', 'spoken': 'speak',
+            'read': 'read',
+            'spent': 'spend',
+            'grew': 'grow', 'grown': 'grow',
+            'won': 'win',
+            'taught': 'teach',
+            'bought': 'buy',
+            'sent': 'send',
+            'built': 'build',
+            'fell': 'fall', 'fallen': 'fall',
+            'cut': 'cut',
+            'sold': 'sell',
+            'broke': 'break', 'broken': 'break',
+            'hit': 'hit',
+            'ate': 'eat', 'eaten': 'eat',
+            'caught': 'catch',
+            'drew': 'draw', 'drawn': 'draw',
+            'chose': 'choose', 'chosen': 'choose',
+            'wore': 'wear', 'worn': 'wear',
+            'fought': 'fight',
+            'threw': 'throw', 'thrown': 'throw',
+            'flew': 'fly', 'flown': 'fly',
+            'drove': 'drive', 'driven': 'drive',
+            'swam': 'swim', 'swum': 'swim',
+            'sang': 'sing', 'sung': 'sing',
+            'rang': 'ring', 'rung': 'ring',
+            'drank': 'drink', 'drunk': 'drink',
+            'forgot': 'forget', 'forgotten': 'forget',
+            'hid': 'hide', 'hidden': 'hide',
+            'woke': 'wake', 'woken': 'wake',
+            'rode': 'ride', 'ridden': 'ride',
+            'rose': 'rise', 'risen': 'rise',
+            'shone': 'shine',
+            'stole': 'steal', 'stolen': 'steal',
+            'blew': 'blow', 'blown': 'blow',
+            'beat': 'beat', 'beaten': 'beat',
+            'hung': 'hang',
+            'bit': 'bite', 'bitten': 'bite',
+            'shook': 'shake', 'shaken': 'shake',
+            'spread': 'spread',
+            'shut': 'shut',
+            'cost': 'cost',
+            'hurt': 'hurt',
+        };
+        
+        // 形容词变形表
+        this.adjectiveVariants = {
+            'better': 'good', 'best': 'good',
+            'worse': 'bad', 'worst': 'bad',
+            'more': 'much', 'most': 'much',
+            'less': 'little', 'least': 'little',
+            'farther': 'far', 'farthest': 'far', 'further': 'far', 'furthest': 'far',
+            'older': 'old', 'oldest': 'old', 'elder': 'old', 'eldest': 'old',
+        };
+        
         this.refreshCache();
     }
 
     /**
-     * 刷新缓存
+     * 刷新缓存（v2.2: 过滤黑名单）
      */
     refreshCache() {
         try {
-            this.cache.words = this.vocabularyService.getAllWords(true);
-            this.cache.phrases = this.vocabularyService.getAllPhrases(true);
-            this.cache.patterns = this.vocabularyService.getAllPatterns(true);
-            this.cache.grammar = this.grammarService.getAll(true);
+            // 获取原始数据
+            let words = this.vocabularyService.getAllWords(true) || [];
+            let phrases = this.vocabularyService.getAllPhrases(true) || [];
+            let patterns = this.vocabularyService.getAllPatterns(true) || [];
+            let grammar = this.grammarService.getAll(true) || [];
+            
+            // v2.2: 过滤黑名单
+            const wordBlacklist = this.blacklist.words.map(w => w.toLowerCase());
+            const phraseBlacklist = this.blacklist.phrases.map(p => p.toLowerCase());
+            
+            this.cache.words = words.filter(w => 
+                !wordBlacklist.includes((w.word || '').toLowerCase())
+            );
+            this.cache.phrases = phrases.filter(p => 
+                !phraseBlacklist.includes((p.phrase || '').toLowerCase())
+            );
+            this.cache.patterns = patterns;
+            this.cache.grammar = grammar;
             this.cache.lastUpdate = Date.now();
-            console.log('[MatchingService] 缓存已刷新');
+            
+            const filteredWords = words.length - this.cache.words.length;
+            const filteredPhrases = phrases.length - this.cache.phrases.length;
+            
+            console.log(`[MatchingService] v2.2 缓存已刷新`);
+            if (filteredWords > 0 || filteredPhrases > 0) {
+                console.log(`[MatchingService] 已过滤黑名单: ${filteredWords}个单词, ${filteredPhrases}个短语`);
+            }
         } catch (e) {
             console.error('[MatchingService] 刷新缓存失败:', e.message);
         }
     }
 
     /**
-     * 检查缓存是否需要刷新（5分钟）
+     * 检查缓存是否需要刷新
      */
     checkCache() {
         if (!this.cache.lastUpdate || Date.now() - this.cache.lastUpdate > 5 * 60 * 1000) {
             this.refreshCache();
         }
+    }
+
+    /**
+     * 调试日志
+     */
+    log(...args) {
+        if (this.debug) {
+            console.log('[MatchingService]', ...args);
+        }
+    }
+
+    /**
+     * 词形还原
+     */
+    lemmatize(word) {
+        const w = word.toLowerCase().trim();
+        const results = [w];
+        
+        if (this.irregularVerbs[w]) {
+            results.push(this.irregularVerbs[w]);
+        }
+        
+        if (this.adjectiveVariants[w]) {
+            results.push(this.adjectiveVariants[w]);
+        }
+        
+        // -ing 结尾
+        if (w.endsWith('ing') && w.length > 4) {
+            const base1 = w.slice(0, -3);
+            if (base1.length >= 2 && base1[base1.length - 1] === base1[base1.length - 2]) {
+                results.push(base1.slice(0, -1));
+            }
+            results.push(base1 + 'e');
+            results.push(base1);
+        }
+        
+        // -ed 结尾
+        if (w.endsWith('ed') && w.length > 3) {
+            results.push(w.slice(0, -2));
+            results.push(w.slice(0, -1));
+            const base = w.slice(0, -2);
+            if (base.length >= 2 && base[base.length - 1] === base[base.length - 2]) {
+                results.push(base.slice(0, -1));
+            }
+            if (w.endsWith('ied')) {
+                results.push(w.slice(0, -3) + 'y');
+            }
+        }
+        
+        // -s/-es 结尾
+        if (w.endsWith('s') && w.length > 2) {
+            results.push(w.slice(0, -1));
+            if (w.endsWith('es') && w.length > 3) {
+                results.push(w.slice(0, -2));
+            }
+            if (w.endsWith('ies') && w.length > 4) {
+                results.push(w.slice(0, -3) + 'y');
+            }
+        }
+        
+        // -er/-est 结尾
+        if (w.endsWith('er') && w.length > 3) {
+            results.push(w.slice(0, -2));
+            results.push(w.slice(0, -1));
+            const base = w.slice(0, -2);
+            if (base.length >= 2 && base[base.length - 1] === base[base.length - 2]) {
+                results.push(base.slice(0, -1));
+            }
+        }
+        if (w.endsWith('est') && w.length > 4) {
+            results.push(w.slice(0, -3));
+            results.push(w.slice(0, -2));
+            const base = w.slice(0, -3);
+            if (base.length >= 2 && base[base.length - 1] === base[base.length - 2]) {
+                results.push(base.slice(0, -1));
+            }
+        }
+        
+        // -ly 结尾
+        if (w.endsWith('ly') && w.length > 3) {
+            results.push(w.slice(0, -2));
+            if (w.endsWith('ily')) {
+                results.push(w.slice(0, -3) + 'y');
+            }
+        }
+        
+        return [...new Set(results)];
+    }
+
+    /**
+     * 检查文本是否是模板类
+     */
+    isTemplateText(text) {
+        return this.templatePattern.test(text);
     }
 
     /**
@@ -79,32 +336,10 @@ class MatchingService {
     }
 
     /**
-     * 计算相似度分数 (0-1)
+     * 清理模板占位符
      */
-    calculateSimilarity(input, target) {
-        const s1 = input.toLowerCase().trim();
-        const s2 = target.toLowerCase().trim();
-
-        // 1. 完全匹配
-        if (s1 === s2) {
-            return 1.0;
-        }
-
-        // 2. 包含匹配
-        // 例如: "look forward to" vs "look forward to doing sth."
-        if (s2.includes(s1)) {
-            const ratio = s1.length / s2.length;
-            // 输入是目标的子串，根据长度比例给分
-            return Math.max(0.85, ratio * 0.95 + 0.05);
-        }
-        if (s1.includes(s2)) {
-            const ratio = s2.length / s1.length;
-            return Math.max(0.85, ratio * 0.95 + 0.05);
-        }
-
-        // 3. 去除模板占位符后匹配
-        // 例如: "look forward to" vs "look forward to doing sth."
-        const cleanS2 = s2
+    cleanTemplateText(text) {
+        const cleaned = text
             .replace(/\bsb\.\s*/gi, '')
             .replace(/\bsth\.\s*/gi, '')
             .replace(/\bdoing\s*/gi, '')
@@ -114,12 +349,202 @@ class MatchingService {
             .replace(/\.\.\./g, '')
             .replace(/\s+/g, ' ')
             .trim();
+        
+        // v2.2: 提高最小长度要求到3个字符
+        if (cleaned.length < 3) {
+            return null;
+        }
+        
+        return cleaned;
+    }
 
-        if (s1 === cleanS2 || cleanS2.includes(s1) || s1.includes(cleanS2)) {
-            return 0.92; // 模板匹配给较高分
+    /**
+     * 检查是否是单词边界匹配
+     */
+    isWordBoundaryMatch(text, word) {
+        const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+        return regex.test(text);
+    }
+
+    /**
+     * v2.2 新增：提取核心词（短语的第一个实词）
+     * 用于确保 "plant sth." 不会匹配到 "plan to do"
+     */
+    extractCoreWord(text) {
+        const cleaned = text.toLowerCase()
+            .replace(/\bsb\.\s*/gi, '')
+            .replace(/\bsth\.\s*/gi, '')
+            .replace(/\bdoing\s*/gi, '')
+            .replace(/\bto do\s*/gi, '')
+            .replace(/\bone's\s*/gi, '')
+            .replace(/\boneself\s*/gi, '')
+            .replace(/\.\.\./g, '')
+            .trim();
+        
+        // 提取第一个单词
+        const words = cleaned.split(/\s+/);
+        if (words.length > 0 && words[0].length >= 2) {
+            return words[0];
+        }
+        return null;
+    }
+
+    /**
+     * v2.2 新增：检查核心词是否匹配
+     */
+    coreWordMatches(input, target) {
+        const inputCore = this.extractCoreWord(input);
+        const targetCore = this.extractCoreWord(target);
+        
+        if (!inputCore || !targetCore) return true; // 无法提取则跳过检查
+        
+        // 核心词必须相同或非常相似（编辑距离<=1）
+        if (inputCore === targetCore) return true;
+        
+        const distance = this.levenshteinDistance(inputCore, targetCore);
+        const maxLen = Math.max(inputCore.length, targetCore.length);
+        
+        // 对于短核心词，要求完全匹配
+        if (maxLen <= 4) {
+            return distance === 0;
+        }
+        
+        // 对于长核心词，允许1个字符差异
+        return distance <= 1;
+    }
+
+    /**
+     * v2.2 新增：检测是否是中文文本
+     */
+    isChinese(text) {
+        return /[\u4e00-\u9fa5]/.test(text);
+    }
+
+    /**
+     * v2.2 新增：中文相似度计算（用于语法匹配）
+     * 使用字符级别的匹配，不使用模板清理
+     */
+    calculateChineseSimilarity(input, target) {
+        const s1 = input.trim();
+        const s2 = target.trim();
+        
+        if (!s1 || !s2) return 0;
+        if (s1 === s2) return 1.0;
+        
+        // 完全包含
+        if (s2.includes(s1)) {
+            return s1.length / s2.length * 0.95;
+        }
+        if (s1.includes(s2)) {
+            return s2.length / s1.length * 0.95;
+        }
+        
+        // 字符级别的编辑距离
+        const distance = this.levenshteinDistance(s1, s2);
+        const maxLen = Math.max(s1.length, s2.length);
+        return 1 - distance / maxLen;
+    }
+
+    /**
+     * 计算相似度分数 (0-1)
+     * v2.2 重构：更严格的匹配逻辑
+     */
+    calculateSimilarity(input, target, options = {}) {
+        const s1 = input.toLowerCase().trim();
+        const s2 = target.toLowerCase().trim();
+        
+        if (!s1 || !s2) return 0;
+
+        // 1. 完全匹配
+        if (s1 === s2) {
+            return 1.0;
         }
 
-        // 4. 编辑距离相似度
+        // v2.2: 中文语法专用逻辑
+        if (options.isGrammarMatch && this.isChinese(input)) {
+            return this.calculateChineseSimilarity(input, target);
+        }
+
+        // v2.1: 词形还原匹配
+        if (options.isWordMatch) {
+            const lemmas = this.lemmatize(s1);
+            for (const lemma of lemmas) {
+                if (lemma === s2) {
+                    this.log(`词形还原匹配: ${s1} → ${lemma} = ${s2}`);
+                    return 0.98;
+                }
+            }
+        }
+
+        // v2.0: 类型保护（单词不匹配模板）
+        if (options.isWordMatch && this.isTemplateText(target)) {
+            const distance = this.levenshteinDistance(s1, s2);
+            const maxLen = Math.max(s1.length, s2.length);
+            return 1 - distance / maxLen;
+        }
+
+        // v2.1: 短词保护
+        if (options.isWordMatch && s1.length <= 3) {
+            const distance = this.levenshteinDistance(s1, s2);
+            if (distance === 0) return 1.0;
+            if (distance === 1 && s2.length <= 4) return 0.80;
+            return 0.5;
+        }
+
+        // v2.2: 短语/句型核心词检查
+        if (options.isPhraseMatch || options.isPatternMatch) {
+            if (!this.coreWordMatches(s1, s2)) {
+                this.log(`核心词不匹配: "${s1}" vs "${s2}"`);
+                // 核心词不匹配，直接用编辑距离（通常会很低）
+                const distance = this.levenshteinDistance(s1, s2);
+                const maxLen = Math.max(s1.length, s2.length);
+                return 1 - distance / maxLen;
+            }
+        }
+
+        // 2. 包含匹配（边界检查）
+        if (s2.includes(s1) && s1.length >= 3) {
+            if (this.isWordBoundaryMatch(s2, s1)) {
+                const ratio = s1.length / s2.length;
+                if (ratio >= 0.5) {
+                    this.log(`边界包含匹配: "${s1}" in "${s2}"`);
+                    return Math.max(0.85, ratio * 0.95 + 0.05);
+                }
+            }
+        }
+        
+        if (s1.includes(s2) && s2.length >= 3) {
+            if (this.isWordBoundaryMatch(s1, s2)) {
+                const ratio = s2.length / s1.length;
+                if (ratio >= 0.5) {
+                    this.log(`边界包含匹配: "${s2}" in "${s1}"`);
+                    return Math.max(0.85, ratio * 0.95 + 0.05);
+                }
+            }
+        }
+
+        // 4. 模板匹配（仅短语/句型，v2.2加强）
+        if (options.isPhraseMatch || options.isPatternMatch) {
+            const cleanS1 = this.cleanTemplateText(s1);
+            const cleanS2 = this.cleanTemplateText(s2);
+            
+            // 两边都要清理成功
+            if (cleanS1 && cleanS2 && cleanS1.length >= 3 && cleanS2.length >= 3) {
+                if (cleanS1 === cleanS2) {
+                    return 0.95;
+                }
+                // 清理后的包含匹配
+                if (cleanS2.includes(cleanS1) && cleanS1.length / cleanS2.length >= 0.7) {
+                    return 0.90;
+                }
+                if (cleanS1.includes(cleanS2) && cleanS2.length / cleanS1.length >= 0.7) {
+                    return 0.90;
+                }
+            }
+        }
+
+        // 5. 编辑距离相似度
         const distance = this.levenshteinDistance(s1, s2);
         const maxLen = Math.max(s1.length, s2.length);
         const similarity = 1 - distance / maxLen;
@@ -130,18 +555,26 @@ class MatchingService {
     /**
      * 在指定数据集中查找最佳匹配
      */
-    findBestMatch(input, dataSet, textField) {
+    findBestMatch(input, dataSet, textField, options = {}) {
         let bestMatch = null;
         let bestScore = 0;
 
+        const inputVariants = options.isWordMatch ? this.lemmatize(input) : [input.toLowerCase().trim()];
+        
         for (const item of dataSet) {
             const target = item[textField];
             if (!target) continue;
 
-            const score = this.calculateSimilarity(input, target);
-            if (score > bestScore) {
-                bestScore = score;
-                bestMatch = item;
+            for (const variant of inputVariants) {
+                const score = this.calculateSimilarity(variant, target, options);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = item;
+                    
+                    if (variant !== input.toLowerCase().trim() && score >= 0.98) {
+                        this.log(`词形匹配成功: ${input} → ${variant} → ${target}`);
+                    }
+                }
             }
         }
 
@@ -149,13 +582,86 @@ class MatchingService {
     }
 
     /**
+     * v3.0: 查询匹配词典
+     * @param {string} text - 原始文本
+     * @param {string} type - 类型 (word/phrase/pattern/grammar)
+     * @returns {Object|null} { action, result } 或 null
+     */
+    checkMatchingDict(text, type) {
+        try {
+            const rule = this.matchingDictService.findRule(text, type);
+            
+            if (!rule) {
+                return null;
+            }
+            
+            this.log(`[词典命中] ${text} (${type}) → ${rule.action}`);
+            
+            if (rule.action === 'exclude') {
+                // 排除：返回特殊标记
+                return {
+                    action: 'exclude',
+                    result: {
+                        matched: false,
+                        excluded: true,
+                        score: 0,
+                        reason: rule.notes || '已被排除'
+                    }
+                };
+            }
+            
+            if (rule.action === 'match') {
+                // 确认匹配：返回100%匹配结果
+                return {
+                    action: 'match',
+                    result: {
+                        matched: true,
+                        score: 1.0,  // 100% 匹配
+                        source_db: rule.target_db ? rule.target_db.replace('.db', '') : 'vocabulary',
+                        source_table: rule.target_table,
+                        source_id: rule.target_id,
+                        matched_text: rule.target_text,
+                        fromDict: true  // 标记来自词典
+                    }
+                };
+            }
+            
+            return null;
+        } catch (e) {
+            console.error('[MatchingService] 查询词典失败:', e.message);
+            return null;
+        }
+    }
+
+    /**
      * 匹配单词
+     * v3.0: 先查词典，再模糊匹配
      */
     matchWord(word) {
         this.checkCache();
-        const { match, score } = this.findBestMatch(word, this.cache.words, 'word');
         
-        if (score >= this.minMatchScore && match) {
+        // v3.0: 先查匹配词典
+        const dictResult = this.checkMatchingDict(word, 'word');
+        if (dictResult) {
+            if (dictResult.action === 'exclude') {
+                return dictResult.result;  // 排除，不匹配
+            }
+            if (dictResult.action === 'match') {
+                return dictResult.result;  // 词典100%匹配
+            }
+        }
+        
+        // 词典没有命中，进行模糊匹配
+        const { match, score } = this.findBestMatch(
+            word, 
+            this.cache.words, 
+            'word',
+            { isWordMatch: true }
+        );
+        
+        const threshold = this.thresholds.word;
+        
+        if (score >= threshold && match) {
             return {
                 matched: true,
                 score,
@@ -171,12 +677,32 @@ class MatchingService {
 
     /**
      * 匹配短语
+     * v3.0: 先查词典，再模糊匹配
      */
     matchPhrase(phrase) {
         this.checkCache();
-        const { match, score } = this.findBestMatch(phrase, this.cache.phrases, 'phrase');
         
-        if (score >= this.minMatchScore && match) {
+        // v3.0: 先查匹配词典
+        const dictResult = this.checkMatchingDict(phrase, 'phrase');
+        if (dictResult) {
+            if (dictResult.action === 'exclude') {
+                return dictResult.result;
+            }
+            if (dictResult.action === 'match') {
+                return dictResult.result;
+            }
+        }
+        
+        const { match, score } = this.findBestMatch(
+            phrase, 
+            this.cache.phrases, 
+            'phrase',
+            { isPhraseMatch: true }  // v2.2: 启用短语专用逻辑
+        );
+        
+        const threshold = this.thresholds.phrase;
+        
+        if (score >= threshold && match) {
             return {
                 matched: true,
                 score,
@@ -192,12 +718,32 @@ class MatchingService {
 
     /**
      * 匹配句型
+     * v3.0: 先查词典，再模糊匹配
      */
     matchPattern(pattern) {
         this.checkCache();
-        const { match, score } = this.findBestMatch(pattern, this.cache.patterns, 'pattern');
         
-        if (score >= this.minMatchScore && match) {
+        // v3.0: 先查匹配词典
+        const dictResult = this.checkMatchingDict(pattern, 'pattern');
+        if (dictResult) {
+            if (dictResult.action === 'exclude') {
+                return dictResult.result;
+            }
+            if (dictResult.action === 'match') {
+                return dictResult.result;
+            }
+        }
+        
+        const { match, score } = this.findBestMatch(
+            pattern, 
+            this.cache.patterns, 
+            'pattern',
+            { isPatternMatch: true }  // v2.2: 启用句型专用逻辑
+        );
+        
+        const threshold = this.thresholds.pattern;
+        
+        if (score >= threshold && match) {
             return {
                 matched: true,
                 score,
@@ -213,22 +759,42 @@ class MatchingService {
 
     /**
      * 匹配语法
+     * v2.2: 使用中文专用匹配逻辑
+     * v3.0: 先查词典，再模糊匹配
      */
     matchGrammar(grammarName) {
         this.checkCache();
         
-        // 语法匹配：标题或关键词
+        // v3.0: 先查匹配词典
+        const dictResult = this.checkMatchingDict(grammarName, 'grammar');
+        if (dictResult) {
+            if (dictResult.action === 'exclude') {
+                return dictResult.result;
+            }
+            if (dictResult.action === 'match') {
+                return dictResult.result;
+            }
+        }
+        
         let bestMatch = null;
         let bestScore = 0;
 
         for (const item of this.cache.grammar) {
-            // 匹配标题
-            let score = this.calculateSimilarity(grammarName, item.title);
+            // v2.2: 使用语法专用匹配
+            let score = this.calculateSimilarity(
+                grammarName, 
+                item.title, 
+                { isGrammarMatch: true }
+            );
             
             // 也尝试匹配关键词
             if (item.keywords && Array.isArray(item.keywords)) {
                 for (const keyword of item.keywords) {
-                    const keywordScore = this.calculateSimilarity(grammarName, keyword);
+                    const keywordScore = this.calculateSimilarity(
+                        grammarName, 
+                        keyword, 
+                        { isGrammarMatch: true }
+                    );
                     if (keywordScore > score) {
                         score = keywordScore;
                     }
@@ -241,7 +807,9 @@ class MatchingService {
             }
         }
 
-        if (bestScore >= this.minMatchScore && bestMatch) {
+        const threshold = this.thresholds.grammar;
+
+        if (bestScore >= threshold && bestMatch) {
             return {
                 matched: true,
                 score: bestScore,
@@ -257,19 +825,30 @@ class MatchingService {
 
     /**
      * 批量匹配
-     * @param {Object} extractedData - AI 提取的数据 { words: [], phrases: [], patterns: [], grammar: [] }
-     * @returns {Object} - { matched: [], unmatched: [] }
+     * v3.0: 支持排除项（excluded 的不显示）
      */
     batchMatch(extractedData) {
         const result = {
             matched: [],
-            unmatched: []
+            unmatched: [],
+            excluded: []  // v3.0: 记录被排除的项（可选，用于调试）
         };
 
         // 匹配单词
         if (extractedData.words && Array.isArray(extractedData.words)) {
             for (const word of extractedData.words) {
                 const matchResult = this.matchWord(word);
+                
+                // v3.0: 如果被排除，跳过
+                if (matchResult.excluded) {
+                    result.excluded.push({
+                        item_type: 'word',
+                        original_text: word,
+                        reason: matchResult.reason
+                    });
+                    continue;
+                }
+                
                 if (matchResult.matched) {
                     result.matched.push({
                         item_type: 'word',
@@ -290,6 +869,17 @@ class MatchingService {
         if (extractedData.phrases && Array.isArray(extractedData.phrases)) {
             for (const phrase of extractedData.phrases) {
                 const matchResult = this.matchPhrase(phrase);
+                
+                // v3.0: 如果被排除，跳过
+                if (matchResult.excluded) {
+                    result.excluded.push({
+                        item_type: 'phrase',
+                        original_text: phrase,
+                        reason: matchResult.reason
+                    });
+                    continue;
+                }
+                
                 if (matchResult.matched) {
                     result.matched.push({
                         item_type: 'phrase',
@@ -310,6 +900,17 @@ class MatchingService {
         if (extractedData.patterns && Array.isArray(extractedData.patterns)) {
             for (const pattern of extractedData.patterns) {
                 const matchResult = this.matchPattern(pattern);
+                
+                // v3.0: 如果被排除，跳过
+                if (matchResult.excluded) {
+                    result.excluded.push({
+                        item_type: 'pattern',
+                        original_text: pattern,
+                        reason: matchResult.reason
+                    });
+                    continue;
+                }
+                
                 if (matchResult.matched) {
                     result.matched.push({
                         item_type: 'pattern',
@@ -330,6 +931,17 @@ class MatchingService {
         if (extractedData.grammar && Array.isArray(extractedData.grammar)) {
             for (const grammar of extractedData.grammar) {
                 const matchResult = this.matchGrammar(grammar);
+                
+                // v3.0: 如果被排除，跳过
+                if (matchResult.excluded) {
+                    result.excluded.push({
+                        item_type: 'grammar',
+                        original_text: grammar,
+                        reason: matchResult.reason
+                    });
+                    continue;
+                }
+                
                 if (matchResult.matched) {
                     result.matched.push({
                         item_type: 'grammar',
@@ -344,6 +956,11 @@ class MatchingService {
                     });
                 }
             }
+        }
+
+        // v3.0: 日志输出排除数量
+        if (result.excluded.length > 0) {
+            console.log(`[MatchingService] 已排除 ${result.excluded.length} 个项目`);
         }
 
         return result;
@@ -365,6 +982,25 @@ class MatchingService {
             unmatched,
             matchRate: total > 0 ? ((exactMatch + fuzzyMatch) / total * 100).toFixed(1) : 0
         };
+    }
+
+    /**
+     * 开启/关闭调试模式
+     */
+    setDebug(enabled) {
+        this.debug = enabled;
+        console.log(`[MatchingService] 调试模式: ${enabled ? '开启' : '关闭'}`);
+    }
+
+    /**
+     * 添加黑名单词条
+     */
+    addToBlacklist(type, text) {
+        if (this.blacklist[type]) {
+            this.blacklist[type].push(text.toLowerCase());
+            this.refreshCache();
+            console.log(`[MatchingService] 已添加到${type}黑名单: ${text}`);
+        }
     }
 }
 
