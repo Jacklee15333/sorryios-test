@@ -94,6 +94,8 @@
         .main-content {
             margin-left: 220px;
             padding: 20px 30px;
+            overflow: hidden;
+            max-width: calc(100vw - 220px);
         }
         
         .header {
@@ -369,6 +371,9 @@
         /* 区块显示 */
         .section {
             display: none;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         
         .section.active {
@@ -686,10 +691,11 @@
             <div class="nav-label">工具</div>
             
             <li><a href="#" onclick="showSection('chunk')"><span class="icon">✂️</span><span>分块管理</span></a></li>
-            <li><a href="/grammar-admin" target="_blank"><span class="icon">📚</span><span>语法库管理</span></a></li>
-            <li><a href="/vocabulary-admin" target="_blank"><span class="icon">📖</span><span>词库管理</span></a></li>
-            <li><a href="/matching-dict-admin" target="_blank"><span class="icon">📚</span><span>匹配词典管理</span></a></li>
-            <li><a href="/processing-log-admin" target="_blank"><span class="icon">📋</span><span>处理日志</span></a></li>
+            <li><a href="#" onclick="showIframePage('/grammar-admin', '语法库管理')"><span class="icon">📚</span><span>语法库管理</span></a></li>
+            <li><a href="#" onclick="showIframePage('/vocabulary-admin', '词库管理')"><span class="icon">📖</span><span>词库管理</span></a></li>
+            <li><a href="#" onclick="showIframePage('/matching-dict-admin', '匹配词典管理')"><span class="icon">📚</span><span>匹配词典管理</span></a></li>
+            <li><a href="#" onclick="showIframePage('/exclude-admin', '排除库管理')"><span class="icon">🚫</span><span>排除库管理</span></a></li>
+            <li><a href="#" onclick="showIframePage('/processing-log-admin', '处理日志')"><span class="icon">📋</span><span>处理日志</span></a></li>
             
             <div class="nav-divider"></div>
             
@@ -1008,6 +1014,20 @@
                 </div>
             </div>
         </div>
+
+        <!-- iframe页面容器 -->
+        <div id="section-iframe" class="section">
+            <div class="header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <h2 id="iframe-title">📄 页面加载中...</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="refreshIframe()">🔄 刷新</button>
+                    <button class="btn btn-secondary" onclick="openInNewTab()">↗️ 新标签打开</button>
+                </div>
+            </div>
+            <div style="margin-top: 10px; height: calc(100vh - 140px); border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <iframe id="content-iframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
     </div>
 
     <!-- 添加用户弹窗 -->
@@ -1113,6 +1133,46 @@
                 case 'files': loadFiles(); break;
                 case 'logs': loadLogs(); break;
                 case 'chunk': loadChunkConfig(); loadChunkFiles(); break;
+            }
+        }
+        
+        // ============================================
+        // iframe页面显示（工具类页面）
+        // ============================================
+        let currentIframeUrl = '';
+        
+        function showIframePage(url, title) {
+            // 隐藏所有section，显示iframe section
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+            
+            document.getElementById('section-iframe').classList.add('active');
+            event.target.closest('a').classList.add('active');
+            
+            // 设置标题和加载页面
+            const iconMap = {
+                '/grammar-admin': '📚',
+                '/vocabulary-admin': '📖',
+                '/matching-dict-admin': '📚',
+                '/exclude-admin': '🚫',
+                '/processing-log-admin': '📋'
+            };
+            const icon = iconMap[url] || '📄';
+            document.getElementById('iframe-title').textContent = `${icon} ${title}`;
+            
+            // 加载页面到iframe
+            currentIframeUrl = url;
+            document.getElementById('content-iframe').src = url;
+        }
+        
+        function refreshIframe() {
+            const iframe = document.getElementById('content-iframe');
+            iframe.src = iframe.src;
+        }
+        
+        function openInNewTab() {
+            if (currentIframeUrl) {
+                window.open(currentIframeUrl, '_blank');
             }
         }
         
