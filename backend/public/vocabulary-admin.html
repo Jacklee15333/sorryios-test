@@ -7,407 +7,366 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.self !== window.top) {
-                // 强制重置 - 去掉所有边距
-                document.documentElement.style.cssText = 'margin: 0 !important; padding: 0 !important; width: 100% !important;';
                 document.body.classList.add('in-iframe');
-                document.body.style.cssText = 'padding: 0 !important; margin: 0 !important; width: 100% !important; min-width: 0 !important;';
-                
-                const container = document.querySelector('.container');
-                if (container) {
-                    container.style.cssText = 'max-width: none !important; width: 100% !important; margin: 0 !important; padding: 10px !important; min-width: 0 !important;';
-                }
-                
                 const backLink = document.querySelector('.back-link');
                 if (backLink) backLink.style.display = 'none';
-                
-                console.log('[词库] iframe模式已激活');
             }
         });
     </script>
     <style>
+        /* ========== Claude 风格基础样式 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #d1fae5 100%); 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; 
+            background: #f7f7f8;
             min-height: 100vh; 
-            padding: 20px; 
+            padding: 24px;
+            color: #1a1a1a;
         }
+        body.in-iframe { padding: 16px; }
+        body.in-iframe .back-link { display: none; }
         
-        /* iframe内嵌时的样式 - 完全适配 */
-        body.in-iframe {
-            padding: 12px !important;
-            margin: 0 !important;
-            overflow-x: hidden;
+        .container { max-width: 1200px; margin: 0 auto; }
+        .back-link { 
+            display: inline-block; 
+            color: #666; 
+            text-decoration: none; 
+            margin-bottom: 16px;
+            font-size: 14px;
         }
-        body.in-iframe .back-link {
-            display: none !important;
-        }
-        body.in-iframe .container {
-            width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        body.in-iframe .header {
-            padding: 16px !important;
-            margin-bottom: 12px !important;
-        }
-        body.in-iframe .header h1 {
-            font-size: 20px !important;
-        }
-        body.in-iframe .tabs {
-            padding: 12px !important;
-            margin-bottom: 12px !important;
-        }
-        body.in-iframe .tab-content {
-            padding: 12px !important;
-        }
+        .back-link:hover { color: #1a1a1a; }
         
-        .container { max-width: 1400px; margin: 0 auto; }
-        
+        /* ========== 头部卡片 ========== */
         .header { 
             background: white; 
-            border-radius: 16px; 
+            border-radius: 12px; 
             padding: 24px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06); 
-            border: 1px solid #e0f2f1;
+            margin-bottom: 16px; 
+            border: 1px solid #e5e5e5;
         }
-        .header h1 { color: #0f766e; font-size: 26px; margin-bottom: 8px; }
-        .header p { color: #64748b; font-size: 14px; }
-        .stats-bar { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-        .stat-item { 
-            background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 100%); 
-            color: #134e4a; 
-            padding: 10px 16px; 
-            border-radius: 10px; 
-            font-size: 14px; 
-            font-weight: 500;
-            box-shadow: 0 2px 8px rgba(45, 212, 191, 0.25);
+        .header h1 { 
+            font-size: 20px; 
+            font-weight: 600; 
+            color: #1a1a1a; 
+            margin-bottom: 6px;
         }
-        .stat-item strong { font-size: 18px; margin-right: 4px; color: #042f2e; }
+        .header p { color: #666; font-size: 14px; margin-bottom: 16px; }
         
+        .stats-bar { display: flex; gap: 12px; flex-wrap: wrap; }
+        .stat-item { 
+            background: #f7f7f8;
+            color: #1a1a1a; 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            font-size: 14px;
+            border: 1px solid #e5e5e5;
+        }
+        .stat-item strong { 
+            font-size: 18px; 
+            font-weight: 600;
+            margin-right: 4px; 
+            color: #2563eb;
+        }
+        
+        /* ========== Tab 切换 ========== */
         .tabs { 
             background: white; 
             border-radius: 12px; 
             padding: 6px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06); 
+            margin-bottom: 16px; 
             display: flex; 
-            gap: 6px;
-            border: 1px solid #e0f2f1;
+            gap: 4px;
+            border: 1px solid #e5e5e5;
         }
         .tab-btn { 
             flex: 1; 
-            padding: 12px 20px; 
+            padding: 10px 16px; 
             border: none; 
             border-radius: 8px; 
             font-size: 14px; 
-            font-weight: 600; 
+            font-weight: 500; 
             cursor: pointer; 
-            transition: all 0.2s; 
+            transition: all 0.15s; 
             background: transparent; 
-            color: #64748b; 
+            color: #666; 
         }
-        .tab-btn:hover { background: #f0fdfa; color: #0f766e; }
+        .tab-btn:hover { background: #f7f7f8; color: #1a1a1a; }
         .tab-btn.active { 
-            background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 100%); 
-            color: #134e4a; 
-            box-shadow: 0 2px 8px rgba(45, 212, 191, 0.3);
+            background: #1a1a1a; 
+            color: white;
         }
         
+        /* ========== 工具栏 ========== */
         .toolbar { 
             background: white; 
             border-radius: 12px; 
-            padding: 14px 20px; 
+            padding: 16px; 
             margin-bottom: 16px; 
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06); 
             display: flex; 
-            gap: 10px; 
-            flex-wrap: wrap; 
+            gap: 12px; 
             align-items: center;
-            border: 1px solid #e0f2f1;
+            flex-wrap: wrap;
+            border: 1px solid #e5e5e5;
         }
-        .search-box { flex: 1; min-width: 200px; display: flex; gap: 8px; }
+        .search-box { display: flex; gap: 8px; flex: 1; min-width: 200px; }
         .search-box input { 
             flex: 1; 
-            padding: 9px 14px; 
-            border: 1px solid #d1d5db; 
+            padding: 8px 12px; 
+            border: 1px solid #e5e5e5; 
             border-radius: 8px; 
-            font-size: 14px; 
-            transition: border-color 0.2s;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s;
         }
-        .search-box input:focus { outline: none; border-color: #2dd4bf; }
+        .search-box input:focus { border-color: #2563eb; }
         
+        /* ========== 按钮 ========== */
         .btn { 
-            padding: 9px 16px; 
+            padding: 8px 16px; 
             border: none; 
             border-radius: 8px; 
             font-size: 13px; 
-            cursor: pointer; 
-            transition: all 0.2s; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 5px;
             font-weight: 500;
-        }
-        .btn-primary { 
-            background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 100%); 
-            color: #134e4a; 
-        }
-        .btn-primary:hover { 
-            transform: translateY(-1px); 
-            box-shadow: 0 4px 12px rgba(45, 212, 191, 0.35); 
-        }
-        .btn-success { background: #34d399; color: #064e3b; }
-        .btn-success:hover { background: #10b981; }
-        .btn-warning { background: #fbbf24; color: #78350f; }
-        .btn-warning:hover { background: #f59e0b; }
-        .btn-danger { background: #f87171; color: #7f1d1d; }
-        .btn-danger:hover { background: #ef4444; }
-        .btn-secondary { background: #94a3b8; color: white; }
-        .btn-secondary:hover { background: #64748b; }
-        
-        .filter-select { 
-            padding: 9px 14px; 
-            border: 1px solid #d1d5db; 
-            border-radius: 8px; 
-            font-size: 13px; 
             cursor: pointer; 
-            background: white;
+            transition: all 0.15s;
+            white-space: nowrap;
         }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e5e5; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-confirm { background: #10b981; color: white; }
+        .btn-confirm:hover { background: #059669; }
         
+        /* ========== 列表项 ========== */
         .item-list { 
             background: white; 
             border-radius: 12px; 
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06); 
+            border: 1px solid #e5e5e5;
             overflow: hidden;
-            border: 1px solid #e0f2f1;
         }
-        
-        /* 紧凑的同行布局 */
         .item { 
-            padding: 12px 20px; 
-            border-bottom: 1px solid #f1f5f9; 
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
+            display: flex; 
+            align-items: center; 
+            padding: 14px 16px; 
+            border-bottom: 1px solid #f3f4f6;
             gap: 12px;
-            flex-wrap: wrap;
+            transition: background 0.1s;
         }
-        .item:hover { background: #f8fafc; }
         .item:last-child { border-bottom: none; }
+        .item:hover { background: #fafafa; }
         .item.disabled { opacity: 0.5; }
-        
-        .item-id {
-            font-size: 12px;
-            color: #94a3b8;
-            font-family: monospace;
-            min-width: 50px;
+        .item.is-new { 
+            background: #fef2f2;
+            border-left: 3px solid #dc2626;
         }
+        .item.is-new:hover { background: #fee2e2; }
         
-        .item-main { 
-            flex: 1; 
-            min-width: 300px;
-            display: flex;
-            align-items: baseline;
-            gap: 10px;
-            flex-wrap: wrap;
+        .item-id { 
+            color: #9ca3af; 
+            font-size: 12px; 
+            min-width: 40px;
         }
+        .item-main { flex: 1; min-width: 0; }
         .item-word { 
-            font-size: 16px; 
             font-weight: 600; 
-            color: #1e293b; 
+            color: #1a1a1a;
+            margin-right: 8px;
         }
         .item-phonetic { 
-            font-size: 13px; 
-            color: #94a3b8; 
-            font-weight: normal;
+            color: #9ca3af; 
+            font-size: 13px;
+            margin-right: 8px;
         }
         .item-meaning { 
-            color: #475569; 
+            color: #666; 
             font-size: 14px;
-            flex-shrink: 0;
         }
-        .item-meaning::before {
-            content: "—";
-            margin-right: 8px;
-            color: #cbd5e1;
-        }
-        
-        .item-badges { 
-            display: flex; 
-            gap: 6px; 
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .badge { 
-            font-size: 11px; 
-            padding: 3px 8px; 
-            border-radius: 4px; 
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        .badge-pos { background: #dcfce7; color: #166534; }
-        .badge-category { background: #e0f2fe; color: #0369a1; }
-        .badge-disabled { background: #fee2e2; color: #dc2626; }
-        
         .item-example { 
-            width: 100%;
-            color: #64748b; 
-            font-size: 12px; 
-            font-style: italic; 
-            background: #f8fafc; 
-            padding: 8px 12px; 
-            border-radius: 6px; 
+            font-size: 13px; 
+            color: #9ca3af; 
             margin-top: 6px;
-            border-left: 3px solid #5eead4;
+            font-style: italic;
         }
-        
         .item-actions { 
             display: flex; 
             gap: 6px;
             flex-shrink: 0;
         }
-        .item-actions .btn { padding: 5px 10px; font-size: 12px; }
+        .item-badges { display: flex; gap: 6px; margin-right: 8px; }
         
-        /* 模态框 */
+        /* ========== 标签 ========== */
+        .badge { 
+            display: inline-block;
+            padding: 3px 8px; 
+            border-radius: 4px; 
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .badge-pos { background: #f3f4f6; color: #374151; }
+        .badge-disabled { background: #fef2f2; color: #dc2626; }
+        
+        .type-badge {
+            display: inline-block;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .type-badge.word { background: #eff6ff; color: #2563eb; }
+        .type-badge.phrase { background: #f0fdf4; color: #16a34a; }
+        .type-badge.pattern { background: #fefce8; color: #ca8a04; }
+        
+        .new-badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+        
+        /* ========== 空状态 ========== */
+        .empty-state { 
+            text-align: center; 
+            padding: 48px 24px; 
+            color: #9ca3af;
+        }
+        .empty-state h3 { 
+            font-size: 16px; 
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .empty-state p { font-size: 14px; }
+        .loading { text-align: center; padding: 48px; color: #9ca3af; }
+        
+        /* ========== Tab 内容 ========== */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* ========== 弹窗 ========== */
         .modal { 
             display: none; 
             position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(15, 23, 42, 0.4); 
-            z-index: 1000; 
-            overflow-y: auto; 
-            padding: 20px;
-            backdrop-filter: blur(4px);
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
         }
-        .modal.active { display: flex; align-items: flex-start; justify-content: center; }
+        .modal.active { display: flex; }
         .modal-content { 
             background: white; 
-            border-radius: 16px; 
+            border-radius: 12px; 
             width: 100%; 
-            max-width: 560px; 
-            margin: 40px 0; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            max-width: 500px; 
+            max-height: 90vh;
+            overflow-y: auto;
         }
         .modal-header { 
-            padding: 18px 24px; 
-            border-bottom: 1px solid #e2e8f0; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+            padding: 20px 24px; 
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .modal-header h2 { color: #1e293b; font-size: 18px; }
+        .modal-header h2 { font-size: 18px; font-weight: 600; }
         .modal-close { 
             background: none; 
             border: none; 
             font-size: 24px; 
             cursor: pointer; 
-            color: #94a3b8;
+            color: #9ca3af;
             line-height: 1;
         }
-        .modal-close:hover { color: #475569; }
-        .modal-body { padding: 20px 24px; }
+        .modal-close:hover { color: #1a1a1a; }
+        .modal-body { padding: 24px; }
         .modal-footer { 
-            padding: 14px 24px; 
-            border-top: 1px solid #e2e8f0; 
-            display: flex; 
-            justify-content: flex-end; 
-            gap: 10px; 
+            padding: 16px 24px; 
+            border-top: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
         }
         
         .form-group { margin-bottom: 16px; }
         .form-group label { 
             display: block; 
-            font-weight: 600; 
-            color: #374151; 
-            margin-bottom: 6px; 
-            font-size: 13px;
+            font-size: 14px; 
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
         }
-        .form-group input, .form-group textarea, .form-group select { 
+        .form-group input,
+        .form-group select,
+        .form-group textarea { 
             width: 100%; 
-            padding: 10px 14px; 
-            border: 1px solid #d1d5db; 
+            padding: 10px 12px; 
+            border: 1px solid #e5e5e5; 
             border-radius: 8px; 
             font-size: 14px;
-            transition: border-color 0.2s;
+            outline: none;
+            transition: border-color 0.15s;
         }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { 
-            outline: none; 
-            border-color: #2dd4bf; 
-        }
-        .form-group textarea { min-height: 70px; resize: vertical; }
-        .form-group .hint { font-size: 11px; color: #94a3b8; margin-top: 4px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus { border-color: #2563eb; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
         
-        /* 类型切换提示 */
-        .type-switch-hint {
-            background: #fef3c7;
-            border: 1px solid #fcd34d;
+        .form-row { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+        }
+        
+        /* ========== Toast ========== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: #1a1a1a;
+            color: white;
             border-radius: 8px;
-            padding: 10px 14px;
-            margin-bottom: 16px;
-            font-size: 12px;
-            color: #92400e;
+            font-size: 14px;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
-        .type-switch-hint strong { color: #78350f; }
-        
-        .empty-state { text-align: center; padding: 50px 20px; color: #94a3b8; }
-        .empty-state h3 { margin-bottom: 8px; color: #64748b; font-size: 16px; }
-        .loading { text-align: center; padding: 40px; color: #64748b; }
-        
-        .toast { 
-            position: fixed; 
-            bottom: 20px; 
-            right: 20px; 
-            padding: 14px 20px; 
-            border-radius: 10px; 
-            color: white; 
-            font-size: 14px; 
-            z-index: 2000; 
-            transform: translateX(120%); 
-            opacity: 0; 
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.show { opacity: 1; }
         .toast.success { background: #10b981; }
         .toast.error { background: #ef4444; }
         
-        .back-link { 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 6px; 
-            color: #0f766e; 
-            text-decoration: none; 
-            margin-bottom: 16px; 
-            font-weight: 500;
-            font-size: 14px;
-        }
-        .back-link:hover { text-decoration: underline; }
-        
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        /* 响应式 */
+        /* ========== 响应式 ========== */
         @media (max-width: 768px) {
+            body { padding: 12px; }
             .item { flex-direction: column; align-items: flex-start; }
-            .item-main { width: 100%; }
-            .item-actions { width: 100%; justify-content: flex-start; }
+            .item-actions { width: 100%; margin-top: 8px; }
             .form-row { grid-template-columns: 1fr; }
+            .toolbar { flex-direction: column; }
+            .search-box { width: 100%; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="/admin" class="back-link">← 返回管理后台</a>
+        
         <div class="header">
             <h1>📖 词库管理</h1>
-            <p>管理单词、短语、句型，支持添加、编辑、删除、分类切换</p>
+            <p>管理单词、短语，支持添加、编辑、删除</p>
             <div class="stats-bar">
                 <div class="stat-item"><strong id="statWords">0</strong> 单词</div>
                 <div class="stat-item"><strong id="statPhrases">0</strong> 短语</div>
@@ -417,24 +376,37 @@
         </div>
         
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('words')">📝 单词</button>
+            <button class="tab-btn active" onclick="switchTab('all')">📋 全部</button>
+            <button class="tab-btn" onclick="switchTab('words')">📝 单词</button>
             <button class="tab-btn" onclick="switchTab('phrases')">📚 短语</button>
-            <button class="tab-btn" onclick="switchTab('patterns')">📋 句型</button>
         </div>
         
-        <div id="tab-words" class="tab-content active">
+        <!-- 全部列表 -->
+        <div id="tab-all" class="tab-content active">
+            <div class="toolbar">
+                <div class="search-box">
+                    <input type="text" id="searchAll" placeholder="搜索全部..." onkeypress="if(event.key==='Enter')searchItems('all')">
+                    <button class="btn btn-primary" onclick="searchItems('all')">搜索</button>
+                </div>
+                <button class="btn btn-secondary" onclick="exportData()">导出</button>
+                <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">导入</button>
+            </div>
+            <div class="item-list" id="allList"><div class="loading">加载中...</div></div>
+        </div>
+        
+        <!-- 单词列表 -->
+        <div id="tab-words" class="tab-content">
             <div class="toolbar">
                 <div class="search-box">
                     <input type="text" id="searchWords" placeholder="搜索单词..." onkeypress="if(event.key==='Enter')searchItems('words')">
                     <button class="btn btn-primary" onclick="searchItems('words')">搜索</button>
                 </div>
                 <button class="btn btn-success" onclick="openAddModal('words')">+ 添加单词</button>
-                <button class="btn btn-secondary" onclick="exportData()">导出</button>
-                <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">导入</button>
             </div>
             <div class="item-list" id="wordsList"><div class="loading">加载中...</div></div>
         </div>
         
+        <!-- 短语列表 -->
         <div id="tab-phrases" class="tab-content">
             <div class="toolbar">
                 <div class="search-box">
@@ -444,17 +416,6 @@
                 <button class="btn btn-success" onclick="openAddModal('phrases')">+ 添加短语</button>
             </div>
             <div class="item-list" id="phrasesList"><div class="loading">加载中...</div></div>
-        </div>
-        
-        <div id="tab-patterns" class="tab-content">
-            <div class="toolbar">
-                <div class="search-box">
-                    <input type="text" id="searchPatterns" placeholder="搜索句型..." onkeypress="if(event.key==='Enter')searchItems('patterns')">
-                    <button class="btn btn-primary" onclick="searchItems('patterns')">搜索</button>
-                </div>
-                <button class="btn btn-success" onclick="openAddModal('patterns')">+ 添加句型</button>
-            </div>
-            <div class="item-list" id="patternsList"><div class="loading">加载中...</div></div>
         </div>
         
         <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
@@ -469,61 +430,31 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="wordId">
-                <input type="hidden" id="wordOriginalType" value="words">
-                
-                <div class="type-switch-hint" id="wordTypeSwitchHint" style="display:none">
-                    <strong>💡 类型切换：</strong>选择不同类型后保存，该条目会自动移动到对应分类
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>类型</label>
-                        <select id="wordType" onchange="onTypeChange('word')">
-                            <option value="words">📝 单词</option>
-                            <option value="phrases">📚 短语</option>
-                            <option value="patterns">📋 句型</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>难度</label>
-                        <select id="wordDifficulty">
-                            <option value="1">简单</option>
-                            <option value="2" selected>中等</option>
-                            <option value="3">困难</option>
-                        </select>
-                    </div>
-                </div>
-                
                 <div class="form-group">
                     <label>单词 *</label>
-                    <input type="text" id="wordWord" placeholder="如：environment">
+                    <input type="text" id="wordText" placeholder="输入单词">
+                </div>
+                <div class="form-group">
+                    <label>含义 *</label>
+                    <input type="text" id="wordMeaning" placeholder="中文释义">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>音标</label>
-                        <input type="text" id="wordPhonetic" placeholder="如：/ɪnˈvaɪrənmənt/">
+                        <input type="text" id="wordPhonetic" placeholder="/ˈæp.əl/">
                     </div>
                     <div class="form-group">
                         <label>词性</label>
-                        <input type="text" id="wordPos" placeholder="如：n.">
+                        <input type="text" id="wordPos" placeholder="n. / v. / adj.">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>含义 *</label>
-                    <input type="text" id="wordMeaning" placeholder="如：环境">
+                    <label>分类</label>
+                    <input type="text" id="wordCategory" placeholder="如：基础词汇">
                 </div>
                 <div class="form-group">
                     <label>例句</label>
-                    <textarea id="wordExample" placeholder="如：We should protect the environment."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>不规则变形</label>
-                    <input type="text" id="wordIrregular" placeholder='如：{"past":"went","pp":"gone"}'>
-                    <p class="hint">JSON格式：{"past":"过去式","pp":"过去分词"}</p>
-                </div>
-                <div class="form-group">
-                    <label>分类</label>
-                    <input type="text" id="wordCategory" placeholder="如：环境">
+                    <textarea id="wordExample" placeholder="英文例句"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -542,46 +473,21 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="phraseId">
-                <input type="hidden" id="phraseOriginalType" value="phrases">
-                
-                <div class="type-switch-hint" id="phraseTypeSwitchHint" style="display:none">
-                    <strong>💡 类型切换：</strong>选择不同类型后保存，该条目会自动移动到对应分类
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>类型</label>
-                        <select id="phraseType" onchange="onTypeChange('phrase')">
-                            <option value="words">📝 单词</option>
-                            <option value="phrases" selected>📚 短语</option>
-                            <option value="patterns">📋 句型</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>难度</label>
-                        <select id="phraseDifficulty">
-                            <option value="1">简单</option>
-                            <option value="2" selected>中等</option>
-                            <option value="3">困难</option>
-                        </select>
-                    </div>
-                </div>
-                
                 <div class="form-group">
                     <label>短语 *</label>
-                    <input type="text" id="phrasePhrase" placeholder="如：look forward to doing sth.">
+                    <input type="text" id="phraseText" placeholder="输入短语">
                 </div>
                 <div class="form-group">
                     <label>含义 *</label>
-                    <input type="text" id="phraseMeaning" placeholder="如：期待做某事">
-                </div>
-                <div class="form-group">
-                    <label>例句</label>
-                    <textarea id="phraseExample" placeholder="如：I look forward to seeing you."></textarea>
+                    <input type="text" id="phraseMeaning" placeholder="中文释义">
                 </div>
                 <div class="form-group">
                     <label>分类</label>
                     <input type="text" id="phraseCategory" placeholder="如：动词短语">
+                </div>
+                <div class="form-group">
+                    <label>例句</label>
+                    <textarea id="phraseExample" placeholder="英文例句"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -591,75 +497,17 @@
         </div>
     </div>
 
-    <!-- 句型编辑弹窗 -->
-    <div class="modal" id="patternModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="patternModalTitle">添加句型</h2>
-                <button class="modal-close" onclick="closeModal('patternModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="patternId">
-                <input type="hidden" id="patternOriginalType" value="patterns">
-                
-                <div class="type-switch-hint" id="patternTypeSwitchHint" style="display:none">
-                    <strong>💡 类型切换：</strong>选择不同类型后保存，该条目会自动移动到对应分类
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>类型</label>
-                        <select id="patternType" onchange="onTypeChange('pattern')">
-                            <option value="words">📝 单词</option>
-                            <option value="phrases">📚 短语</option>
-                            <option value="patterns" selected>📋 句型</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>难度</label>
-                        <select id="patternDifficulty">
-                            <option value="1">简单</option>
-                            <option value="2" selected>中等</option>
-                            <option value="3">困难</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>句型 *</label>
-                    <input type="text" id="patternPattern" placeholder="如：so...that...">
-                </div>
-                <div class="form-group">
-                    <label>含义 *</label>
-                    <input type="text" id="patternMeaning" placeholder="如：如此...以至于...">
-                </div>
-                <div class="form-group">
-                    <label>例句</label>
-                    <textarea id="patternExample" placeholder="如：He was so tired that he fell asleep."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>分类</label>
-                    <input type="text" id="patternCategory" placeholder="如：结果状语">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('patternModal')">取消</button>
-                <button class="btn btn-primary" onclick="savePattern()">保存</button>
-            </div>
-        </div>
-    </div>
-
     <div class="toast" id="toast"></div>
 
     <script>
         const API_BASE = '/api/vocabulary';
-        let allWords = [], allPhrases = [], allPatterns = [];
+        let allWords = [], allPhrases = [], allPatterns = [], allItems = [];
         
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
+            loadAll();
             loadWords();
             loadPhrases();
-            loadPatterns();
         });
 
         function switchTab(tab) {
@@ -667,6 +515,10 @@
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('tab-' + tab).classList.add('active');
+            
+            if (tab === 'all') loadAll();
+            else if (tab === 'words') loadWords();
+            else if (tab === 'phrases') loadPhrases();
         }
 
         async function loadStats() {
@@ -680,6 +532,74 @@
                     document.getElementById('statTotal').textContent = data.data.total;
                 }
             } catch (e) { console.error(e); }
+        }
+
+        // ========== 全部列表 ==========
+        async function loadAll() {
+            try {
+                const res = await fetch(API_BASE + '/all');
+                const data = await res.json();
+                if (data.success) {
+                    allItems = data.data;
+                    renderAll(allItems);
+                }
+            } catch (e) {
+                document.getElementById('allList').innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
+            }
+        }
+
+        function renderAll(items) {
+            const c = document.getElementById('allList');
+            if (!items.length) {
+                c.innerHTML = '<div class="empty-state"><h3>暂无数据</h3><p>点击添加单词或短语</p></div>';
+                return;
+            }
+            c.innerHTML = items.map(item => {
+                const isNew = item.is_new === 1;
+                const typeLabel = item.type === 'word' ? '单词' : item.type === 'phrase' ? '短语' : '句型';
+                const typeBadgeClass = item.type === 'word' ? 'word' : item.type === 'phrase' ? 'phrase' : 'pattern';
+                const text = item.word || item.phrase || item.pattern || '';
+                const meaning = item.meaning || '';
+                
+                return `
+                    <div class="item ${isNew ? 'is-new' : ''}">
+                        <span class="type-badge ${typeBadgeClass}">${typeLabel}</span>
+                        <div class="item-main">
+                            <span class="item-word">${escapeHtml(text)}</span>
+                            ${isNew ? '<span class="new-badge">🆕 新</span>' : ''}
+                            <span class="item-meaning">— ${escapeHtml(meaning)}</span>
+                        </div>
+                        <div class="item-actions">
+                            ${isNew ? `<button class="btn btn-confirm btn-sm" onclick="confirmItem('${item.type}', ${item.id})">✓ 确认</button>` : ''}
+                            <button class="btn btn-primary btn-sm" onclick="editItem('${item.type}', ${item.id})">编辑</button>
+                            <button class="btn btn-secondary btn-sm" onclick="toggleItem('${item.type}s', ${item.id})">
+                                ${item.enabled ? '禁用' : '启用'}
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteItem('${item.type}s', ${item.id}, '${escapeHtml(text)}')">删除</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function confirmItem(type, id) {
+            try {
+                const table = type === 'word' ? 'words' : type === 'phrase' ? 'phrases' : 'patterns';
+                const res = await fetch(API_BASE + '/' + table + '/' + id + '/confirm', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('已确认', 'success');
+                    loadAll();
+                    loadStats();
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+
+        function editItem(type, id) {
+            if (type === 'word') editWord(id);
+            else if (type === 'phrase') editPhrase(id);
         }
 
         // ========== 单词 ==========
@@ -702,26 +622,30 @@
                 c.innerHTML = '<div class="empty-state"><h3>暂无单词</h3><p>点击"添加单词"创建</p></div>';
                 return;
             }
-            c.innerHTML = words.map(w => `
-                <div class="item ${w.enabled ? '' : 'disabled'}">
+            c.innerHTML = words.map(w => {
+                const isNew = w.is_new === 1;
+                return `
+                <div class="item ${w.enabled ? '' : 'disabled'} ${isNew ? 'is-new' : ''}">
                     <span class="item-id">#${w.id}</span>
                     <div class="item-main">
                         <span class="item-word">${escapeHtml(w.word)}</span>
+                        ${isNew ? '<span class="new-badge">🆕 新</span>' : ''}
                         ${w.phonetic ? `<span class="item-phonetic">${escapeHtml(w.phonetic)}</span>` : ''}
-                        <span class="item-meaning">${escapeHtml(w.meaning)}</span>
+                        <span class="item-meaning">— ${escapeHtml(w.meaning)}</span>
+                        ${w.example ? `<div class="item-example">${escapeHtml(w.example)}</div>` : ''}
                     </div>
                     <div class="item-badges">
                         ${w.pos ? `<span class="badge badge-pos">${escapeHtml(w.pos)}</span>` : ''}
                         ${!w.enabled ? '<span class="badge badge-disabled">已禁用</span>' : ''}
                     </div>
                     <div class="item-actions">
-                        <button class="btn btn-primary" onclick="editWord(${w.id})">编辑</button>
-                        <button class="btn ${w.enabled ? 'btn-warning' : 'btn-success'}" onclick="toggleItem('words',${w.id})">${w.enabled ? '禁用' : '启用'}</button>
-                        <button class="btn btn-danger" onclick="deleteItem('words',${w.id},'${escapeHtml(w.word)}')">删除</button>
+                        ${isNew ? `<button class="btn btn-confirm btn-sm" onclick="confirmItem('word', ${w.id})">✓ 确认</button>` : ''}
+                        <button class="btn btn-primary btn-sm" onclick="editWord(${w.id})">编辑</button>
+                        <button class="btn btn-secondary btn-sm" onclick="toggleItem('words',${w.id})">${w.enabled ? '禁用' : '启用'}</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('words',${w.id},'${escapeHtml(w.word)}')">删除</button>
                     </div>
-                    ${w.example ? `<div class="item-example">${escapeHtml(w.example)}</div>` : ''}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // ========== 短语 ==========
@@ -742,418 +666,189 @@
                 c.innerHTML = '<div class="empty-state"><h3>暂无短语</h3><p>点击"添加短语"创建</p></div>';
                 return;
             }
-            c.innerHTML = phrases.map(p => `
-                <div class="item ${p.enabled ? '' : 'disabled'}">
+            c.innerHTML = phrases.map(p => {
+                const isNew = p.is_new === 1;
+                return `
+                <div class="item ${p.enabled ? '' : 'disabled'} ${isNew ? 'is-new' : ''}">
                     <span class="item-id">#${p.id}</span>
                     <div class="item-main">
                         <span class="item-word">${escapeHtml(p.phrase)}</span>
-                        <span class="item-meaning">${escapeHtml(p.meaning)}</span>
+                        ${isNew ? '<span class="new-badge">🆕 新</span>' : ''}
+                        <span class="item-meaning">— ${escapeHtml(p.meaning)}</span>
+                        ${p.example ? `<div class="item-example">${escapeHtml(p.example)}</div>` : ''}
                     </div>
                     <div class="item-badges">
                         ${!p.enabled ? '<span class="badge badge-disabled">已禁用</span>' : ''}
                     </div>
                     <div class="item-actions">
-                        <button class="btn btn-primary" onclick="editPhrase(${p.id})">编辑</button>
-                        <button class="btn ${p.enabled ? 'btn-warning' : 'btn-success'}" onclick="toggleItem('phrases',${p.id})">${p.enabled ? '禁用' : '启用'}</button>
-                        <button class="btn btn-danger" onclick="deleteItem('phrases',${p.id},'${escapeHtml(p.phrase)}')">删除</button>
+                        ${isNew ? `<button class="btn btn-confirm btn-sm" onclick="confirmItem('phrase', ${p.id})">✓ 确认</button>` : ''}
+                        <button class="btn btn-primary btn-sm" onclick="editPhrase(${p.id})">编辑</button>
+                        <button class="btn btn-secondary btn-sm" onclick="toggleItem('phrases',${p.id})">${p.enabled ? '禁用' : '启用'}</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('phrases',${p.id},'${escapeHtml(p.phrase)}')">删除</button>
                     </div>
-                    ${p.example ? `<div class="item-example">${escapeHtml(p.example)}</div>` : ''}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
-        // ========== 句型 ==========
-        async function loadPatterns() {
-            try {
-                const res = await fetch(API_BASE + '/patterns?all=true');
-                const data = await res.json();
-                if (data.success) {
-                    allPatterns = data.data;
-                    renderPatterns(allPatterns);
-                }
-            } catch (e) {}
-        }
-
-        function renderPatterns(patterns) {
-            const c = document.getElementById('patternsList');
-            if (!patterns.length) {
-                c.innerHTML = '<div class="empty-state"><h3>暂无句型</h3><p>点击"添加句型"创建</p></div>';
+        // ========== 搜索 ==========
+        async function searchItems(type) {
+            const inputId = 'search' + type.charAt(0).toUpperCase() + type.slice(1);
+            const kw = document.getElementById(inputId).value.trim();
+            
+            if (!kw) {
+                if (type === 'all') loadAll();
+                else if (type === 'words') renderWords(allWords);
+                else if (type === 'phrases') renderPhrases(allPhrases);
                 return;
             }
-            c.innerHTML = patterns.map(p => `
-                <div class="item ${p.enabled ? '' : 'disabled'}">
-                    <span class="item-id">#${p.id}</span>
-                    <div class="item-main">
-                        <span class="item-word">${escapeHtml(p.pattern)}</span>
-                        <span class="item-meaning">${escapeHtml(p.meaning)}</span>
-                    </div>
-                    <div class="item-badges">
-                        ${!p.enabled ? '<span class="badge badge-disabled">已禁用</span>' : ''}
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn btn-primary" onclick="editPattern(${p.id})">编辑</button>
-                        <button class="btn ${p.enabled ? 'btn-warning' : 'btn-success'}" onclick="toggleItem('patterns',${p.id})">${p.enabled ? '禁用' : '启用'}</button>
-                        <button class="btn btn-danger" onclick="deleteItem('patterns',${p.id},'${escapeHtml(p.pattern)}')">删除</button>
-                    </div>
-                    ${p.example ? `<div class="item-example">${escapeHtml(p.example)}</div>` : ''}
-                </div>
-            `).join('');
+            
+            try {
+                if (type === 'all') {
+                    const res = await fetch(API_BASE + '/all?search=' + encodeURIComponent(kw));
+                    const data = await res.json();
+                    if (data.success) renderAll(data.data);
+                } else {
+                    const res = await fetch(API_BASE + '/' + type + '?search=' + encodeURIComponent(kw));
+                    const data = await res.json();
+                    if (data.success) {
+                        if (type === 'words') renderWords(data.data);
+                        else if (type === 'phrases') renderPhrases(data.data);
+                    }
+                }
+            } catch (e) {
+                console.error('搜索失败:', e);
+            }
         }
 
-        // ========== 弹窗操作 ==========
+        // ========== CRUD 操作 ==========
         function openAddModal(type) {
             if (type === 'words') {
                 document.getElementById('wordModalTitle').textContent = '添加单词';
                 document.getElementById('wordId').value = '';
-                document.getElementById('wordOriginalType').value = 'words';
-                document.getElementById('wordType').value = 'words';
-                document.getElementById('wordWord').value = '';
+                document.getElementById('wordText').value = '';
+                document.getElementById('wordMeaning').value = '';
                 document.getElementById('wordPhonetic').value = '';
                 document.getElementById('wordPos').value = '';
-                document.getElementById('wordMeaning').value = '';
-                document.getElementById('wordExample').value = '';
-                document.getElementById('wordIrregular').value = '';
                 document.getElementById('wordCategory').value = '';
-                document.getElementById('wordDifficulty').value = '2';
-                document.getElementById('wordTypeSwitchHint').style.display = 'none';
+                document.getElementById('wordExample').value = '';
                 document.getElementById('wordModal').classList.add('active');
             } else if (type === 'phrases') {
                 document.getElementById('phraseModalTitle').textContent = '添加短语';
                 document.getElementById('phraseId').value = '';
-                document.getElementById('phraseOriginalType').value = 'phrases';
-                document.getElementById('phraseType').value = 'phrases';
-                document.getElementById('phrasePhrase').value = '';
+                document.getElementById('phraseText').value = '';
                 document.getElementById('phraseMeaning').value = '';
-                document.getElementById('phraseExample').value = '';
                 document.getElementById('phraseCategory').value = '';
-                document.getElementById('phraseDifficulty').value = '2';
-                document.getElementById('phraseTypeSwitchHint').style.display = 'none';
+                document.getElementById('phraseExample').value = '';
                 document.getElementById('phraseModal').classList.add('active');
-            } else if (type === 'patterns') {
-                document.getElementById('patternModalTitle').textContent = '添加句型';
-                document.getElementById('patternId').value = '';
-                document.getElementById('patternOriginalType').value = 'patterns';
-                document.getElementById('patternType').value = 'patterns';
-                document.getElementById('patternPattern').value = '';
-                document.getElementById('patternMeaning').value = '';
-                document.getElementById('patternExample').value = '';
-                document.getElementById('patternCategory').value = '';
-                document.getElementById('patternDifficulty').value = '2';
-                document.getElementById('patternTypeSwitchHint').style.display = 'none';
-                document.getElementById('patternModal').classList.add('active');
             }
         }
 
-        function editWord(id) {
-            const w = allWords.find(x => x.id === id);
-            if (!w) return;
-            document.getElementById('wordModalTitle').textContent = '编辑单词';
-            document.getElementById('wordId').value = id;
-            document.getElementById('wordOriginalType').value = 'words';
-            document.getElementById('wordType').value = 'words';
-            document.getElementById('wordWord').value = w.word;
-            document.getElementById('wordPhonetic').value = w.phonetic || '';
-            document.getElementById('wordPos').value = w.pos || '';
-            document.getElementById('wordMeaning').value = w.meaning;
-            document.getElementById('wordExample').value = w.example || '';
-            document.getElementById('wordIrregular').value = Object.keys(w.irregular_forms || {}).length ? JSON.stringify(w.irregular_forms) : '';
-            document.getElementById('wordCategory').value = w.category || '';
-            document.getElementById('wordDifficulty').value = w.difficulty || 2;
-            document.getElementById('wordTypeSwitchHint').style.display = 'block';
-            document.getElementById('wordModal').classList.add('active');
+        async function editWord(id) {
+            try {
+                const res = await fetch(API_BASE + '/words/' + id);
+                const data = await res.json();
+                if (data.success) {
+                    const w = data.data;
+                    document.getElementById('wordModalTitle').textContent = '编辑单词';
+                    document.getElementById('wordId').value = w.id;
+                    document.getElementById('wordText').value = w.word;
+                    document.getElementById('wordMeaning').value = w.meaning;
+                    document.getElementById('wordPhonetic').value = w.phonetic || '';
+                    document.getElementById('wordPos').value = w.pos || '';
+                    document.getElementById('wordCategory').value = w.category || '';
+                    document.getElementById('wordExample').value = w.example || '';
+                    document.getElementById('wordModal').classList.add('active');
+                }
+            } catch (e) {
+                showToast('加载失败', 'error');
+            }
         }
 
-        function editPhrase(id) {
-            const p = allPhrases.find(x => x.id === id);
-            if (!p) return;
-            document.getElementById('phraseModalTitle').textContent = '编辑短语';
-            document.getElementById('phraseId').value = id;
-            document.getElementById('phraseOriginalType').value = 'phrases';
-            document.getElementById('phraseType').value = 'phrases';
-            document.getElementById('phrasePhrase').value = p.phrase;
-            document.getElementById('phraseMeaning').value = p.meaning;
-            document.getElementById('phraseExample').value = p.example || '';
-            document.getElementById('phraseCategory').value = p.category || '';
-            document.getElementById('phraseDifficulty').value = p.difficulty || 2;
-            document.getElementById('phraseTypeSwitchHint').style.display = 'block';
-            document.getElementById('phraseModal').classList.add('active');
+        async function editPhrase(id) {
+            try {
+                const res = await fetch(API_BASE + '/phrases/' + id);
+                const data = await res.json();
+                if (data.success) {
+                    const p = data.data;
+                    document.getElementById('phraseModalTitle').textContent = '编辑短语';
+                    document.getElementById('phraseId').value = p.id;
+                    document.getElementById('phraseText').value = p.phrase;
+                    document.getElementById('phraseMeaning').value = p.meaning;
+                    document.getElementById('phraseCategory').value = p.category || '';
+                    document.getElementById('phraseExample').value = p.example || '';
+                    document.getElementById('phraseModal').classList.add('active');
+                }
+            } catch (e) {
+                showToast('加载失败', 'error');
+            }
         }
 
-        function editPattern(id) {
-            const p = allPatterns.find(x => x.id === id);
-            if (!p) return;
-            document.getElementById('patternModalTitle').textContent = '编辑句型';
-            document.getElementById('patternId').value = id;
-            document.getElementById('patternOriginalType').value = 'patterns';
-            document.getElementById('patternType').value = 'patterns';
-            document.getElementById('patternPattern').value = p.pattern;
-            document.getElementById('patternMeaning').value = p.meaning;
-            document.getElementById('patternExample').value = p.example || '';
-            document.getElementById('patternCategory').value = p.category || '';
-            document.getElementById('patternDifficulty').value = p.difficulty || 2;
-            document.getElementById('patternTypeSwitchHint').style.display = 'block';
-            document.getElementById('patternModal').classList.add('active');
-        }
-
-        function onTypeChange(modalType) {
-            // 显示类型切换提示
-            const hint = document.getElementById(modalType + 'TypeSwitchHint');
-            if (hint) hint.style.display = 'block';
-        }
-
-        // ========== 保存操作（支持类型切换）==========
         async function saveWord() {
             const id = document.getElementById('wordId').value;
-            const originalType = document.getElementById('wordOriginalType').value;
-            const newType = document.getElementById('wordType').value;
-            
-            let irregular = {};
-            try {
-                const s = document.getElementById('wordIrregular').value.trim();
-                if (s) irregular = JSON.parse(s);
-            } catch (e) {
-                showToast('不规则变形格式错误', 'error');
-                return;
-            }
-            
-            const content = document.getElementById('wordWord').value.trim();
+            const word = document.getElementById('wordText').value.trim();
             const meaning = document.getElementById('wordMeaning').value.trim();
-            
-            if (!content || !meaning) {
-                showToast('内容和含义不能为空', 'error');
+            const phonetic = document.getElementById('wordPhonetic').value.trim();
+            const pos = document.getElementById('wordPos').value.trim();
+            const category = document.getElementById('wordCategory').value.trim();
+            const example = document.getElementById('wordExample').value.trim();
+
+            if (!word || !meaning) {
+                showToast('单词和含义必填', 'error');
                 return;
             }
-
-            // 如果类型改变了，需要删除旧的并创建新的
-            if (id && newType !== originalType) {
-                await moveItem(originalType, newType, id, {
-                    content,
-                    meaning,
-                    example: document.getElementById('wordExample').value.trim(),
-                    category: document.getElementById('wordCategory').value.trim() || '其他',
-                    difficulty: parseInt(document.getElementById('wordDifficulty').value),
-                    phonetic: document.getElementById('wordPhonetic').value.trim(),
-                    pos: document.getElementById('wordPos').value.trim(),
-                    irregular_forms: irregular
-                });
-                return;
-            }
-
-            // 正常保存
-            const word = {
-                word: content,
-                phonetic: document.getElementById('wordPhonetic').value.trim(),
-                pos: document.getElementById('wordPos').value.trim(),
-                meaning,
-                example: document.getElementById('wordExample').value.trim(),
-                irregular_forms: irregular,
-                category: document.getElementById('wordCategory').value.trim() || '其他',
-                difficulty: parseInt(document.getElementById('wordDifficulty').value)
-            };
 
             try {
-                const res = await fetch(API_BASE + '/words' + (id ? '/' + id : ''), {
-                    method: id ? 'PUT' : 'POST',
+                const url = id ? API_BASE + '/words/' + id : API_BASE + '/words';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(word)
+                    body: JSON.stringify({ word, meaning, phonetic, pos, category, example })
                 });
                 const data = await res.json();
                 if (data.success) {
                     showToast(id ? '更新成功' : '添加成功', 'success');
                     closeModal('wordModal');
                     loadStats();
+                    loadAll();
                     loadWords();
-                } else {
-                    showToast(data.error || '操作失败', 'error');
                 }
             } catch (e) {
-                showToast('操作失败', 'error');
+                showToast('保存失败', 'error');
             }
         }
 
         async function savePhrase() {
             const id = document.getElementById('phraseId').value;
-            const originalType = document.getElementById('phraseOriginalType').value;
-            const newType = document.getElementById('phraseType').value;
-            
-            const content = document.getElementById('phrasePhrase').value.trim();
+            const phrase = document.getElementById('phraseText').value.trim();
             const meaning = document.getElementById('phraseMeaning').value.trim();
-            
-            if (!content || !meaning) {
-                showToast('短语和含义不能为空', 'error');
+            const category = document.getElementById('phraseCategory').value.trim();
+            const example = document.getElementById('phraseExample').value.trim();
+
+            if (!phrase || !meaning) {
+                showToast('短语和含义必填', 'error');
                 return;
             }
-
-            // 如果类型改变了
-            if (id && newType !== originalType) {
-                await moveItem(originalType, newType, id, {
-                    content,
-                    meaning,
-                    example: document.getElementById('phraseExample').value.trim(),
-                    category: document.getElementById('phraseCategory').value.trim() || '其他',
-                    difficulty: parseInt(document.getElementById('phraseDifficulty').value)
-                });
-                return;
-            }
-
-            const phrase = {
-                phrase: content,
-                meaning,
-                example: document.getElementById('phraseExample').value.trim(),
-                category: document.getElementById('phraseCategory').value.trim() || '其他',
-                difficulty: parseInt(document.getElementById('phraseDifficulty').value)
-            };
 
             try {
-                const res = await fetch(API_BASE + '/phrases' + (id ? '/' + id : ''), {
-                    method: id ? 'PUT' : 'POST',
+                const url = id ? API_BASE + '/phrases/' + id : API_BASE + '/phrases';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(phrase)
+                    body: JSON.stringify({ phrase, meaning, category, example })
                 });
                 const data = await res.json();
                 if (data.success) {
                     showToast(id ? '更新成功' : '添加成功', 'success');
                     closeModal('phraseModal');
                     loadStats();
+                    loadAll();
                     loadPhrases();
-                } else {
-                    showToast(data.error || '操作失败', 'error');
                 }
             } catch (e) {
-                showToast('操作失败', 'error');
+                showToast('保存失败', 'error');
             }
-        }
-
-        async function savePattern() {
-            const id = document.getElementById('patternId').value;
-            const originalType = document.getElementById('patternOriginalType').value;
-            const newType = document.getElementById('patternType').value;
-            
-            const content = document.getElementById('patternPattern').value.trim();
-            const meaning = document.getElementById('patternMeaning').value.trim();
-            
-            if (!content || !meaning) {
-                showToast('句型和含义不能为空', 'error');
-                return;
-            }
-
-            // 如果类型改变了
-            if (id && newType !== originalType) {
-                await moveItem(originalType, newType, id, {
-                    content,
-                    meaning,
-                    example: document.getElementById('patternExample').value.trim(),
-                    category: document.getElementById('patternCategory').value.trim() || '其他',
-                    difficulty: parseInt(document.getElementById('patternDifficulty').value)
-                });
-                return;
-            }
-
-            const pattern = {
-                pattern: content,
-                meaning,
-                example: document.getElementById('patternExample').value.trim(),
-                category: document.getElementById('patternCategory').value.trim() || '其他',
-                difficulty: parseInt(document.getElementById('patternDifficulty').value)
-            };
-
-            try {
-                const res = await fetch(API_BASE + '/patterns' + (id ? '/' + id : ''), {
-                    method: id ? 'PUT' : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(pattern)
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast(id ? '更新成功' : '添加成功', 'success');
-                    closeModal('patternModal');
-                    loadStats();
-                    loadPatterns();
-                } else {
-                    showToast(data.error || '操作失败', 'error');
-                }
-            } catch (e) {
-                showToast('操作失败', 'error');
-            }
-        }
-
-        // 移动条目到不同类型
-        async function moveItem(fromType, toType, id, data) {
-            try {
-                // 1. 在新类型中创建
-                const newItem = {};
-                if (toType === 'words') {
-                    newItem.word = data.content;
-                    newItem.meaning = data.meaning;
-                    newItem.example = data.example;
-                    newItem.category = data.category;
-                    newItem.difficulty = data.difficulty;
-                    newItem.phonetic = data.phonetic || '';
-                    newItem.pos = data.pos || '';
-                    newItem.irregular_forms = data.irregular_forms || {};
-                } else if (toType === 'phrases') {
-                    newItem.phrase = data.content;
-                    newItem.meaning = data.meaning;
-                    newItem.example = data.example;
-                    newItem.category = data.category;
-                    newItem.difficulty = data.difficulty;
-                } else if (toType === 'patterns') {
-                    newItem.pattern = data.content;
-                    newItem.meaning = data.meaning;
-                    newItem.example = data.example;
-                    newItem.category = data.category;
-                    newItem.difficulty = data.difficulty;
-                }
-
-                const createRes = await fetch(API_BASE + '/' + toType, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newItem)
-                });
-                const createData = await createRes.json();
-                
-                if (!createData.success) {
-                    showToast(createData.error || '创建失败', 'error');
-                    return;
-                }
-
-                // 2. 删除旧的
-                await fetch(API_BASE + '/' + fromType + '/' + id, { method: 'DELETE' });
-
-                const typeNames = { words: '单词', phrases: '短语', patterns: '句型' };
-                showToast(`已从"${typeNames[fromType]}"移动到"${typeNames[toType]}"`, 'success');
-                
-                // 关闭弹窗并刷新
-                closeModal('wordModal');
-                closeModal('phraseModal');
-                closeModal('patternModal');
-                loadStats();
-                loadWords();
-                loadPhrases();
-                loadPatterns();
-            } catch (e) {
-                showToast('移动失败', 'error');
-            }
-        }
-
-        // ========== 其他操作 ==========
-        async function searchItems(type) {
-            const kw = document.getElementById('search' + type.charAt(0).toUpperCase() + type.slice(1)).value.trim();
-            if (!kw) {
-                if (type === 'words') renderWords(allWords);
-                else if (type === 'phrases') renderPhrases(allPhrases);
-                else renderPatterns(allPatterns);
-                return;
-            }
-            try {
-                const res = await fetch(API_BASE + '/' + type + '/search?keyword=' + encodeURIComponent(kw));
-                const data = await res.json();
-                if (data.success) {
-                    if (type === 'words') renderWords(data.data);
-                    else if (type === 'phrases') renderPhrases(data.data);
-                    else renderPatterns(data.data);
-                }
-            } catch (e) {}
         }
 
         async function toggleItem(type, id) {
@@ -1163,9 +858,9 @@
                 if (data.success) {
                     showToast('状态已切换', 'success');
                     loadStats();
+                    loadAll();
                     if (type === 'words') loadWords();
                     else if (type === 'phrases') loadPhrases();
-                    else loadPatterns();
                 }
             } catch (e) {
                 showToast('操作失败', 'error');
@@ -1180,9 +875,9 @@
                 if (data.success) {
                     showToast('删除成功', 'success');
                     loadStats();
+                    loadAll();
                     if (type === 'words') loadWords();
                     else if (type === 'phrases') loadPhrases();
-                    else loadPatterns();
                 }
             } catch (e) {
                 showToast('删除失败', 'error');
@@ -1197,9 +892,8 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'vocabulary_database.json';
+                a.download = 'vocabulary_export.json';
                 a.click();
-                URL.revokeObjectURL(url);
                 showToast('导出成功', 'success');
             } catch (e) {
                 showToast('导出失败', 'error');
@@ -1211,37 +905,36 @@
             if (!file) return;
             try {
                 const text = await file.text();
-                const data = JSON.parse(text);
+                const json = JSON.parse(text);
                 const res = await fetch(API_BASE + '/import', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data })
+                    body: JSON.stringify({ data: json.data?.words?.concat(json.data?.phrases || []) || [] })
                 });
-                const result = await res.json();
-                if (result.success) {
-                    showToast('导入完成', 'success');
+                const data = await res.json();
+                if (data.success) {
+                    showToast('导入成功', 'success');
                     loadStats();
+                    loadAll();
                     loadWords();
                     loadPhrases();
-                    loadPatterns();
-                } else {
-                    showToast(result.error || '导入失败', 'error');
                 }
             } catch (e) {
-                showToast('导入失败: JSON格式错误', 'error');
+                showToast('导入失败', 'error');
             }
             event.target.value = '';
         }
 
+        // ========== 工具函数 ==========
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
         }
 
-        function showToast(msg, type) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.className = 'toast ' + type + ' show';
-            setTimeout(() => t.classList.remove('show'), 3000);
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => toast.className = 'toast', 2500);
         }
 
         function escapeHtml(text) {

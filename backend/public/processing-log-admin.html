@@ -687,11 +687,12 @@
                 </div>
             </div>
             <div class="modal-footer" style="justify-content: space-between; padding: 12px 16px;">
-                <!-- v5.5 排除 + v5.7 替换 + v5.8 匹配 -->
+                <!-- v5.5 排除 + v5.7 替换 + v5.8 匹配 + v6.0 转为语法 -->
                 <div style="display: flex; gap: 6px;">
                     <button class="btn btn-danger btn-sm" id="excludeBtn" onclick="openExcludeModal()" style="padding: 6px 10px; font-size: 12px;">🚫 排除</button>
                     <button class="btn btn-sm" id="replaceBtn" onclick="openReplaceModal()" style="padding: 6px 10px; font-size: 12px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;">🔄 替换</button>
                     <button class="btn btn-sm" id="matchBtn" onclick="openMatchModal()" style="padding: 6px 10px; font-size: 12px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">🎯 匹配</button>
+                    <button class="btn btn-sm" id="toGrammarBtn" onclick="openToGrammarModal()" style="padding: 6px 10px; font-size: 12px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">📚 转为语法</button>
                 </div>
                 <div style="display: flex; gap: 6px;">
                     <button class="btn btn-secondary btn-sm" onclick="closeModal('editModal')" style="padding: 6px 12px; font-size: 12px;">取消</button>
@@ -969,6 +970,105 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('matchModal')">取消</button>
                 <button class="btn btn-warning" onclick="executeMatch()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">✓ 确认匹配</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- v6.0: 转为语法弹窗 -->
+    <div class="modal" id="toGrammarModal">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);">
+                <h2 style="color: #6d28d9;">📚 转为语法</h2>
+                <button class="modal-close" onclick="closeModal('toGrammarModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="grammarItemId">
+                <input type="hidden" id="grammarItemType">
+
+                <div style="background: #ede9fe; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-size: 12px; color: #6d28d9; margin-bottom: 4px;">原始文本（被识别为句型）</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #5b21b6;" id="grammarOriginalText"></div>
+                </div>
+
+                <!-- AI 生成的内容（如果有） -->
+                <div id="grammarAiContent" style="display: none; background: #fef3c7; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-size: 12px; color: #92400e; margin-bottom: 4px;">🤖 AI 生成内容</div>
+                    <div style="font-size: 14px; color: #78350f;" id="grammarAiText"></div>
+                </div>
+
+                <!-- 搜索语法库 -->
+                <div class="form-group">
+                    <label style="color: #6d28d9; font-weight: 600;">搜索语法库</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="grammarSearchInput" placeholder="输入语法关键词，如：现在完成时、被动语态" style="flex: 1; border-color: #8b5cf6;">
+                        <button class="btn btn-sm" onclick="searchGrammarLib()" style="background: #8b5cf6; color: white; padding: 8px 16px;">🔍 搜索</button>
+                    </div>
+                </div>
+
+                <!-- 搜索结果 -->
+                <div id="grammarSearchResults" style="display: none; margin-bottom: 16px;">
+                    <div style="font-size: 13px; color: #6d28d9; margin-bottom: 8px; font-weight: 600;">📋 搜索结果（点击选择）</div>
+                    <div id="grammarResultsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e5e5; border-radius: 8px;"></div>
+                </div>
+
+                <!-- 选中的语法 -->
+                <div id="grammarSelected" style="display: none; background: #f0fdf4; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border: 2px solid #10b981;">
+                    <div style="font-size: 12px; color: #166534; margin-bottom: 4px;">✅ 已选择语法词条</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #15803d;" id="grammarSelectedTitle"></div>
+                    <div style="font-size: 13px; color: #166534; margin-top: 4px;" id="grammarSelectedDef"></div>
+                    <input type="hidden" id="grammarSelectedId">
+                </div>
+
+                <!-- 新建语法表单（搜索无结果时显示） -->
+                <div id="grammarNewForm" style="display: none; background: #faf5ff; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 2px dashed #8b5cf6;">
+                    <div style="font-size: 13px; color: #6d28d9; margin-bottom: 12px; font-weight: 600;">⚠️ 语法库中未找到，请填写信息后新建：</div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="color: #5b21b6; font-size: 13px;">语法标题 <span style="color:#ef4444">*</span></label>
+                        <input type="text" id="grammarNewTitle" placeholder="如：现在完成时、被动语态" style="border-color: #8b5cf6; padding: 8px 10px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="color: #5b21b6; font-size: 13px;">分类</label>
+                        <select id="grammarNewCategory" style="border-color: #8b5cf6; padding: 8px 10px;">
+                            <option value="">选择分类</option>
+                            <option value="时态">时态</option>
+                            <option value="从句">从句</option>
+                            <option value="句式">句式</option>
+                            <option value="词法">词法</option>
+                            <option value="语态">语态</option>
+                            <option value="词汇辨析">词汇辨析</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="color: #5b21b6; font-size: 13px;">定义说明 <span style="color:#ef4444">*</span></label>
+                        <textarea id="grammarNewDefinition" placeholder="语法点的定义说明" style="border-color: #8b5cf6; padding: 8px 10px; min-height: 60px;"></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="color: #5b21b6; font-size: 13px;">结构</label>
+                        <input type="text" id="grammarNewStructure" placeholder="如：have/has + done" style="border-color: #8b5cf6; padding: 8px 10px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="color: #5b21b6; font-size: 13px;">关键词（逗号分隔）</label>
+                        <input type="text" id="grammarNewKeywords" placeholder="如：现在完成时,have,has,done" style="border-color: #8b5cf6; padding: 8px 10px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: #5b21b6; font-size: 13px;">例句</label>
+                        <input type="text" id="grammarNewExample" placeholder="如：She has finished her homework." style="border-color: #8b5cf6; padding: 8px 10px;">
+                    </div>
+                </div>
+
+                <div style="background: #ede9fe; padding: 12px; border-radius: 8px; font-size: 13px; color: #6d28d9;">
+                    💡 系统将：
+                    <ol style="margin: 8px 0 0 20px; padding: 0;">
+                        <li>如果选择已有语法 → 只保存匹配规则</li>
+                        <li>如果新建语法 → 保存到语法库 + 保存匹配规则</li>
+                        <li>匹配规则：原文 → 语法词条</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('toGrammarModal')">取消</button>
+                <button class="btn" onclick="executeToGrammar()" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">✓ 确认转为语法</button>
             </div>
         </div>
     </div>
@@ -2264,48 +2364,101 @@
             }
 
             try {
-                const res = await fetch('/api/replace/search-vocab', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: targetText, type: itemType })
-                });
+                // 使用模糊搜索 API
+                const res = await fetch('/api/vocabulary/all?search=' + encodeURIComponent(targetText));
                 const data = await res.json();
 
                 const previewDiv = document.getElementById('matchPreview');
                 const contentDiv = document.getElementById('matchPreviewContent');
                 const addNewDiv = document.getElementById('matchAddNew');
 
-                if (data.success) {
-                    previewDiv.style.display = 'block';
-                    if (data.data.matched && data.data.score >= 0.85) {
-                        // ✅ 找到了
-                        contentDiv.innerHTML = `
-                            ✅ 找到词条！<br>
-                            词条：<strong>${escapeHtml(data.data.matchedText)}</strong><br>
-                            匹配度：${(data.data.score * 100).toFixed(0)}%<br>
-                            位置：${data.data.sourceTable} #${data.data.sourceId}
-                        `;
-                        previewDiv.style.background = '#f0fdf4';
-                        contentDiv.style.color = '#15803d';
-                        addNewDiv.style.display = 'none';
-                        window._matchResult = data.data;
-                        window._matchIsNew = false;
-                    } else {
-                        // ❌ 没找到，显示添加区域
-                        contentDiv.innerHTML = `
-                            ⚠️ 词库中未找到 "<strong>${escapeHtml(targetText)}</strong>"<br>
-                            请在下方填写信息后添加到词库
-                        `;
-                        previewDiv.style.background = '#fef3c7';
-                        contentDiv.style.color = '#92400e';
-                        addNewDiv.style.display = 'block';
-                        window._matchResult = null;
-                        window._matchIsNew = true;
+                previewDiv.style.display = 'block';
+
+                // 合并所有结果
+                let allResults = [];
+                if (data.success && data.data) {
+                    if (data.data.words) {
+                        allResults = allResults.concat(data.data.words.map(w => ({...w, _table: 'words', _text: w.word})));
                     }
+                    if (data.data.phrases) {
+                        allResults = allResults.concat(data.data.phrases.map(p => ({...p, _table: 'phrases', _text: p.phrase})));
+                    }
+                    if (data.data.patterns) {
+                        allResults = allResults.concat(data.data.patterns.map(p => ({...p, _table: 'patterns', _text: p.pattern})));
+                    }
+                }
+
+                if (allResults.length > 0) {
+                    // ✅ 找到候选结果，显示列表让用户选择
+                    const results = allResults.slice(0, 10); // 最多显示10个
+                    contentDiv.innerHTML = `
+                        <div style="margin-bottom: 8px;">🔍 找到 ${allResults.length} 个相关词条，点击选择：</div>
+                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #d1fae5; border-radius: 6px;">
+                            ${results.map(item => {
+                                const text = item._text;
+                                const meaning = item.meaning || '';
+                                const table = item._table;
+                                const typeLabel = table === 'words' ? '单词' : table === 'phrases' ? '短语' : '句型';
+                                return `
+                                    <div onclick="selectVocabMatch(${item.id}, '${table}', '${escapeJs(text)}', '${escapeJs(meaning)}')" 
+                                         style="padding: 10px 12px; border-bottom: 1px solid #d1fae5; cursor: pointer; transition: background 0.1s;"
+                                         onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='white'">
+                                        <div style="font-weight: 600; color: #15803d;">
+                                            ${escapeHtml(text)}
+                                            <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 3px; margin-left: 6px;">${typeLabel}</span>
+                                        </div>
+                                        <div style="font-size: 12px; color: #666; margin-top: 2px;">${escapeHtml(meaning || '暂无释义')}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                    previewDiv.style.background = '#f0fdf4';
+                    contentDiv.style.color = '#15803d';
+                    addNewDiv.style.display = 'none';
+                    window._matchResult = null; // 等用户选择
+                    window._matchIsNew = false;
+                } else {
+                    // ❌ 没找到，显示添加区域
+                    contentDiv.innerHTML = `
+                        ⚠️ 词库中未找到 "<strong>${escapeHtml(targetText)}</strong>"<br>
+                        请在下方填写信息后添加到词库
+                    `;
+                    previewDiv.style.background = '#fef3c7';
+                    contentDiv.style.color = '#92400e';
+                    addNewDiv.style.display = 'block';
+                    window._matchResult = null;
+                    window._matchIsNew = true;
                 }
             } catch (e) {
                 showToast('搜索失败: ' + e.message, 'error');
             }
+        }
+
+        /**
+         * 选择词库匹配结果
+         */
+        function selectVocabMatch(id, table, text, meaning) {
+            window._matchResult = {
+                sourceTable: table,
+                sourceId: id,
+                matchedText: text
+            };
+            window._matchIsNew = false;
+            
+            // 更新显示
+            const previewDiv = document.getElementById('matchPreview');
+            const contentDiv = document.getElementById('matchPreviewContent');
+            contentDiv.innerHTML = `
+                ✅ 已选择词条！<br>
+                词条：<strong>${escapeHtml(text)}</strong><br>
+                释义：${escapeHtml(meaning || '暂无')}<br>
+                位置：${table} #${id}
+            `;
+            previewDiv.style.background = '#d1fae5';
+            document.getElementById('matchAddNew').style.display = 'none';
+            
+            showToast('已选择：' + text, 'success');
         }
 
         /**
@@ -2385,7 +2538,11 @@
                 }
 
                 if (!finalMatchResult) {
-                    showToast('请先搜索词库或填写新词条信息', 'error');
+                    if (window._matchIsNew === false && window._matchResult === null) {
+                        showToast('请先从搜索结果中选择一个词条', 'error');
+                    } else {
+                        showToast('请先搜索词库并选择或填写新词条信息', 'error');
+                    }
                     return;
                 }
 
@@ -2447,6 +2604,263 @@
                 console.error('匹配操作失败:', e);
                 showToast('操作失败: ' + e.message, 'error');
             }
+        }
+        
+        // ============================================
+        // v6.0: 转为语法功能
+        // ============================================
+        
+        /**
+         * 打开转为语法弹窗
+         */
+        function openToGrammarModal() {
+            const id = document.getElementById('editItemId').value;
+            const originalText = document.getElementById('editOriginalText').textContent;
+            const itemType = document.getElementById('editItemType').value;
+
+            document.getElementById('grammarItemId').value = id;
+            document.getElementById('grammarItemType').value = itemType;
+            document.getElementById('grammarOriginalText').textContent = originalText;
+            document.getElementById('grammarSearchInput').value = '';
+            
+            // 重置状态
+            document.getElementById('grammarSearchResults').style.display = 'none';
+            document.getElementById('grammarSelected').style.display = 'none';
+            document.getElementById('grammarNewForm').style.display = 'none';
+            document.getElementById('grammarSelectedId').value = '';
+            
+            // 预填 AI 生成的内容（如果有）
+            const aiContent = document.getElementById('editAiContent');
+            const aiMeaning = document.getElementById('editMeaning').value;
+            const aiExample = document.getElementById('editExample').value;
+            
+            if (aiMeaning || aiExample) {
+                const aiTextDiv = document.getElementById('grammarAiText');
+                aiTextDiv.innerHTML = `
+                    ${aiMeaning ? `<div>含义：${escapeHtml(aiMeaning)}</div>` : ''}
+                    ${aiExample ? `<div>例句：${escapeHtml(aiExample)}</div>` : ''}
+                `;
+                document.getElementById('grammarAiContent').style.display = 'block';
+                
+                // 预填新建表单
+                document.getElementById('grammarNewDefinition').value = aiMeaning || '';
+                document.getElementById('grammarNewExample').value = aiExample || '';
+                document.getElementById('grammarNewStructure').value = originalText;
+            } else {
+                document.getElementById('grammarAiContent').style.display = 'none';
+                document.getElementById('grammarNewDefinition').value = '';
+                document.getElementById('grammarNewExample').value = '';
+                document.getElementById('grammarNewStructure').value = originalText;
+            }
+            
+            document.getElementById('grammarNewTitle').value = '';
+            document.getElementById('grammarNewCategory').value = '';
+            document.getElementById('grammarNewKeywords').value = '';
+            
+            document.getElementById('toGrammarModal').classList.add('active');
+        }
+        
+        /**
+         * 搜索语法库
+         */
+        async function searchGrammarLib() {
+            const keyword = document.getElementById('grammarSearchInput').value.trim();
+            
+            if (!keyword) {
+                showToast('请输入搜索关键词', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/grammar/search?keyword=' + encodeURIComponent(keyword));
+                const data = await res.json();
+                
+                const resultsDiv = document.getElementById('grammarSearchResults');
+                const listDiv = document.getElementById('grammarResultsList');
+                const newFormDiv = document.getElementById('grammarNewForm');
+                const selectedDiv = document.getElementById('grammarSelected');
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    // 有搜索结果
+                    resultsDiv.style.display = 'block';
+                    newFormDiv.style.display = 'none';
+                    selectedDiv.style.display = 'none';
+                    
+                    listDiv.innerHTML = data.data.map(g => `
+                        <div onclick="selectGrammar(${g.id}, '${escapeJs(g.title)}', '${escapeJs(g.definition || '')}')" 
+                             style="padding: 12px 16px; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.1s;"
+                             onmouseover="this.style.background='#f3e8ff'" onmouseout="this.style.background='white'">
+                            <div style="font-weight: 600; color: #5b21b6;">${escapeHtml(g.title)}</div>
+                            <div style="font-size: 13px; color: #666; margin-top: 4px;">${escapeHtml(g.definition || '暂无定义')}</div>
+                            ${g.category ? `<span style="font-size: 11px; background: #ede9fe; color: #6d28d9; padding: 2px 8px; border-radius: 4px; margin-top: 4px; display: inline-block;">${escapeHtml(g.category)}</span>` : ''}
+                        </div>
+                    `).join('');
+                    
+                    showToast(`找到 ${data.data.length} 个相关语法`, 'success');
+                } else {
+                    // 没有搜索结果，显示新建表单
+                    resultsDiv.style.display = 'none';
+                    selectedDiv.style.display = 'none';
+                    newFormDiv.style.display = 'block';
+                    
+                    // 预填标题为搜索词
+                    document.getElementById('grammarNewTitle').value = keyword;
+                    
+                    showToast('未找到相关语法，请填写信息新建', 'warning');
+                }
+            } catch (e) {
+                console.error('搜索语法库失败:', e);
+                showToast('搜索失败: ' + e.message, 'error');
+            }
+        }
+        
+        /**
+         * 选择已有语法
+         */
+        function selectGrammar(id, title, definition) {
+            document.getElementById('grammarSelectedId').value = id;
+            document.getElementById('grammarSelectedTitle').textContent = title;
+            document.getElementById('grammarSelectedDef').textContent = definition || '暂无定义';
+            
+            document.getElementById('grammarSearchResults').style.display = 'none';
+            document.getElementById('grammarNewForm').style.display = 'none';
+            document.getElementById('grammarSelected').style.display = 'block';
+            
+            showToast('已选择：' + title, 'success');
+        }
+        
+        /**
+         * 确认转为语法
+         */
+        async function executeToGrammar() {
+            const id = document.getElementById('grammarItemId').value;
+            const originalText = document.getElementById('grammarOriginalText').textContent;
+            const originalType = document.getElementById('grammarItemType').value;
+            const selectedId = document.getElementById('grammarSelectedId').value;
+            
+            let targetGrammarId = null;
+            let targetGrammarTitle = null;
+            let isNewGrammar = false;
+            
+            // 情况 A：选择了已有语法
+            if (selectedId) {
+                targetGrammarId = parseInt(selectedId);
+                targetGrammarTitle = document.getElementById('grammarSelectedTitle').textContent;
+                isNewGrammar = false;
+            }
+            // 情况 B：新建语法
+            else if (document.getElementById('grammarNewForm').style.display !== 'none') {
+                const title = document.getElementById('grammarNewTitle').value.trim();
+                const definition = document.getElementById('grammarNewDefinition').value.trim();
+                const category = document.getElementById('grammarNewCategory').value;
+                const structure = document.getElementById('grammarNewStructure').value.trim();
+                const keywordsStr = document.getElementById('grammarNewKeywords').value.trim();
+                const example = document.getElementById('grammarNewExample').value.trim();
+                
+                if (!title) {
+                    showToast('请填写语法标题', 'error');
+                    return;
+                }
+                if (!definition) {
+                    showToast('请填写定义说明', 'error');
+                    return;
+                }
+                
+                // 1️⃣ 保存新语法到语法库
+                const keywords = keywordsStr ? keywordsStr.split(/[,，]/).map(k => k.trim()).filter(k => k) : [title];
+                const examples = example ? [example] : [];
+                
+                try {
+                    const addRes = await fetch('/api/grammar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title,
+                            definition,
+                            category: category || '其他',
+                            structure,
+                            keywords,
+                            examples
+                        })
+                    });
+                    const addData = await addRes.json();
+                    
+                    if (!addData.success) {
+                        showToast('添加语法失败: ' + (addData.error || '未知错误'), 'error');
+                        return;
+                    }
+                    
+                    targetGrammarId = addData.id;
+                    targetGrammarTitle = title;
+                    isNewGrammar = true;
+                    
+                    console.log('[转为语法] 新语法已添加:', title, '→', targetGrammarId);
+                } catch (e) {
+                    showToast('添加语法失败: ' + e.message, 'error');
+                    return;
+                }
+            } else {
+                showToast('请先搜索并选择语法，或填写新语法信息', 'error');
+                return;
+            }
+            
+            // 2️⃣ 保存匹配规则到 matching.db
+            try {
+                const matchRes = await fetch(MATCHING_DICT_API + '/confirm-match', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        original_text: originalText,
+                        original_type: originalType,  // 原类型（如 pattern）
+                        target_db: 'grammar.db',
+                        target_table: 'grammar',
+                        target_id: targetGrammarId,
+                        target_text: targetGrammarTitle,
+                        created_by: 'admin'
+                    })
+                });
+                const matchData = await matchRes.json();
+                
+                if (!matchData.success) {
+                    showToast('保存匹配规则失败: ' + (matchData.error || '未知错误'), 'error');
+                    return;
+                }
+                
+                console.log('[转为语法] 匹配规则已保存:', originalText, '→', targetGrammarTitle);
+            } catch (e) {
+                showToast('保存匹配规则失败: ' + e.message, 'error');
+                return;
+            }
+            
+            // 3️⃣ 标记原记录为已处理
+            if (id) {
+                try {
+                    await fetch(API_BASE + '/unmatched/' + id + '/ignore', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            reviewedBy: 'admin',
+                            notes: `已转为语法: ${targetGrammarTitle}`
+                        })
+                    });
+                } catch (e) {
+                    console.warn('标记原记录失败:', e);
+                }
+            }
+            
+            // 4️⃣ 显示成功信息
+            const shortOriginal = originalText.length > 20 ? originalText.substring(0, 20) + '...' : originalText;
+            if (isNewGrammar) {
+                showToast(`转换成功！已新增语法「${targetGrammarTitle}」并建立匹配规则`, 'success');
+            } else {
+                showToast(`转换成功！语法库已有「${targetGrammarTitle}」，已建立匹配规则`, 'success');
+            }
+            
+            // 5️⃣ 关闭弹窗并刷新
+            closeModal('toGrammarModal');
+            closeModal('editModal');
+            loadStats();
+            loadPendingUnmatched();
         }
         
         /**
