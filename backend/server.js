@@ -1,8 +1,8 @@
 /**
  * Sorryios AI 智能笔记系统 - 后端服务器
  * 
- * 版本: v4.3
- * 更新: 新增排除库功能
+ * 版本: v4.4
+ * 更新: 新增替换库功能
  */
 
 const express = require('express');
@@ -159,7 +159,7 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        version: '4.3',
+        version: '4.4',
         wsClients: wsClients.size
     });
 });
@@ -194,6 +194,8 @@ loadRoute('matching-dict-api', './routes/matching-dict-api', '/api/matching-dict
 loadRoute('user-mastered-api', './routes/user-mastered-api', '/api/user-mastered');
 // v4.3 新增：排除库API
 loadRoute('exclude-api', './routes/exclude-api', '/api/exclude');
+// v4.4 新增：替换库API
+loadRoute('replace-api', './routes/replace-api', '/api/replace');
 
 // 2️⃣ 然后加载挂载到 /api 的路由（这些包含 /:id 通配符）
 // ⚠️ 这些必须放在最后，否则会拦截上面的路由！
@@ -261,10 +263,20 @@ app.get('/exclude-admin', (req, res) => {
     }
 });
 
+// v4.4 新增：替换库管理页面
+app.get('/replace-admin', (req, res) => {
+    const replaceAdminPath = path.join(__dirname, 'public/replace-admin.html');
+    if (fs.existsSync(replaceAdminPath)) {
+        res.sendFile(replaceAdminPath);
+    } else {
+        res.status(404).send('替换库管理页面不存在');
+    }
+});
+
 app.get('/', (req, res) => {
     res.json({
         name: 'Sorryios AI 智能笔记系统',
-        version: '4.3',
+        version: '4.4',
         endpoints: {
             health: '/api/health',
             upload: '/api/upload',
@@ -272,7 +284,8 @@ app.get('/', (req, res) => {
             admin: '/admin',
             userMastered: '/api/user-mastered',
             matchingDict: '/api/matching-dict',
-            exclude: '/api/exclude'
+            exclude: '/api/exclude',
+            replace: '/api/replace'
         }
     });
 });
@@ -324,8 +337,8 @@ requiredDirs.forEach(dir => {
 
 server.listen(PORT, HOST, () => {
     console.log('\n' + '='.repeat(60));
-    console.log('  Sorryios AI 智能笔记系统 v4.3');
-    console.log('  🔧 新增：排除库功能');
+    console.log('  Sorryios AI 智能笔记系统 v4.4');
+    console.log('  🔧 新增：替换库功能');
     console.log('='.repeat(60));
     console.log(`  🚀 服务器启动成功！`);
     console.log(`  📡 地址: http://localhost:${PORT}`);
@@ -338,6 +351,7 @@ server.listen(PORT, HOST, () => {
     console.log(`     - 处理日志: http://localhost:${PORT}/processing-log-admin`);
     console.log(`     - 匹配词典: http://localhost:${PORT}/matching-dict-admin`);
     console.log(`     - 排除库: http://localhost:${PORT}/exclude-admin`);
+    console.log(`     - 替换库: http://localhost:${PORT}/replace-admin`);
     console.log('');
     console.log('  📌 API 接口:');
     console.log(`     - 健康检查: http://localhost:${PORT}/api/health`);
@@ -348,6 +362,7 @@ server.listen(PORT, HOST, () => {
     console.log(`     - 处理日志: http://localhost:${PORT}/api/processing-log`);
     console.log(`     - 已掌握词汇: http://localhost:${PORT}/api/user-mastered`);
     console.log(`     - 排除库: http://localhost:${PORT}/api/exclude`);
+    console.log(`     - 替换库: http://localhost:${PORT}/api/replace`);
     console.log('='.repeat(60) + '\n');
 });
 
