@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>处理日志 - Sorryios AI</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.self !== window.top) {
+                // 强制重置 - 去掉所有边距
+                document.documentElement.style.cssText = 'margin: 0 !important; padding: 0 !important; width: 100% !important;';
+                document.body.classList.add('in-iframe');
+                document.body.style.cssText = 'padding: 0 !important; margin: 0 !important; width: 100% !important; min-width: 0 !important;';
+                
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.style.cssText = 'max-width: none !important; width: 100% !important; margin: 0 !important; padding: 10px !important; min-width: 0 !important;';
+                }
+                
+                const backLink = document.querySelector('.back-link');
+                if (backLink) backLink.style.display = 'none';
+                
+                console.log('[处理日志] iframe模式已激活');
+            }
+        });
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -12,6 +32,42 @@
             min-height: 100vh; 
             padding: 20px; 
         }
+        
+        /* iframe内嵌时的样式 - 完全适配 */
+        body.in-iframe {
+            padding: 12px !important;
+            margin: 0 !important;
+            overflow-x: hidden;
+        }
+        body.in-iframe .back-link {
+            display: none !important;
+        }
+        body.in-iframe .container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        body.in-iframe .header {
+            padding: 16px !important;
+            margin-bottom: 12px !important;
+        }
+        body.in-iframe .header h1 {
+            font-size: 20px !important;
+        }
+        body.in-iframe .three-columns {
+            gap: 10px !important;
+        }
+        body.in-iframe .column {
+            min-width: 280px !important;
+        }
+        body.in-iframe .column-header {
+            padding: 12px !important;
+        }
+        body.in-iframe .column-body {
+            padding: 8px !important;
+        }
+        
         .container { max-width: 1400px; margin: 0 auto; }
         
         /* 返回链接 */
@@ -1623,7 +1679,8 @@
                     const wordData = await wordRes.json();
                     
                     if (wordData.success) {
-                        showToast(`单词 "${originalText}" 入库成功！`, 'success');
+                        // v5.6: 显示具体入库位置
+                        showToast(`入库成功！已添加到：词库管理 vocabulary.db → words 表`, 'success');
                         closeModal('editModal', true);  // skipCheck=true 避免重复询问
                         
                         // 恢复弹窗标题和排除按钮
@@ -1639,6 +1696,7 @@
                             // 清理状态
                             window._pendingNewWords = null;
                             window._pendingNewWordsIndex = 0;
+                            window._aiGeneratedContent = null;
                             loadStats();
                             loadPendingUnmatched();
                         }
@@ -1672,7 +1730,9 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast(`入库成功！已添加到 ${data.importedTo}`, 'success');
+                    // v5.6: 显示详细的入库位置
+                    const dbInfo = getDbInfo(data.importedTo);
+                    showToast(`入库成功！已添加到：${dbInfo}`, 'success');
                     closeModal('editModal');
                     loadStats();
                     loadPendingUnmatched();
@@ -1682,6 +1742,19 @@
             } catch (e) {
                 showToast('入库失败', 'error');
             }
+        }
+        
+        /**
+         * v5.6: 获取数据库详细信息
+         */
+        function getDbInfo(importedTo) {
+            const dbInfoMap = {
+                'words': '词库管理 vocabulary.db → words 表',
+                'phrases': '词库管理 vocabulary.db → phrases 表',
+                'patterns': '词库管理 vocabulary.db → patterns 表',
+                'grammar': '语法库管理 grammar.db → grammar 表'
+            };
+            return dbInfoMap[importedTo] || importedTo;
         }
         
         // 忽略
@@ -1745,6 +1818,14 @@
             document.getElementById('excludeOriginalText').value = originalText;
             document.getElementById('excludeOriginalType').value = itemType;
             
+            // v5.6: 保存AI生成的内容，用于后续提取单词时预填
+            window._aiGeneratedContent = {
+                pos: document.getElementById('editPos').value || '',
+                meaning: document.getElementById('editMeaning').value || '',
+                example: document.getElementById('editExample').value || ''
+            };
+            console.log('[排除] 保存AI内容:', window._aiGeneratedContent);
+            
             // 显示信息
             document.getElementById('excludeDisplayText').textContent = originalText;
             document.getElementById('excludeDisplayText2').textContent = originalText;
@@ -1779,6 +1860,7 @@
         
         /**
          * 执行排除操作（批量处理）
+         * v5.6: 改为调用新的排除库API /api/exclude
          */
         async function executeExcludeFromEdit() {
             const id = document.getElementById('excludeItemId').value;
@@ -1792,14 +1874,14 @@
             });
             
             try {
-                // 1. 添加到排除名单
-                const excludeRes = await fetch(MATCHING_DICT_API + '/exclude', {
+                // 1. 添加到排除库（新API）
+                const excludeRes = await fetch('/api/exclude/items', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         original_text: originalText,
                         original_type: originalType,
-                        notes: `不是${getTypeLabel(originalType)}，已排除`,
+                        reason: `不是${getTypeLabel(originalType)}`,
                         created_by: 'admin'
                     })
                 });
@@ -1810,7 +1892,8 @@
                     return;
                 }
                 
-                console.log(`[排除] 已添加: ${originalText} (${originalType})`);
+                console.log(`[排除] 已添加到排除库: ${originalText} (${originalType})`);
+                showToast(`已添加到：排除库管理 exclude.db`, 'success');
                 
                 // 2. 标记原记录为已忽略
                 await fetch(API_BASE + '/unmatched/' + id + '/ignore', {
@@ -1819,8 +1902,8 @@
                     body: JSON.stringify({ 
                         reviewedBy: 'admin',
                         notes: checkedWords.length > 0 
-                            ? `已排除，待提取: ${checkedWords.join(', ')}` 
-                            : '已排除'
+                            ? `已排除到exclude.db，待提取: ${checkedWords.join(', ')}` 
+                            : '已排除到exclude.db'
                     })
                 });
                 
@@ -1895,12 +1978,14 @@
         
         /**
          * 处理下一个新单词（打开编辑弹窗）
+         * v5.6: 预填AI生成的内容
          */
         function processNextNewWord() {
             if (!window._pendingNewWords || window._pendingNewWordsIndex >= window._pendingNewWords.length) {
                 // 全部处理完成，清理状态
                 window._pendingNewWords = null;
                 window._pendingNewWordsIndex = 0;
+                window._aiGeneratedContent = null;
                 showToast('所有单词处理完成！', 'success');
                 loadStats();
                 loadPendingUnmatched();
@@ -1923,9 +2008,14 @@
             document.getElementById('vocabFields').style.display = 'block';
             document.getElementById('grammarFields').style.display = 'none';
             document.getElementById('editPhonetic').value = '';
-            document.getElementById('editPos').value = '';
-            document.getElementById('editMeaning').value = '';
-            document.getElementById('editExample').value = '';
+            
+            // v5.6: 预填AI生成的内容
+            const aiContent = window._aiGeneratedContent || {};
+            document.getElementById('editPos').value = aiContent.pos || '';
+            document.getElementById('editMeaning').value = aiContent.meaning || '';
+            document.getElementById('editExample').value = aiContent.example || '';
+            
+            console.log(`[新建单词] ${word} - 预填AI内容:`, aiContent);
             
             // 修改弹窗标题提示还有多少个待处理
             const modalHeader = document.querySelector('#editModal .modal-header h2');

@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>词库管理 - Sorryios AI</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.self !== window.top) {
+                // 强制重置 - 去掉所有边距
+                document.documentElement.style.cssText = 'margin: 0 !important; padding: 0 !important; width: 100% !important;';
+                document.body.classList.add('in-iframe');
+                document.body.style.cssText = 'padding: 0 !important; margin: 0 !important; width: 100% !important; min-width: 0 !important;';
+                
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.style.cssText = 'max-width: none !important; width: 100% !important; margin: 0 !important; padding: 10px !important; min-width: 0 !important;';
+                }
+                
+                const backLink = document.querySelector('.back-link');
+                if (backLink) backLink.style.display = 'none';
+                
+                console.log('[词库] iframe模式已激活');
+            }
+        });
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -12,7 +32,39 @@
             min-height: 100vh; 
             padding: 20px; 
         }
+        
+        /* iframe内嵌时的样式 - 完全适配 */
+        body.in-iframe {
+            padding: 12px !important;
+            margin: 0 !important;
+            overflow-x: hidden;
+        }
+        body.in-iframe .back-link {
+            display: none !important;
+        }
+        body.in-iframe .container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        body.in-iframe .header {
+            padding: 16px !important;
+            margin-bottom: 12px !important;
+        }
+        body.in-iframe .header h1 {
+            font-size: 20px !important;
+        }
+        body.in-iframe .tabs {
+            padding: 12px !important;
+            margin-bottom: 12px !important;
+        }
+        body.in-iframe .tab-content {
+            padding: 12px !important;
+        }
+        
         .container { max-width: 1400px; margin: 0 auto; }
+        
         .header { 
             background: white; 
             border-radius: 16px; 

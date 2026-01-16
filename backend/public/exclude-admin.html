@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>排除库管理 - Sorryios AI</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.self !== window.top) {
+                // 强制重置 - 去掉所有边距
+                document.documentElement.style.cssText = 'margin: 0 !important; padding: 0 !important; width: 100% !important;';
+                document.body.classList.add('in-iframe');
+                document.body.style.cssText = 'padding: 0 !important; margin: 0 !important; width: 100% !important; min-width: 0 !important;';
+                
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.style.cssText = 'max-width: none !important; width: 100% !important; margin: 0 !important; padding: 10px !important; min-width: 0 !important;';
+                }
+                
+                const backLink = document.querySelector('.back-link');
+                if (backLink) backLink.style.display = 'none';
+                
+                console.log('[排除库] iframe模式已激活');
+            }
+        });
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* iframe模式 */
+        body.in-iframe {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            overflow-x: hidden !important;
+        }
+        body.in-iframe .container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 10px !important;
+            min-width: 0 !important;
+        }
+        body.in-iframe .back-link {
+            display: none !important;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 50%, #fca5a5 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        
+        /* iframe内嵌时的样式 - 完全适配 */
+        body.in-iframe {
+            padding: 12px !important;
+            margin: 0 !important;
+            overflow-x: hidden;
+        }
+        body.in-iframe .back-link {
+            display: none !important;
+        }
+        body.in-iframe .container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        body.in-iframe .header {
+            padding: 16px !important;
+            margin-bottom: 12px !important;
+        }
+        body.in-iframe .header h1 {
+            font-size: 20px !important;
+        }
+        body.in-iframe .toolbar {
+            padding: 12px !important;
+            margin-bottom: 12px !important;
+        }
+        body.in-iframe .list-container {
+            padding: 12px !important;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* 返回链接 */
+        .back-link { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            color: #991b1b; 
+            text-decoration: none; 
+            margin-bottom: 16px; 
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        /* 头部 */
+        .header { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 24px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+            border: 1px solid #fecaca;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .header h1 { color: #991b1b; font-size: 26px; margin-bottom: 8px; }
+        .header p { color: #b91c1c; font-size: 14px; }
+        
+        /* 统计卡片 */
+        .stats-row { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 16px; 
+            margin-top: 20px; 
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #fca5a5;
+        }
+        .stat-card .label { font-size: 13px; color: #991b1b; margin-bottom: 4px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: #7f1d1d; }
+        .stat-card .sub { font-size: 12px; color: #b91c1c; margin-top: 4px; }
+        
+        /* 工具栏 */
+        .toolbar {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid #fecaca;
+        }
+        .toolbar select, .toolbar input {
+            padding: 8px 12px;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .toolbar input { width: 200px; }
+        .toolbar .spacer { flex: 1; }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+        }
+        .btn-success { background: #34d399; color: #064e3b; }
+        .btn-success:hover { background: #10b981; }
+        .btn-warning { background: #fbbf24; color: #78350f; }
+        .btn-warning:hover { background: #f59e0b; }
+        .btn-danger { background: #f87171; color: #7f1d1d; }
+        .btn-danger:hover { background: #ef4444; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-secondary:hover { background: #d1d5db; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        
+        /* 列表容器 */
+        .list-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid #fecaca;
+            overflow: hidden;
+        }
+        
+        /* 列表项 */
+        .item {
+            padding: 14px 20px;
+            border-bottom: 1px solid #fef2f2;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.2s;
+        }
+        .item:hover { background: #fef2f2; }
+        .item:last-child { border-bottom: none; }
+        
+        .item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #fee2e2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        
+        .item-content { flex: 1; min-width: 0; }
+        .item-text {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+        .item-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .badge-type { background: #fee2e2; color: #991b1b; }
+        .badge-new { background: #dcfce7; color: #166534; }
+        
+        .item-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #94a3b8;
+        }
+        .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: #64748b; }
+        
+        /* 加载状态 */
+        .loading {
+            padding: 40px 20px;
+            text-align: center;
+            color: #94a3b8;
+        }
+        
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #fef2f2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h2 { font-size: 18px; color: #991b1b; }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+        .modal-close:hover { color: #64748b; }
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #fef2f2;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* 表单 */
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ef4444;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+        }
+        .toast.success { background: #10b981; color: white; }
+        .toast.error { background: #ef4444; color: white; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/admin" class="back-link">← 返回管理后台</a>
+        
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>🚫 排除库管理</h1>
+                    <p>管理被排除的识别错误项，这些项在匹配流程中会被跳过</p>
+                    <p style="margin-top: 8px; font-size: 12px; color: #64748b;">
+                        数据库位置：exclude.db
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-warning" onclick="clearAllNew()">📋 批量取消标新</button>
+                    <button class="btn btn-primary" onclick="openAddModal()">+ 添加排除项</button>
+                </div>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="label">排除总数</div>
+                    <div class="value" id="statTotal">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">🆕 新增</div>
+                    <div class="value" id="statNew">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">短语</div>
+                    <div class="value" id="statPhrase">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">单词</div>
+                    <div class="value" id="statWord">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">其他</div>
+                    <div class="value" id="statOther">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toolbar">
+            <select id="filterType" onchange="loadItems()">
+                <option value="">全部类型</option>
+                <option value="word">单词</option>
+                <option value="phrase">短语</option>
+                <option value="pattern">句型</option>
+                <option value="grammar">语法</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="搜索..." onkeyup="if(event.key==='Enter')loadItems()">
+            <button class="btn btn-secondary" onclick="loadItems()">🔍 搜索</button>
+            <span class="spacer"></span>
+            <button class="btn btn-secondary" onclick="loadItems()">🔄 刷新</button>
+        </div>
+        
+        <div class="list-container">
+            <div id="itemList">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加/编辑弹窗 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">添加排除项</h2>
+                <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                
+                <div class="form-group">
+                    <label>原始文本 <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="editText" placeholder="如：protect sth.">
+                </div>
+                
+                <div class="form-group">
+                    <label>类型 <span style="color: #ef4444;">*</span></label>
+                    <select id="editType">
+                        <option value="word">单词</option>
+                        <option value="phrase">短语</option>
+                        <option value="pattern">句型</option>
+                        <option value="grammar">语法</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>排除原因</label>
+                    <input type="text" id="editReason" placeholder="如：不是短语，识别错误">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveItem()">💾 保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        const API_BASE = '/api/exclude';
+        
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadItems();
+        });
+        
+        // 加载统计
+        async function loadStats() {
+            try {
+                const res = await fetch(API_BASE + '/stats');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('statTotal').textContent = data.data.total;
+                    document.getElementById('statNew').textContent = data.data.newCount;
+                    document.getElementById('statPhrase').textContent = data.data.byType.phrase || 0;
+                    document.getElementById('statWord').textContent = data.data.byType.word || 0;
+                    
+                    const other = (data.data.byType.pattern || 0) + (data.data.byType.grammar || 0);
+                    document.getElementById('statOther').textContent = other;
+                }
+            } catch (e) {
+                console.error('加载统计失败:', e);
+            }
+        }
+        
+        // 加载列表
+        async function loadItems() {
+            const container = document.getElementById('itemList');
+            container.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const type = document.getElementById('filterType').value;
+                const search = document.getElementById('searchInput').value.trim();
+                
+                let url = API_BASE + '/items?limit=200';
+                if (type) url += '&type=' + type;
+                if (search) url += '&search=' + encodeURIComponent(search);
+                
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (!data.success || !data.data.length) {
+                    container.innerHTML = '<div class="empty-state"><h3>🎉 没有排除项</h3><p>排除库为空</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = data.data.map(item => `
+                    <div class="item">
+                        <div class="item-icon">🚫</div>
+                        <div class="item-content">
+                            <div class="item-text">
+                                ${item.is_new ? '<span class="badge badge-new">🆕 新</span>' : ''}
+                                ${escapeHtml(item.original_text)}
+                            </div>
+                            <div class="item-meta">
+                                <span class="badge badge-type">${getTypeLabel(item.original_type)}</span>
+                                ${item.reason ? `<span>原因：${escapeHtml(item.reason)}</span>` : ''}
+                                <span>${formatTime(item.created_at)}</span>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            ${item.is_new ? `<button class="btn btn-warning btn-sm" onclick="clearNew(${item.id})">取消标新</button>` : ''}
+                            <button class="btn btn-secondary btn-sm" onclick="editItem(${item.id})">✎ 编辑</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id}, '${escapeJs(item.original_text)}')">🗑 删除</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
+            }
+        }
+        
+        // 打开添加弹窗
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '添加排除项';
+            document.getElementById('editId').value = '';
+            document.getElementById('editText').value = '';
+            document.getElementById('editType').value = 'phrase';
+            document.getElementById('editReason').value = '';
+            document.getElementById('editModal').classList.add('active');
+        }
+        
+        // 编辑
+        async function editItem(id) {
+            try {
+                const res = await fetch(API_BASE + '/items/' + id);
+                const data = await res.json();
+                if (!data.success) {
+                    showToast('加载失败', 'error');
+                    return;
+                }
+                
+                const item = data.data;
+                document.getElementById('modalTitle').textContent = '编辑排除项';
+                document.getElementById('editId').value = id;
+                document.getElementById('editText').value = item.original_text;
+                document.getElementById('editType').value = item.original_type;
+                document.getElementById('editReason').value = item.reason || '';
+                document.getElementById('editModal').classList.add('active');
+            } catch (e) {
+                showToast('加载失败', 'error');
+            }
+        }
+        
+        // 保存
+        async function saveItem() {
+            const id = document.getElementById('editId').value;
+            const text = document.getElementById('editText').value.trim();
+            const type = document.getElementById('editType').value;
+            const reason = document.getElementById('editReason').value.trim();
+            
+            if (!text) {
+                showToast('请输入原始文本', 'error');
+                return;
+            }
+            
+            try {
+                const url = id ? API_BASE + '/items/' + id : API_BASE + '/items';
+                const method = id ? 'PUT' : 'POST';
+                
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        original_text: text,
+                        original_type: type,
+                        reason,
+                        created_by: 'admin'
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(id ? '更新成功' : '添加成功', 'success');
+                    closeModal('editModal');
+                    loadStats();
+                    loadItems();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+        
+        // 删除
+        async function deleteItem(id, text) {
+            if (!confirm(`确定要删除排除项"${text}"吗？\n\n删除后，该项在匹配流程中将不再被跳过。`)) {
+                return;
+            }
+            
+            try {
+                const res = await fetch(API_BASE + '/items/' + id, { method: 'DELETE' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('删除成功', 'success');
+                    loadStats();
+                    loadItems();
+                } else {
+                    showToast(data.error || '删除失败', 'error');
+                }
+            } catch (e) {
+                showToast('删除失败', 'error');
+            }
+        }
+        
+        // 取消单个标新
+        async function clearNew(id) {
+            try {
+                const res = await fetch(API_BASE + '/items/' + id + '/clear-new', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('已取消标新', 'success');
+                    loadStats();
+                    loadItems();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+        
+        // 批量取消标新
+        async function clearAllNew() {
+            if (!confirm('确定要取消所有标新吗？')) return;
+            
+            try {
+                const res = await fetch(API_BASE + '/clear-all-new', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(`已取消 ${data.count} 个标新`, 'success');
+                    loadStats();
+                    loadItems();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                showToast('操作失败', 'error');
+            }
+        }
+        
+        // 工具函数
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + type + ' show';
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function escapeJs(text) {
+            if (!text) return '';
+            return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+        
+        function getTypeLabel(type) {
+            const labels = {
+                'word': '单词',
+                'phrase': '短语',
+                'pattern': '句型',
+                'grammar': '语法'
+            };
+            return labels[type] || type;
+        }
+        
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            let date;
+            if (dateStr.includes('T') || dateStr.includes('Z')) {
+                date = new Date(dateStr);
+            } else {
+                date = new Date(dateStr.replace(' ', 'T') + 'Z');
+            }
+            if (isNaN(date.getTime())) return dateStr;
+            
+            // 北京时间 UTC+8
+            const beijingTime = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+            const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+            const hour = String(beijingTime.getUTCHours()).padStart(2, '0');
+            const minute = String(beijingTime.getUTCMinutes()).padStart(2, '0');
+            
+            return `${month}/${day} ${hour}:${minute}`;
+        }
+    </script>
+</body>
+</html>
