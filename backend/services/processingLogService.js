@@ -1,6 +1,10 @@
 /**
- * 处理日志服务 v5.3
+ * 处理日志服务 v5.4
  * 文件位置: backend/services/processingLogService.js
+ * 
+ * 📦 v5.4 更新：
+ * - 新增：markAsReplaced() 标记为已替换状态
+ * - 支持 'replaced' 状态
  * 
  * 📦 v5.3 更新：
  * - 新增：updateUnmatchedAiContent() 更新未匹配项的AI生成内容
@@ -39,7 +43,7 @@ class ProcessingLogService {
     constructor() {
         // v5.0: 使用主数据库
         this.db = db;
-        console.log('[ProcessingLogService] v5.3: 使用主数据库 sorryios.db');
+        console.log('[ProcessingLogService] v5.4: 使用主数据库 sorryios.db');
     }
 
     // ============================================
@@ -239,6 +243,36 @@ class ProcessingLogService {
     }
 
     /**
+     * v5.4 新增：标记为已替换
+     * @param {number} id - 记录ID
+     * @param {string} replaceText - 替换后的文本
+     * @param {string} importedTo - 入库到哪个表
+     * @param {number} importedId - 入库的ID
+     * @param {string} reviewedBy - 审核人
+     * @returns {Object} { success }
+     */
+    markAsReplaced(id, replaceText, importedTo, importedId, reviewedBy = null) {
+        try {
+            const stmt = db.prepare(`
+                UPDATE unmatched_items 
+                SET status = 'replaced',
+                    notes = ?,
+                    imported_to = ?,
+                    imported_id = ?,
+                    reviewed_by = ?,
+                    reviewed_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `);
+            const notes = `替换为: ${replaceText}`;
+            stmt.run(notes, importedTo, importedId, reviewedBy, id);
+            return { success: true };
+        } catch (e) {
+            console.error('[ProcessingLogService] 标记为已替换失败:', e.message);
+            return { success: false, error: e.message };
+        }
+    }
+
+    /**
      * 获取单个未匹配记录
      */
     getUnmatchedItemById(id) {
@@ -327,7 +361,13 @@ class ProcessingLogService {
             WHERE status = 'imported' AND date(reviewed_at) = date('now', 'localtime')
         `).get().count;
 
-        return { tasks, imported };
+        // v5.4: 今日替换数
+        const replaced = db.prepare(`
+            SELECT COUNT(*) as count FROM unmatched_items 
+            WHERE status = 'replaced' AND date(reviewed_at) = date('now', 'localtime')
+        `).get().count;
+
+        return { tasks, imported, replaced };
     }
 
     /**

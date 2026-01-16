@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>替换库管理 - Sorryios AI</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.self !== window.top) {
+                document.documentElement.style.cssText = 'margin: 0 !important; padding: 0 !important; width: 100% !important;';
+                document.body.classList.add('in-iframe');
+                document.body.style.cssText = 'padding: 0 !important; margin: 0 !important; width: 100% !important; min-width: 0 !important;';
+                
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.style.cssText = 'max-width: none !important; width: 100% !important; margin: 0 !important; padding: 10px !important; min-width: 0 !important;';
+                }
+                
+                const backLink = document.querySelector('.back-link');
+                if (backLink) backLink.style.display = 'none';
+                
+                console.log('[替换库管理] iframe模式已激活');
+            }
+        });
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        
+        body.in-iframe {
+            padding: 12px !important;
+            margin: 0 !important;
+            overflow-x: hidden;
+        }
+        body.in-iframe .back-link { display: none !important; }
+        body.in-iframe .container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .back-link { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            color: #1e40af; 
+            text-decoration: none; 
+            margin-bottom: 16px; 
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        
+        .header { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 24px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
+            border: 1px solid #bfdbfe;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .header h1 { color: #1e40af; font-size: 26px; margin-bottom: 8px; }
+        .header p { color: #3b82f6; font-size: 14px; }
+        
+        .stats-row { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 16px; 
+            margin-top: 20px; 
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #93c5fd;
+        }
+        .stat-card .label { font-size: 13px; color: #1e40af; margin-bottom: 4px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: #1e3a8a; }
+        .stat-card .sub { font-size: 12px; color: #3b82f6; margin-top: 4px; }
+        
+        .toolbar {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid #bfdbfe;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .toolbar input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .toolbar input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .toolbar select {
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 120px;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+        }
+        .btn-success { background: #34d399; color: #064e3b; }
+        .btn-success:hover { background: #10b981; }
+        .btn-danger { background: #f87171; color: #7f1d1d; }
+        .btn-danger:hover { background: #ef4444; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-secondary:hover { background: #d1d5db; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        
+        .list-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid #bfdbfe;
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 13px;
+        }
+        tr:hover { background: #f8fafc; }
+        
+        .type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .type-word { background: #dbeafe; color: #1e40af; }
+        .type-phrase { background: #fef3c7; color: #92400e; }
+        .type-pattern { background: #d1fae5; color: #065f46; }
+        .type-grammar { background: #fce7f3; color: #9d174d; }
+        
+        .arrow-icon {
+            color: #3b82f6;
+            font-weight: bold;
+            margin: 0 8px;
+        }
+        
+        .use-count {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+        
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h2 { font-size: 18px; color: #1e3a8a; }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+        }
+        .toast.success { background: #10b981; color: white; }
+        .toast.error { background: #ef4444; color: white; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        
+        .text-original { color: #ef4444; font-weight: 500; }
+        .text-replace { color: #10b981; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/admin" class="back-link">← 返回管理后台</a>
+        
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>🔄 替换库管理</h1>
+                    <p>管理识别错误的替换规则，让系统越用越准确</p>
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">+ 添加规则</button>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="label">替换规则总数</div>
+                    <div class="value" id="statTotal">0</div>
+                    <div class="sub">已创建的规则</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">累计使用次数</div>
+                    <div class="value" id="statUseCount">0</div>
+                    <div class="sub">自动替换次数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">单词规则</div>
+                    <div class="value" id="statWord">0</div>
+                    <div class="sub">word 类型</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">短语规则</div>
+                    <div class="value" id="statPhrase">0</div>
+                    <div class="sub">phrase 类型</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toolbar">
+            <input type="text" id="searchInput" placeholder="搜索原始文本或替换文本..." onkeyup="if(event.key==='Enter')loadRules()">
+            <select id="typeFilter" onchange="loadRules()">
+                <option value="">全部类型</option>
+                <option value="word">单词</option>
+                <option value="phrase">短语</option>
+                <option value="pattern">句型</option>
+                <option value="grammar">语法</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadRules()">🔍 搜索</button>
+            <button class="btn btn-secondary" onclick="resetFilter()">🔄 重置</button>
+        </div>
+        
+        <div class="list-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>类型</th>
+                        <th>原始文本 → 替换为</th>
+                        <th>使用次数</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="rulesList">
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="icon">📋</div>
+                                <div>加载中...</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 添加/编辑弹窗 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">🔄 添加替换规则</h2>
+                <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                
+                <div class="form-group">
+                    <label>类型 <span style="color:#ef4444">*</span></label>
+                    <select id="editType">
+                        <option value="word">单词</option>
+                        <option value="phrase">短语</option>
+                        <option value="pattern">句型</option>
+                        <option value="grammar">语法</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>原始文本（识别错误的） <span style="color:#ef4444">*</span></label>
+                    <input type="text" id="editOriginal" placeholder="如：be important for sth.">
+                </div>
+                
+                <div class="form-group">
+                    <label>替换为（正确的文本） <span style="color:#ef4444">*</span></label>
+                    <input type="text" id="editReplace" placeholder="如：be important to">
+                </div>
+                
+                <div class="form-group">
+                    <label>备注（选填）</label>
+                    <textarea id="editNotes" rows="2" placeholder="添加备注..."></textarea>
+                </div>
+                
+                <div style="background:#dbeafe; padding:12px; border-radius:8px; font-size:13px; color:#1e40af;">
+                    💡 保存后，下次遇到「原始文本」会自动替换为「正确文本」再进行匹配
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveRule()">💾 保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        const API_BASE = '/api/replace';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadRules();
+        });
+        
+        async function loadStats() {
+            try {
+                const res = await fetch(API_BASE + '/stats');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('statTotal').textContent = data.data.total || 0;
+                    document.getElementById('statUseCount').textContent = data.data.totalUseCount || 0;
+                    
+                    // 按类型统计
+                    const byType = data.data.byType || [];
+                    const wordCount = byType.find(t => t.original_type === 'word')?.count || 0;
+                    const phraseCount = byType.find(t => t.original_type === 'phrase')?.count || 0;
+                    
+                    document.getElementById('statWord').textContent = wordCount;
+                    document.getElementById('statPhrase').textContent = phraseCount;
+                }
+            } catch (e) {
+                console.error('加载统计失败:', e);
+            }
+        }
+        
+        async function loadRules() {
+            const search = document.getElementById('searchInput').value.trim();
+            const type = document.getElementById('typeFilter').value;
+            
+            try {
+                let url = API_BASE + '/rules?limit=100';
+                if (search) url += '&search=' + encodeURIComponent(search);
+                if (type) url += '&type=' + type;
+                
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (data.success) {
+                    renderRules(data.data);
+                }
+            } catch (e) {
+                console.error('加载规则失败:', e);
+                showToast('加载失败', 'error');
+            }
+        }
+        
+        function renderRules(rules) {
+            const tbody = document.getElementById('rulesList');
+            
+            if (!rules || rules.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="icon">📋</div>
+                                <div>暂无替换规则</div>
+                                <p style="margin-top:8px;font-size:13px;">点击「添加规则」创建第一条替换规则</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = rules.map(rule => `
+                <tr>
+                    <td>${rule.id}</td>
+                    <td><span class="type-badge type-${rule.original_type}">${getTypeLabel(rule.original_type)}</span></td>
+                    <td>
+                        <span class="text-original">${escapeHtml(rule.original_text)}</span>
+                        <span class="arrow-icon">→</span>
+                        <span class="text-replace">${escapeHtml(rule.replace_text)}</span>
+                    </td>
+                    <td><span class="use-count">${rule.use_count || 0} 次</span></td>
+                    <td>${formatTime(rule.created_at)}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-sm" onclick="editRule(${rule.id})">编辑</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteRule(${rule.id})">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function resetFilter() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('typeFilter').value = '';
+            loadRules();
+        }
+        
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '🔄 添加替换规则';
+            document.getElementById('editId').value = '';
+            document.getElementById('editType').value = 'phrase';
+            document.getElementById('editOriginal').value = '';
+            document.getElementById('editReplace').value = '';
+            document.getElementById('editNotes').value = '';
+            document.getElementById('editModal').classList.add('active');
+        }
+        
+        async function editRule(id) {
+            try {
+                const res = await fetch(API_BASE + '/rules/' + id);
+                const data = await res.json();
+                
+                if (data.success) {
+                    const rule = data.data;
+                    document.getElementById('modalTitle').textContent = '✏️ 编辑替换规则';
+                    document.getElementById('editId').value = rule.id;
+                    document.getElementById('editType').value = rule.original_type;
+                    document.getElementById('editOriginal').value = rule.original_text;
+                    document.getElementById('editReplace').value = rule.replace_text;
+                    document.getElementById('editNotes').value = rule.notes || '';
+                    document.getElementById('editModal').classList.add('active');
+                }
+            } catch (e) {
+                showToast('加载失败', 'error');
+            }
+        }
+        
+        async function saveRule() {
+            const id = document.getElementById('editId').value;
+            const original_type = document.getElementById('editType').value;
+            const original_text = document.getElementById('editOriginal').value.trim();
+            const replace_text = document.getElementById('editReplace').value.trim();
+            const notes = document.getElementById('editNotes').value.trim();
+            
+            if (!original_text || !replace_text) {
+                showToast('请填写原始文本和替换文本', 'error');
+                return;
+            }
+            
+            try {
+                let url = API_BASE + '/rules';
+                let method = 'POST';
+                
+                if (id) {
+                    url = API_BASE + '/rules/' + id;
+                    method = 'PUT';
+                }
+                
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        original_type,
+                        original_text,
+                        replace_text,
+                        notes
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(id ? '更新成功' : '添加成功', 'success');
+                    closeModal('editModal');
+                    loadStats();
+                    loadRules();
+                } else {
+                    showToast(data.error || '保存失败', 'error');
+                }
+            } catch (e) {
+                showToast('保存失败', 'error');
+            }
+        }
+        
+        async function deleteRule(id) {
+            if (!confirm('确定要删除这条规则吗？')) return;
+            
+            try {
+                const res = await fetch(API_BASE + '/rules/' + id, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('删除成功', 'success');
+                    loadStats();
+                    loadRules();
+                } else {
+                    showToast(data.error || '删除失败', 'error');
+                }
+            } catch (e) {
+                showToast('删除失败', 'error');
+            }
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + type + ' show';
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function getTypeLabel(type) {
+            const labels = {
+                'word': '单词',
+                'phrase': '短语',
+                'pattern': '句型',
+                'grammar': '语法'
+            };
+            return labels[type] || type;
+        }
+        
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            
+            let date;
+            if (dateStr.includes('T') || dateStr.includes('Z')) {
+                date = new Date(dateStr);
+            } else {
+                date = new Date(dateStr.replace(' ', 'T') + 'Z');
+            }
+            
+            if (isNaN(date.getTime())) return dateStr;
+            
+            // 强制使用北京时间（UTC+8）
+            const beijingTime = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+            
+            const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+            const hour = String(beijingTime.getUTCHours()).padStart(2, '0');
+            const minute = String(beijingTime.getUTCMinutes()).padStart(2, '0');
+            
+            return `${month}/${day} ${hour}:${minute}`;
+        }
+    </script>
+</body>
+</html>
