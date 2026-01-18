@@ -74,31 +74,40 @@
         .search-box input:focus { border-color: #7c3aed; }
         
         .btn { 
-            padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; 
+            padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; 
             font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+            background: white; color: #374151;
         }
-        .btn-primary { background: #7c3aed; color: white; }
-        .btn-primary:hover { background: #6d28d9; }
-        .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e5e5; }
-        .btn-secondary:hover { background: #e5e7eb; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-success:hover { background: #059669; }
-        .btn-warning { background: #f59e0b; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .btn-confirm { background: #10b981; color: white; }
+        .btn:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-primary { background: white; color: #7c3aed; border: 1px solid #c4b5fd; }
+        .btn-primary:hover { background: #f5f3ff; border-color: #a78bfa; }
+        .btn-secondary { background: white; color: #374151; border: 1px solid #d1d5db; }
+        .btn-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-success { background: white; color: #059669; border: 1px solid #a7f3d0; }
+        .btn-success:hover { background: #ecfdf5; border-color: #34d399; }
+        .btn-warning { background: white; color: #d97706; border: 1px solid #fcd34d; }
+        .btn-warning:hover { background: #fffbeb; border-color: #fbbf24; }
+        .btn-danger { background: white; color: #dc2626; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fef2f2; border-color: #f87171; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-confirm { background: white; color: #059669; border: 1px solid #a7f3d0; }
+        .btn-confirm:hover { background: #ecfdf5; border-color: #34d399; }
         
-        .item-list { background: white; border-radius: 12px; border: 1px solid #e5e5e5; overflow: hidden; }
+        .item-list { background: transparent; border-radius: 12px; }
         
         .grammar-item { 
-            padding: 16px; border-bottom: 1px solid #f3f4f6;
-            transition: background 0.1s;
+            padding: 16px; 
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            transition: background 0.1s, box-shadow 0.1s;
+            position: relative;
         }
-        .grammar-item:last-child { border-bottom: none; }
-        .grammar-item:hover { background: #fafafa; }
-        .grammar-item.is-new { background: #fef2f2; border-left: 3px solid #dc2626; }
-        .grammar-item.is-new:hover { background: #fee2e2; }
+        .grammar-item:last-child { margin-bottom: 0; }
+        .grammar-item:hover { background: #fafafa; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .grammar-item.is-new { background: #fffbfb; border-left: 2px solid #fca5a5; }
+        .grammar-item.is-new:hover { background: #fef7f7; }
         .grammar-item.disabled { opacity: 0.5; }
         
         .grammar-title { 
@@ -111,8 +120,10 @@
         .grammar-actions { display: flex; gap: 6px; flex-wrap: wrap; }
         
         .new-badge {
-            display: inline-block; background: #fef3c7; color: #92400e;
-            font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+            position: absolute; top: 8px; right: 12px;
+            background: white; color: #dc2626;
+            font-size: 12px; font-weight: 600; padding: 4px 12px; 
+            border-radius: 6px; border: 1px solid #fecaca;
         }
         .category-badge {
             display: inline-block; background: #ede9fe; color: #6d28d9;
@@ -131,30 +142,41 @@
         .modal.active { display: flex; }
         .modal-content { 
             background: white; border-radius: 12px; width: 100%; 
-            max-width: 600px; max-height: 90vh; overflow-y: auto;
+            max-width: 900px; max-height: 95vh; overflow-y: auto;
         }
         .modal-header { 
             padding: 20px 24px; border-bottom: 1px solid #e5e5e5;
             display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; background: white; z-index: 10;
         }
         .modal-header h2 { font-size: 18px; font-weight: 600; }
         .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #9ca3af; }
         .modal-body { padding: 24px; }
-        .modal-footer { padding: 16px 24px; border-top: 1px solid #e5e5e5; display: flex; justify-content: flex-end; gap: 8px; }
+        .modal-footer { 
+            padding: 16px 24px; border-top: 1px solid #e5e5e5; display: flex; justify-content: flex-end; gap: 8px;
+            position: sticky; bottom: 0; background: white; z-index: 10;
+        }
         
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 6px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px; }
         .form-group input, .form-group select, .form-group textarea { 
-            width: 100%; padding: 10px 12px; border: 1px solid #e5e5e5; 
-            border-radius: 8px; font-size: 14px; outline: none;
+            width: 100%; padding: 12px 14px; border: 1px solid #e5e5e5; 
+            border-radius: 8px; font-size: 14px; outline: none; line-height: 1.5;
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #7c3aed; }
-        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-group textarea { resize: vertical; min-height: 100px; }
         
-        .array-input { background: #f7f7f8; border-radius: 8px; padding: 12px; margin-top: 8px; }
-        .array-item { display: flex; gap: 8px; margin-bottom: 8px; }
-        .array-item input { flex: 1; }
+        .array-input { background: #f9fafb; border-radius: 8px; padding: 12px; margin-top: 8px; border: 1px solid #e5e7eb; }
+        .array-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+        .array-item input, .array-item textarea { flex: 1; }
+        .array-item textarea { min-height: 60px; resize: vertical; }
         .array-item:last-child { margin-bottom: 0; }
+        
+        .sub-topics-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+        .sub-topic-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .sub-topic-card:last-child { margin-bottom: 0; }
+        .sub-topic-title { font-weight: 600; color: #374151; margin-bottom: 8px; }
+        .sub-topic-content { font-size: 13px; color: #6b7280; line-height: 1.6; }
         
         .toast {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -184,6 +206,8 @@
                 <div class="stat-item"><strong id="statTotal">0</strong> 总数</div>
                 <div class="stat-item"><strong id="statEnabled">0</strong> 已启用</div>
                 <div class="stat-item"><strong id="statDisabled">0</strong> 已禁用</div>
+                <div class="stat-item" style="background: #fef2f2; border-color: #fecaca;"><strong id="statNew" style="color: #dc2626;">0</strong> 待确认</div>
+                <div class="stat-item"><strong id="statSubTopics">0</strong> 子话题</div>
             </div>
         </div>
         
@@ -245,34 +269,21 @@
                     <textarea id="grammarStructure" placeholder="语法结构"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>关键词</label>
-                    <div class="array-input" id="keywordsInput">
-                        <div class="array-item">
-                            <input type="text" placeholder="关键词">
-                            <button class="btn btn-danger btn-sm" onclick="removeArrayItem(this)">删除</button>
-                        </div>
-                    </div>
-                    <button class="btn btn-secondary btn-sm" onclick="addArrayItem('keywordsInput')" style="margin-top:8px">+ 添加关键词</button>
+                    <label>关键词 <span style="font-weight: normal; color: #9ca3af; font-size: 12px;">（每行一个）</span></label>
+                    <textarea id="keywordsInput" placeholder="关键词1&#10;关键词2&#10;关键词3" style="min-height: 80px;"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>用法</label>
-                    <div class="array-input" id="usageInput">
-                        <div class="array-item">
-                            <input type="text" placeholder="用法说明">
-                            <button class="btn btn-danger btn-sm" onclick="removeArrayItem(this)">删除</button>
-                        </div>
-                    </div>
-                    <button class="btn btn-secondary btn-sm" onclick="addArrayItem('usageInput')" style="margin-top:8px">+ 添加用法</button>
+                    <label>用法 <span style="font-weight: normal; color: #9ca3af; font-size: 12px;">（每行一条）</span></label>
+                    <textarea id="usageInput" placeholder="用法说明1&#10;用法说明2" style="min-height: 80px;"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>例句</label>
-                    <div class="array-input" id="examplesInput">
-                        <div class="array-item">
-                            <input type="text" placeholder="例句">
-                            <button class="btn btn-danger btn-sm" onclick="removeArrayItem(this)">删除</button>
-                        </div>
-                    </div>
-                    <button class="btn btn-secondary btn-sm" onclick="addArrayItem('examplesInput')" style="margin-top:8px">+ 添加例句</button>
+                    <label>例句 <span style="font-weight: normal; color: #9ca3af; font-size: 12px;">（每行一句）</span></label>
+                    <textarea id="examplesInput" placeholder="例句1&#10;例句2" style="min-height: 80px;"></textarea>
+                </div>
+                <!-- 子话题显示区域 -->
+                <div class="sub-topics-section" id="subTopicsSection" style="display: none;">
+                    <label style="font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 12px; display: block;">📚 子话题</label>
+                    <div id="subTopicsList"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -283,6 +294,44 @@
     </div>
 
     <div class="toast" id="toast"></div>
+
+    <!-- 转移弹窗 -->
+    <div class="modal" id="transferModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>转移语法点</h2>
+                <button class="modal-close" onclick="closeTransferModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                    <div style="font-size: 13px; color: #92400e;">
+                        将 <strong id="transferSourceTitle"></strong> 的内容转移到目标语法点，作为子话题
+                    </div>
+                </div>
+                <input type="hidden" id="transferSourceId">
+                <div class="form-group">
+                    <label>搜索目标语法点</label>
+                    <input type="text" id="transferSearchInput" placeholder="输入关键词搜索..." oninput="searchTransferTarget()">
+                </div>
+                <div id="transferSearchResults" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; display: none;"></div>
+                <div id="transferSelectedTarget" style="display: none; margin-top: 12px; padding: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px;">
+                    <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">已选择目标：</div>
+                    <div style="font-weight: 600; color: #065f46;" id="transferTargetTitle"></div>
+                    <input type="hidden" id="transferTargetId">
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="transferDeleteSource" checked>
+                        <span>转移后删除原语法点</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTransferModal()">取消</button>
+                <button class="btn btn-warning" onclick="executeTransfer()">确认转移</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const API_BASE = '/api/grammar';
@@ -303,6 +352,10 @@
                     document.getElementById('statTotal').textContent = data.data.total;
                     document.getElementById('statEnabled').textContent = data.data.enabled;
                     document.getElementById('statDisabled').textContent = data.data.disabled;
+                    // v2.1: 显示新增数量
+                    document.getElementById('statNew').textContent = data.data.newCount || 0;
+                    // v2.0: 显示子话题总数
+                    document.getElementById('statSubTopics').textContent = data.data.totalSubTopics || 0;
                 }
             } catch (e) { console.error(e); }
         }
@@ -377,15 +430,19 @@
             }
             
             c.innerHTML = items.map(g => {
-                const isNew = g.is_new === 1;
+                const isNew = g.is_new === true || g.is_new === 1;
                 const keywords = g.keywords ? (typeof g.keywords === 'string' ? JSON.parse(g.keywords) : g.keywords) : [];
+                // v2.0: 获取子话题
+                const subTopics = g.sub_topics ? (typeof g.sub_topics === 'string' ? JSON.parse(g.sub_topics) : g.sub_topics) : [];
+                const hasSubTopics = subTopics.length > 0;
                 
                 return `
                 <div class="grammar-item ${g.enabled ? '' : 'disabled'} ${isNew ? 'is-new' : ''}">
+                    ${isNew ? '<span class="new-badge">新</span>' : ''}
                     <div class="grammar-title">
                         ${escapeHtml(g.title)}
                         ${g.category ? `<span class="category-badge">${escapeHtml(g.category)}</span>` : ''}
-                        ${isNew ? '<span class="new-badge">🆕 新</span>' : ''}
+                        ${hasSubTopics ? `<span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;">📚 ${subTopics.length} 个子话题</span>` : ''}
                     </div>
                     <div class="grammar-definition">${escapeHtml(g.definition || '')}</div>
                     ${keywords.length ? `
@@ -394,9 +451,29 @@
                             ${keywords.length > 6 ? `<span class="tag">+${keywords.length - 6}</span>` : ''}
                         </div>
                     ` : ''}
-                    <div class="grammar-actions">
+                    ${hasSubTopics ? `
+                        <div style="margin-top: 12px; background: #f9fafb; border-radius: 8px; padding: 12px; border: 1px solid #e5e7eb;">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 10px; font-weight: 500;">📚 相关知识点 (${subTopics.length})</div>
+                            ${subTopics.map((st, idx) => `
+                                <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; ${idx === subTopics.length - 1 ? 'margin-bottom: 0;' : ''}">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; color: #374151; margin-bottom: 6px;">${idx + 1}. ${escapeHtml(st.title)}</div>
+                                            ${st.definition ? `<div style="font-size: 13px; color: #4b5563; margin-bottom: 6px; line-height: 1.5;">${escapeHtml(st.definition)}</div>` : ''}
+                                            ${st.structure ? `<div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;"><span style="color: #9ca3af;">结构：</span>${escapeHtml(st.structure)}</div>` : ''}
+                                            ${st.examples && st.examples.length > 0 ? `<div style="font-size: 13px; color: #6b7280;"><span style="color: #9ca3af;">例句：</span>${st.examples.map(e => escapeHtml(e)).join(' / ')}</div>` : ''}
+                                        </div>
+                                        <button class="btn btn-danger btn-sm" onclick="removeSubTopic(${g.id}, ${idx}, '${escapeHtml(st.title).replace(/'/g, "\\'")}', event)" style="font-size: 11px; padding: 3px 8px;">删除</button>
+                                    </div>
+                                    ${st.added_at ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e5e7eb;">添加于 ${formatTime(st.added_at)}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="grammar-actions" style="${hasSubTopics ? 'margin-top: 10px;' : ''}">
                         ${isNew ? `<button class="btn btn-confirm btn-sm" onclick="confirmGrammar(${g.id})">✓ 确认</button>` : ''}
                         <button class="btn btn-primary btn-sm" onclick="editGrammar(${g.id})">编辑</button>
+                        <button class="btn btn-warning btn-sm" onclick="openTransferModal(${g.id}, '${escapeHtml(g.title).replace(/'/g, "\\'")}')">转移</button>
                         <button class="btn btn-secondary btn-sm" onclick="toggleGrammar(${g.id})">${g.enabled ? '禁用' : '启用'}</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteGrammar(${g.id}, '${escapeHtml(g.title)}')">删除</button>
                     </div>
@@ -438,9 +515,14 @@
             document.getElementById('grammarDefinition').value = '';
             document.getElementById('grammarStructure').value = '';
             
-            resetArrayInput('keywordsInput');
-            resetArrayInput('usageInput');
-            resetArrayInput('examplesInput');
+            // 清空textarea
+            document.getElementById('keywordsInput').value = '';
+            document.getElementById('usageInput').value = '';
+            document.getElementById('examplesInput').value = '';
+            
+            // 隐藏子话题区域
+            document.getElementById('subTopicsSection').style.display = 'none';
+            document.getElementById('subTopicsList').innerHTML = '';
             
             document.getElementById('grammarModal').classList.add('active');
         }
@@ -458,9 +540,53 @@
                     document.getElementById('grammarDefinition').value = g.definition || '';
                     document.getElementById('grammarStructure').value = g.structure || '';
                     
-                    fillArrayInput('keywordsInput', g.keywords);
-                    fillArrayInput('usageInput', g.usage);
-                    fillArrayInput('examplesInput', g.examples);
+                    // 填充textarea（数组转换为每行一条）
+                    document.getElementById('keywordsInput').value = arrayToLines(g.keywords);
+                    document.getElementById('usageInput').value = arrayToLines(g.usage);
+                    document.getElementById('examplesInput').value = arrayToLines(g.examples);
+                    
+                    // 显示子话题（可编辑）
+                    const subTopics = g.sub_topics || [];
+                    const subTopicsSection = document.getElementById('subTopicsSection');
+                    const subTopicsList = document.getElementById('subTopicsList');
+                    
+                    if (subTopics.length > 0) {
+                        subTopicsSection.style.display = 'block';
+                        subTopicsList.innerHTML = subTopics.map((st, idx) => `
+                            <div class="sub-topic-card" data-index="${idx}">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: 600; color: #374151;">子话题 ${idx + 1}</span>
+                                    <button class="btn btn-danger btn-sm" onclick="removeSubTopicInEdit(${idx})">删除</button>
+                                </div>
+                                <div style="display: grid; gap: 10px;">
+                                    <div>
+                                        <label style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">标题</label>
+                                        <input type="text" class="sub-topic-input" data-field="title" data-index="${idx}" value="${escapeHtml(st.title || '')}" style="width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">定义</label>
+                                        <textarea class="sub-topic-input" data-field="definition" data-index="${idx}" style="width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; min-height: 60px; resize: vertical;">${escapeHtml(st.definition || '')}</textarea>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">结构</label>
+                                        <input type="text" class="sub-topic-input" data-field="structure" data-index="${idx}" value="${escapeHtml(st.structure || '')}" style="width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">例句 <span style="font-weight: normal; color: #9ca3af;">（每行一句）</span></label>
+                                        <textarea class="sub-topic-input" data-field="examples" data-index="${idx}" style="width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; min-height: 60px; resize: vertical;">${escapeHtml((st.examples || []).join('\n'))}</textarea>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">用法 <span style="font-weight: normal; color: #9ca3af;">（每行一条）</span></label>
+                                        <textarea class="sub-topic-input" data-field="usage" data-index="${idx}" style="width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; min-height: 60px; resize: vertical;">${escapeHtml((st.usage || []).join('\n'))}</textarea>
+                                    </div>
+                                </div>
+                                ${st.added_at ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 10px;">添加于 ${formatTime(st.added_at)}</div>` : ''}
+                            </div>
+                        `).join('');
+                    } else {
+                        subTopicsSection.style.display = 'none';
+                        subTopicsList.innerHTML = '';
+                    }
                     
                     document.getElementById('grammarModal').classList.add('active');
                 }
@@ -473,9 +599,12 @@
             const category = document.getElementById('grammarCategory').value.trim();
             const definition = document.getElementById('grammarDefinition').value.trim();
             const structure = document.getElementById('grammarStructure').value.trim();
-            const keywords = getArrayValues('keywordsInput');
-            const usage = getArrayValues('usageInput');
-            const examples = getArrayValues('examplesInput');
+            const keywords = getTextareaArray('keywordsInput');
+            const usage = getTextareaArray('usageInput');
+            const examples = getTextareaArray('examplesInput');
+            
+            // 收集子话题数据
+            const sub_topics = getSubTopicsData();
 
             if (!title) {
                 showToast('标题必填', 'error');
@@ -488,7 +617,7 @@
                 const res = await fetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, category, definition, structure, keywords, usage, examples })
+                    body: JSON.stringify({ title, category, definition, structure, keywords, usage, examples, sub_topics })
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -562,58 +691,73 @@
             event.target.value = '';
         }
 
-        // 数组输入辅助函数
-        function addArrayItem(containerId) {
-            const container = document.getElementById(containerId);
-            const placeholder = containerId === 'keywordsInput' ? '关键词' : containerId === 'usageInput' ? '用法说明' : '例句';
-            const div = document.createElement('div');
-            div.className = 'array-item';
-            div.innerHTML = `
-                <input type="text" placeholder="${placeholder}">
-                <button class="btn btn-danger btn-sm" onclick="removeArrayItem(this)">删除</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function removeArrayItem(btn) {
-            const container = btn.parentElement.parentElement;
-            if (container.children.length > 1) {
-                btn.parentElement.remove();
+        // Textarea辅助函数 - 数组转每行一条
+        function arrayToLines(arr) {
+            if (!arr) return '';
+            if (typeof arr === 'string') {
+                try { arr = JSON.parse(arr); } catch { return arr; }
             }
+            return arr.filter(v => v).join('\n');
         }
-
-        function resetArrayInput(containerId) {
-            const container = document.getElementById(containerId);
-            const placeholder = containerId === 'keywordsInput' ? '关键词' : containerId === 'usageInput' ? '用法说明' : '例句';
-            container.innerHTML = `
-                <div class="array-item">
-                    <input type="text" placeholder="${placeholder}">
-                    <button class="btn btn-danger btn-sm" onclick="removeArrayItem(this)">删除</button>
-                </div>
-            `;
+        
+        // Textarea辅助函数 - 每行转数组
+        function getTextareaArray(textareaId) {
+            const text = document.getElementById(textareaId).value;
+            return text.split('\n').map(line => line.trim()).filter(line => line);
         }
-
-        function fillArrayInput(containerId, values) {
-            const container = document.getElementById(containerId);
-            const placeholder = containerId === 'keywordsInput' ? '关键词' : containerId === 'usageInput' ? '用法说明' : '例句';
-            let arr = values;
-            if (typeof values === 'string') {
-                try { arr = JSON.parse(values); } catch { arr = []; }
-            }
-            if (!arr || !arr.length) arr = [''];
+        
+        // 收集子话题数据
+        function getSubTopicsData() {
+            const cards = document.querySelectorAll('#subTopicsList .sub-topic-card');
+            const subTopics = [];
             
-            container.innerHTML = arr.map(v => `
-                <div class="array-item">
-                    <input type="text" value="${escapeHtml(v || '')}" placeholder="${placeholder}">
-                    <button class="btn btn-danger btn-sm" onclick="removeArrayItem(this)">删除</button>
-                </div>
-            `).join('');
+            cards.forEach(card => {
+                const idx = card.dataset.index;
+                const title = card.querySelector(`[data-field="title"][data-index="${idx}"]`)?.value?.trim() || '';
+                const definition = card.querySelector(`[data-field="definition"][data-index="${idx}"]`)?.value?.trim() || '';
+                const structure = card.querySelector(`[data-field="structure"][data-index="${idx}"]`)?.value?.trim() || '';
+                const examplesStr = card.querySelector(`[data-field="examples"][data-index="${idx}"]`)?.value?.trim() || '';
+                const usageStr = card.querySelector(`[data-field="usage"][data-index="${idx}"]`)?.value?.trim() || '';
+                
+                // 按换行分割成数组
+                const examples = examplesStr ? examplesStr.split('\n').map(e => e.trim()).filter(e => e) : [];
+                const usage = usageStr ? usageStr.split('\n').map(u => u.trim()).filter(u => u) : [];
+                
+                if (title) {
+                    subTopics.push({
+                        title,
+                        definition,
+                        structure,
+                        examples,
+                        usage,
+                        added_at: card.querySelector('[style*="添加于"]')?.textContent?.replace('添加于 ', '') || new Date().toISOString()
+                    });
+                }
+            });
+            
+            return subTopics;
         }
-
-        function getArrayValues(containerId) {
-            const container = document.getElementById(containerId);
-            const inputs = container.querySelectorAll('input');
-            return Array.from(inputs).map(i => i.value.trim()).filter(v => v);
+        
+        // 在编辑界面删除子话题
+        function removeSubTopicInEdit(idx) {
+            if (!confirm('确定删除这个子话题吗？')) return;
+            const card = document.querySelector(`#subTopicsList .sub-topic-card[data-index="${idx}"]`);
+            if (card) {
+                card.remove();
+                // 重新编号
+                const cards = document.querySelectorAll('#subTopicsList .sub-topic-card');
+                if (cards.length === 0) {
+                    document.getElementById('subTopicsSection').style.display = 'none';
+                } else {
+                    cards.forEach((c, i) => {
+                        c.dataset.index = i;
+                        c.querySelector('span').textContent = `子话题 ${i + 1}`;
+                        c.querySelectorAll('.sub-topic-input').forEach(input => {
+                            input.dataset.index = i;
+                        });
+                    });
+                }
+            }
         }
 
         function closeModal() {
@@ -632,6 +776,218 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // ============================================
+        // v2.0: 子话题相关函数
+        // ============================================
+        
+        /**
+         * 切换子话题展开/折叠
+         */
+        function toggleSubTopics(grammarId) {
+            const container = document.getElementById('subTopics_' + grammarId);
+            const btn = document.getElementById('subTopicsBtn_' + grammarId);
+            
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                btn.textContent = btn.textContent.replace('展开', '收起').replace('📖', '📕');
+            } else {
+                container.style.display = 'none';
+                btn.textContent = btn.textContent.replace('收起', '展开').replace('📕', '📖');
+            }
+        }
+        
+        /**
+         * 删除子话题
+         */
+        async function removeSubTopic(grammarId, subTopicIndex, subTopicTitle, event) {
+            event.stopPropagation();
+            
+            if (!confirm(`确定要删除子话题「${subTopicTitle}」吗？`)) {
+                return;
+            }
+            
+            try {
+                const res = await fetch(API_BASE + '/' + grammarId + '/sub-topic/' + subTopicIndex, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('子话题已删除', 'success');
+                    loadGrammar();
+                    loadStats();
+                } else {
+                    showToast('删除失败: ' + (data.error || '未知错误'), 'error');
+                }
+            } catch (e) {
+                showToast('删除失败: ' + e.message, 'error');
+            }
+        }
+        
+        /**
+         * 格式化时间
+         */
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hour = String(date.getHours()).padStart(2, '0');
+                const minute = String(date.getMinutes()).padStart(2, '0');
+                
+                return `${month}/${day} ${hour}:${minute}`;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        // ============================================
+        // v2.2: 转移/合并功能
+        // ============================================
+        
+        let transferSourceData = null;
+        
+        function openTransferModal(sourceId, sourceTitle) {
+            document.getElementById('transferSourceId').value = sourceId;
+            document.getElementById('transferSourceTitle').textContent = sourceTitle;
+            document.getElementById('transferSearchInput').value = '';
+            document.getElementById('transferSearchResults').style.display = 'none';
+            document.getElementById('transferSearchResults').innerHTML = '';
+            document.getElementById('transferSelectedTarget').style.display = 'none';
+            document.getElementById('transferTargetId').value = '';
+            document.getElementById('transferDeleteSource').checked = true;
+            
+            // 获取源语法点的完整数据
+            fetch(API_BASE + '/' + sourceId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        transferSourceData = data.data;
+                    }
+                });
+            
+            document.getElementById('transferModal').classList.add('active');
+        }
+        
+        function closeTransferModal() {
+            document.getElementById('transferModal').classList.remove('active');
+            transferSourceData = null;
+        }
+        
+        let transferSearchTimeout = null;
+        function searchTransferTarget() {
+            clearTimeout(transferSearchTimeout);
+            const keyword = document.getElementById('transferSearchInput').value.trim();
+            const sourceId = document.getElementById('transferSourceId').value;
+            
+            if (!keyword) {
+                document.getElementById('transferSearchResults').style.display = 'none';
+                return;
+            }
+            
+            transferSearchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(API_BASE + '/search?keyword=' + encodeURIComponent(keyword));
+                    const data = await res.json();
+                    
+                    if (data.success && data.data.length > 0) {
+                        // 排除自己
+                        const results = data.data.filter(g => g.id != sourceId);
+                        
+                        if (results.length > 0) {
+                            document.getElementById('transferSearchResults').innerHTML = results.map(g => `
+                                <div style="padding: 10px 12px; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.1s;"
+                                     onmouseover="this.style.background='#f9fafb'"
+                                     onmouseout="this.style.background='white'"
+                                     onclick="selectTransferTarget(${g.id}, '${escapeHtml(g.title).replace(/'/g, "\\'")}')">
+                                    <div style="font-weight: 500; color: #374151;">${escapeHtml(g.title)}</div>
+                                    <div style="font-size: 12px; color: #9ca3af;">${escapeHtml(g.definition || '').slice(0, 50)}...</div>
+                                    ${g.sub_topics && g.sub_topics.length > 0 ? `<div style="font-size: 11px; color: #059669;">已有 ${g.sub_topics.length} 个子话题</div>` : ''}
+                                </div>
+                            `).join('');
+                            document.getElementById('transferSearchResults').style.display = 'block';
+                        } else {
+                            document.getElementById('transferSearchResults').innerHTML = '<div style="padding: 12px; color: #9ca3af; text-align: center;">没有找到其他语法点</div>';
+                            document.getElementById('transferSearchResults').style.display = 'block';
+                        }
+                    } else {
+                        document.getElementById('transferSearchResults').innerHTML = '<div style="padding: 12px; color: #9ca3af; text-align: center;">没有找到匹配的语法点</div>';
+                        document.getElementById('transferSearchResults').style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            }, 300);
+        }
+        
+        function selectTransferTarget(targetId, targetTitle) {
+            document.getElementById('transferTargetId').value = targetId;
+            document.getElementById('transferTargetTitle').textContent = targetTitle;
+            document.getElementById('transferSelectedTarget').style.display = 'block';
+            document.getElementById('transferSearchResults').style.display = 'none';
+            document.getElementById('transferSearchInput').value = targetTitle;
+        }
+        
+        async function executeTransfer() {
+            const sourceId = document.getElementById('transferSourceId').value;
+            const targetId = document.getElementById('transferTargetId').value;
+            const deleteSource = document.getElementById('transferDeleteSource').checked;
+            
+            if (!targetId) {
+                showToast('请选择目标语法点', 'error');
+                return;
+            }
+            
+            if (!transferSourceData) {
+                showToast('源数据加载失败，请重试', 'error');
+                return;
+            }
+            
+            try {
+                // 构建子话题数据
+                const subTopic = {
+                    title: transferSourceData.title,
+                    definition: transferSourceData.definition || '',
+                    structure: transferSourceData.structure || '',
+                    examples: transferSourceData.examples || [],
+                    usage: transferSourceData.usage || [],
+                    mistakes: transferSourceData.mistakes || [],
+                    source_type: 'transfer',
+                    source_id: sourceId
+                };
+                
+                // 添加子话题到目标
+                const addRes = await fetch(API_BASE + '/' + targetId + '/sub-topic', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(subTopic)
+                });
+                const addData = await addRes.json();
+                
+                if (!addData.success) {
+                    showToast('转移失败: ' + (addData.error || '未知错误'), 'error');
+                    return;
+                }
+                
+                // 如果勾选了删除源
+                if (deleteSource) {
+                    await fetch(API_BASE + '/' + sourceId, { method: 'DELETE' });
+                }
+                
+                showToast('转移成功！', 'success');
+                closeTransferModal();
+                loadStats();
+                loadGrammar();
+                
+            } catch (e) {
+                showToast('转移失败: ' + e.message, 'error');
+            }
         }
     </script>
 </body>

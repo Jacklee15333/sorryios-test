@@ -1,12 +1,6 @@
 /**
- * 语法数据库服务 v2.0
+ * 语法数据库服务
  * 使用 SQLite 存储语法知识库
- * 
- * 📦 v2.0 更新：
- * - 新增 sub_topics 字段，支持子话题/相关知识点的聚合
- * - 新增 addSubTopic() 方法，追加子知识点
- * - 新增 updateSubTopicsOrder() 方法，调整子话题排序
- * - 新增 removeSubTopic() 方法，移除子话题
  */
 
 const Database = require('better-sqlite3');
@@ -33,41 +27,10 @@ class GrammarService {
         this.db = new Database(this.dbPath);
         this.createTables();
         
-        // v2.0: 检查并添加 sub_topics 字段
-        this.migrateSubTopics();
-        
         // 自动检测并导入初始数据
         this.autoImportIfEmpty();
         
-        console.log('[GrammarService] v2.0 语法数据库已初始化:', this.dbPath);
-    }
-
-    /**
-     * v2.0: 数据库迁移 - 添加 sub_topics 字段
-     * v2.1: 添加 is_new 字段
-     */
-    migrateSubTopics() {
-        try {
-            const columns = this.db.prepare("PRAGMA table_info(grammar)").all();
-            
-            // 检查并添加 sub_topics 字段
-            const hasSubTopics = columns.some(col => col.name === 'sub_topics');
-            if (!hasSubTopics) {
-                console.log('[GrammarService] 添加 sub_topics 字段...');
-                this.db.exec(`ALTER TABLE grammar ADD COLUMN sub_topics TEXT DEFAULT '[]'`);
-                console.log('[GrammarService] sub_topics 字段添加成功');
-            }
-            
-            // 检查并添加 is_new 字段
-            const hasIsNew = columns.some(col => col.name === 'is_new');
-            if (!hasIsNew) {
-                console.log('[GrammarService] 添加 is_new 字段...');
-                this.db.exec(`ALTER TABLE grammar ADD COLUMN is_new INTEGER DEFAULT 0`);
-                console.log('[GrammarService] is_new 字段添加成功');
-            }
-        } catch (e) {
-            console.error('[GrammarService] 数据库迁移失败:', e.message);
-        }
+        console.log('[GrammarService] 语法数据库已初始化:', this.dbPath);
     }
 
     /**
@@ -127,7 +90,6 @@ class GrammarService {
                 usage TEXT,
                 mistakes TEXT,
                 examples TEXT,
-                sub_topics TEXT DEFAULT '[]',
                 category TEXT DEFAULT '其他',
                 difficulty INTEGER DEFAULT 2,
                 enabled INTEGER DEFAULT 1,
@@ -148,12 +110,11 @@ class GrammarService {
 
     /**
      * 添加语法点
-     * v2.1: 新增时设置 is_new = 1
      */
     add(grammar) {
         const stmt = this.db.prepare(`
-            INSERT INTO grammar (title, keywords, definition, structure, usage, mistakes, examples, sub_topics, category, difficulty, enabled, is_new)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO grammar (title, keywords, definition, structure, usage, mistakes, examples, category, difficulty, enabled)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
         try {
@@ -165,11 +126,9 @@ class GrammarService {
                 JSON.stringify(grammar.usage || []),
                 JSON.stringify(grammar.mistakes || []),
                 JSON.stringify(grammar.examples || []),
-                JSON.stringify(grammar.sub_topics || []),
                 grammar.category || '其他',
                 grammar.difficulty || 2,
-                grammar.enabled !== false ? 1 : 0,
-                1  // is_new = 1，标记为新添加
+                grammar.enabled !== false ? 1 : 0
             );
             return { success: true, id: result.lastInsertRowid };
         } catch (error) {
@@ -193,7 +152,6 @@ class GrammarService {
                 usage = ?,
                 mistakes = ?,
                 examples = ?,
-                sub_topics = ?,
                 category = ?,
                 difficulty = ?,
                 enabled = ?,
@@ -210,7 +168,6 @@ class GrammarService {
                 JSON.stringify(grammar.usage || []),
                 JSON.stringify(grammar.mistakes || []),
                 JSON.stringify(grammar.examples || []),
-                JSON.stringify(grammar.sub_topics || []),
                 grammar.category || '其他',
                 grammar.difficulty || 2,
                 grammar.enabled !== false ? 1 : 0,
@@ -223,230 +180,6 @@ class GrammarService {
             }
             throw error;
         }
-    }
-
-    /**
-     * v2.0 新增：追加子话题到语法点
-     * @param {number} grammarId - 目标语法点ID
-     * @param {Object} subTopic - 子话题内容
-     * @param {string} subTopic.title - 子话题标题（原始文本）
-     * @param {string} subTopic.source_type - 来源类型 (unmatched/manual)
-     * @param {number} subTopic.source_id - 来源ID（可追溯）
-     * @param {string} subTopic.definition - 定义
-     * @param {string} subTopic.structure - 结构
-     * @param {Array} subTopic.usage - 用法
-     * @param {Array} subTopic.examples - 例句
-     * @param {Array} subTopic.mistakes - 易错点
-     * @returns {Object} { success, error?, subTopicIndex? }
-     */
-    addSubTopic(grammarId, subTopic) {
-        try {
-            // 获取当前语法点
-            const grammar = this.getById(grammarId);
-            if (!grammar) {
-                return { success: false, error: '语法点不存在' };
-            }
-
-            // 获取现有的 sub_topics
-            const subTopics = grammar.sub_topics || [];
-
-            // 检查是否已存在相同标题的子话题
-            const existingIndex = subTopics.findIndex(st => 
-                st.title && st.title.toLowerCase() === subTopic.title.toLowerCase()
-            );
-            
-            if (existingIndex >= 0) {
-                return { 
-                    success: false, 
-                    error: '该子话题已存在',
-                    existingIndex 
-                };
-            }
-
-            // 构造新的子话题对象
-            const newSubTopic = {
-                title: subTopic.title,
-                source_type: subTopic.source_type || 'manual',
-                source_id: subTopic.source_id || null,
-                definition: subTopic.definition || '',
-                structure: subTopic.structure || '',
-                usage: subTopic.usage || [],
-                examples: subTopic.examples || [],
-                mistakes: subTopic.mistakes || [],
-                added_at: new Date().toISOString(),
-                order: subTopics.length  // 按添加顺序排序
-            };
-
-            // 追加到数组末尾
-            subTopics.push(newSubTopic);
-
-            // 更新数据库
-            const stmt = this.db.prepare(`
-                UPDATE grammar SET
-                    sub_topics = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            `);
-            
-            stmt.run(JSON.stringify(subTopics), grammarId);
-
-            console.log(`[GrammarService] 子话题已追加: "${subTopic.title}" → "${grammar.title}"`);
-
-            return { 
-                success: true, 
-                subTopicIndex: subTopics.length - 1,
-                totalSubTopics: subTopics.length
-            };
-        } catch (e) {
-            console.error('[GrammarService] 追加子话题失败:', e.message);
-            return { success: false, error: e.message };
-        }
-    }
-
-    /**
-     * v2.0 新增：更新子话题排序
-     * @param {number} grammarId - 语法点ID
-     * @param {Array} newOrder - 新的排序数组，包含子话题索引
-     * @returns {Object} { success, error? }
-     */
-    updateSubTopicsOrder(grammarId, newOrder) {
-        try {
-            const grammar = this.getById(grammarId);
-            if (!grammar) {
-                return { success: false, error: '语法点不存在' };
-            }
-
-            const subTopics = grammar.sub_topics || [];
-            
-            // 验证 newOrder
-            if (!Array.isArray(newOrder) || newOrder.length !== subTopics.length) {
-                return { success: false, error: '排序数组长度不匹配' };
-            }
-
-            // 重新排序
-            const reorderedSubTopics = newOrder.map((oldIndex, newIndex) => {
-                const topic = subTopics[oldIndex];
-                if (topic) {
-                    topic.order = newIndex;
-                }
-                return topic;
-            }).filter(t => t);
-
-            // 更新数据库
-            const stmt = this.db.prepare(`
-                UPDATE grammar SET
-                    sub_topics = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            `);
-            
-            stmt.run(JSON.stringify(reorderedSubTopics), grammarId);
-
-            return { success: true };
-        } catch (e) {
-            console.error('[GrammarService] 更新子话题排序失败:', e.message);
-            return { success: false, error: e.message };
-        }
-    }
-
-    /**
-     * v2.0 新增：移除子话题
-     * @param {number} grammarId - 语法点ID
-     * @param {number} subTopicIndex - 子话题索引
-     * @returns {Object} { success, error?, removed? }
-     */
-    removeSubTopic(grammarId, subTopicIndex) {
-        try {
-            const grammar = this.getById(grammarId);
-            if (!grammar) {
-                return { success: false, error: '语法点不存在' };
-            }
-
-            const subTopics = grammar.sub_topics || [];
-            
-            if (subTopicIndex < 0 || subTopicIndex >= subTopics.length) {
-                return { success: false, error: '子话题索引无效' };
-            }
-
-            // 移除指定子话题
-            const [removed] = subTopics.splice(subTopicIndex, 1);
-
-            // 重新设置 order
-            subTopics.forEach((topic, index) => {
-                topic.order = index;
-            });
-
-            // 更新数据库
-            const stmt = this.db.prepare(`
-                UPDATE grammar SET
-                    sub_topics = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            `);
-            
-            stmt.run(JSON.stringify(subTopics), grammarId);
-
-            return { success: true, removed };
-        } catch (e) {
-            console.error('[GrammarService] 移除子话题失败:', e.message);
-            return { success: false, error: e.message };
-        }
-    }
-
-    /**
-     * v2.0 新增：更新单个子话题内容
-     * @param {number} grammarId - 语法点ID
-     * @param {number} subTopicIndex - 子话题索引
-     * @param {Object} updates - 要更新的字段
-     * @returns {Object} { success, error? }
-     */
-    updateSubTopic(grammarId, subTopicIndex, updates) {
-        try {
-            const grammar = this.getById(grammarId);
-            if (!grammar) {
-                return { success: false, error: '语法点不存在' };
-            }
-
-            const subTopics = grammar.sub_topics || [];
-            
-            if (subTopicIndex < 0 || subTopicIndex >= subTopics.length) {
-                return { success: false, error: '子话题索引无效' };
-            }
-
-            // 更新指定字段
-            const allowedFields = ['title', 'definition', 'structure', 'usage', 'examples', 'mistakes'];
-            for (const field of allowedFields) {
-                if (updates[field] !== undefined) {
-                    subTopics[subTopicIndex][field] = updates[field];
-                }
-            }
-
-            // 更新数据库
-            const stmt = this.db.prepare(`
-                UPDATE grammar SET
-                    sub_topics = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            `);
-            
-            stmt.run(JSON.stringify(subTopics), grammarId);
-
-            return { success: true };
-        } catch (e) {
-            console.error('[GrammarService] 更新子话题失败:', e.message);
-            return { success: false, error: e.message };
-        }
-    }
-
-    /**
-     * v2.1 新增：确认语法点（取消"新"标记）
-     */
-    confirm(id) {
-        const stmt = this.db.prepare(`
-            UPDATE grammar SET is_new = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?
-        `);
-        const result = stmt.run(id);
-        return { success: result.changes > 0 };
     }
 
     /**
@@ -478,15 +211,13 @@ class GrammarService {
 
     /**
      * 获取所有语法点
-     * v2.1: 按 is_new DESC, created_at DESC 排序（新的在最前面）
      */
     getAll(includeDisabled = false) {
         let sql = 'SELECT * FROM grammar';
         if (!includeDisabled) {
             sql += ' WHERE enabled = 1';
         }
-        // 新添加的在最前面，然后按创建时间倒序
-        sql += ' ORDER BY is_new DESC, created_at DESC';
+        sql += ' ORDER BY category, title';
         
         const stmt = this.db.prepare(sql);
         const rows = stmt.all();
@@ -552,7 +283,6 @@ class GrammarService {
 
     /**
      * 解析数据库行
-     * v2.1: 添加 is_new 字段
      */
     parseRow(row) {
         return {
@@ -564,11 +294,9 @@ class GrammarService {
             usage: JSON.parse(row.usage || '[]'),
             mistakes: JSON.parse(row.mistakes || '[]'),
             examples: JSON.parse(row.examples || '[]'),
-            sub_topics: JSON.parse(row.sub_topics || '[]'),
             category: row.category,
             difficulty: row.difficulty,
             enabled: row.enabled === 1,
-            is_new: row.is_new === 1,
             created_at: row.created_at,
             updated_at: row.updated_at
         };
@@ -650,7 +378,7 @@ class GrammarService {
         const all = this.getAll(true);
         const result = {
             _meta: {
-                version: '2.0',
+                version: '1.0',
                 exported_at: new Date().toISOString(),
                 total_items: all.length
             },
@@ -665,8 +393,7 @@ class GrammarService {
                 structure: item.structure,
                 usage: item.usage,
                 mistakes: item.mistakes,
-                examples: item.examples,
-                sub_topics: item.sub_topics
+                examples: item.examples
             };
         }
 
@@ -675,27 +402,16 @@ class GrammarService {
 
     /**
      * 获取统计信息
-     * v2.1: 添加新增数量统计
      */
     getStats() {
         const total = this.db.prepare('SELECT COUNT(*) as count FROM grammar').get().count;
         const enabled = this.db.prepare('SELECT COUNT(*) as count FROM grammar WHERE enabled = 1').get().count;
-        const newCount = this.db.prepare('SELECT COUNT(*) as count FROM grammar WHERE is_new = 1').get().count;
         const categories = this.db.prepare('SELECT category, COUNT(*) as count FROM grammar GROUP BY category ORDER BY count DESC').all();
-        
-        // v2.0: 统计子话题数量
-        const allGrammar = this.getAll(true);
-        let totalSubTopics = 0;
-        for (const g of allGrammar) {
-            totalSubTopics += (g.sub_topics || []).length;
-        }
         
         return {
             total,
             enabled,
             disabled: total - enabled,
-            newCount,
-            totalSubTopics,
             categories
         };
     }
