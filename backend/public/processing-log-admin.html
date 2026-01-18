@@ -1008,20 +1008,63 @@
                 <!-- 搜索结果 -->
                 <div id="grammarSearchResults" style="display: none; margin-bottom: 16px;">
                     <div style="font-size: 13px; color: #6d28d9; margin-bottom: 8px; font-weight: 600;">📋 搜索结果（点击选择）</div>
-                    <div id="grammarResultsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e5e5; border-radius: 8px;"></div>
+                    <div id="grammarResultsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e5e5; border-radius: 8px 8px 0 0; border-bottom: none;"></div>
+                    <!-- 固定在底部的新建按钮 -->
+                    <div id="grammarCreateNewBtn" onclick="showNewGrammarForm()" 
+                         style="padding: 12px 16px; cursor: pointer; background: #fef3c7; border: 1px solid #e5e5e5; border-radius: 0 0 8px 8px; text-align: center; border-top: 2px dashed #f59e0b;"
+                         onmouseover="this.style.background='#fde68a'" onmouseout="this.style.background='#fef3c7'">
+                        <div style="color: #92400e; font-weight: 600;">➕ 没找到想要的？点击新建「<span id="grammarCreateNewKeyword"></span>」</div>
+                    </div>
                 </div>
 
-                <!-- 选中的语法 -->
-                <div id="grammarSelected" style="display: none; background: #f0fdf4; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border: 2px solid #10b981;">
-                    <div style="font-size: 12px; color: #166534; margin-bottom: 4px;">✅ 已选择语法词条</div>
-                    <div style="font-size: 16px; font-weight: 600; color: #15803d;" id="grammarSelectedTitle"></div>
-                    <div style="font-size: 13px; color: #166534; margin-top: 4px;" id="grammarSelectedDef"></div>
+                <!-- 选中的语法 - v2.0 增强版预览 -->
+                <div id="grammarSelected" style="display: none; background: #f0fdf4; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 2px solid #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 12px; color: #166534; margin-bottom: 4px;">✅ 已选择语法词条</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #15803d;" id="grammarSelectedTitle"></div>
+                            <div style="font-size: 13px; color: #166534; margin-top: 4px;" id="grammarSelectedDef"></div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="toggleGrammarPreview()" id="previewToggleBtn" style="white-space: nowrap; margin-left: 12px;">📖 展开详情</button>
+                    </div>
                     <input type="hidden" id="grammarSelectedId">
+                    
+                    <!-- v2.0: 目标词条完整预览（可折叠） -->
+                    <div id="grammarFullPreview" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px dashed #86efac;">
+                        <!-- 基本信息 -->
+                        <div id="grammarPreviewContent" style="margin-bottom: 12px;">
+                            <!-- 动态填充 -->
+                        </div>
+                        
+                        <!-- 已有子话题列表 -->
+                        <div id="grammarSubTopicsList" style="margin-top: 12px;">
+                            <div style="font-size: 13px; font-weight: 600; color: #166534; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                <span>📚 已有相关知识点</span>
+                                <span style="background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 10px; font-size: 11px;" id="subTopicsCount">0</span>
+                            </div>
+                            <div id="subTopicsContainer" style="max-height: 200px; overflow-y: auto; padding-right: 4px;">
+                                <!-- 动态填充 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 当前内容预览（将要追加的） -->
+                        <div style="margin-top: 16px; background: #fef3c7; padding: 12px; border-radius: 8px; border: 2px dashed #f59e0b;">
+                            <div style="font-size: 13px; font-weight: 600; color: #92400e; margin-bottom: 8px;">
+                                ➕ 即将追加为新的子话题
+                            </div>
+                            <div id="pendingSubTopicPreview" style="font-size: 13px; color: #78350f;">
+                                <!-- 动态填充 -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 新建语法表单（搜索无结果时显示） -->
+                <!-- 新建语法表单（搜索无结果时显示） - v2.0 增强 -->
                 <div id="grammarNewForm" style="display: none; background: #faf5ff; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 2px dashed #8b5cf6;">
-                    <div style="font-size: 13px; color: #6d28d9; margin-bottom: 12px; font-weight: 600;">⚠️ 语法库中未找到，请填写信息后新建：</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div style="font-size: 13px; color: #6d28d9; font-weight: 600;">⚠️ 语法库中未找到，请填写信息后新建：</div>
+                        <button class="btn btn-sm" onclick="quickCreateGrammar()" style="background: #8b5cf6; color: white; font-size: 12px; padding: 4px 10px;">⚡ 快速新建</button>
+                    </div>
                     <div class="form-group" style="margin-bottom: 12px;">
                         <label style="color: #5b21b6; font-size: 13px;">语法标题 <span style="color:#ef4444">*</span></label>
                         <input type="text" id="grammarNewTitle" placeholder="如：现在完成时、被动语态" style="border-color: #8b5cf6; padding: 8px 10px;">
@@ -1060,9 +1103,9 @@
                 <div style="background: #ede9fe; padding: 12px; border-radius: 8px; font-size: 13px; color: #6d28d9;">
                     💡 系统将：
                     <ol style="margin: 8px 0 0 20px; padding: 0;">
-                        <li>如果选择已有语法 → 只保存匹配规则</li>
+                        <li>如果选择已有语法 → <strong>追加为子话题</strong> + 保存匹配规则</li>
                         <li>如果新建语法 → 保存到语法库 + 保存匹配规则</li>
-                        <li>匹配规则：原文 → 语法词条</li>
+                        <li>匹配规则：原文 → 语法词条（下次自动匹配）</li>
                     </ol>
                 </div>
             </div>
@@ -2629,6 +2672,11 @@
             document.getElementById('grammarNewForm').style.display = 'none';
             document.getElementById('grammarSelectedId').value = '';
             
+            // v2.0: 重置预览区域
+            document.getElementById('grammarFullPreview').style.display = 'none';
+            document.getElementById('previewToggleBtn').textContent = '📖 展开详情';
+            window._selectedGrammar = null;
+            
             // 预填 AI 生成的内容（如果有）
             const aiContent = document.getElementById('editAiContent');
             const aiMeaning = document.getElementById('editMeaning').value;
@@ -2686,6 +2734,9 @@
                     newFormDiv.style.display = 'none';
                     selectedDiv.style.display = 'none';
                     
+                    // 更新固定按钮的关键词
+                    document.getElementById('grammarCreateNewKeyword').textContent = keyword;
+                    
                     listDiv.innerHTML = data.data.map(g => `
                         <div onclick="selectGrammar(${g.id}, '${escapeJs(g.title)}', '${escapeJs(g.definition || '')}')" 
                              style="padding: 12px 16px; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.1s;"
@@ -2715,7 +2766,7 @@
         }
         
         /**
-         * 选择已有语法
+         * 选择已有语法 - v2.0 增强
          */
         function selectGrammar(id, title, definition) {
             document.getElementById('grammarSelectedId').value = id;
@@ -2726,11 +2777,14 @@
             document.getElementById('grammarNewForm').style.display = 'none';
             document.getElementById('grammarSelected').style.display = 'block';
             
+            // v2.0: 加载完整预览
+            loadGrammarPreview(id);
+            
             showToast('已选择：' + title, 'success');
         }
         
         /**
-         * 确认转为语法
+         * 确认转为语法 - v2.0 增强（支持子话题追加）
          */
         async function executeToGrammar() {
             const id = document.getElementById('grammarItemId').value;
@@ -2742,11 +2796,50 @@
             let targetGrammarTitle = null;
             let isNewGrammar = false;
             
+            // v2.0: 收集当前编辑的内容（作为子话题）
+            const subTopicContent = {
+                title: originalText,
+                source_type: 'unmatched',
+                source_id: id ? parseInt(id) : null,
+                definition: document.getElementById('editDefinition')?.value || 
+                           document.getElementById('editMeaning')?.value || '',
+                structure: document.getElementById('editStructure')?.value || '',
+                usage: document.getElementById('editUsage')?.value?.split('\n').filter(s => s.trim()) || [],
+                examples: document.getElementById('editExamples')?.value?.split('\n').filter(s => s.trim()) || 
+                          (document.getElementById('editExample')?.value ? [document.getElementById('editExample').value] : []),
+                mistakes: document.getElementById('editMistakes')?.value?.split('\n').filter(s => s.trim()) || []
+            };
+            
             // 情况 A：选择了已有语法
             if (selectedId) {
                 targetGrammarId = parseInt(selectedId);
                 targetGrammarTitle = document.getElementById('grammarSelectedTitle').textContent;
                 isNewGrammar = false;
+                
+                // v2.0: 追加子话题
+                try {
+                    const subTopicRes = await fetch('/api/grammar/' + targetGrammarId + '/sub-topic', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(subTopicContent)
+                    });
+                    const subTopicData = await subTopicRes.json();
+                    
+                    if (!subTopicData.success) {
+                        // 如果是因为已存在，只是警告，不阻止继续
+                        if (subTopicData.error === '该子话题已存在') {
+                            console.warn('[转为语法] 子话题已存在，跳过追加');
+                        } else {
+                            showToast('追加子话题失败: ' + subTopicData.error, 'error');
+                            return;
+                        }
+                    } else {
+                        console.log(`[转为语法] 子话题已追加: "${originalText}" → "${targetGrammarTitle}" (第${subTopicData.subTopicIndex + 1}个)`);
+                    }
+                } catch (e) {
+                    console.error('追加子话题失败:', e);
+                    // 不阻止继续，因为匹配规则可能更重要
+                }
             }
             // 情况 B：新建语法
             else if (document.getElementById('grammarNewForm').style.display !== 'none') {
@@ -2770,6 +2863,9 @@
                 const keywords = keywordsStr ? keywordsStr.split(/[,，]/).map(k => k.trim()).filter(k => k) : [title];
                 const examples = example ? [example] : [];
                 
+                // v2.0: 如果原内容不同于标题，直接作为第一个子话题
+                const initialSubTopics = (originalText.toLowerCase() !== title.toLowerCase()) ? [subTopicContent] : [];
+                
                 try {
                     const addRes = await fetch('/api/grammar', {
                         method: 'POST',
@@ -2780,7 +2876,8 @@
                             category: category || '其他',
                             structure,
                             keywords,
-                            examples
+                            examples,
+                            sub_topics: initialSubTopics
                         })
                     });
                     const addData = await addRes.json();
@@ -2840,7 +2937,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             reviewedBy: 'admin',
-                            notes: `已转为语法: ${targetGrammarTitle}`
+                            notes: `已转为语法: ${targetGrammarTitle}${isNewGrammar ? '' : ' (作为子话题追加)'}`
                         })
                     });
                 } catch (e) {
@@ -2853,14 +2950,180 @@
             if (isNewGrammar) {
                 showToast(`转换成功！已新增语法「${targetGrammarTitle}」并建立匹配规则`, 'success');
             } else {
-                showToast(`转换成功！语法库已有「${targetGrammarTitle}」，已建立匹配规则`, 'success');
+                showToast(`转换成功！「${shortOriginal}」已追加到「${targetGrammarTitle}」的子话题中`, 'success');
             }
             
-            // 5️⃣ 关闭弹窗并刷新
+            // 5️⃣ 清理并关闭
+            window._selectedGrammar = null;
             closeModal('toGrammarModal');
             closeModal('editModal');
             loadStats();
             loadPendingUnmatched();
+        }
+        
+        // ============================================
+        // v2.0: 转为语法增强功能 - 辅助函数
+        // ============================================
+        
+        /**
+         * 切换语法预览展开/折叠
+         */
+        function toggleGrammarPreview() {
+            const previewDiv = document.getElementById('grammarFullPreview');
+            const btn = document.getElementById('previewToggleBtn');
+            
+            if (previewDiv.style.display === 'none') {
+                previewDiv.style.display = 'block';
+                btn.textContent = '📕 收起详情';
+            } else {
+                previewDiv.style.display = 'none';
+                btn.textContent = '📖 展开详情';
+            }
+        }
+        
+        /**
+         * 加载并显示目标语法词条的完整信息
+         */
+        async function loadGrammarPreview(grammarId) {
+            try {
+                const res = await fetch('/api/grammar/' + grammarId);
+                const data = await res.json();
+                
+                if (!data.success) {
+                    console.error('加载语法详情失败');
+                    return;
+                }
+                
+                const grammar = data.data;
+                
+                // 填充基本信息
+                const contentDiv = document.getElementById('grammarPreviewContent');
+                contentDiv.innerHTML = `
+                    <div style="display: grid; gap: 8px; font-size: 13px; color: #374151;">
+                        ${grammar.structure ? `<div><strong>结构：</strong>${escapeHtml(grammar.structure)}</div>` : ''}
+                        ${grammar.usage && grammar.usage.length > 0 ? `<div><strong>用法：</strong>${grammar.usage.map(u => escapeHtml(u)).join('；')}</div>` : ''}
+                        ${grammar.examples && grammar.examples.length > 0 ? `<div><strong>例句：</strong>${grammar.examples.map(e => escapeHtml(e)).join('；')}</div>` : ''}
+                        ${grammar.mistakes && grammar.mistakes.length > 0 ? `<div><strong>易错点：</strong>${grammar.mistakes.map(m => escapeHtml(m)).join('；')}</div>` : ''}
+                        ${grammar.category ? `<div><strong>分类：</strong><span style="background:#ede9fe;color:#6d28d9;padding:2px 8px;border-radius:4px;">${escapeHtml(grammar.category)}</span></div>` : ''}
+                    </div>
+                `;
+                
+                // 填充子话题列表
+                const subTopics = grammar.sub_topics || [];
+                document.getElementById('subTopicsCount').textContent = subTopics.length;
+                
+                const container = document.getElementById('subTopicsContainer');
+                if (subTopics.length === 0) {
+                    container.innerHTML = '<div style="color: #9ca3af; font-size: 12px; padding: 8px;">暂无相关知识点</div>';
+                } else {
+                    container.innerHTML = subTopics.map((st, idx) => `
+                        <div style="background: white; padding: 10px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #e5e7eb;">
+                            <div style="font-weight: 500; color: #374151; margin-bottom: 4px;">${idx + 1}. ${escapeHtml(st.title)}</div>
+                            <div style="font-size: 12px; color: #6b7280;">${escapeHtml(st.definition || '暂无定义')}</div>
+                            ${st.added_at ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">添加于 ${formatTime(st.added_at)}</div>` : ''}
+                        </div>
+                    `).join('');
+                }
+                
+                // 填充即将追加的内容预览
+                updatePendingSubTopicPreview();
+                
+                // 保存当前语法信息到全局变量，供后续使用
+                window._selectedGrammar = grammar;
+                
+            } catch (e) {
+                console.error('加载语法预览失败:', e);
+            }
+        }
+        
+        /**
+         * 更新即将追加的子话题预览
+         */
+        function updatePendingSubTopicPreview() {
+            const originalText = document.getElementById('grammarOriginalText').textContent;
+            
+            // 从编辑弹窗获取当前编辑的内容
+            const definition = document.getElementById('editDefinition')?.value || 
+                               document.getElementById('editMeaning')?.value || '';
+            const structure = document.getElementById('editStructure')?.value || '';
+            const usage = document.getElementById('editUsage')?.value || '';
+            const examples = document.getElementById('editExamples')?.value || 
+                             document.getElementById('editExample')?.value || '';
+            const mistakes = document.getElementById('editMistakes')?.value || '';
+            
+            const previewDiv = document.getElementById('pendingSubTopicPreview');
+            previewDiv.innerHTML = `
+                <div style="font-weight: 500; color: #78350f; margin-bottom: 6px;">「${escapeHtml(originalText)}」</div>
+                ${definition ? `<div>定义：${escapeHtml(definition.substring(0, 100))}${definition.length > 100 ? '...' : ''}</div>` : ''}
+                ${structure ? `<div>结构：${escapeHtml(structure)}</div>` : ''}
+                ${usage ? `<div>用法：${escapeHtml(usage.split('\\n')[0])}${usage.includes('\\n') ? '...' : ''}</div>` : ''}
+                ${examples ? `<div>例句：${escapeHtml(examples.split('\\n')[0])}${examples.includes('\\n') ? '...' : ''}</div>` : ''}
+                ${!definition && !structure && !usage && !examples ? '<div style="color: #9ca3af;">（暂无内容，将只保存标题）</div>' : ''}
+            `;
+        }
+        
+        /**
+         * 显示新建语法表单（从搜索结果点击"新建"时调用）
+         */
+        function showNewGrammarForm() {
+            const keyword = document.getElementById('grammarSearchInput').value.trim();
+            
+            // 隐藏搜索结果，显示新建表单
+            document.getElementById('grammarSearchResults').style.display = 'none';
+            document.getElementById('grammarSelected').style.display = 'none';
+            document.getElementById('grammarNewForm').style.display = 'block';
+            
+            // 预填标题为搜索词
+            document.getElementById('grammarNewTitle').value = keyword;
+            
+            showToast('请填写新语法信息', 'info');
+        }
+        
+        /**
+         * 快速新建语法词条
+         */
+        async function quickCreateGrammar() {
+            const keyword = document.getElementById('grammarSearchInput').value.trim();
+            
+            if (!keyword) {
+                showToast('请先输入语法关键词', 'error');
+                return;
+            }
+            
+            // 弹出简化的确认框
+            const title = prompt('请输入语法词条标题：', keyword);
+            if (!title) return;
+            
+            const definition = prompt('请输入简要定义（可留空后续补充）：', '');
+            if (definition === null) return;  // 用户取消
+            
+            try {
+                const res = await fetch('/api/grammar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: title.trim(),
+                        definition: definition.trim() || '待补充',
+                        keywords: [title.trim()],
+                        category: '其他'
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(`语法词条「${title}」创建成功！`, 'success');
+                    
+                    // 自动选中新创建的语法
+                    selectGrammar(data.id, title, definition || '待补充');
+                    
+                    // 隐藏新建表单
+                    document.getElementById('grammarNewForm').style.display = 'none';
+                } else {
+                    showToast('创建失败: ' + (data.error || '未知错误'), 'error');
+                }
+            } catch (e) {
+                showToast('创建失败: ' + e.message, 'error');
+            }
         }
         
         /**
