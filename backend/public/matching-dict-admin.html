@@ -37,7 +37,7 @@
             background: #f7f7f8; color: #1a1a1a; padding: 8px 16px; 
             border-radius: 8px; font-size: 14px; border: 1px solid #e5e5e5;
         }
-        .stat-item strong { font-size: 18px; font-weight: 600; margin-right: 4px; color: #0d9488; }
+        .stat-item strong { font-size: 18px; font-weight: 600; margin-right: 4px; color: #374151; }
         
         .toolbar { 
             background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; 
@@ -48,33 +48,38 @@
             padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 8px; font-size: 14px; outline: none;
         }
         .search-box input { flex: 1; }
-        .search-box input:focus, .filter-select:focus { border-color: #0d9488; }
+        .search-box input:focus, .filter-select:focus { border-color: #9ca3af; }
         
         .btn { 
-            padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; 
+            padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; 
             font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+            background: white; color: #374151;
         }
-        .btn-primary { background: #0d9488; color: white; }
-        .btn-primary:hover { background: #0f766e; }
-        .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e5e5; }
-        .btn-secondary:hover { background: #e5e7eb; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .btn-confirm { background: #10b981; color: white; }
-        .btn-transfer { background: #2563eb; color: white; }
-        .btn-transfer:hover { background: #1d4ed8; }
+        .btn:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-primary { background: white; color: #2563eb; border: 1px solid #93c5fd; }
+        .btn-primary:hover { background: #eff6ff; border-color: #60a5fa; }
+        .btn-secondary { background: white; color: #374151; border: 1px solid #d1d5db; }
+        .btn-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-success { background: white; color: #059669; border: 1px solid #a7f3d0; }
+        .btn-success:hover { background: #ecfdf5; border-color: #34d399; }
+        .btn-danger { background: white; color: #dc2626; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fef2f2; border-color: #f87171; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-confirm { background: white; color: #059669; border: 1px solid #a7f3d0; }
+        .btn-confirm:hover { background: #ecfdf5; border-color: #34d399; }
+        .btn-transfer { background: white; color: #2563eb; border: 1px solid #93c5fd; }
+        .btn-transfer:hover { background: #eff6ff; border-color: #60a5fa; }
         
         .item-list { background: white; border-radius: 12px; border: 1px solid #e5e5e5; overflow: hidden; }
         
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #f3f4f6; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
         th { background: #f9fafb; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; }
+        td { font-weight: normal; color: #1a1a1a; }
         tr:last-child td { border-bottom: none; }
         tr:hover { background: #fafafa; }
-        tr.is-new { background: #fef2f2; border-left: 3px solid #dc2626; }
-        tr.is-new:hover { background: #fee2e2; }
+        tr.is-new { background: #f9fafb; border-left: 3px solid #9ca3af; }
+        tr.is-new:hover { background: #f3f4f6; }
         
         .type-badge {
             display: inline-block; font-size: 11px; padding: 3px 8px; 
@@ -87,11 +92,11 @@
         
         .action-badge {
             display: inline-block; font-size: 11px; padding: 3px 8px; 
-            border-radius: 4px; font-weight: 500; background: #f0fdfa; color: #0d9488;
+            border-radius: 4px; font-weight: 500; background: #f3f4f6; color: #374151;
         }
         
         .new-badge {
-            display: inline-block; background: #fef3c7; color: #92400e;
+            display: inline-block; background: #f3f4f6; color: #374151;
             font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-left: 8px;
         }
         
@@ -114,7 +119,7 @@
         }
         .page-btn:hover:not(:disabled) { background: #f3f4f6; border-color: #d1d5db; }
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .page-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+        .page-btn.active { background: #f3f4f6; color: #1a1a1a; border-color: #9ca3af; }
         .page-size-select {
             padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 8px;
             font-size: 13px; background: white; cursor: pointer;
@@ -504,7 +509,7 @@
                 <tr class="${isNew ? 'is-new' : ''}">
                     <td>${r.id}</td>
                     <td>
-                        <strong>${escapeHtml(r.original_text)}</strong>
+                        ${escapeHtml(r.original_text)}
                         ${isNew ? '<span class="new-badge">🆕 新</span>' : ''}
                     </td>
                     <td><span class="type-badge ${typeClass}">${typeLabel}</span></td>

@@ -65,7 +65,7 @@
             font-size: 18px; 
             font-weight: 600;
             margin-right: 4px; 
-            color: #2563eb;
+            color: #374151;
         }
         
         /* ========== Tab 切换 ========== */
@@ -92,8 +92,9 @@
         }
         .tab-btn:hover { background: #f7f7f8; color: #1a1a1a; }
         .tab-btn.active { 
-            background: #1a1a1a; 
-            color: white;
+            background: #f3f4f6; 
+            color: #1a1a1a;
+            border: 1px solid #d1d5db;
         }
         
         /* ========== 工具栏 ========== */
@@ -118,34 +119,37 @@
             outline: none;
             transition: border-color 0.15s;
         }
-        .search-box input:focus { border-color: #2563eb; }
+        .search-box input:focus { border-color: #9ca3af; }
         
-        /* ========== 按钮 ========== */
+        /* ========== 按钮 - 线条风格 ========== */
         .btn { 
             padding: 8px 16px; 
-            border: none; 
-            border-radius: 8px; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
             font-size: 13px; 
             font-weight: 500;
             cursor: pointer; 
             transition: all 0.15s;
             white-space: nowrap;
+            background: white;
+            color: #374151;
         }
-        .btn-primary { background: #2563eb; color: white; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e5e5; }
-        .btn-secondary:hover { background: #e5e7eb; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-success:hover { background: #059669; }
-        .btn-warning { background: #f59e0b; color: white; }
-        .btn-warning:hover { background: #d97706; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .btn-confirm { background: #10b981; color: white; }
-        .btn-confirm:hover { background: #059669; }
-        .btn-transfer { background: #7c3aed; color: white; }
-        .btn-transfer:hover { background: #6d28d9; }
+        .btn:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-primary { background: white; color: #2563eb; border: 1px solid #93c5fd; }
+        .btn-primary:hover { background: #eff6ff; border-color: #60a5fa; }
+        .btn-secondary { background: white; color: #374151; border: 1px solid #d1d5db; }
+        .btn-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-success { background: white; color: #059669; border: 1px solid #a7f3d0; }
+        .btn-success:hover { background: #ecfdf5; border-color: #34d399; }
+        .btn-warning { background: white; color: #d97706; border: 1px solid #fcd34d; }
+        .btn-warning:hover { background: #fffbeb; border-color: #fbbf24; }
+        .btn-danger { background: white; color: #dc2626; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fef2f2; border-color: #f87171; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-confirm { background: white; color: #059669; border: 1px solid #a7f3d0; }
+        .btn-confirm:hover { background: #ecfdf5; border-color: #34d399; }
+        .btn-transfer { background: white; color: #7c3aed; border: 1px solid #c4b5fd; }
+        .btn-transfer:hover { background: #f5f3ff; border-color: #a78bfa; }
         
         /* ========== 列表项 ========== */
         .item-list { 

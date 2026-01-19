@@ -219,6 +219,37 @@
         .toast.success { background: #10b981; }
         .toast.error { background: #ef4444; }
         
+        /* 行内编辑样式 */
+        .editable-field {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+        .editable-field:hover {
+            background: #f3f4f6;
+        }
+        .editable-input {
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid #7c3aed;
+            border-radius: 4px;
+            font-size: inherit;
+            font-family: inherit;
+            outline: none;
+            background: white;
+        }
+        .editable-input:focus {
+            box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+        }
+        .sub-topic-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .sub-topic-item:last-child {
+            border-bottom: none;
+        }
+        
         @media (max-width: 768px) {
             body { padding: 12px; }
             .grammar-item { padding: 12px; }
@@ -425,6 +456,44 @@
         </div>
     </div>
 
+    <!-- 子话题编辑弹窗 -->
+    <div class="modal" id="subTopicEditModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>编辑子话题</h2>
+                <button class="modal-close" onclick="closeSubTopicEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="subTopicEditGrammarId">
+                <input type="hidden" id="subTopicEditIndex">
+                <div class="form-group">
+                    <label>标题 *</label>
+                    <input type="text" id="subTopicEditTitle" placeholder="子话题标题">
+                </div>
+                <div class="form-group">
+                    <label>定义</label>
+                    <textarea id="subTopicEditDefinition" placeholder="定义说明" style="min-height: 80px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>结构</label>
+                    <input type="text" id="subTopicEditStructure" placeholder="语法结构">
+                </div>
+                <div class="form-group">
+                    <label>例句 <span style="font-weight: normal; color: #9ca3af; font-size: 12px;">（每行一句）</span></label>
+                    <textarea id="subTopicEditExamples" placeholder="例句1&#10;例句2" style="min-height: 80px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>用法 <span style="font-weight: normal; color: #9ca3af; font-size: 12px;">（每行一条）</span></label>
+                    <textarea id="subTopicEditUsage" placeholder="用法1&#10;用法2" style="min-height: 80px;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSubTopicEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveSubTopicEdit()">保存</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = '/api/grammar';
         let allGrammar = [];
@@ -613,6 +682,9 @@
                 const subTopics = g.sub_topics ? (typeof g.sub_topics === 'string' ? JSON.parse(g.sub_topics) : g.sub_topics) : [];
                 const hasSubTopics = subTopics.length > 0;
                 
+                // 去重：如果definition等于title则不显示
+                const showDefinition = g.definition && g.definition.trim() !== g.title.trim();
+                
                 return `
                 <div class="grammar-item ${g.enabled ? '' : 'disabled'} ${isNew ? 'is-new' : ''}">
                     ${isNew ? '<span class="new-badge">新</span>' : ''}
@@ -621,7 +693,7 @@
                         ${g.category ? `<span class="category-badge">${escapeHtml(g.category)}</span>` : ''}
                         ${hasSubTopics ? `<span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;">📚 ${subTopics.length} 个子话题</span>` : ''}
                     </div>
-                    <div class="grammar-definition">${escapeHtml(g.definition || '')}</div>
+                    ${showDefinition ? `<div class="grammar-definition">${escapeHtml(g.definition)}</div>` : ''}
                     ${keywords.length ? `
                         <div class="grammar-tags">
                             ${keywords.slice(0, 6).map(k => `<span class="tag">${escapeHtml(k)}</span>`).join('')}
@@ -629,22 +701,31 @@
                         </div>
                     ` : ''}
                     ${hasSubTopics ? `
-                        <div style="margin-top: 12px; background: #f9fafb; border-radius: 8px; padding: 12px; border: 1px solid #e5e7eb;">
-                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 10px; font-weight: 500;">📚 相关知识点 (${subTopics.length})</div>
-                            ${subTopics.map((st, idx) => `
-                                <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; ${idx === subTopics.length - 1 ? 'margin-bottom: 0;' : ''}">
+                        <div style="margin-top: 12px;">
+                            ${subTopics.map((st, idx) => {
+                                // 子话题去重：如果definition等于title则不显示
+                                const stShowDef = st.definition && st.definition.trim() !== st.title.trim();
+                                const examplesStr = (st.examples || []).join(' / ');
+                                return `
+                                <div class="sub-topic-item">
                                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                         <div style="flex: 1;">
-                                            <div style="font-weight: 600; color: #374151; margin-bottom: 6px;">${idx + 1}. ${escapeHtml(st.title)}</div>
-                                            ${st.definition ? `<div style="font-size: 13px; color: #4b5563; margin-bottom: 6px; line-height: 1.5;">${escapeHtml(st.definition)}</div>` : ''}
-                                            ${st.structure ? `<div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;"><span style="color: #9ca3af;">结构：</span>${escapeHtml(st.structure)}</div>` : ''}
-                                            ${st.examples && st.examples.length > 0 ? `<div style="font-size: 13px; color: #6b7280;"><span style="color: #9ca3af;">例句：</span>${st.examples.map(e => escapeHtml(e)).join(' / ')}</div>` : ''}
+                                            <div style="font-weight: 600; color: #374151; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+                                                <span>${idx + 1}.</span>
+                                                <span class="editable-field" onclick="editSubTopicField(event, ${g.id}, ${idx}, 'title', this)" data-field="title" data-value="${escapeHtml(st.title).replace(/"/g, '&quot;')}">${escapeHtml(st.title)}</span>
+                                            </div>
+                                            ${stShowDef ? `<div style="font-size: 13px; color: #4b5563; margin-bottom: 6px; line-height: 1.5;"><span class="editable-field" onclick="editSubTopicField(event, ${g.id}, ${idx}, 'definition', this)" data-field="definition" data-value="${escapeHtml(st.definition).replace(/"/g, '&quot;')}">${escapeHtml(st.definition)}</span></div>` : ''}
+                                            ${st.structure ? `<div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;"><span style="color: #9ca3af;">结构：</span><span class="editable-field" onclick="editSubTopicField(event, ${g.id}, ${idx}, 'structure', this)" data-field="structure" data-value="${escapeHtml(st.structure).replace(/"/g, '&quot;')}">${escapeHtml(st.structure)}</span></div>` : ''}
+                                            ${st.examples && st.examples.length > 0 ? `<div style="font-size: 13px; color: #6b7280;"><span style="color: #9ca3af;">例句：</span><span class="editable-field" onclick="editSubTopicField(event, ${g.id}, ${idx}, 'examples', this)" data-field="examples" data-value="${escapeHtml(examplesStr).replace(/"/g, '&quot;')}">${escapeHtml(examplesStr)}</span></div>` : ''}
                                         </div>
-                                        <button class="btn btn-danger btn-sm" onclick="removeSubTopic(${g.id}, ${idx}, '${escapeHtml(st.title).replace(/'/g, "\\'")}', event)" style="font-size: 11px; padding: 3px 8px;">删除</button>
+                                        <div style="display: flex; gap: 4px;">
+                                            <button class="btn btn-primary btn-sm" onclick="openSubTopicEditModal(${g.id}, ${idx}, event)" style="font-size: 11px; padding: 3px 8px;">编辑</button>
+                                            <button class="btn btn-danger btn-sm" onclick="removeSubTopic(${g.id}, ${idx}, '${escapeHtml(st.title).replace(/'/g, "\\'")}', event)" style="font-size: 11px; padding: 3px 8px;">删除</button>
+                                        </div>
                                     </div>
-                                    ${st.added_at ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e5e7eb;">添加于 ${formatTime(st.added_at)}</div>` : ''}
+                                    ${st.added_at ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">添加于 ${formatTime(st.added_at)}</div>` : ''}
                                 </div>
-                            `).join('')}
+                            `}).join('')}
                         </div>
                     ` : ''}
                     <div class="grammar-actions" style="${hasSubTopics ? 'margin-top: 10px;' : ''}">
@@ -1007,6 +1088,199 @@
                 }
             } catch (e) {
                 showToast('删除失败: ' + e.message, 'error');
+            }
+        }
+        
+        /**
+         * v3.0: 行内编辑子话题字段
+         */
+        function editSubTopicField(event, grammarId, subTopicIndex, field, element) {
+            event.stopPropagation();
+            
+            // 如果已经在编辑状态，不做任何操作
+            if (element.querySelector('input, textarea')) return;
+            
+            const currentValue = element.dataset.value || element.textContent;
+            const isMultiLine = field === 'examples' || field === 'definition';
+            
+            // 保存原始HTML以便取消时恢复
+            const originalHtml = element.innerHTML;
+            const originalClasses = element.className;
+            
+            // 创建输入框
+            if (isMultiLine) {
+                element.innerHTML = `<textarea class="editable-input" style="min-height: 60px; resize: vertical;">${escapeHtml(currentValue)}</textarea>`;
+            } else {
+                element.innerHTML = `<input type="text" class="editable-input" value="${escapeHtml(currentValue).replace(/"/g, '&quot;')}">`;
+            }
+            element.className = '';
+            
+            const input = element.querySelector('input, textarea');
+            input.focus();
+            input.select();
+            
+            // 保存函数
+            const save = async () => {
+                const newValue = input.value.trim();
+                
+                // 如果值没变，恢复原状
+                if (newValue === currentValue) {
+                    element.innerHTML = originalHtml;
+                    element.className = originalClasses;
+                    return;
+                }
+                
+                // 值不能为空（标题必填）
+                if (!newValue && field === 'title') {
+                    showToast('标题不能为空', 'error');
+                    input.focus();
+                    return;
+                }
+                
+                try {
+                    // 构建更新数据
+                    const updateData = {};
+                    if (field === 'examples') {
+                        // 例句用 / 分隔转数组
+                        updateData[field] = newValue.split(/\s*\/\s*/).filter(s => s);
+                    } else {
+                        updateData[field] = newValue;
+                    }
+                    
+                    const res = await fetch(API_BASE + '/' + grammarId + '/sub-topic/' + subTopicIndex, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        showToast('已保存', 'success');
+                        // 刷新列表
+                        loadGrammar();
+                    } else {
+                        showToast('保存失败: ' + (data.error || '未知错误'), 'error');
+                        element.innerHTML = originalHtml;
+                        element.className = originalClasses;
+                    }
+                } catch (e) {
+                    showToast('保存失败: ' + e.message, 'error');
+                    element.innerHTML = originalHtml;
+                    element.className = originalClasses;
+                }
+            };
+            
+            // 取消函数
+            const cancel = () => {
+                element.innerHTML = originalHtml;
+                element.className = originalClasses;
+            };
+            
+            // 失焦保存
+            input.addEventListener('blur', save);
+            
+            // 按键处理
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !isMultiLine) {
+                    e.preventDefault();
+                    input.blur(); // 触发保存
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    input.removeEventListener('blur', save);
+                    cancel();
+                }
+            });
+        }
+        
+        /**
+         * v3.1: 打开子话题编辑弹窗
+         */
+        async function openSubTopicEditModal(grammarId, subTopicIndex, event) {
+            event.stopPropagation();
+            
+            try {
+                // 获取语法点数据
+                const res = await fetch(API_BASE + '/' + grammarId);
+                const data = await res.json();
+                
+                if (!data.success) {
+                    showToast('加载失败', 'error');
+                    return;
+                }
+                
+                const grammar = data.data;
+                const subTopics = grammar.sub_topics || [];
+                
+                if (subTopicIndex >= subTopics.length) {
+                    showToast('子话题不存在', 'error');
+                    return;
+                }
+                
+                const st = subTopics[subTopicIndex];
+                
+                // 填充表单
+                document.getElementById('subTopicEditGrammarId').value = grammarId;
+                document.getElementById('subTopicEditIndex').value = subTopicIndex;
+                document.getElementById('subTopicEditTitle').value = st.title || '';
+                document.getElementById('subTopicEditDefinition').value = st.definition || '';
+                document.getElementById('subTopicEditStructure').value = st.structure || '';
+                document.getElementById('subTopicEditExamples').value = (st.examples || []).join('\n');
+                document.getElementById('subTopicEditUsage').value = (st.usage || []).join('\n');
+                
+                // 显示弹窗
+                document.getElementById('subTopicEditModal').classList.add('active');
+                
+            } catch (e) {
+                showToast('加载失败: ' + e.message, 'error');
+            }
+        }
+        
+        /**
+         * 关闭子话题编辑弹窗
+         */
+        function closeSubTopicEditModal() {
+            document.getElementById('subTopicEditModal').classList.remove('active');
+        }
+        
+        /**
+         * 保存子话题编辑
+         */
+        async function saveSubTopicEdit() {
+            const grammarId = document.getElementById('subTopicEditGrammarId').value;
+            const subTopicIndex = document.getElementById('subTopicEditIndex').value;
+            const title = document.getElementById('subTopicEditTitle').value.trim();
+            const definition = document.getElementById('subTopicEditDefinition').value.trim();
+            const structure = document.getElementById('subTopicEditStructure').value.trim();
+            const examplesText = document.getElementById('subTopicEditExamples').value;
+            const usageText = document.getElementById('subTopicEditUsage').value;
+            
+            // 验证
+            if (!title) {
+                showToast('标题不能为空', 'error');
+                return;
+            }
+            
+            // 转换数组
+            const examples = examplesText.split('\n').map(s => s.trim()).filter(s => s);
+            const usage = usageText.split('\n').map(s => s.trim()).filter(s => s);
+            
+            try {
+                const res = await fetch(API_BASE + '/' + grammarId + '/sub-topic/' + subTopicIndex, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, definition, structure, examples, usage })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('保存成功', 'success');
+                    closeSubTopicEditModal();
+                    loadGrammar();
+                } else {
+                    showToast('保存失败: ' + (data.error || '未知错误'), 'error');
+                }
+            } catch (e) {
+                showToast('保存失败: ' + e.message, 'error');
             }
         }
         
