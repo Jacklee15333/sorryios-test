@@ -59,6 +59,7 @@ router.get('/stats', (req, res) => {
 /**
  * 获取全部数据（单词+短语+句型混合，按创建时间倒序）
  * GET /api/vocabulary/all
+ * 支持多词模糊搜索：用空格分隔的词都会匹配
  */
 router.get('/all', (req, res) => {
     try {
@@ -68,30 +69,73 @@ router.get('/all', (req, res) => {
         let words = [], phrases = [], patterns = [];
         
         if (search) {
-            const searchPattern = `%${search}%`;
-            words = db.prepare(`
-                SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
-                       COALESCE(is_new, 0) as is_new, created_at, 'word' as type
-                FROM words 
-                WHERE word LIKE ? OR meaning LIKE ?
-                ORDER BY created_at DESC
-            `).all(searchPattern, searchPattern);
+            // 分割搜索词，支持多词搜索
+            const searchTerms = search.trim().split(/\s+/).filter(t => t.length > 0);
             
-            phrases = db.prepare(`
-                SELECT id, phrase, meaning, example, category, enabled, 
-                       COALESCE(is_new, 0) as is_new, created_at, 'phrase' as type
-                FROM phrases 
-                WHERE phrase LIKE ? OR meaning LIKE ?
-                ORDER BY created_at DESC
-            `).all(searchPattern, searchPattern);
-            
-            patterns = db.prepare(`
-                SELECT id, pattern, meaning, example, category, enabled, 
-                       COALESCE(is_new, 0) as is_new, created_at, 'pattern' as type
-                FROM patterns 
-                WHERE pattern LIKE ? OR meaning LIKE ?
-                ORDER BY created_at DESC
-            `).all(searchPattern, searchPattern);
+            if (searchTerms.length === 1) {
+                // 单词搜索：简单模糊匹配
+                const searchPattern = `%${searchTerms[0]}%`;
+                words = db.prepare(`
+                    SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
+                           COALESCE(is_new, 0) as is_new, created_at, 'word' as type
+                    FROM words 
+                    WHERE word LIKE ? OR meaning LIKE ?
+                    ORDER BY created_at DESC
+                `).all(searchPattern, searchPattern);
+                
+                phrases = db.prepare(`
+                    SELECT id, phrase, meaning, example, category, enabled, 
+                           COALESCE(is_new, 0) as is_new, created_at, 'phrase' as type
+                    FROM phrases 
+                    WHERE phrase LIKE ? OR meaning LIKE ?
+                    ORDER BY created_at DESC
+                `).all(searchPattern, searchPattern);
+                
+                patterns = db.prepare(`
+                    SELECT id, pattern, meaning, example, category, enabled, 
+                           COALESCE(is_new, 0) as is_new, created_at, 'pattern' as type
+                    FROM patterns 
+                    WHERE pattern LIKE ? OR meaning LIKE ?
+                    ORDER BY created_at DESC
+                `).all(searchPattern, searchPattern);
+            } else {
+                // 多词搜索：任一词匹配即可（OR逻辑，更宽松）
+                const conditions = searchTerms.map(() => `(word LIKE ? OR meaning LIKE ?)`).join(' OR ');
+                const conditionsPh = searchTerms.map(() => `(phrase LIKE ? OR meaning LIKE ?)`).join(' OR ');
+                const conditionsPt = searchTerms.map(() => `(pattern LIKE ? OR meaning LIKE ?)`).join(' OR ');
+                
+                const buildParams = () => {
+                    const params = [];
+                    searchTerms.forEach(term => {
+                        params.push(`%${term}%`, `%${term}%`);
+                    });
+                    return params;
+                };
+                
+                words = db.prepare(`
+                    SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
+                           COALESCE(is_new, 0) as is_new, created_at, 'word' as type
+                    FROM words 
+                    WHERE ${conditions}
+                    ORDER BY created_at DESC
+                `).all(...buildParams());
+                
+                phrases = db.prepare(`
+                    SELECT id, phrase, meaning, example, category, enabled, 
+                           COALESCE(is_new, 0) as is_new, created_at, 'phrase' as type
+                    FROM phrases 
+                    WHERE ${conditionsPh}
+                    ORDER BY created_at DESC
+                `).all(...buildParams());
+                
+                patterns = db.prepare(`
+                    SELECT id, pattern, meaning, example, category, enabled, 
+                           COALESCE(is_new, 0) as is_new, created_at, 'pattern' as type
+                    FROM patterns 
+                    WHERE ${conditionsPt}
+                    ORDER BY created_at DESC
+                `).all(...buildParams());
+            }
         } else {
             words = db.prepare(`
                 SELECT id, word, meaning, phonetic, pos, example, category, enabled, 

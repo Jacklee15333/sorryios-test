@@ -2417,17 +2417,28 @@
 
                 previewDiv.style.display = 'block';
 
-                // 合并所有结果
+                // 合并所有结果 - 适配新的API格式（返回扁平数组，每项有type字段）
                 let allResults = [];
                 if (data.success && data.data) {
-                    if (data.data.words) {
-                        allResults = allResults.concat(data.data.words.map(w => ({...w, _table: 'words', _text: w.word})));
-                    }
-                    if (data.data.phrases) {
-                        allResults = allResults.concat(data.data.phrases.map(p => ({...p, _table: 'phrases', _text: p.phrase})));
-                    }
-                    if (data.data.patterns) {
-                        allResults = allResults.concat(data.data.patterns.map(p => ({...p, _table: 'patterns', _text: p.pattern})));
+                    if (Array.isArray(data.data)) {
+                        // 新格式：data.data 是数组，每项有 type 字段
+                        allResults = data.data.map(item => {
+                            const type = item.type;
+                            const table = type === 'word' ? 'words' : type === 'phrase' ? 'phrases' : 'patterns';
+                            const text = item.word || item.phrase || item.pattern || '';
+                            return { ...item, _table: table, _text: text };
+                        });
+                    } else {
+                        // 兼容旧格式
+                        if (data.data.words) {
+                            allResults = allResults.concat(data.data.words.map(w => ({...w, _table: 'words', _text: w.word})));
+                        }
+                        if (data.data.phrases) {
+                            allResults = allResults.concat(data.data.phrases.map(p => ({...p, _table: 'phrases', _text: p.phrase})));
+                        }
+                        if (data.data.patterns) {
+                            allResults = allResults.concat(data.data.patterns.map(p => ({...p, _table: 'patterns', _text: p.pattern})));
+                        }
                     }
                 }
 
