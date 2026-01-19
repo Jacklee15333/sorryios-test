@@ -1108,6 +1108,26 @@
                     // 优化：只在新增时刷新统计，编辑时只刷新列表
                     if (!id) loadStats();
                     refreshCurrentTab();
+                } else if (data.error && data.error.includes('已存在')) {
+                    // 重复错误，询问用户是否删除当前记录
+                    if (id && confirm(`词库中已有相同的单词 "${word}"。\n\n是否删除当前这条重复记录（ID: ${id}）？`)) {
+                        try {
+                            const delRes = await fetch(API_BASE + '/words/' + id, { method: 'DELETE' });
+                            const delData = await delRes.json();
+                            if (delData.success) {
+                                showToast('已删除重复记录', 'success');
+                                closeModal('wordModal');
+                                loadStats();
+                                refreshCurrentTab();
+                            }
+                        } catch (e) {
+                            showToast('删除失败', 'error');
+                        }
+                    } else {
+                        showToast(data.error, 'error');
+                    }
+                } else {
+                    showToast(data.error || '保存失败', 'error');
                 }
             } catch (e) {
                 showToast('保存失败', 'error');
@@ -1140,6 +1160,26 @@
                     closeModal('phraseModal');
                     if (!id) loadStats();
                     refreshCurrentTab();
+                } else if (data.error && data.error.includes('已存在')) {
+                    // 重复错误，询问用户是否删除当前记录
+                    if (id && confirm(`词库中已有相同的短语 "${phrase}"。\n\n是否删除当前这条重复记录（ID: ${id}）？`)) {
+                        try {
+                            const delRes = await fetch(API_BASE + '/phrases/' + id, { method: 'DELETE' });
+                            const delData = await delRes.json();
+                            if (delData.success) {
+                                showToast('已删除重复记录', 'success');
+                                closeModal('phraseModal');
+                                loadStats();
+                                refreshCurrentTab();
+                            }
+                        } catch (e) {
+                            showToast('删除失败', 'error');
+                        }
+                    } else {
+                        showToast(data.error, 'error');
+                    }
+                } else {
+                    showToast(data.error || '保存失败', 'error');
                 }
             } catch (e) {
                 showToast('保存失败', 'error');
@@ -1191,6 +1231,26 @@
                     closeModal('patternModal');
                     if (!id) loadStats();
                     refreshCurrentTab();
+                } else if (data.error && data.error.includes('已存在')) {
+                    // 重复错误，询问用户是否删除当前记录
+                    if (id && confirm(`词库中已有相同的句型 "${pattern}"。\n\n是否删除当前这条重复记录（ID: ${id}）？`)) {
+                        try {
+                            const delRes = await fetch(API_BASE + '/patterns/' + id, { method: 'DELETE' });
+                            const delData = await delRes.json();
+                            if (delData.success) {
+                                showToast('已删除重复记录', 'success');
+                                closeModal('patternModal');
+                                loadStats();
+                                refreshCurrentTab();
+                            }
+                        } catch (e) {
+                            showToast('删除失败', 'error');
+                        }
+                    } else {
+                        showToast(data.error, 'error');
+                    }
+                } else {
+                    showToast(data.error || '保存失败', 'error');
                 }
             } catch (e) {
                 showToast('保存失败', 'error');
