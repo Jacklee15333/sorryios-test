@@ -280,13 +280,28 @@ router.post('/words', (req, res) => {
 router.put('/words/:id', (req, res) => {
     try {
         const { word, meaning, phonetic, pos, example, category } = req.body;
+        const id = req.params.id;
+        console.log('[Vocabulary] 更新单词请求:', id, { word, meaning, phonetic, pos, category });
+        
+        // 检查是否有其他记录使用相同的单词名
+        const existing = db.prepare('SELECT id FROM words WHERE word = ? AND id != ?').get(word, id);
+        if (existing) {
+            console.log('[Vocabulary] 单词已存在:', word, '被记录', existing.id, '使用');
+            return res.status(400).json({ 
+                success: false, 
+                error: `单词 "${word}" 已存在（ID: ${existing.id}）` 
+            });
+        }
+        
         const stmt = db.prepare(`
             UPDATE words SET word=?, meaning=?, phonetic=?, pos=?, example=?, category=?
             WHERE id=?
         `);
-        stmt.run(word, meaning, phonetic || '', pos || '', example || '', category || '其他', req.params.id);
+        const result = stmt.run(word, meaning, phonetic || '', pos || '', example || '', category || '其他', id);
+        console.log('[Vocabulary] 更新单词成功:', result);
         res.json({ success: true });
     } catch (e) {
+        console.error('[Vocabulary] 更新单词失败:', e.message, e.stack);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -434,13 +449,28 @@ router.post('/phrases', (req, res) => {
 router.put('/phrases/:id', (req, res) => {
     try {
         const { phrase, meaning, example, category } = req.body;
+        const id = req.params.id;
+        console.log('[Vocabulary] 更新短语请求:', id, { phrase, meaning, category });
+        
+        // 检查是否有其他记录使用相同的短语
+        const existing = db.prepare('SELECT id FROM phrases WHERE phrase = ? AND id != ?').get(phrase, id);
+        if (existing) {
+            console.log('[Vocabulary] 短语已存在:', phrase, '被记录', existing.id, '使用');
+            return res.status(400).json({ 
+                success: false, 
+                error: `短语 "${phrase}" 已存在（ID: ${existing.id}）` 
+            });
+        }
+        
         const stmt = db.prepare(`
             UPDATE phrases SET phrase=?, meaning=?, example=?, category=?
             WHERE id=?
         `);
-        stmt.run(phrase, meaning, example || '', category || '其他', req.params.id);
+        const result = stmt.run(phrase, meaning, example || '', category || '其他', id);
+        console.log('[Vocabulary] 更新短语成功:', result);
         res.json({ success: true });
     } catch (e) {
+        console.error('[Vocabulary] 更新短语失败:', e.message, e.stack);
         res.status(500).json({ success: false, error: e.message });
     }
 });
@@ -588,13 +618,28 @@ router.post('/patterns', (req, res) => {
 router.put('/patterns/:id', (req, res) => {
     try {
         const { pattern, meaning, example, category } = req.body;
+        const id = req.params.id;
+        console.log('[Vocabulary] 更新句型请求:', id, { pattern, meaning, category });
+        
+        // 检查是否有其他记录使用相同的句型
+        const existing = db.prepare('SELECT id FROM patterns WHERE pattern = ? AND id != ?').get(pattern, id);
+        if (existing) {
+            console.log('[Vocabulary] 句型已存在:', pattern, '被记录', existing.id, '使用');
+            return res.status(400).json({ 
+                success: false, 
+                error: `句型 "${pattern}" 已存在（ID: ${existing.id}）` 
+            });
+        }
+        
         const stmt = db.prepare(`
             UPDATE patterns SET pattern=?, meaning=?, example=?, category=?
             WHERE id=?
         `);
-        stmt.run(pattern, meaning, example || '', category || '其他', req.params.id);
+        const result = stmt.run(pattern, meaning, example || '', category || '其他', id);
+        console.log('[Vocabulary] 更新句型成功:', result);
         res.json({ success: true });
     } catch (e) {
+        console.error('[Vocabulary] 更新句型失败:', e.message, e.stack);
         res.status(500).json({ success: false, error: e.message });
     }
 });
