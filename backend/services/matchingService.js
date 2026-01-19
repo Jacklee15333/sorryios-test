@@ -1,6 +1,10 @@
 /**
- * 匹配算法服务 v3.1
+ * 匹配算法服务 v3.2
  * 文件位置: backend/services/matchingService.js
+ * 
+ * 📦 v3.2 修复：
+ * - 修复：plant sth. 错误匹配到 plan to do 的问题
+ * - 新增：核心词前缀检查（防止 plant vs plan 这类误匹配）
  * 
  * 📦 v3.1 更新：
  * - 新增：替换规则检查（replace.db）
@@ -30,7 +34,7 @@ let replaceService = null;
 try {
     const { getReplaceService } = require('./replaceService');
     replaceService = getReplaceService();
-    console.log('[MatchingService] v3.1: 替换规则服务已加载');
+    console.log('[MatchingService] v3.2: 替换规则服务已加载');
 } catch (e) {
     console.warn('[MatchingService] 替换规则服务未找到，跳过替换功能');
 }
@@ -208,7 +212,7 @@ class MatchingService {
             const filteredWords = words.length - this.cache.words.length;
             const filteredPhrases = phrases.length - this.cache.phrases.length;
             
-            console.log(`[MatchingService] v3.1 缓存已刷新`);
+            console.log(`[MatchingService] v3.2 缓存已刷新`);
             if (filteredWords > 0 || filteredPhrases > 0) {
                 console.log(`[MatchingService] 已过滤黑名单: ${filteredWords}个单词, ${filteredPhrases}个短语`);
             }
@@ -361,6 +365,7 @@ class MatchingService {
 
     /**
      * v2.2 新增：核心词匹配检查
+     * v3.2 修复：添加前缀检查，防止 plant vs plan 这类误匹配
      */
     coreWordMatches(input, target) {
         const inputWords = input.toLowerCase().split(/\s+/).filter(w => w.length > 0);
@@ -389,15 +394,28 @@ class MatchingService {
         
         if (!inputCore || !targetCore) return true;
         
+        // 完全相等
         if (inputCore === targetCore) return true;
+        
+        // ========== v3.2 修复：前缀检查 ==========
+        // 如果一个核心词是另一个的前缀，认为不匹配
+        // 防止 plant vs plan, explain vs explain 这类误匹配
+        // 因为 "plan" 是 "plant" 的前缀，但它们是完全不同的词
+        if (inputCore.startsWith(targetCore) || targetCore.startsWith(inputCore)) {
+            this.log(`[v3.2] 核心词前缀冲突，拒绝匹配: "${inputCore}" vs "${targetCore}"`);
+            return false;
+        }
+        // ========================================
         
         const distance = this.levenshteinDistance(inputCore, targetCore);
         const maxLen = Math.max(inputCore.length, targetCore.length);
         
+        // 短词（<=4字符）必须完全匹配
         if (maxLen <= 4) {
             return distance === 0;
         }
         
+        // 长词允许1个字符的差异（但已排除前缀关系）
         return distance <= 1;
     }
 
@@ -470,6 +488,7 @@ class MatchingService {
             return 0.5;
         }
 
+        // v3.2: 核心词检查现在包含前缀检测
         if (options.isPhraseMatch || options.isPatternMatch) {
             if (!this.coreWordMatches(s1, s2)) {
                 this.log(`核心词不匹配: "${s1}" vs "${s2}"`);
@@ -507,12 +526,20 @@ class MatchingService {
                 if (cleanS1 === cleanS2) {
                     return 0.95;
                 }
-                if (cleanS2.includes(cleanS1) && cleanS1.length / cleanS2.length >= 0.7) {
-                    return 0.90;
+                
+                // ========== v3.2 修复：清理后的文本也要检查前缀关系 ==========
+                // 如果清理后一个是另一个的前缀/后缀，不能返回高相似度
+                const isPrefixRelation = cleanS1.startsWith(cleanS2) || cleanS2.startsWith(cleanS1);
+                
+                if (!isPrefixRelation) {
+                    if (cleanS2.includes(cleanS1) && cleanS1.length / cleanS2.length >= 0.7) {
+                        return 0.90;
+                    }
+                    if (cleanS1.includes(cleanS2) && cleanS2.length / cleanS1.length >= 0.7) {
+                        return 0.90;
+                    }
                 }
-                if (cleanS1.includes(cleanS2) && cleanS2.length / cleanS1.length >= 0.7) {
-                    return 0.90;
-                }
+                // ============================================================
             }
         }
 
@@ -814,28 +841,28 @@ class MatchingService {
      * 匹配语法
      * v3.1: 先查替换规则 → 再查词典 → 最后模糊匹配
      */
-    matchGrammar(grammarName) {
+    matchGrammar(grammarText) {
         this.checkCache();
         
         // v3.1: 先查替换规则
-        const replaceResult = this.checkReplaceRule(grammarName, 'grammar');
+        const replaceResult = this.checkReplaceRule(grammarText, 'grammar');
         if (replaceResult && replaceResult.action === 'replace') {
             const newResult = this._matchGrammarInternal(replaceResult.replace_text);
             newResult.replaced = true;
-            newResult.original_text = grammarName;
+            newResult.original_text = grammarText;
             newResult.replace_text = replaceResult.replace_text;
             return newResult;
         }
         
-        return this._matchGrammarInternal(grammarName);
+        return this._matchGrammarInternal(grammarText);
     }
     
     /**
      * 内部语法匹配（不检查替换规则）
      */
-    _matchGrammarInternal(grammarName) {
+    _matchGrammarInternal(grammarText) {
         // v3.0: 先查匹配词典
-        const dictResult = this.checkMatchingDict(grammarName, 'grammar');
+        const dictResult = this.checkMatchingDict(grammarText, 'grammar');
         if (dictResult) {
             if (dictResult.action === 'exclude') {
                 return dictResult.result;
@@ -845,37 +872,26 @@ class MatchingService {
             }
         }
         
+        // v2.2: 语法使用特殊匹配逻辑
+        const isChinese = this.isChinese(grammarText);
+        
         let bestMatch = null;
         let bestScore = 0;
-
+        
         for (const item of this.cache.grammar) {
-            let score = this.calculateSimilarity(
-                grammarName, 
-                item.title, 
-                { isGrammarMatch: true }
-            );
+            const target = item.title;
+            if (!target) continue;
             
-            if (item.keywords && Array.isArray(item.keywords)) {
-                for (const keyword of item.keywords) {
-                    const keywordScore = this.calculateSimilarity(
-                        grammarName, 
-                        keyword, 
-                        { isGrammarMatch: true }
-                    );
-                    if (keywordScore > score) {
-                        score = keywordScore;
-                    }
-                }
-            }
-
+            const score = this.calculateSimilarity(grammarText, target, { isGrammarMatch: true });
+            
             if (score > bestScore) {
                 bestScore = score;
                 bestMatch = item;
             }
         }
-
+        
         const threshold = this.thresholds.grammar;
-
+        
         if (bestScore >= threshold && bestMatch) {
             return {
                 matched: true,

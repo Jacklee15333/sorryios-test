@@ -37,12 +37,15 @@ const CONFIG = {
     // 请求间隔（避免触发限制）- AI回复完成后额外等待时间
     requestInterval: 15000,  // 15秒
     
-    // 浏览器设置
-    headless: false,  // 生产环境设为true，调试时设为false
+    // 浏览器设置 - Docker环境自动使用headless模式
+    headless: process.env.NODE_ENV === 'production' || !process.env.DISPLAY,
     
     // 登录状态保存路径
     storageStatePath: './sorryios-auth.json',
 };
+
+// 导出配置供外部修改
+module.exports.CONFIG = CONFIG;
 
 // ============== 工具函数 ==============
 

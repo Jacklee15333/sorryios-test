@@ -1,8 +1,8 @@
 /**
  * Sorryios AI 智能笔记系统 - 后端服务器
  * 
- * 版本: v4.4
- * 更新: 新增替换库功能
+ * 版本: v4.5
+ * 更新: 集成前端应用
  */
 
 const express = require('express');
@@ -38,6 +38,13 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/outputs', express.static(path.join(__dirname, 'outputs')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// 前端应用静态文件（如果存在）
+const frontendPath = path.join(__dirname, 'public/app');
+if (fs.existsSync(frontendPath)) {
+    app.use('/app', express.static(frontendPath));
+    console.log('[Server] ✓ 前端应用已加载: /app');
+}
 
 // 请求日志中间件
 app.use((req, res, next) => {
@@ -120,20 +127,18 @@ function broadcastTaskProgress(taskId, progress, status, message = '') {
         progress,
         status,
         message,
-        currentStep: message,  // 🔧 同时发送两个字段，兼容前端
+        currentStep: message,
         timestamp: new Date().toISOString()
     });
 
     let sentCount = 0;
     wsClients.forEach((ws, clientId) => {
         if (ws.readyState === WebSocket.OPEN) {
-            // 🔧 修改：发送给所有连接的客户端，让前端自己过滤
             ws.send(data);
             sentCount++;
         }
     });
     
-    // 调试：显示发送了多少个客户端
     if (sentCount > 0) {
         console.log(`[WebSocket] 📤 推送进度: ${taskId.slice(0,8)} - ${progress}% - ${message.substring(0, 30)} (${sentCount}个客户端)`);
     }
@@ -142,7 +147,7 @@ function broadcastTaskProgress(taskId, progress, status, message = '') {
 // 导出广播函数供其他模块使用
 global.broadcastTaskProgress = broadcastTaskProgress;
 
-// 🔧 关键修复：将进度回调注入到 taskQueue
+// 将进度回调注入到 taskQueue
 const taskQueue = require('./services/taskQueue');
 taskQueue.setProgressCallback((taskId, task) => {
     console.log(`[WebSocket] 📤 推送进度: ${taskId.slice(0,8)} - ${task.progress}% - ${task.currentStep}`);
@@ -159,7 +164,7 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        version: '4.4',
+        version: '4.5',
         wsClients: wsClients.size
     });
 });
@@ -179,11 +184,9 @@ function loadRoute(name, routePath, mountPath) {
 }
 
 // ============================================
-// 🔧 v4.1.1 修复：调整路由加载顺序
-// 具体路由必须在通配符路由之前加载！
+// 路由加载顺序（具体路由在前，通配符路由在后）
 // ============================================
 
-// 1️⃣ 首先加载具体路径的路由（这些不会互相冲突）
 loadRoute('admin', './routes/admin', '/api/admin');
 loadRoute('chunk-api', './routes/chunk-api', '/api/chunk');
 loadRoute('ai-api', './routes/ai-api', '/api/ai');
@@ -192,17 +195,14 @@ loadRoute('vocabulary-api', './routes/vocabulary-api', '/api/vocabulary');
 loadRoute('processing-log-api', './routes/processing-log-api', '/api/processing-log');
 loadRoute('matching-dict-api', './routes/matching-dict-api', '/api/matching-dict');
 loadRoute('user-mastered-api', './routes/user-mastered-api', '/api/user-mastered');
-// v4.3 新增：排除库API
 loadRoute('exclude-api', './routes/exclude-api', '/api/exclude');
-// v4.4 新增：替换库API
 loadRoute('replace-api', './routes/replace-api', '/api/replace');
 
-// 2️⃣ 然后加载挂载到 /api 的路由（这些包含 /:id 通配符）
-// ⚠️ 这些必须放在最后，否则会拦截上面的路由！
+// 通配符路由放最后
 loadRoute('upload', './routes/upload', '/api');
 loadRoute('auth', './routes/auth', '/api');
 loadRoute('report', './routes/report', '/api');
-loadRoute('task', './routes/task', '/api');  // ⚠️ task 包含 /:id，必须最后加载
+loadRoute('task', './routes/task', '/api');
 
 // ============================================
 // 页面路由
@@ -253,7 +253,6 @@ app.get('/matching-dict-admin', (req, res) => {
     }
 });
 
-// v4.3 新增：排除库管理页面
 app.get('/exclude-admin', (req, res) => {
     const excludeAdminPath = path.join(__dirname, 'public/exclude-admin.html');
     if (fs.existsSync(excludeAdminPath)) {
@@ -263,7 +262,6 @@ app.get('/exclude-admin', (req, res) => {
     }
 });
 
-// v4.4 新增：替换库管理页面
 app.get('/replace-admin', (req, res) => {
     const replaceAdminPath = path.join(__dirname, 'public/replace-admin.html');
     if (fs.existsSync(replaceAdminPath)) {
@@ -273,31 +271,69 @@ app.get('/replace-admin', (req, res) => {
     }
 });
 
+// ============================================
+// 根路径和前端应用路由
+// ============================================
+
+// 根路径：优先显示前端应用，否则显示API信息
 app.get('/', (req, res) => {
-    res.json({
-        name: 'Sorryios AI 智能笔记系统',
-        version: '4.4',
-        endpoints: {
-            health: '/api/health',
-            upload: '/api/upload',
-            task: '/api/task/:id',
-            admin: '/admin',
-            userMastered: '/api/user-mastered',
-            matchingDict: '/api/matching-dict',
-            exclude: '/api/exclude',
-            replace: '/api/replace'
-        }
-    });
+    const frontendIndex = path.join(__dirname, 'public/app/index.html');
+    if (fs.existsSync(frontendIndex)) {
+        res.sendFile(frontendIndex);
+    } else {
+        res.json({
+            name: 'Sorryios AI 智能笔记系统',
+            version: '4.5',
+            frontend: '前端应用未部署，请访问 /admin 进入管理后台',
+            endpoints: {
+                health: '/api/health',
+                upload: '/api/upload',
+                task: '/api/task/:id',
+                admin: '/admin',
+                userMastered: '/api/user-mastered',
+                matchingDict: '/api/matching-dict',
+                exclude: '/api/exclude',
+                replace: '/api/replace'
+            }
+        });
+    }
+});
+
+// 前端应用SPA路由支持（处理前端路由刷新问题）
+app.get('/app/*', (req, res) => {
+    const frontendIndex = path.join(__dirname, 'public/app/index.html');
+    if (fs.existsSync(frontendIndex)) {
+        res.sendFile(frontendIndex);
+    } else {
+        res.status(404).send('前端应用未部署');
+    }
 });
 
 // ============================================
 // 错误处理
 // ============================================
 
+// 404处理 - 对于非API请求，尝试返回前端应用
 app.use((req, res, next) => {
+    // API请求返回JSON错误
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({
+            success: false,
+            error: '接口不存在',
+            path: req.path
+        });
+    }
+    
+    // 非API请求，如果前端存在则返回前端（支持SPA路由）
+    const frontendIndex = path.join(__dirname, 'public/app/index.html');
+    if (fs.existsSync(frontendIndex)) {
+        return res.sendFile(frontendIndex);
+    }
+    
+    // 都不存在，返回404
     res.status(404).json({
         success: false,
-        error: '接口不存在',
+        error: '页面不存在',
         path: req.path
     });
 });
@@ -336,15 +372,21 @@ requiredDirs.forEach(dir => {
 // ============================================
 
 server.listen(PORT, HOST, () => {
+    const hasFrontend = fs.existsSync(path.join(__dirname, 'public/app/index.html'));
+    
     console.log('\n' + '='.repeat(60));
-    console.log('  Sorryios AI 智能笔记系统 v4.4');
-    console.log('  🔧 新增：替换库功能');
+    console.log('  Sorryios AI 智能笔记系统 v4.5');
+    console.log('  🔧 已集成前端应用');
     console.log('='.repeat(60));
     console.log(`  🚀 服务器启动成功！`);
     console.log(`  📡 地址: http://localhost:${PORT}`);
     console.log(`  🔌 WebSocket: ws://localhost:${PORT}`);
     console.log('');
     console.log('  📌 可用页面:');
+    if (hasFrontend) {
+        console.log(`     - 前端应用: http://localhost:${PORT}/`);
+        console.log(`     - 前端应用: http://localhost:${PORT}/app`);
+    }
     console.log(`     - 管理后台: http://localhost:${PORT}/admin`);
     console.log(`     - 语法库管理: http://localhost:${PORT}/grammar-admin`);
     console.log(`     - 词库管理: http://localhost:${PORT}/vocabulary-admin`);
@@ -357,12 +399,6 @@ server.listen(PORT, HOST, () => {
     console.log(`     - 健康检查: http://localhost:${PORT}/api/health`);
     console.log(`     - 文件上传: POST http://localhost:${PORT}/api/upload`);
     console.log(`     - 任务查询: GET http://localhost:${PORT}/api/task/:id`);
-    console.log(`     - 语法库: http://localhost:${PORT}/api/grammar`);
-    console.log(`     - 词库: http://localhost:${PORT}/api/vocabulary`);
-    console.log(`     - 处理日志: http://localhost:${PORT}/api/processing-log`);
-    console.log(`     - 已掌握词汇: http://localhost:${PORT}/api/user-mastered`);
-    console.log(`     - 排除库: http://localhost:${PORT}/api/exclude`);
-    console.log(`     - 替换库: http://localhost:${PORT}/api/replace`);
     console.log('='.repeat(60) + '\n');
 });
 
