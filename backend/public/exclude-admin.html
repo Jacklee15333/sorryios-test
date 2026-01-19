@@ -37,7 +37,7 @@
             background: #f7f7f8; color: #1a1a1a; padding: 8px 16px; 
             border-radius: 8px; font-size: 14px; border: 1px solid #e5e5e5;
         }
-        .stat-item strong { font-size: 18px; font-weight: 600; margin-right: 4px; color: #dc2626; }
+        .stat-item strong { font-size: 18px; font-weight: 600; margin-right: 4px; color: #374151; }
         
         .toolbar { 
             background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; 
@@ -48,52 +48,47 @@
             padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 8px; font-size: 14px; outline: none;
         }
         .search-box input { flex: 1; }
-        .search-box input:focus, .filter-select:focus { border-color: #dc2626; }
+        .search-box input:focus, .filter-select:focus { border-color: #9ca3af; }
         
         .btn { 
-            padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; 
+            padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; 
             font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+            background: white; color: #374151;
         }
-        .btn-primary { background: #dc2626; color: white; }
-        .btn-primary:hover { background: #b91c1c; }
-        .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e5e5; }
-        .btn-secondary:hover { background: #e5e7eb; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-success:hover { background: #059669; }
-        .btn-warning { background: #f59e0b; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .btn-confirm { background: #10b981; color: white; }
+        .btn:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-primary { background: white; color: #2563eb; border: 1px solid #93c5fd; }
+        .btn-primary:hover { background: #eff6ff; border-color: #60a5fa; }
+        .btn-secondary { background: white; color: #374151; border: 1px solid #d1d5db; }
+        .btn-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-success { background: white; color: #059669; border: 1px solid #a7f3d0; }
+        .btn-success:hover { background: #ecfdf5; border-color: #34d399; }
+        .btn-warning { background: white; color: #d97706; border: 1px solid #fcd34d; }
+        .btn-warning:hover { background: #fffbeb; border-color: #fbbf24; }
+        .btn-danger { background: white; color: #dc2626; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fef2f2; border-color: #f87171; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-confirm { background: white; color: #059669; border: 1px solid #a7f3d0; }
+        .btn-confirm:hover { background: #ecfdf5; border-color: #34d399; }
         
         .item-list { background: white; border-radius: 12px; border: 1px solid #e5e5e5; overflow: hidden; }
         .item { 
             display: flex; align-items: center; padding: 14px 16px; 
-            border-bottom: 1px solid #f3f4f6; gap: 12px;
+            border-bottom: 1px solid #e5e7eb; gap: 12px;
         }
         .item:last-child { border-bottom: none; }
         .item:hover { background: #fafafa; }
-        .item.is-new { background: #fef2f2; border-left: 3px solid #dc2626; }
-        .item.is-new:hover { background: #fee2e2; }
+        .item.is-new { background: #f9fafb; }
+        .item.is-new:hover { background: #f3f4f6; }
         
-        .item-icon { font-size: 20px; color: #dc2626; }
         .item-main { flex: 1; min-width: 0; }
-        .item-text { font-weight: 600; color: #1a1a1a; }
+        .item-text { font-weight: normal; color: #1a1a1a; font-size: 14px; }
         .item-meta { font-size: 13px; color: #9ca3af; margin-top: 4px; }
         .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
         
-        .type-badge {
-            display: inline-block; font-size: 11px; padding: 3px 8px; 
-            border-radius: 4px; font-weight: 500; margin-left: 8px;
-        }
-        .type-badge.phrase { background: #f0fdf4; color: #16a34a; }
-        .type-badge.word { background: #eff6ff; color: #2563eb; }
-        .type-badge.pattern { background: #fefce8; color: #ca8a04; }
-        .type-badge.grammar { background: #faf5ff; color: #7c3aed; }
-        
         .new-badge {
-            display: inline-block; background: #fef3c7; color: #92400e;
+            display: inline-block; background: #fef3c7; color: #d97706;
             font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-left: 8px;
+            border: 1px solid #fcd34d;
         }
         
         .empty-state { text-align: center; padding: 48px 24px; color: #9ca3af; }
@@ -115,12 +110,12 @@
         }
         .page-btn:hover:not(:disabled) { background: #f3f4f6; border-color: #d1d5db; }
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .page-btn.active { background: #dc2626; color: white; border-color: #dc2626; }
+        .page-btn.active { background: #f3f4f6; color: #1a1a1a; border-color: #9ca3af; }
         .page-size-select {
             padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 8px;
             font-size: 13px; background: white; cursor: pointer;
         }
-        .page-size-select:focus { border-color: #dc2626; outline: none; }
+        .page-size-select:focus { border-color: #9ca3af; outline: none; }
         
         .modal { 
             display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
@@ -146,7 +141,7 @@
         .form-group input, .form-group select, .form-group textarea { 
             width: 100%; padding: 10px 12px; border: 1px solid #e5e5e5; border-radius: 8px; font-size: 14px; outline: none;
         }
-        .form-group input:focus, .form-group select:focus { border-color: #dc2626; }
+        .form-group input:focus, .form-group select:focus { border-color: #9ca3af; }
         
         .toast {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -410,12 +405,10 @@
                 
                 return `
                 <div class="item ${isNew ? 'is-new' : ''}">
-                    <span class="item-icon">🚫</span>
                     <div class="item-main">
                         <div class="item-text">
-                            <strong>${escapeHtml(text)}</strong>
-                            <span class="type-badge ${typeClass}">${typeLabel}</span>
-                            ${isNew ? '<span class="new-badge">🆕 新</span>' : ''}
+                            ${escapeHtml(text)}
+                            ${isNew ? '<span class="new-badge">新</span>' : ''}
                         </div>
                         <div class="item-meta">
                             原因：${escapeHtml(item.reason || '不是短语')} · ${time}
@@ -423,8 +416,8 @@
                     </div>
                     <div class="item-actions">
                         ${isNew ? `<button class="btn btn-confirm btn-sm" onclick="confirmItem(${item.id})">取消标新</button>` : ''}
-                        <button class="btn btn-secondary btn-sm" onclick="editItem(${item.id})">✏️ 编辑</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">🗑️ 删除</button>
+                        <button class="btn btn-secondary btn-sm" onclick="editItem(${item.id})">编辑</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">删除</button>
                     </div>
                 </div>
                 `;
