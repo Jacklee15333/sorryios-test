@@ -1,10 +1,13 @@
 /**
- * 替换规则 API 路由 v1.0
+ * 替换规则 API 路由 v1.1
  * 文件位置: backend/routes/replace-api.js
  * 
- * 📦 功能说明：
+ * 📦 v1.0 功能说明：
  * - 提供替换规则的增删改查接口
  * - 用于管理识别错误的替换规则
+ * 
+ * 📦 v1.1 新增：
+ * - POST /api/replace/rules/:id/transfer - 转移到匹配词典
  */
 
 const express = require('express');
@@ -13,11 +16,13 @@ const { getReplaceService } = require('../services/replaceService');
 const { getVocabularyService } = require('../services/vocabularyService');
 const { getGrammarService } = require('../services/grammarService');
 const { getMatchingService } = require('../services/matchingService');
+const { getMatchingDictService } = require('../services/matchingDictService');
 
 // 获取服务实例
 const replaceService = getReplaceService();
 const vocabularyService = getVocabularyService();
 const grammarService = getGrammarService();
+const matchingDictService = getMatchingDictService();
 
 // ============================================
 // 统计接口
@@ -388,6 +393,81 @@ router.get('/find', (req, res) => {
         });
     } catch (error) {
         console.error('[Replace API] 查找规则失败:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// v1.1 新增：转移功能（替换库 → 匹配词典）
+// ============================================
+
+/**
+ * POST /api/replace/rules/:id/transfer
+ * 将替换规则转移到匹配词典
+ * 
+ * Body:
+ * {
+ *   action: "match" | "exclude",  // 匹配动作（默认match）
+ *   targetText: "目标文本",        // 可选：匹配的目标文本
+ *   deleteSource: true            // 是否删除源数据（默认true）
+ * }
+ */
+router.post('/rules/:id/transfer', (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { action = 'match', targetText, deleteSource = true } = req.body;
+        
+        // 获取源规则
+        const rule = replaceService.getById(id);
+        if (!rule) {
+            return res.status(404).json({ success: false, error: '规则不存在' });
+        }
+        
+        // 验证动作
+        if (!['match', 'exclude'].includes(action)) {
+            return res.status(400).json({ success: false, error: '无效的动作，只能是 match 或 exclude' });
+        }
+        
+        // 添加到匹配词典
+        const addResult = matchingDictService.addRule({
+            original_text: rule.original_text,
+            original_type: rule.original_type,
+            action: action,
+            target_text: targetText || rule.replace_text,
+            notes: `从替换库转移 (原ID: ${id}, 原替换文本: ${rule.replace_text})`,
+            created_by: 'admin'
+        });
+        
+        if (!addResult || !addResult.success) {
+            return res.status(400).json({ 
+                success: false, 
+                error: addResult?.error || '转移失败' 
+            });
+        }
+        
+        // 删除源数据
+        if (deleteSource) {
+            replaceService.deleteRule(id);
+        }
+        
+        console.log(`[Replace API] 转移成功: 替换规则#${id} "${rule.original_text}" → 匹配词典#${addResult.id}`);
+        
+        res.json({
+            success: true,
+            message: '转移成功',
+            data: {
+                sourceId: id,
+                sourceText: rule.original_text,
+                sourceType: 'replace',
+                targetType: 'matching',
+                targetId: addResult.id,
+                action: action,
+                deleted: deleteSource
+            }
+        });
+        
+    } catch (error) {
+        console.error('[Replace API] 转移失败:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
