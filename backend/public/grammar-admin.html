@@ -92,6 +92,15 @@
         .btn-sm { padding: 5px 10px; font-size: 12px; }
         .btn-confirm { background: white; color: #059669; border: 1px solid #a7f3d0; }
         .btn-confirm:hover { background: #ecfdf5; border-color: #34d399; }
+        .btn-to-vocab { background: #eff6ff; color: #2563eb; border: 1px solid #93c5fd; }
+        .btn-to-vocab:hover { background: #dbeafe; border-color: #60a5fa; }
+        .vocab-opt { 
+            display: flex; flex-direction: column; align-items: center; 
+            padding: 16px 8px; border: 2px solid #e5e7eb; border-radius: 12px; 
+            cursor: pointer; text-align: center; transition: all 0.15s;
+        }
+        .vocab-opt:hover { border-color: #93c5fd; }
+        .vocab-opt.selected { border-color: #2563eb; background: #eff6ff; }
         
         .item-list { background: transparent; border-radius: 12px; }
         
@@ -133,6 +142,28 @@
         .empty-state { text-align: center; padding: 48px 24px; color: #9ca3af; }
         .empty-state h3 { font-size: 16px; font-weight: 500; color: #666; margin-bottom: 8px; }
         .loading { text-align: center; padding: 48px; color: #9ca3af; }
+        
+        /* 分页样式 */
+        .pagination-wrap {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; background: white; border-top: 1px solid #e5e5e5;
+            border-radius: 0 0 12px 12px; flex-wrap: wrap; gap: 12px;
+        }
+        .pagination-info { font-size: 13px; color: #6b7280; }
+        .pagination-nav { display: flex; gap: 4px; align-items: center; }
+        .page-btn {
+            min-width: 36px; height: 36px; padding: 0 12px;
+            border: 1px solid #e5e5e5; background: white; border-radius: 8px;
+            font-size: 13px; cursor: pointer; transition: all 0.15s; color: #374151;
+        }
+        .page-btn:hover:not(:disabled) { background: #f3f4f6; border-color: #d1d5db; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-btn.active { background: #7c3aed; color: white; border-color: #7c3aed; }
+        .page-size-select {
+            padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 8px;
+            font-size: 13px; background: white; cursor: pointer;
+        }
+        .page-size-select:focus { border-color: #7c3aed; outline: none; }
         
         .modal { 
             display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
@@ -222,13 +253,24 @@
                 <input type="text" id="searchKeyword" placeholder="搜索语法点..." onkeypress="if(event.key==='Enter')searchGrammar()">
                 <button class="btn btn-primary" onclick="searchGrammar()">搜索</button>
             </div>
+            <select class="page-size-select" id="pageSize" onchange="changePageSize()">
+                <option value="50">50条/页</option>
+                <option value="100" selected>100条/页</option>
+                <option value="200">200条/页</option>
+                <option value="300">300条/页</option>
+                <option value="0">全部</option>
+            </select>
             <button class="btn btn-success" onclick="openAddModal()">+ 添加语法</button>
-            <button class="btn btn-secondary" onclick="exportData()">导出 JSON</button>
-            <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">导入 JSON</button>
+            <button class="btn btn-secondary" onclick="exportData()">导出</button>
+            <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">导入</button>
         </div>
         
         <div class="item-list" id="grammarList">
             <div class="loading">加载中...</div>
+        </div>
+        <div class="pagination-wrap" id="paginationWrap" style="display:none;">
+            <div class="pagination-info" id="pageInfo">共 0 条</div>
+            <div class="pagination-nav" id="pageNav"></div>
         </div>
         
         <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
@@ -333,10 +375,63 @@
         </div>
     </div>
 
+    <!-- 转移到词库弹窗 -->
+    <div class="modal" id="toVocabModal">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2>转移到词库</h2>
+                <button class="modal-close" onclick="closeToVocabModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                    <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 4px;">要转移的语法点</div>
+                    <div style="font-weight: 600; color: #1e40af;" id="toVocabTitle"></div>
+                </div>
+                <input type="hidden" id="toVocabId">
+                <div class="form-group">
+                    <label>选择目标库</label>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;" id="vocabTargetOptions">
+                        <label class="vocab-opt" data-value="word" onclick="selectVocabTarget('word')">
+                            <input type="radio" name="vocabTarget" value="word" style="display:none">
+                            <div style="font-size: 28px; margin-bottom: 8px;">📝</div>
+                            <div style="font-weight: 600; color: #1f2937;">单词库</div>
+                            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">适合单个词汇</div>
+                        </label>
+                        <label class="vocab-opt" data-value="phrase" onclick="selectVocabTarget('phrase')">
+                            <input type="radio" name="vocabTarget" value="phrase" style="display:none">
+                            <div style="font-size: 28px; margin-bottom: 8px;">📖</div>
+                            <div style="font-weight: 600; color: #1f2937;">短语库</div>
+                            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">适合固定搭配</div>
+                        </label>
+                        <label class="vocab-opt selected" data-value="pattern" onclick="selectVocabTarget('pattern')">
+                            <input type="radio" name="vocabTarget" value="pattern" checked style="display:none">
+                            <div style="font-size: 28px; margin-bottom: 8px;">📋</div>
+                            <div style="font-weight: 600; color: #1f2937;">句型库</div>
+                            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">适合句型结构</div>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="toVocabDelete" checked>
+                        <span>转移后删除原语法点</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeToVocabModal()">取消</button>
+                <button class="btn btn-primary" onclick="executeToVocab()">确认转移</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = '/api/grammar';
         let allGrammar = [];
         let currentCategory = '';
+        
+        // 分页状态
+        const pagination = { page: 1, pageSize: 100, total: 0, data: [] };
 
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
@@ -398,6 +493,7 @@
             
             // 前端过滤
             currentCategory = btn.dataset.category;
+            pagination.page = 1; // 切换分类重置页码
             filterAndRender();
         }
 
@@ -406,11 +502,92 @@
             const filtered = currentCategory 
                 ? allGrammar.filter(g => g.category === currentCategory)
                 : allGrammar;
-            renderGrammar(filtered);
+            pagination.data = filtered;
+            pagination.total = filtered.length;
+            renderPaginated();
+        }
+        
+        // 切换每页条数
+        function changePageSize() {
+            pagination.pageSize = parseInt(document.getElementById('pageSize').value) || 0;
+            pagination.page = 1;
+            renderPaginated();
+        }
+        
+        // 跳转页码
+        function goToPage(page) {
+            const totalPages = pagination.pageSize === 0 ? 1 : Math.ceil(pagination.total / pagination.pageSize);
+            if (page < 1 || page > totalPages) return;
+            pagination.page = page;
+            renderPaginated();
+        }
+        
+        // 渲染分页数据
+        function renderPaginated() {
+            const { data, page, pageSize, total } = pagination;
+            let displayData;
+            if (pageSize === 0) {
+                displayData = data;
+            } else {
+                const start = (page - 1) * pageSize;
+                displayData = data.slice(start, start + pageSize);
+            }
+            renderGrammar(displayData);
+            renderPaginationNav();
+        }
+        
+        // 渲染分页导航
+        function renderPaginationNav() {
+            const { total, pageSize, page } = pagination;
+            const paginationEl = document.getElementById('paginationWrap');
+            const infoEl = document.getElementById('pageInfo');
+            const navEl = document.getElementById('pageNav');
+            
+            if (total === 0) {
+                paginationEl.style.display = 'none';
+                return;
+            }
+            
+            paginationEl.style.display = 'flex';
+            
+            if (pageSize === 0 || total <= pageSize) {
+                infoEl.textContent = `共 ${total} 条`;
+                navEl.innerHTML = '';
+                return;
+            }
+            
+            const totalPages = Math.ceil(total / pageSize);
+            const start = (page - 1) * pageSize + 1;
+            const end = Math.min(page * pageSize, total);
+            
+            infoEl.textContent = `第 ${start}-${end} 条，共 ${total} 条`;
+            
+            let navHtml = `<button class="page-btn" onclick="goToPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>上一页</button>`;
+            
+            const maxButtons = 5;
+            let startPage = Math.max(1, page - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            if (endPage - startPage < maxButtons - 1) startPage = Math.max(1, endPage - maxButtons + 1);
+            
+            if (startPage > 1) {
+                navHtml += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) navHtml += `<span style="padding:0 8px;color:#9ca3af;">...</span>`;
+            }
+            for (let i = startPage; i <= endPage; i++) {
+                navHtml += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) navHtml += `<span style="padding:0 8px;color:#9ca3af;">...</span>`;
+                navHtml += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            navHtml += `<button class="page-btn" onclick="goToPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>下一页</button>`;
+            navEl.innerHTML = navHtml;
         }
 
         async function loadGrammar() {
             try {
+                document.getElementById('grammarList').innerHTML = '<div class="loading">加载中...</div>';
                 const res = await fetch(API_BASE + '?all=true');
                 const data = await res.json();
                 if (data.success) {
@@ -474,6 +651,7 @@
                         ${isNew ? `<button class="btn btn-confirm btn-sm" onclick="confirmGrammar(${g.id})">✓ 确认</button>` : ''}
                         <button class="btn btn-primary btn-sm" onclick="editGrammar(${g.id})">编辑</button>
                         <button class="btn btn-warning btn-sm" onclick="openTransferModal(${g.id}, '${escapeHtml(g.title).replace(/'/g, "\\'")}')">转移</button>
+                        <button class="btn btn-to-vocab btn-sm" onclick="openToVocabModal(${g.id}, '${escapeHtml(g.title).replace(/'/g, "\\'")}')">转移</button>
                         <button class="btn btn-secondary btn-sm" onclick="toggleGrammar(${g.id})">${g.enabled ? '禁用' : '启用'}</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteGrammar(${g.id}, '${escapeHtml(g.title)}')">删除</button>
                     </div>
@@ -489,9 +667,15 @@
                 return;
             }
             try {
+                document.getElementById('grammarList').innerHTML = '<div class="loading">搜索中...</div>';
                 const res = await fetch(API_BASE + '/search?keyword=' + encodeURIComponent(kw));
                 const data = await res.json();
-                if (data.success) renderGrammar(data.data);
+                if (data.success) {
+                    pagination.data = data.data;
+                    pagination.total = data.data.length;
+                    pagination.page = 1;
+                    renderPaginated();
+                }
             } catch (e) { console.error(e); }
         }
 
@@ -985,6 +1169,70 @@
                 loadStats();
                 loadGrammar();
                 
+            } catch (e) {
+                showToast('转移失败: ' + e.message, 'error');
+            }
+        }
+        
+        // ============================================
+        // 转移到词库功能
+        // ============================================
+        
+        function openToVocabModal(id, title) {
+            document.getElementById('toVocabId').value = id;
+            document.getElementById('toVocabTitle').textContent = title;
+            document.getElementById('toVocabDelete').checked = true;
+            selectVocabTarget('pattern'); // 默认选中句型
+            document.getElementById('toVocabModal').classList.add('active');
+        }
+        
+        function selectVocabTarget(type) {
+            document.querySelectorAll('.vocab-opt').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.querySelector('input').checked = false;
+            });
+            const target = document.querySelector(`.vocab-opt[data-value="${type}"]`);
+            if (target) {
+                target.classList.add('selected');
+                target.querySelector('input').checked = true;
+            }
+        }
+        
+        function closeToVocabModal() {
+            document.getElementById('toVocabModal').classList.remove('active');
+        }
+        
+        async function executeToVocab() {
+            const id = document.getElementById('toVocabId').value;
+            const targetType = document.querySelector('input[name="vocabTarget"]:checked')?.value;
+            const deleteSource = document.getElementById('toVocabDelete').checked;
+            
+            if (!targetType) {
+                showToast('请选择目标库', 'error');
+                return;
+            }
+            
+            const targetNames = { word: '单词库', phrase: '短语库', pattern: '句型库' };
+            if (!confirm(`确定要将此语法点转移到【${targetNames[targetType]}】吗？${deleteSource ? '\n\n转移后原语法点将被删除！' : ''}`)) {
+                return;
+            }
+            
+            try {
+                const res = await fetch(API_BASE + '/' + id + '/transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ targetType, deleteSource })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('转移成功！', 'success');
+                    closeToVocabModal();
+                    loadStats();
+                    loadGrammar();
+                } else {
+                    showToast('转移失败: ' + (data.error || '未知错误'), 'error');
+                }
             } catch (e) {
                 showToast('转移失败: ' + e.message, 'error');
             }

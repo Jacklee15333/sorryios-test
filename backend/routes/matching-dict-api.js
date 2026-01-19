@@ -1,18 +1,23 @@
 /**
- * 匹配词典 API 路由 v1.0
+ * 匹配词典 API 路由 v1.1
  * 文件位置: backend/routes/matching-dict-api.js
  * 
- * 📦 功能说明：
+ * 📦 v1.0 功能说明：
  * - 提供匹配词典的增删改查接口
  * - 用于管理人工确认的匹配规则
+ * 
+ * 📦 v1.1 新增：
+ * - POST /api/matching-dict/rules/:id/transfer - 转移到替换库
  */
 
 const express = require('express');
 const router = express.Router();
 const { getMatchingDictService } = require('../services/matchingDictService');
+const { getReplaceService } = require('../services/replaceService');
 
 // 获取服务实例
 const dictService = getMatchingDictService();
+const replaceService = getReplaceService();
 
 // ============================================
 // 统计接口
@@ -301,6 +306,107 @@ router.get('/find', (req, res) => {
         });
     } catch (error) {
         console.error('[MatchingDict API] 查找规则失败:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// v1.1 新增：转移功能（匹配词典 → 替换库）
+// ============================================
+
+/**
+ * POST /api/matching-dict/rules/:id/transfer
+ * 将匹配规则转移到其他库
+ * 
+ * Body:
+ * {
+ *   target: "replace" | "exclude",  // 目标库
+ *   replaceText: "替换后的文本",     // target=replace时必填
+ *   deleteSource: true              // 是否删除源数据（默认true）
+ * }
+ */
+router.post('/rules/:id/transfer', (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { target = 'replace', replaceText, deleteSource = true } = req.body;
+        
+        // 获取源规则
+        const rule = dictService.getById(id);
+        if (!rule) {
+            return res.status(404).json({ success: false, error: '规则不存在' });
+        }
+        
+        let result;
+        
+        if (target === 'replace') {
+            // 转移到替换库
+            if (!replaceText) {
+                return res.status(400).json({ success: false, error: '请提供替换后的文本' });
+            }
+            
+            const addResult = replaceService.addRule({
+                original_text: rule.original_text,
+                original_type: rule.original_type,
+                replace_text: replaceText,
+                notes: `从匹配词典转移 (原ID: ${id}, 原动作: ${rule.action})`,
+                created_by: 'admin'
+            });
+            
+            if (!addResult || !addResult.success) {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: addResult?.error || '转移失败' 
+                });
+            }
+            
+            // 删除源数据
+            if (deleteSource) {
+                dictService.deleteRule(id);
+            }
+            
+            console.log(`[MatchingDict API] 转移成功: 匹配规则#${id} "${rule.original_text}" → 替换库#${addResult.id}`);
+            
+            result = {
+                sourceId: id,
+                sourceText: rule.original_text,
+                sourceType: 'matching',
+                targetType: 'replace',
+                targetId: addResult.id,
+                replaceText: replaceText,
+                deleted: deleteSource
+            };
+            
+        } else if (target === 'exclude') {
+            // 转移到排除库（更改action为exclude）
+            if (rule.action === 'exclude') {
+                return res.status(400).json({ success: false, error: '该规则已经是排除状态' });
+            }
+            
+            // 更新为排除状态
+            dictService.updateRule(id, { action: 'exclude' });
+            
+            console.log(`[MatchingDict API] 转移成功: 匹配规则#${id} "${rule.original_text}" → 排除库`);
+            
+            result = {
+                sourceId: id,
+                sourceText: rule.original_text,
+                sourceType: 'matching',
+                targetType: 'exclude',
+                deleted: false
+            };
+            
+        } else {
+            return res.status(400).json({ success: false, error: '无效的目标库' });
+        }
+        
+        res.json({
+            success: true,
+            message: '转移成功',
+            data: result
+        });
+        
+    } catch (error) {
+        console.error('[MatchingDict API] 转移失败:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

@@ -144,6 +144,8 @@
         .btn-sm { padding: 6px 12px; font-size: 12px; }
         .btn-confirm { background: #10b981; color: white; }
         .btn-confirm:hover { background: #059669; }
+        .btn-transfer { background: #7c3aed; color: white; }
+        .btn-transfer:hover { background: #6d28d9; }
         
         /* ========== 列表项 ========== */
         .item-list { 
@@ -249,6 +251,52 @@
         }
         .empty-state p { font-size: 14px; }
         .loading { text-align: center; padding: 48px; color: #9ca3af; }
+        
+        /* ========== 分页 ========== */
+        .pagination-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #e5e5e5;
+            border-radius: 0 0 12px 12px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .pagination-info {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .pagination-nav {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .page-btn {
+            min-width: 36px;
+            height: 36px;
+            padding: 0 12px;
+            border: 1px solid #e5e5e5;
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #374151;
+        }
+        .page-btn:hover:not(:disabled) { background: #f3f4f6; border-color: #d1d5db; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+        .page-size-select {
+            padding: 8px 12px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+        }
+        .page-size-select:focus { border-color: #2563eb; outline: none; }
         
         /* ========== Tab 内容 ========== */
         .tab-content { display: none; }
@@ -388,10 +436,21 @@
                     <input type="text" id="searchAll" placeholder="搜索全部..." onkeypress="if(event.key==='Enter')searchItems('all')">
                     <button class="btn btn-primary" onclick="searchItems('all')">搜索</button>
                 </div>
+                <select class="page-size-select" id="pageSizeAll" onchange="changePageSize('all')">
+                    <option value="50">50条/页</option>
+                    <option value="100" selected>100条/页</option>
+                    <option value="200">200条/页</option>
+                    <option value="300">300条/页</option>
+                    <option value="0">全部</option>
+                </select>
                 <button class="btn btn-secondary" onclick="exportData()">导出</button>
                 <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">导入</button>
             </div>
             <div class="item-list" id="allList"><div class="loading">加载中...</div></div>
+            <div class="pagination-wrap" id="paginationAll" style="display:none;">
+                <div class="pagination-info" id="pageInfoAll">共 0 条</div>
+                <div class="pagination-nav" id="pageNavAll"></div>
+            </div>
         </div>
         
         <!-- 单词列表 -->
@@ -401,9 +460,20 @@
                     <input type="text" id="searchWords" placeholder="搜索单词..." onkeypress="if(event.key==='Enter')searchItems('words')">
                     <button class="btn btn-primary" onclick="searchItems('words')">搜索</button>
                 </div>
+                <select class="page-size-select" id="pageSizeWords" onchange="changePageSize('words')">
+                    <option value="50">50条/页</option>
+                    <option value="100" selected>100条/页</option>
+                    <option value="200">200条/页</option>
+                    <option value="300">300条/页</option>
+                    <option value="0">全部</option>
+                </select>
                 <button class="btn btn-success" onclick="openAddModal('words')">+ 添加单词</button>
             </div>
             <div class="item-list" id="wordsList"><div class="loading">加载中...</div></div>
+            <div class="pagination-wrap" id="paginationWords" style="display:none;">
+                <div class="pagination-info" id="pageInfoWords">共 0 条</div>
+                <div class="pagination-nav" id="pageNavWords"></div>
+            </div>
         </div>
         
         <!-- 短语列表 -->
@@ -413,9 +483,20 @@
                     <input type="text" id="searchPhrases" placeholder="搜索短语..." onkeypress="if(event.key==='Enter')searchItems('phrases')">
                     <button class="btn btn-primary" onclick="searchItems('phrases')">搜索</button>
                 </div>
+                <select class="page-size-select" id="pageSizePhrases" onchange="changePageSize('phrases')">
+                    <option value="50">50条/页</option>
+                    <option value="100" selected>100条/页</option>
+                    <option value="200">200条/页</option>
+                    <option value="300">300条/页</option>
+                    <option value="0">全部</option>
+                </select>
                 <button class="btn btn-success" onclick="openAddModal('phrases')">+ 添加短语</button>
             </div>
             <div class="item-list" id="phrasesList"><div class="loading">加载中...</div></div>
+            <div class="pagination-wrap" id="paginationPhrases" style="display:none;">
+                <div class="pagination-info" id="pageInfoPhrases">共 0 条</div>
+                <div class="pagination-nav" id="pageNavPhrases"></div>
+            </div>
         </div>
         
         <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
@@ -497,28 +578,216 @@
         </div>
     </div>
 
+    <!-- 句型编辑弹窗 -->
+    <div class="modal" id="patternModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="patternModalTitle">添加句型</h2>
+                <button class="modal-close" onclick="closeModal('patternModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="patternId">
+                <div class="form-group">
+                    <label>句型 *</label>
+                    <input type="text" id="patternText" placeholder="如：It is + adj. + to do sth.">
+                </div>
+                <div class="form-group">
+                    <label>含义 *</label>
+                    <input type="text" id="patternMeaning" placeholder="中文释义">
+                </div>
+                <div class="form-group">
+                    <label>分类</label>
+                    <input type="text" id="patternCategory" placeholder="如：主语从句">
+                </div>
+                <div class="form-group">
+                    <label>例句</label>
+                    <textarea id="patternExample" placeholder="英文例句"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('patternModal')">取消</button>
+                <button class="btn btn-primary" onclick="savePattern()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 转移到语法库弹窗 -->
+    <div class="modal" id="transferModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>→ 转移到语法库</h2>
+                <button class="modal-close" onclick="closeModal('transferModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                    <div style="font-size: 12px; color: #7c3aed; margin-bottom: 4px;" id="transferTypeLabel">要转移的内容</div>
+                    <div style="font-weight: 600; color: #5b21b6;" id="transferTitle"></div>
+                </div>
+                <input type="hidden" id="transferId">
+                <input type="hidden" id="transferType">
+                
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 32px;">📖</div>
+                        <div>
+                            <div style="font-weight: 600; color: #1f2937; font-size: 15px;">语法库</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">适合需要详细语法说明的条目</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="transferDelete" checked>
+                        <span>转移后删除原数据</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('transferModal')">取消</button>
+                <button class="btn btn-transfer" onclick="executeTransfer()">确认转移</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
         const API_BASE = '/api/vocabulary';
         let allWords = [], allPhrases = [], allPatterns = [], allItems = [];
+        let currentTab = 'all';
+        
+        // 分页状态
+        const pagination = {
+            all: { page: 1, pageSize: 100, total: 0, data: [] },
+            words: { page: 1, pageSize: 100, total: 0, data: [] },
+            phrases: { page: 1, pageSize: 100, total: 0, data: [] }
+        };
         
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
             loadAll();
-            loadWords();
-            loadPhrases();
         });
 
         function switchTab(tab) {
+            currentTab = tab;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('tab-' + tab).classList.add('active');
             
+            // 如果没有数据则加载
+            if (pagination[tab].data.length === 0) {
+                if (tab === 'all') loadAll();
+                else if (tab === 'words') loadWords();
+                else if (tab === 'phrases') loadPhrases();
+            }
+        }
+        
+        // 根据当前tab刷新数据
+        function refreshCurrentTab() {
+            pagination[currentTab].data = []; // 清空缓存强制重新加载
+            if (currentTab === 'all') loadAll();
+            else if (currentTab === 'words') loadWords();
+            else if (currentTab === 'phrases') loadPhrases();
+        }
+        
+        // 切换每页条数
+        function changePageSize(tab) {
+            const select = document.getElementById('pageSize' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            pagination[tab].pageSize = parseInt(select.value) || 0;
+            pagination[tab].page = 1;
+            pagination[tab].data = []; // 清空缓存
             if (tab === 'all') loadAll();
             else if (tab === 'words') loadWords();
             else if (tab === 'phrases') loadPhrases();
+        }
+        
+        // 跳转页码
+        function goToPage(tab, page) {
+            const p = pagination[tab];
+            const totalPages = p.pageSize === 0 ? 1 : Math.ceil(p.total / p.pageSize);
+            if (page < 1 || page > totalPages) return;
+            p.page = page;
+            renderPaginated(tab);
+        }
+        
+        // 渲染分页数据
+        function renderPaginated(tab) {
+            const p = pagination[tab];
+            const pageSize = p.pageSize;
+            const page = p.page;
+            
+            let displayData;
+            if (pageSize === 0) {
+                // 全部显示
+                displayData = p.data;
+            } else {
+                const start = (page - 1) * pageSize;
+                displayData = p.data.slice(start, start + pageSize);
+            }
+            
+            if (tab === 'all') renderAll(displayData);
+            else if (tab === 'words') renderWords(displayData);
+            else if (tab === 'phrases') renderPhrases(displayData);
+            
+            renderPaginationNav(tab);
+        }
+        
+        // 渲染分页导航
+        function renderPaginationNav(tab) {
+            const p = pagination[tab];
+            const total = p.total;
+            const pageSize = p.pageSize;
+            const page = p.page;
+            
+            const paginationEl = document.getElementById('pagination' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            const infoEl = document.getElementById('pageInfo' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            const navEl = document.getElementById('pageNav' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            
+            if (pageSize === 0 || total <= pageSize) {
+                // 不需要分页
+                paginationEl.style.display = total > 0 ? 'flex' : 'none';
+                infoEl.textContent = `共 ${total} 条`;
+                navEl.innerHTML = '';
+                return;
+            }
+            
+            paginationEl.style.display = 'flex';
+            const totalPages = Math.ceil(total / pageSize);
+            const start = (page - 1) * pageSize + 1;
+            const end = Math.min(page * pageSize, total);
+            
+            infoEl.textContent = `第 ${start}-${end} 条，共 ${total} 条`;
+            
+            let navHtml = '';
+            navHtml += `<button class="page-btn" onclick="goToPage('${tab}', ${page - 1})" ${page === 1 ? 'disabled' : ''}>上一页</button>`;
+            
+            // 页码按钮
+            const maxButtons = 5;
+            let startPage = Math.max(1, page - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            if (endPage - startPage < maxButtons - 1) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+            
+            if (startPage > 1) {
+                navHtml += `<button class="page-btn" onclick="goToPage('${tab}', 1)">1</button>`;
+                if (startPage > 2) navHtml += `<span style="padding:0 8px;color:#9ca3af;">...</span>`;
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                navHtml += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage('${tab}', ${i})">${i}</button>`;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) navHtml += `<span style="padding:0 8px;color:#9ca3af;">...</span>`;
+                navHtml += `<button class="page-btn" onclick="goToPage('${tab}', ${totalPages})">${totalPages}</button>`;
+            }
+            
+            navHtml += `<button class="page-btn" onclick="goToPage('${tab}', ${page + 1})" ${page === totalPages ? 'disabled' : ''}>下一页</button>`;
+            
+            navEl.innerHTML = navHtml;
         }
 
         async function loadStats() {
@@ -537,11 +806,15 @@
         // ========== 全部列表 ==========
         async function loadAll() {
             try {
+                document.getElementById('allList').innerHTML = '<div class="loading">加载中...</div>';
                 const res = await fetch(API_BASE + '/all');
                 const data = await res.json();
                 if (data.success) {
+                    pagination.all.data = data.data;
+                    pagination.all.total = data.data.length;
+                    pagination.all.page = 1;
                     allItems = data.data;
-                    renderAll(allItems);
+                    renderPaginated('all');
                 }
             } catch (e) {
                 document.getElementById('allList').innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
@@ -572,6 +845,7 @@
                         <div class="item-actions">
                             ${isNew ? `<button class="btn btn-confirm btn-sm" onclick="confirmItem('${item.type}', ${item.id})">✓ 确认</button>` : ''}
                             <button class="btn btn-primary btn-sm" onclick="editItem('${item.type}', ${item.id})">编辑</button>
+                            <button class="btn btn-transfer btn-sm" onclick="openTransferModal('${item.type}', ${item.id}, '${escapeHtml(text).replace(/'/g, "\\'")}')">转移</button>
                             <button class="btn btn-secondary btn-sm" onclick="toggleItem('${item.type}s', ${item.id})">
                                 ${item.enabled ? '禁用' : '启用'}
                             </button>
@@ -600,16 +874,21 @@
         function editItem(type, id) {
             if (type === 'word') editWord(id);
             else if (type === 'phrase') editPhrase(id);
+            else if (type === 'pattern') editPattern(id);
         }
 
         // ========== 单词 ==========
         async function loadWords() {
             try {
+                document.getElementById('wordsList').innerHTML = '<div class="loading">加载中...</div>';
                 const res = await fetch(API_BASE + '/words?all=true');
                 const data = await res.json();
                 if (data.success) {
+                    pagination.words.data = data.data;
+                    pagination.words.total = data.data.length;
+                    pagination.words.page = 1;
                     allWords = data.data;
-                    renderWords(allWords);
+                    renderPaginated('words');
                 }
             } catch (e) {
                 document.getElementById('wordsList').innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
@@ -641,6 +920,7 @@
                     <div class="item-actions">
                         ${isNew ? `<button class="btn btn-confirm btn-sm" onclick="confirmItem('word', ${w.id})">✓ 确认</button>` : ''}
                         <button class="btn btn-primary btn-sm" onclick="editWord(${w.id})">编辑</button>
+                        <button class="btn btn-transfer btn-sm" onclick="openTransferModal('word', ${w.id}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">转移</button>
                         <button class="btn btn-secondary btn-sm" onclick="toggleItem('words',${w.id})">${w.enabled ? '禁用' : '启用'}</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteItem('words',${w.id},'${escapeHtml(w.word)}')">删除</button>
                     </div>
@@ -651,13 +931,19 @@
         // ========== 短语 ==========
         async function loadPhrases() {
             try {
+                document.getElementById('phrasesList').innerHTML = '<div class="loading">加载中...</div>';
                 const res = await fetch(API_BASE + '/phrases?all=true');
                 const data = await res.json();
                 if (data.success) {
+                    pagination.phrases.data = data.data;
+                    pagination.phrases.total = data.data.length;
+                    pagination.phrases.page = 1;
                     allPhrases = data.data;
-                    renderPhrases(allPhrases);
+                    renderPaginated('phrases');
                 }
-            } catch (e) {}
+            } catch (e) {
+                document.getElementById('phrasesList').innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
+            }
         }
 
         function renderPhrases(phrases) {
@@ -683,6 +969,7 @@
                     <div class="item-actions">
                         ${isNew ? `<button class="btn btn-confirm btn-sm" onclick="confirmItem('phrase', ${p.id})">✓ 确认</button>` : ''}
                         <button class="btn btn-primary btn-sm" onclick="editPhrase(${p.id})">编辑</button>
+                        <button class="btn btn-transfer btn-sm" onclick="openTransferModal('phrase', ${p.id}, '${escapeHtml(p.phrase).replace(/'/g, "\\'")}')">转移</button>
                         <button class="btn btn-secondary btn-sm" onclick="toggleItem('phrases',${p.id})">${p.enabled ? '禁用' : '启用'}</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteItem('phrases',${p.id},'${escapeHtml(p.phrase)}')">删除</button>
                     </div>
@@ -696,24 +983,29 @@
             const kw = document.getElementById(inputId).value.trim();
             
             if (!kw) {
-                if (type === 'all') loadAll();
-                else if (type === 'words') renderWords(allWords);
-                else if (type === 'phrases') renderPhrases(allPhrases);
+                // 清空搜索，恢复完整数据
+                pagination[type].page = 1;
+                renderPaginated(type);
                 return;
             }
             
             try {
-                if (type === 'all') {
-                    const res = await fetch(API_BASE + '/all?search=' + encodeURIComponent(kw));
-                    const data = await res.json();
-                    if (data.success) renderAll(data.data);
-                } else {
-                    const res = await fetch(API_BASE + '/' + type + '?search=' + encodeURIComponent(kw));
-                    const data = await res.json();
-                    if (data.success) {
-                        if (type === 'words') renderWords(data.data);
-                        else if (type === 'phrases') renderPhrases(data.data);
-                    }
+                const listId = type === 'all' ? 'allList' : type === 'words' ? 'wordsList' : 'phrasesList';
+                document.getElementById(listId).innerHTML = '<div class="loading">搜索中...</div>';
+                
+                let url = type === 'all' 
+                    ? API_BASE + '/all?search=' + encodeURIComponent(kw)
+                    : API_BASE + '/' + type + '?search=' + encodeURIComponent(kw);
+                    
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (data.success) {
+                    // 搜索结果存入分页数据
+                    pagination[type].data = data.data;
+                    pagination[type].total = data.data.length;
+                    pagination[type].page = 1;
+                    renderPaginated(type);
                 }
             } catch (e) {
                 console.error('搜索失败:', e);
@@ -809,9 +1101,9 @@
                 if (data.success) {
                     showToast(id ? '更新成功' : '添加成功', 'success');
                     closeModal('wordModal');
-                    loadStats();
-                    loadAll();
-                    loadWords();
+                    // 优化：只在新增时刷新统计，编辑时只刷新列表
+                    if (!id) loadStats();
+                    refreshCurrentTab();
                 }
             } catch (e) {
                 showToast('保存失败', 'error');
@@ -842,9 +1134,59 @@
                 if (data.success) {
                     showToast(id ? '更新成功' : '添加成功', 'success');
                     closeModal('phraseModal');
-                    loadStats();
-                    loadAll();
-                    loadPhrases();
+                    if (!id) loadStats();
+                    refreshCurrentTab();
+                }
+            } catch (e) {
+                showToast('保存失败', 'error');
+            }
+        }
+
+        async function editPattern(id) {
+            try {
+                const res = await fetch(API_BASE + '/patterns/' + id);
+                const data = await res.json();
+                if (data.success) {
+                    const p = data.data;
+                    document.getElementById('patternModalTitle').textContent = '编辑句型';
+                    document.getElementById('patternId').value = p.id;
+                    document.getElementById('patternText').value = p.pattern;
+                    document.getElementById('patternMeaning').value = p.meaning;
+                    document.getElementById('patternCategory').value = p.category || '';
+                    document.getElementById('patternExample').value = p.example || '';
+                    document.getElementById('patternModal').classList.add('active');
+                }
+            } catch (e) {
+                showToast('加载失败', 'error');
+            }
+        }
+
+        async function savePattern() {
+            const id = document.getElementById('patternId').value;
+            const pattern = document.getElementById('patternText').value.trim();
+            const meaning = document.getElementById('patternMeaning').value.trim();
+            const category = document.getElementById('patternCategory').value.trim();
+            const example = document.getElementById('patternExample').value.trim();
+
+            if (!pattern || !meaning) {
+                showToast('句型和含义必填', 'error');
+                return;
+            }
+
+            try {
+                const url = id ? API_BASE + '/patterns/' + id : API_BASE + '/patterns';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pattern, meaning, category, example })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(id ? '更新成功' : '添加成功', 'success');
+                    closeModal('patternModal');
+                    if (!id) loadStats();
+                    refreshCurrentTab();
                 }
             } catch (e) {
                 showToast('保存失败', 'error');
@@ -857,10 +1199,7 @@
                 const data = await res.json();
                 if (data.success) {
                     showToast('状态已切换', 'success');
-                    loadStats();
-                    loadAll();
-                    if (type === 'words') loadWords();
-                    else if (type === 'phrases') loadPhrases();
+                    refreshCurrentTab();
                 }
             } catch (e) {
                 showToast('操作失败', 'error');
@@ -875,9 +1214,7 @@
                 if (data.success) {
                     showToast('删除成功', 'success');
                     loadStats();
-                    loadAll();
-                    if (type === 'words') loadWords();
-                    else if (type === 'phrases') loadPhrases();
+                    refreshCurrentTab();
                 }
             } catch (e) {
                 showToast('删除失败', 'error');
@@ -928,6 +1265,50 @@
         // ========== 工具函数 ==========
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
+        }
+
+        // ========== 转移到语法库 ==========
+        function openTransferModal(type, id, title) {
+            const typeLabels = { word: '单词', phrase: '短语', pattern: '句型' };
+            document.getElementById('transferId').value = id;
+            document.getElementById('transferType').value = type;
+            document.getElementById('transferTitle').textContent = title;
+            document.getElementById('transferTypeLabel').textContent = `要转移的${typeLabels[type] || '内容'}`;
+            document.getElementById('transferDelete').checked = true;
+            document.getElementById('transferModal').classList.add('active');
+        }
+
+        async function executeTransfer() {
+            const id = document.getElementById('transferId').value;
+            const type = document.getElementById('transferType').value;
+            const deleteSource = document.getElementById('transferDelete').checked;
+            
+            const typeLabels = { word: '单词', phrase: '短语', pattern: '句型' };
+            const tableNames = { word: 'words', phrase: 'phrases', pattern: 'patterns' };
+            
+            if (!confirm(`确定要将此${typeLabels[type]}转移到【语法库】吗？${deleteSource ? '\n\n转移后原数据将被删除！' : ''}`)) {
+                return;
+            }
+            
+            try {
+                const res = await fetch(API_BASE + '/' + tableNames[type] + '/' + id + '/transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deleteSource })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('转移成功！', 'success');
+                    closeModal('transferModal');
+                    if (deleteSource) loadStats();
+                    refreshCurrentTab();
+                } else {
+                    showToast('转移失败: ' + (data.error || '未知错误'), 'error');
+                }
+            } catch (e) {
+                showToast('转移失败: ' + e.message, 'error');
+            }
         }
 
         function showToast(msg, type = 'success') {

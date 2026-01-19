@@ -1,22 +1,31 @@
 /**
- * 词库管理 API - 更新版 v2.0
+ * 词库管理 API - 更新版 v2.1
  * 
- * 新增功能：
+ * 📦 v2.0 功能：
  * 1. GET /all - 获取全部数据（按时间排序）
  * 2. POST /:table/:id/confirm - 取消标新
  * 3. 新增数据自动标记 is_new = 1
  * 
+ * 📦 v2.1 新增：
+ * - POST /words/:id/transfer - 单词转移到语法库
+ * - POST /phrases/:id/transfer - 短语转移到语法库
+ * - POST /patterns/:id/transfer - 句型转移到语法库
+ * 
  * 使用方法：
- * 替换 D:\sorryios-test\backend\routes\vocabulary-api.js
+ * 替换 backend/routes/vocabulary-api.js
  */
 
 const express = require('express');
 const router = express.Router();
 const Database = require('better-sqlite3');
 const path = require('path');
+const { getGrammarService } = require('../services/grammarService');
 
 const dbPath = path.join(__dirname, '..', 'data', 'vocabulary.db');
 const db = new Database(dbPath);
+
+// 获取语法服务（用于转移功能）
+const grammarService = getGrammarService();
 
 // 确保 is_new 字段存在
 try {
@@ -300,6 +309,65 @@ router.patch('/words/:id/toggle', (req, res) => {
     }
 });
 
+/**
+ * v2.1 新增：单词转移到语法库
+ * POST /api/vocabulary/words/:id/transfer
+ */
+router.post('/words/:id/transfer', (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { deleteSource = true } = req.body;
+        
+        // 获取源数据
+        const word = db.prepare('SELECT * FROM words WHERE id = ?').get(id);
+        if (!word) {
+            return res.status(404).json({ success: false, error: '单词不存在' });
+        }
+        
+        // 转移到语法库
+        const addResult = grammarService.add({
+            title: word.word,
+            keywords: [word.word],
+            definition: word.meaning || '',
+            structure: '',
+            usage: [],
+            examples: word.example ? [word.example] : [],
+            mistakes: [],
+            category: word.category || '其他'
+        });
+        
+        if (!addResult || !addResult.success) {
+            return res.status(400).json({ 
+                success: false, 
+                error: addResult?.error || '转移失败，目标可能已存在' 
+            });
+        }
+        
+        // 删除源数据
+        if (deleteSource) {
+            db.prepare('DELETE FROM words WHERE id = ?').run(id);
+        }
+        
+        console.log(`[Vocabulary API] 转移成功: 单词#${id} "${word.word}" → 语法#${addResult.id}`);
+        
+        res.json({
+            success: true,
+            message: '转移成功',
+            data: {
+                sourceId: id,
+                sourceTitle: word.word,
+                sourceType: 'word',
+                targetType: 'grammar',
+                targetId: addResult.id,
+                deleted: deleteSource
+            }
+        });
+    } catch (e) {
+        console.error('[Vocabulary API] 单词转移失败:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 // ========== 短语 CRUD ==========
 router.get('/phrases', (req, res) => {
     try {
@@ -395,6 +463,65 @@ router.patch('/phrases/:id/toggle', (req, res) => {
     }
 });
 
+/**
+ * v2.1 新增：短语转移到语法库
+ * POST /api/vocabulary/phrases/:id/transfer
+ */
+router.post('/phrases/:id/transfer', (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { deleteSource = true } = req.body;
+        
+        // 获取源数据
+        const phrase = db.prepare('SELECT * FROM phrases WHERE id = ?').get(id);
+        if (!phrase) {
+            return res.status(404).json({ success: false, error: '短语不存在' });
+        }
+        
+        // 转移到语法库
+        const addResult = grammarService.add({
+            title: phrase.phrase,
+            keywords: [phrase.phrase],
+            definition: phrase.meaning || '',
+            structure: '',
+            usage: [],
+            examples: phrase.example ? [phrase.example] : [],
+            mistakes: [],
+            category: phrase.category || '其他'
+        });
+        
+        if (!addResult || !addResult.success) {
+            return res.status(400).json({ 
+                success: false, 
+                error: addResult?.error || '转移失败，目标可能已存在' 
+            });
+        }
+        
+        // 删除源数据
+        if (deleteSource) {
+            db.prepare('DELETE FROM phrases WHERE id = ?').run(id);
+        }
+        
+        console.log(`[Vocabulary API] 转移成功: 短语#${id} "${phrase.phrase}" → 语法#${addResult.id}`);
+        
+        res.json({
+            success: true,
+            message: '转移成功',
+            data: {
+                sourceId: id,
+                sourceTitle: phrase.phrase,
+                sourceType: 'phrase',
+                targetType: 'grammar',
+                targetId: addResult.id,
+                deleted: deleteSource
+            }
+        });
+    } catch (e) {
+        console.error('[Vocabulary API] 短语转移失败:', e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 // ========== 句型 CRUD ==========
 router.get('/patterns', (req, res) => {
     try {
@@ -486,6 +613,65 @@ router.patch('/patterns/:id/toggle', (req, res) => {
         db.prepare('UPDATE patterns SET enabled = NOT enabled WHERE id = ?').run(req.params.id);
         res.json({ success: true });
     } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * v2.1 新增：句型转移到语法库
+ * POST /api/vocabulary/patterns/:id/transfer
+ */
+router.post('/patterns/:id/transfer', (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { deleteSource = true } = req.body;
+        
+        // 获取源数据
+        const pattern = db.prepare('SELECT * FROM patterns WHERE id = ?').get(id);
+        if (!pattern) {
+            return res.status(404).json({ success: false, error: '句型不存在' });
+        }
+        
+        // 转移到语法库
+        const addResult = grammarService.add({
+            title: pattern.pattern,
+            keywords: [pattern.pattern],
+            definition: pattern.meaning || '',
+            structure: '',
+            usage: [],
+            examples: pattern.example ? [pattern.example] : [],
+            mistakes: [],
+            category: pattern.category || '其他'
+        });
+        
+        if (!addResult || !addResult.success) {
+            return res.status(400).json({ 
+                success: false, 
+                error: addResult?.error || '转移失败，目标可能已存在' 
+            });
+        }
+        
+        // 删除源数据
+        if (deleteSource) {
+            db.prepare('DELETE FROM patterns WHERE id = ?').run(id);
+        }
+        
+        console.log(`[Vocabulary API] 转移成功: 句型#${id} "${pattern.pattern}" → 语法#${addResult.id}`);
+        
+        res.json({
+            success: true,
+            message: '转移成功',
+            data: {
+                sourceId: id,
+                sourceTitle: pattern.pattern,
+                sourceType: 'pattern',
+                targetType: 'grammar',
+                targetId: addResult.id,
+                deleted: deleteSource
+            }
+        });
+    } catch (e) {
+        console.error('[Vocabulary API] 句型转移失败:', e);
         res.status(500).json({ success: false, error: e.message });
     }
 });

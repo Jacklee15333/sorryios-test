@@ -1,5 +1,5 @@
 /**
- * 语法库 API 路由 v2.0
+ * 语法库 API 路由 v2.1
  * 提供语法知识库的增删改查接口
  * 
  * 📦 v2.0 更新：
@@ -7,6 +7,9 @@
  * - 新增 PUT /api/grammar/:id/sub-topic/:index 更新子话题
  * - 新增 DELETE /api/grammar/:id/sub-topic/:index 删除子话题
  * - 新增 PUT /api/grammar/:id/sub-topics/order 调整子话题排序
+ * 
+ * 📦 v2.1 更新：
+ * - 新增 POST /api/grammar/:id/transfer 转移到词库（单词/短语/句型）
  */
 
 const express = require('express');
@@ -14,9 +17,11 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const { getGrammarService } = require('../services/grammarService');
+const { getVocabularyService } = require('../services/vocabularyService');
 
 // 获取语法服务实例
 const grammarService = getGrammarService();
+const vocabularyService = getVocabularyService();
 
 /**
  * GET /api/grammar
@@ -425,6 +430,100 @@ router.put('/:id/sub-topics/order', (req, res) => {
         }
     } catch (error) {
         console.error('[Grammar API] 更新排序失败:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// v2.1 新增：转移功能（语法 → 词库）
+// ============================================
+
+/**
+ * POST /api/grammar/:id/transfer
+ * 将语法点转移到词库（单词/短语/句型）
+ * 
+ * Body:
+ * {
+ *   targetType: "word" | "phrase" | "pattern",  // 目标类型
+ *   deleteSource: true                          // 是否删除源数据（默认true）
+ * }
+ */
+router.post('/:id/transfer', (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { targetType, deleteSource = true } = req.body;
+        
+        // 验证目标类型
+        if (!['word', 'phrase', 'pattern'].includes(targetType)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: '无效的目标类型，只能是 word/phrase/pattern' 
+            });
+        }
+        
+        // 获取源语法点
+        const grammar = grammarService.getById(id);
+        if (!grammar) {
+            return res.status(404).json({ success: false, error: '语法点不存在' });
+        }
+        
+        let addResult = null;
+        let targetId = 0;
+        
+        // 根据目标类型转移
+        if (targetType === 'word') {
+            addResult = vocabularyService.addWord({
+                word: grammar.title,
+                meaning: grammar.definition || '',
+                example: (grammar.examples && grammar.examples[0]) || '',
+                category: grammar.category || '其他'
+            });
+        } else if (targetType === 'phrase') {
+            addResult = vocabularyService.addPhrase({
+                phrase: grammar.title,
+                meaning: grammar.definition || '',
+                example: (grammar.examples && grammar.examples[0]) || '',
+                category: grammar.category || '其他'
+            });
+        } else if (targetType === 'pattern') {
+            addResult = vocabularyService.addPattern({
+                pattern: grammar.title,
+                meaning: grammar.definition || '',
+                example: (grammar.examples && grammar.examples[0]) || '',
+                category: grammar.category || '其他'
+            });
+        }
+        
+        if (!addResult || !addResult.success) {
+            return res.status(400).json({ 
+                success: false, 
+                error: addResult?.error || '转移失败，目标可能已存在' 
+            });
+        }
+        
+        targetId = addResult.id;
+        
+        // 如果需要删除源数据
+        if (deleteSource) {
+            grammarService.delete(id);
+        }
+        
+        console.log(`[Grammar API] 转移成功: 语法#${id} "${grammar.title}" → ${targetType}#${targetId}`);
+        
+        res.json({
+            success: true,
+            message: '转移成功',
+            data: {
+                sourceId: id,
+                sourceTitle: grammar.title,
+                targetType,
+                targetId,
+                deleted: deleteSource
+            }
+        });
+        
+    } catch (error) {
+        console.error('[Grammar API] 转移失败:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

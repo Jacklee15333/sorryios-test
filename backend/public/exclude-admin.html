@@ -100,6 +100,28 @@
         .empty-state h3 { font-size: 16px; font-weight: 500; color: #666; margin-bottom: 8px; }
         .loading { text-align: center; padding: 48px; color: #9ca3af; }
         
+        /* 分页样式 */
+        .pagination-wrap {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; background: white; border-top: 1px solid #e5e5e5;
+            border-radius: 0 0 12px 12px; flex-wrap: wrap; gap: 12px;
+        }
+        .pagination-info { font-size: 13px; color: #6b7280; }
+        .pagination-nav { display: flex; gap: 4px; align-items: center; }
+        .page-btn {
+            min-width: 36px; height: 36px; padding: 0 12px;
+            border: 1px solid #e5e5e5; background: white; border-radius: 8px;
+            font-size: 13px; cursor: pointer; transition: all 0.15s; color: #374151;
+        }
+        .page-btn:hover:not(:disabled) { background: #f3f4f6; border-color: #d1d5db; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-btn.active { background: #dc2626; color: white; border-color: #dc2626; }
+        .page-size-select {
+            padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 8px;
+            font-size: 13px; background: white; cursor: pointer;
+        }
+        .page-size-select:focus { border-color: #dc2626; outline: none; }
+        
         .modal { 
             display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
             background: rgba(0,0,0,0.5); z-index: 1000; align-items: center;
@@ -163,13 +185,23 @@
                 <input type="text" id="searchKeyword" placeholder="搜索..." onkeypress="if(event.key==='Enter')loadItems()">
                 <button class="btn btn-primary" onclick="loadItems()">🔍 搜索</button>
             </div>
-            <button class="btn btn-secondary" onclick="loadItems()">🔄 刷新</button>
+            <select class="page-size-select" id="pageSize" onchange="changePageSize()">
+                <option value="50">50条/页</option>
+                <option value="100" selected>100条/页</option>
+                <option value="200">200条/页</option>
+                <option value="300">300条/页</option>
+                <option value="0">全部</option>
+            </select>
             <button class="btn btn-warning" onclick="batchCancelNew()">批量取消标新</button>
-            <button class="btn btn-success" onclick="openAddModal()">+ 添加排除项</button>
+            <button class="btn btn-success" onclick="openAddModal()">+ 添加</button>
         </div>
         
         <div class="item-list" id="itemList">
             <div class="loading">加载中...</div>
+        </div>
+        <div class="pagination-wrap" id="paginationWrap" style="display:none;">
+            <div class="pagination-info" id="pageInfo">共 0 条</div>
+            <div class="pagination-nav" id="pageNav"></div>
         </div>
     </div>
 
@@ -244,6 +276,10 @@
 
     <script>
         const API_BASE = '/api/exclude';
+        let allItems = [];
+        
+        // 分页状态
+        const pagination = { page: 1, pageSize: 100, total: 0, data: [] };
 
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
@@ -262,6 +298,77 @@
                 }
             } catch (e) { console.error(e); }
         }
+        
+        // 切换每页条数
+        function changePageSize() {
+            pagination.pageSize = parseInt(document.getElementById('pageSize').value) || 0;
+            pagination.page = 1;
+            renderPaginated();
+        }
+        
+        // 跳转页码
+        function goToPage(page) {
+            const totalPages = pagination.pageSize === 0 ? 1 : Math.ceil(pagination.total / pagination.pageSize);
+            if (page < 1 || page > totalPages) return;
+            pagination.page = page;
+            renderPaginated();
+        }
+        
+        // 渲染分页数据
+        function renderPaginated() {
+            const { data, page, pageSize, total } = pagination;
+            let displayData;
+            if (pageSize === 0) {
+                displayData = data;
+            } else {
+                const start = (page - 1) * pageSize;
+                displayData = data.slice(start, start + pageSize);
+            }
+            renderItems(displayData);
+            renderPaginationNav();
+        }
+        
+        // 渲染分页导航
+        function renderPaginationNav() {
+            const { total, pageSize, page } = pagination;
+            const paginationEl = document.getElementById('paginationWrap');
+            const infoEl = document.getElementById('pageInfo');
+            const navEl = document.getElementById('pageNav');
+            
+            if (total === 0) { paginationEl.style.display = 'none'; return; }
+            paginationEl.style.display = 'flex';
+            
+            if (pageSize === 0 || total <= pageSize) {
+                infoEl.textContent = `共 ${total} 条`;
+                navEl.innerHTML = '';
+                return;
+            }
+            
+            const totalPages = Math.ceil(total / pageSize);
+            const start = (page - 1) * pageSize + 1;
+            const end = Math.min(page * pageSize, total);
+            infoEl.textContent = `第 ${start}-${end} 条，共 ${total} 条`;
+            
+            let navHtml = `<button class="page-btn" onclick="goToPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>上一页</button>`;
+            const maxButtons = 5;
+            let startPage = Math.max(1, page - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            if (endPage - startPage < maxButtons - 1) startPage = Math.max(1, endPage - maxButtons + 1);
+            
+            if (startPage > 1) {
+                navHtml += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) navHtml += `<span style="padding:0 8px;color:#9ca3af;">...</span>`;
+            }
+            for (let i = startPage; i <= endPage; i++) {
+                navHtml += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) navHtml += `<span style="padding:0 8px;color:#9ca3af;">...</span>`;
+                navHtml += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+            navHtml += `<button class="page-btn" onclick="goToPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>下一页</button>`;
+            navEl.innerHTML = navHtml;
+        }
 
         async function loadItems() {
             const type = document.getElementById('typeFilter').value;
@@ -272,10 +379,15 @@
             if (keyword) url += 'search=' + encodeURIComponent(keyword) + '&';
             
             try {
+                document.getElementById('itemList').innerHTML = '<div class="loading">加载中...</div>';
                 const res = await fetch(url);
                 const data = await res.json();
                 if (data.success) {
-                    renderItems(data.data || []);
+                    allItems = data.data || [];
+                    pagination.data = allItems;
+                    pagination.total = allItems.length;
+                    pagination.page = 1;
+                    renderPaginated();
                 }
             } catch (e) {
                 document.getElementById('itemList').innerHTML = '<div class="empty-state">加载失败</div>';
