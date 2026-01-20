@@ -1,5 +1,8 @@
 /**
- * AI 处理器服务 - 英语课堂专用版 v4.3.4
+ * AI 处理器服务 - 英语课堂专用版 v4.3.5
+ * 
+ * 【v4.3.5 更新】
+ * - 修复：排除库过滤 - 排除库中的项不再出现在"待完善入库"
  * 
  * 【v4.3.4 更新】
  * - 修复：AI生成内容保存到数据库（待完善入库能看到AI内容）
@@ -14,8 +17,8 @@
  * - 每个阶段都推送详细执行信息
  * 
  * @author Sorryios AI Team
- * @version 4.3.4
- * @date 2026-01-16
+ * @version 4.3.5
+ * @date 2026-01-20
  */
 
 const fs = require('fs');
@@ -30,14 +33,18 @@ const taskQueue = require('./taskQueue');
 // 处理日志服务
 let matchingService = null;
 let processingLogService = null;
+let excludeService = null;
 try {
     const { getMatchingService } = require('./matchingService');
     const { getProcessingLogService } = require('./processingLogService');
+    const { getExcludeService } = require('./excludeService');
     matchingService = getMatchingService();
     processingLogService = getProcessingLogService();
+    excludeService = getExcludeService();
     console.log('[AIProcessor] ✓ 处理日志服务已加载');
+    console.log('[AIProcessor] ✓ 排除库服务已加载');
 } catch (e) {
-    console.warn('[AIProcessor] ✗ 处理日志服务未加载');
+    console.warn('[AIProcessor] ✗ 处理日志服务未加载:', e.message);
 }
 
 // ============================================
@@ -853,6 +860,11 @@ async function processTask(task, onProgress) {
                     }
                 }
                 for (const unmatched of matchResult.unmatched) {
+                    // v4.3.5: 检查是否在排除库中，如果在则跳过
+                    if (excludeService && excludeService.isExcluded(unmatched.original_text, unmatched.item_type)) {
+                        console.log(`[阶段6] 🚫 跳过排除项: ${unmatched.original_text} (${unmatched.item_type})`);
+                        continue;
+                    }
                     if (unmatched.item_type === 'word') unmatchedKeywords.words.push(unmatched.original_text);
                     else if (unmatched.item_type === 'phrase') unmatchedKeywords.phrases.push(unmatched.original_text);
                     else if (unmatched.item_type === 'pattern') unmatchedKeywords.patterns.push(unmatched.original_text);
@@ -889,8 +901,19 @@ async function processTask(task, onProgress) {
                             onProgress({ currentStep: `💾 保存匹配记录: ${matchedItems.length} 条`, progress: 69 });
                         }
                         
-                        // 保存未匹配记录
-                        const unmatchedItemsToSave = matchResult.unmatched.map(u => ({
+                        // 保存未匹配记录（v4.3.5: 先过滤排除库）
+                        let unmatchedToSave = matchResult.unmatched;
+                        if (excludeService) {
+                            unmatchedToSave = matchResult.unmatched.filter(u => 
+                                !excludeService.isExcluded(u.original_text, u.item_type)
+                            );
+                            const excludedCount = matchResult.unmatched.length - unmatchedToSave.length;
+                            if (excludedCount > 0) {
+                                console.log(`[阶段6] 🚫 排除库过滤: ${excludedCount} 项`);
+                            }
+                        }
+                        
+                        const unmatchedItemsToSave = unmatchedToSave.map(u => ({
                             task_id: taskId,
                             original_text: u.original_text,
                             item_type: u.item_type,
@@ -904,12 +927,12 @@ async function processTask(task, onProgress) {
                             onProgress({ currentStep: `💾 保存未匹配记录: ${unmatchedItemsToSave.length} 条`, progress: 69 });
                         }
                         
-                        // 更新任务统计
+                        // 更新任务统计（使用过滤后的数量）
                         processingLogService.updateTaskStats(taskId, {
-                            total_items: matchResult.matched.length + matchResult.unmatched.length,
+                            total_items: matchResult.matched.length + unmatchedToSave.length,
                             exact_match_count: matchResult.matched.filter(m => m.score >= 1.0).length,
                             fuzzy_match_count: matchResult.matched.filter(m => m.score < 1.0).length,
-                            unmatched_count: matchResult.unmatched.length
+                            unmatched_count: unmatchedToSave.length
                         });
                         console.log(`[阶段6] 💾 更新任务统计完成`);
                         

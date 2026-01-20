@@ -1,5 +1,5 @@
 /**
- * 词库管理 API - 更新版 v2.1
+ * 词库管理 API - 更新版 v2.2
  * 
  * 📦 v2.0 功能：
  * 1. GET /all - 获取全部数据（按时间排序）
@@ -10,6 +10,9 @@
  * - POST /words/:id/transfer - 单词转移到语法库
  * - POST /phrases/:id/transfer - 短语转移到语法库
  * - POST /patterns/:id/transfer - 句型转移到语法库
+ * 
+ * 📦 v2.2 新增：
+ * - GET /check-exists - 精确检查是否存在（避免唯一约束冲突）
  * 
  * 使用方法：
  * 替换 backend/routes/vocabulary-api.js
@@ -61,6 +64,59 @@ router.get('/stats', (req, res) => {
             } 
         });
     } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+/**
+ * v2.2 新增：精确检查是否存在
+ * GET /api/vocabulary/check-exists?text=xxx&type=word|phrase|pattern
+ * 
+ * 用于入库前精确检查，避免唯一约束冲突
+ */
+router.get('/check-exists', (req, res) => {
+    try {
+        const { text, type } = req.query;
+        
+        if (!text) {
+            return res.status(400).json({ success: false, error: '请提供 text 参数' });
+        }
+        
+        let exists = false;
+        let item = null;
+        
+        // 根据 type 决定检查哪个表，如果不指定则检查所有表
+        if (!type || type === 'word') {
+            const word = db.prepare('SELECT * FROM words WHERE LOWER(word) = LOWER(?)').get(text);
+            if (word) {
+                exists = true;
+                item = { ...word, type: 'word', table: 'words' };
+            }
+        }
+        
+        if (!exists && (!type || type === 'phrase')) {
+            const phrase = db.prepare('SELECT * FROM phrases WHERE LOWER(phrase) = LOWER(?)').get(text);
+            if (phrase) {
+                exists = true;
+                item = { ...phrase, type: 'phrase', table: 'phrases' };
+            }
+        }
+        
+        if (!exists && (!type || type === 'pattern')) {
+            const pattern = db.prepare('SELECT * FROM patterns WHERE LOWER(pattern) = LOWER(?)').get(text);
+            if (pattern) {
+                exists = true;
+                item = { ...pattern, type: 'pattern', table: 'patterns' };
+            }
+        }
+        
+        res.json({ 
+            success: true, 
+            exists, 
+            data: item 
+        });
+    } catch (e) {
+        console.error('[Vocabulary] 检查是否存在失败:', e);
         res.status(500).json({ success: false, error: e.message });
     }
 });

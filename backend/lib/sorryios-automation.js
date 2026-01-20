@@ -37,8 +37,9 @@ const CONFIG = {
     // 请求间隔（避免触发限制）- AI回复完成后额外等待时间
     requestInterval: 15000,  // 15秒
     
-    // 浏览器设置 - Docker环境自动使用headless模式
-    headless: process.env.NODE_ENV === 'production' || !process.env.DISPLAY,
+    // 浏览器设置 - Docker环境无头模式，本地显示浏览器
+    // 通过检测 /.dockerenv 文件判断是否在 Docker 中
+    headless: require('fs').existsSync('/.dockerenv'),
     
     // 登录状态保存路径
     storageStatePath: './sorryios-auth.json',
