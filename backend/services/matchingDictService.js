@@ -1,11 +1,17 @@
 /**
- * 匹配词典服务 v1.0
+ * 替换库服务 v2.0
  * 文件位置: backend/services/matchingDictService.js
  * 
+ * 📦 v2.0 更新：
+ * - 改名：匹配词典 → 替换库
+ * - 合并：原 replace.db 功能合并进来
+ * - 删除：exclude 功能（已移到 exclude.db）
+ * - action 支持 'replace'（替换后重新匹配）
+ * 
  * 📦 功能说明：
- * - 管理匹配词典（matching.db）
- * - 存储人工确认的匹配规则
- * - 支持 match（确认匹配）和 exclude（排除）两种动作
+ * - 管理替换规则（matching.db）
+ * - 存储识别错误的替换规则
+ * - 在匹配阶段自动将错误文本替换为正确文本
  * 
  * 📦 数据库位置：backend/data/matching.db
  */
@@ -32,16 +38,24 @@ function initDatabase() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             original_text TEXT NOT NULL,
             original_type TEXT NOT NULL,
-            action TEXT NOT NULL,
+            action TEXT NOT NULL DEFAULT 'replace',
             target_db TEXT,
             target_table TEXT,
             target_id INTEGER,
             target_text TEXT,
             notes TEXT,
+            use_count INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             created_by TEXT DEFAULT 'admin'
         )
     `);
+
+    // v2.0: 尝试添加 use_count 列（如果不存在）
+    try {
+        db.exec(`ALTER TABLE matching_rules ADD COLUMN use_count INTEGER DEFAULT 0`);
+    } catch (e) {
+        // 列已存在，忽略
+    }
 
     // 创建索引
     db.exec(`
@@ -49,7 +63,7 @@ function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_matching_action ON matching_rules(action);
     `);
 
-    console.log('[MatchingDictService] v1.0 数据库初始化完成: matching.db');
+    console.log('[MatchingDictService] v2.0 替换库初始化完成: matching.db');
 }
 
 // 初始化
@@ -79,7 +93,7 @@ class MatchingDictService {
             const rules = db.prepare('SELECT * FROM matching_rules').all();
             this.cache.rules = rules;
             this.cache.lastUpdate = Date.now();
-            console.log(`[MatchingDictService] 缓存已刷新，共 ${rules.length} 条规则`);
+            console.log(`[MatchingDictService] 缓存已刷新，共 ${rules.length} 条替换规则`);
         } catch (e) {
             console.error('[MatchingDictService] 刷新缓存失败:', e.message);
             this.cache.rules = [];
@@ -96,10 +110,10 @@ class MatchingDictService {
     }
 
     /**
-     * 查询匹配规则
+     * 查询替换规则
      * @param {string} text - 原始文本
      * @param {string} type - 类型 (word/phrase/pattern/grammar)
-     * @returns {Object|null} 匹配规则或 null
+     * @returns {Object|null} 替换规则或 null
      */
     findRule(text, type) {
         this.checkCache();
@@ -113,11 +127,27 @@ class MatchingDictService {
             r.original_type.toLowerCase().trim() === normalizedType
         );
         
+        // v2.0: 如果找到，增加使用次数
+        if (rule) {
+            this.incrementUseCount(rule.id);
+        }
+        
         return rule || null;
     }
 
     /**
-     * 添加匹配规则
+     * v2.0: 增加使用次数
+     */
+    incrementUseCount(id) {
+        try {
+            db.prepare('UPDATE matching_rules SET use_count = use_count + 1 WHERE id = ?').run(id);
+        } catch (e) {
+            // 忽略错误，不影响主流程
+        }
+    }
+
+    /**
+     * 添加替换规则
      * @param {Object} data - 规则数据
      * @returns {Object} { success, id?, error? }
      */
@@ -126,7 +156,7 @@ class MatchingDictService {
             const {
                 original_text,
                 original_type,
-                action,
+                action = 'replace',
                 target_db = null,
                 target_table = null,
                 target_id = null,
@@ -136,13 +166,13 @@ class MatchingDictService {
             } = data;
 
             // 验证必填字段
-            if (!original_text || !original_type || !action) {
+            if (!original_text || !original_type) {
                 return { success: false, error: '缺少必填字段' };
             }
 
-            // 验证 action
-            if (!['match', 'exclude'].includes(action)) {
-                return { success: false, error: '无效的 action，只能是 match 或 exclude' };
+            // v2.0: action 支持 replace 和 match
+            if (!['replace', 'match'].includes(action)) {
+                return { success: false, error: '无效的 action，只能是 replace 或 match' };
             }
 
             // 检查是否已存在
@@ -297,8 +327,8 @@ class MatchingDictService {
             params.push(type);
         }
         if (search) {
-            sql += ' AND (original_text LIKE ? OR target_text LIKE ?)';
-            params.push(`%${search}%`, `%${search}%`);
+            sql += ' AND (original_text LIKE ? OR target_text LIKE ? OR notes LIKE ?)';
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`);
         }
 
         sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
@@ -333,8 +363,9 @@ class MatchingDictService {
      */
     getStats() {
         const total = db.prepare('SELECT COUNT(*) as count FROM matching_rules').get().count;
+        const replaceCount = db.prepare('SELECT COUNT(*) as count FROM matching_rules WHERE action = ?').get('replace').count;
         const matchCount = db.prepare('SELECT COUNT(*) as count FROM matching_rules WHERE action = ?').get('match').count;
-        const excludeCount = db.prepare('SELECT COUNT(*) as count FROM matching_rules WHERE action = ?').get('exclude').count;
+        const totalUseCount = db.prepare('SELECT SUM(use_count) as sum FROM matching_rules').get().sum || 0;
         
         const byType = db.prepare(`
             SELECT original_type, COUNT(*) as count 
@@ -342,11 +373,22 @@ class MatchingDictService {
             GROUP BY original_type
         `).all();
 
+        // v2.0: 最常使用的替换规则
+        const topUsed = db.prepare(`
+            SELECT original_text, target_text, use_count 
+            FROM matching_rules 
+            WHERE action = 'replace'
+            ORDER BY use_count DESC 
+            LIMIT 5
+        `).all();
+
         return {
             total,
+            replace: replaceCount,
             match: matchCount,
-            exclude: excludeCount,
-            byType
+            totalUseCount,
+            byType,
+            topUsed
         };
     }
 

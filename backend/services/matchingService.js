@@ -1,54 +1,36 @@
 /**
- * 匹配算法服务 v3.2
+ * 匹配算法服务 v3.6
  * 文件位置: backend/services/matchingService.js
+ * 
+ * 📦 v3.6 更新：
+ * - 修复：替换库命中后强制100%匹配，不再出现在"待审核"
+ * 
+ * 📦 v3.5 更新：
+ * - 简化：删除 replaceService，替换功能合并到 matchingDictService
+ * - 简化：删除 matchingDict 的 exclude 处理（已移到 excludeService）
+ * - 流程：先查替换库 → 再模糊匹配
+ * 
+ * 📦 v3.3 修复：
+ * - 修复：teach sb. sth. 错误匹配到 teach oneself sth. 的问题
+ * - 新增：模板参数兼容性检查（sb. 和 oneself 不兼容）
  * 
  * 📦 v3.2 修复：
  * - 修复：plant sth. 错误匹配到 plan to do 的问题
  * - 新增：核心词前缀检查（防止 plant vs plan 这类误匹配）
- * 
- * 📦 v3.1 更新：
- * - 新增：替换规则检查（replace.db）
- * - 流程：先查替换规则 → 再查词典 → 最后模糊匹配
- * 
- * 📦 v3.0 匹配词典更新：
- * - 新增：匹配词典查询（matching.db）
- * - 流程：先查词典 → 再模糊匹配
- * - 支持：match（确认匹配）和 exclude（排除）规则
- * 
- * 📦 v2.2 终极版更新：
- * - 修复：语法全部匹配到"不定式"的问题
- * - 修复：plant sth. 匹配到 plan to do 的问题
- * - 新增：核心词匹配检查（短语的第一个词必须匹配）
- * - 新增：中文语法专用匹配逻辑
- * - 新增：词库黑名单（排除会导致误匹配的条目）
- * - 提高：匹配阈值（更严格）
- * - 优化：模板清理逻辑
  */
 
 const { getVocabularyService } = require('./vocabularyService');
 const { getGrammarService } = require('./grammarService');
 const { getMatchingDictService } = require('./matchingDictService');
 
-// v3.1: 引入替换规则服务
-let replaceService = null;
-try {
-    const { getReplaceService } = require('./replaceService');
-    replaceService = getReplaceService();
-    console.log('[MatchingService] v3.2: 替换规则服务已加载');
-} catch (e) {
-    console.warn('[MatchingService] 替换规则服务未找到，跳过替换功能');
-}
-
 class MatchingService {
     constructor() {
         this.vocabularyService = getVocabularyService();
         this.grammarService = getGrammarService();
         
-        // v3.0: 添加匹配词典服务
+        // v3.6: 替换库服务（原 matchingDictService）
         this.matchingDictService = getMatchingDictService();
-        
-        // v3.1: 添加替换规则服务
-        this.replaceService = replaceService;
+        console.log('[MatchingService] v3.6: 替换库服务已加载');
         
         // v2.2: 提高匹配阈值，更严格
         this.thresholds = {
@@ -212,7 +194,7 @@ class MatchingService {
             const filteredWords = words.length - this.cache.words.length;
             const filteredPhrases = phrases.length - this.cache.phrases.length;
             
-            console.log(`[MatchingService] v3.2 缓存已刷新`);
+            console.log(`[MatchingService] v3.3 缓存已刷新`);
             if (filteredWords > 0 || filteredPhrases > 0) {
                 console.log(`[MatchingService] 已过滤黑名单: ${filteredWords}个单词, ${filteredPhrases}个短语`);
             }
@@ -420,6 +402,36 @@ class MatchingService {
     }
 
     /**
+     * v3.3 新增：模板参数兼容性检查
+     * 检查两个短语的模板参数是否兼容
+     * sb. 和 oneself 是不兼容的（前者泛指某人，后者指主语自己）
+     * @param {string} input - 输入文本
+     * @param {string} target - 目标文本
+     * @returns {boolean} 是否兼容
+     */
+    templateParamsCompatible(input, target) {
+        const inputLower = input.toLowerCase();
+        const targetLower = target.toLowerCase();
+        
+        // 检查 sb. 和 oneself 的冲突
+        // sb./sb 表示泛指某人，oneself 表示反身代词（主语自己）
+        const inputHasSb = /\bsb\.?\b/.test(inputLower);
+        const targetHasSb = /\bsb\.?\b/.test(targetLower);
+        const inputHasOneself = /\boneself\b/.test(inputLower);
+        const targetHasOneself = /\boneself\b/.test(targetLower);
+        
+        // 如果一个有 sb. 另一个有 oneself，不兼容
+        if ((inputHasSb && targetHasOneself) || (inputHasOneself && targetHasSb)) {
+            this.log(`[v3.3] 模板参数不兼容: sb. vs oneself - "${input}" vs "${target}"`);
+            return false;
+        }
+        
+        // 检查 one's 和 sb's 的关系（这个相对兼容，暂不做严格限制）
+        
+        return true;
+    }
+
+    /**
      * v2.2 新增：检测是否是中文文本
      */
     isChinese(text) {
@@ -489,9 +501,18 @@ class MatchingService {
         }
 
         // v3.2: 核心词检查现在包含前缀检测
+        // v3.3: 添加模板参数兼容性检查
         if (options.isPhraseMatch || options.isPatternMatch) {
             if (!this.coreWordMatches(s1, s2)) {
                 this.log(`核心词不匹配: "${s1}" vs "${s2}"`);
+                const distance = this.levenshteinDistance(s1, s2);
+                const maxLen = Math.max(s1.length, s2.length);
+                return 1 - distance / maxLen;
+            }
+            
+            // v3.3: 检查模板参数兼容性（sb. vs oneself 等）
+            if (!this.templateParamsCompatible(s1, s2)) {
+                this.log(`模板参数不兼容: "${s1}" vs "${s2}"`);
                 const distance = this.levenshteinDistance(s1, s2);
                 const maxLen = Math.max(s1.length, s2.length);
                 return 1 - distance / maxLen;
@@ -580,44 +601,12 @@ class MatchingService {
     }
 
     /**
-     * v3.1 新增：查询替换规则
+     * v3.6: 查询替换库（使用 matchingDictService）
      * @param {string} text - 原始文本
      * @param {string} type - 类型 (word/phrase/pattern/grammar)
      * @returns {Object|null} { action: 'replace', replace_text } 或 null
      */
     checkReplaceRule(text, type) {
-        if (!this.replaceService) {
-            return null;
-        }
-        
-        try {
-            const rule = this.replaceService.findRule(text, type);
-            
-            if (!rule) {
-                return null;
-            }
-            
-            this.log(`[替换规则命中] "${text}" → "${rule.replace_text}"`);
-            console.log(`[MatchingService] 替换规则命中: "${text}" → "${rule.replace_text}"`);
-            
-            return {
-                action: 'replace',
-                replace_text: rule.replace_text,
-                rule_id: rule.id
-            };
-        } catch (e) {
-            console.error('[MatchingService] 查询替换规则失败:', e.message);
-            return null;
-        }
-    }
-
-    /**
-     * v3.0: 查询匹配词典
-     * @param {string} text - 原始文本
-     * @param {string} type - 类型 (word/phrase/pattern/grammar)
-     * @returns {Object|null} { action, result } 或 null
-     */
-    checkMatchingDict(text, type) {
         try {
             const rule = this.matchingDictService.findRule(text, type);
             
@@ -625,57 +614,45 @@ class MatchingService {
                 return null;
             }
             
-            this.log(`[词典命中] ${text} (${type}) → ${rule.action}`);
-            
-            if (rule.action === 'exclude') {
+            // v3.6 修复：只要有 target_text，就当作替换规则（兼容旧数据 action='match'）
+            if (rule.target_text) {
+                this.log(`[替换库命中] "${text}" → "${rule.target_text}" (强制100%匹配)`);
+                console.log(`[MatchingService] 替换库命中: "${text}" → "${rule.target_text}" (强制100%匹配)`);
+                
                 return {
-                    action: 'exclude',
-                    result: {
-                        matched: false,
-                        excluded: true,
-                        score: 0,
-                        reason: rule.notes || '已被排除'
-                    }
-                };
-            }
-            
-            if (rule.action === 'match') {
-                return {
-                    action: 'match',
-                    result: {
-                        matched: true,
-                        score: 1.0,
-                        source_db: rule.target_db ? rule.target_db.replace('.db', '') : 'vocabulary',
-                        source_table: rule.target_table,
-                        source_id: rule.target_id,
-                        matched_text: rule.target_text,
-                        fromDict: true
-                    }
+                    action: 'replace',
+                    replace_text: rule.target_text,
+                    rule_id: rule.id
                 };
             }
             
             return null;
         } catch (e) {
-            console.error('[MatchingService] 查询词典失败:', e.message);
+            console.error('[MatchingService] 查询替换库失败:', e.message);
             return null;
         }
     }
 
     /**
      * 匹配单词
-     * v3.1: 先查替换规则 → 再查词典 → 最后模糊匹配
+     * v3.6: 替换库命中 → 强制100%匹配
      */
     matchWord(word) {
         this.checkCache();
         
-        // v3.1: 先查替换规则
+        // v3.6: 先查替换库
         const replaceResult = this.checkReplaceRule(word, 'word');
         if (replaceResult && replaceResult.action === 'replace') {
-            // 用替换后的文本重新匹配（递归，但替换后的文本不会再触发替换）
+            // 用替换后的文本重新匹配
             const newResult = this._matchWordInternal(replaceResult.replace_text);
             newResult.replaced = true;
             newResult.original_text = word;
             newResult.replace_text = replaceResult.replace_text;
+            // v3.6: 替换库命中，强制100%匹配（用户已审核过）
+            if (newResult.matched) {
+                newResult.score = 1.0;
+                newResult.fromReplaceDict = true;
+            }
             return newResult;
         }
         
@@ -683,21 +660,10 @@ class MatchingService {
     }
     
     /**
-     * 内部单词匹配（不检查替换规则）
+     * 内部单词匹配
+     * v3.5: 直接模糊匹配（删除了 checkMatchingDict）
      */
     _matchWordInternal(word) {
-        // v3.0: 查匹配词典
-        const dictResult = this.checkMatchingDict(word, 'word');
-        if (dictResult) {
-            if (dictResult.action === 'exclude') {
-                return dictResult.result;
-            }
-            if (dictResult.action === 'match') {
-                return dictResult.result;
-            }
-        }
-        
-        // 词典没有命中，进行模糊匹配
         const { match, score } = this.findBestMatch(
             word, 
             this.cache.words, 
@@ -723,18 +689,23 @@ class MatchingService {
 
     /**
      * 匹配短语
-     * v3.1: 先查替换规则 → 再查词典 → 最后模糊匹配
+     * v3.6: 替换库命中 → 强制100%匹配
      */
     matchPhrase(phrase) {
         this.checkCache();
         
-        // v3.1: 先查替换规则
+        // v3.6: 先查替换库
         const replaceResult = this.checkReplaceRule(phrase, 'phrase');
         if (replaceResult && replaceResult.action === 'replace') {
             const newResult = this._matchPhraseInternal(replaceResult.replace_text);
             newResult.replaced = true;
             newResult.original_text = phrase;
             newResult.replace_text = replaceResult.replace_text;
+            // v3.6: 替换库命中，强制100%匹配（用户已审核过）
+            if (newResult.matched) {
+                newResult.score = 1.0;
+                newResult.fromReplaceDict = true;
+            }
             return newResult;
         }
         
@@ -742,20 +713,10 @@ class MatchingService {
     }
     
     /**
-     * 内部短语匹配（不检查替换规则）
+     * 内部短语匹配
+     * v3.5: 直接模糊匹配（删除了 checkMatchingDict）
      */
     _matchPhraseInternal(phrase) {
-        // v3.0: 先查匹配词典
-        const dictResult = this.checkMatchingDict(phrase, 'phrase');
-        if (dictResult) {
-            if (dictResult.action === 'exclude') {
-                return dictResult.result;
-            }
-            if (dictResult.action === 'match') {
-                return dictResult.result;
-            }
-        }
-        
         const { match, score } = this.findBestMatch(
             phrase, 
             this.cache.phrases, 
@@ -781,18 +742,23 @@ class MatchingService {
 
     /**
      * 匹配句型
-     * v3.1: 先查替换规则 → 再查词典 → 最后模糊匹配
+     * v3.6: 替换库命中 → 强制100%匹配
      */
     matchPattern(pattern) {
         this.checkCache();
         
-        // v3.1: 先查替换规则
+        // v3.6: 先查替换库
         const replaceResult = this.checkReplaceRule(pattern, 'pattern');
         if (replaceResult && replaceResult.action === 'replace') {
             const newResult = this._matchPatternInternal(replaceResult.replace_text);
             newResult.replaced = true;
             newResult.original_text = pattern;
             newResult.replace_text = replaceResult.replace_text;
+            // v3.6: 替换库命中，强制100%匹配（用户已审核过）
+            if (newResult.matched) {
+                newResult.score = 1.0;
+                newResult.fromReplaceDict = true;
+            }
             return newResult;
         }
         
@@ -800,20 +766,10 @@ class MatchingService {
     }
     
     /**
-     * 内部句型匹配（不检查替换规则）
+     * 内部句型匹配
+     * v3.5: 直接模糊匹配（删除了 checkMatchingDict）
      */
     _matchPatternInternal(pattern) {
-        // v3.0: 先查匹配词典
-        const dictResult = this.checkMatchingDict(pattern, 'pattern');
-        if (dictResult) {
-            if (dictResult.action === 'exclude') {
-                return dictResult.result;
-            }
-            if (dictResult.action === 'match') {
-                return dictResult.result;
-            }
-        }
-        
         const { match, score } = this.findBestMatch(
             pattern, 
             this.cache.patterns, 
@@ -839,18 +795,23 @@ class MatchingService {
 
     /**
      * 匹配语法
-     * v3.1: 先查替换规则 → 再查词典 → 最后模糊匹配
+     * v3.6: 替换库命中 → 强制100%匹配
      */
     matchGrammar(grammarText) {
         this.checkCache();
         
-        // v3.1: 先查替换规则
+        // v3.6: 先查替换库
         const replaceResult = this.checkReplaceRule(grammarText, 'grammar');
         if (replaceResult && replaceResult.action === 'replace') {
             const newResult = this._matchGrammarInternal(replaceResult.replace_text);
             newResult.replaced = true;
             newResult.original_text = grammarText;
             newResult.replace_text = replaceResult.replace_text;
+            // v3.6: 替换库命中，强制100%匹配（用户已审核过）
+            if (newResult.matched) {
+                newResult.score = 1.0;
+                newResult.fromReplaceDict = true;
+            }
             return newResult;
         }
         
@@ -858,20 +819,10 @@ class MatchingService {
     }
     
     /**
-     * 内部语法匹配（不检查替换规则）
+     * 内部语法匹配
+     * v3.5: 直接模糊匹配（删除了 checkMatchingDict）
      */
     _matchGrammarInternal(grammarText) {
-        // v3.0: 先查匹配词典
-        const dictResult = this.checkMatchingDict(grammarText, 'grammar');
-        if (dictResult) {
-            if (dictResult.action === 'exclude') {
-                return dictResult.result;
-            }
-            if (dictResult.action === 'match') {
-                return dictResult.result;
-            }
-        }
-        
         // v2.2: 语法使用特殊匹配逻辑
         const isChinese = this.isChinese(grammarText);
         
