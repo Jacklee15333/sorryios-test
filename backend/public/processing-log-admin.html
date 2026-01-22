@@ -941,6 +941,13 @@
                     </div>
                 </div>
 
+                <!-- 跳过按钮区 -->
+                <div style="margin-bottom: 12px;">
+                    <button class="btn" onclick="skipAndExclude()" style="width: 100%; padding: 10px 16px; font-size: 14px; font-weight: 600; color: #6b7280; border: 1px dashed #d1d5db; background: #f9fafb;">
+                        ⏭️ 跳过（下次不展示、不上报）
+                    </button>
+                </div>
+
                 <!-- 短语组合区 -->
                 <div style="margin-bottom: 16px;">
                     <div style="font-size: 13px; color: #7c3aed; margin-bottom: 8px; font-weight: 600;">🔗 短语组合区（拖入单词或直接输入）</div>
@@ -3071,6 +3078,73 @@
         function removeFromBuilder(idx) {
             window._matchBuilderWords.splice(idx, 1);
             renderBuilderArea();
+        }
+        
+        /**
+         * 跳过并添加到排除库
+         * 下次遇到相同文本时自动跳过，不展示、不上报
+         */
+        async function skipAndExclude() {
+            const itemId = document.getElementById('matchItemId').value;
+            const originalText = document.getElementById('matchOriginalText').textContent;
+            const itemType = document.getElementById('matchItemType').value;
+            
+            if (!originalText) {
+                showToast('缺少原始文本', 'error');
+                return;
+            }
+            
+            // 确认提示
+            if (!confirm(`确定要跳过「${originalText}」吗？\n\n跳过后：\n• 此项将标记为已忽略\n• 添加到排除库\n• 下次处理时自动跳过`)) {
+                return;
+            }
+            
+            try {
+                // 1. 添加到排除库
+                const excludeRes = await fetch('/api/matching-dict/exclude', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        original_text: originalText,
+                        original_type: itemType,
+                        notes: '用户手动跳过',
+                        created_by: 'admin'
+                    })
+                });
+                const excludeData = await excludeRes.json();
+                
+                if (!excludeData.success) {
+                    showToast('添加排除规则失败: ' + (excludeData.error || '未知错误'), 'error');
+                    return;
+                }
+                
+                // 2. 如果有 itemId，标记该未匹配记录为已忽略
+                if (itemId) {
+                    const ignoreRes = await fetch(API_BASE + `/unmatched/${itemId}/ignore`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            notes: '已添加到排除库，下次自动跳过'
+                        })
+                    });
+                    const ignoreData = await ignoreRes.json();
+                    if (!ignoreData.success) {
+                        console.warn('标记忽略失败:', ignoreData.error);
+                    }
+                }
+                
+                showToast(`已跳过「${originalText}」，下次将自动跳过`, 'success');
+                
+                // 关闭弹窗并刷新列表
+                closeModal('matchModal');
+                closeModal('editModal', true);
+                loadStats();
+                loadPendingUnmatched();
+                
+            } catch (e) {
+                console.error('跳过失败:', e);
+                showToast('跳过失败: ' + e.message, 'error');
+            }
         }
         
         /**

@@ -1,6 +1,15 @@
 /**
- * 匹配算法服务 v4.2.2
+ * 匹配算法服务 v4.3.1
  * 文件位置: backend/services/matchingService.js
+ * 
+ * 📦 v4.3.1 更新：
+ * - 修复：核心词不匹配时返回高相似度的问题（how vs hope）
+ * - 修复："X + Y" 结构模式不完整匹配的问题（without + 动名词）
+ * 
+ * 📦 v4.3.0 更新：
+ * - 优化：中文相似度计算，增加关键词匹配和分词匹配
+ * - 新增：详细的匹配日志输出，便于调试
+ * - 修复：语法匹配相似度过低的问题
  * 
  * 📦 v4.2.2 更新：
  * - 删除：去掉语法关键词匹配功能（匹配太粗糙）
@@ -31,7 +40,7 @@ class MatchingService {
         
         // v3.8: 替换库服务（已合并排除库）
         this.matchingDictService = getMatchingDictService();
-        console.log('[MatchingService] v3.8: 替换库服务已加载（已合并排除库）');
+        console.log('[MatchingService] v4.3.0: 替换库服务已加载（已合并排除库）');
         
         // v2.2: 提高匹配阈值，更严格
         this.thresholds = {
@@ -43,6 +52,9 @@ class MatchingService {
         
         this.minMatchScore = 0.85;
         this.debug = false;
+        
+        // v4.3.0: 详细日志开关
+        this.verboseLog = true;
         
         // 缓存词库数据
         this.cache = {
@@ -99,6 +111,49 @@ class MatchingService {
             '宾补', '宾语补足语', '状语', '定语', '表语', '主语', '谓语',
             'there be', 'it作形式主语', 'it作形式宾语'
         ];
+        
+        // v4.3.0: 语法核心概念词（用于中文相似度匹配）
+        this.grammarCoreTerms = [
+            // 时态相关
+            '现在进行时', '过去进行时', '将来进行时',
+            '一般现在时', '一般过去时', '一般将来时',
+            '现在完成时', '过去完成时', '将来完成时',
+            // 语态
+            '被动语态', '主动语态',
+            // 句型
+            '祈使句', '疑问句', '否定句', '感叹句', '倒装句', '强调句',
+            '一般疑问句', '特殊疑问句', '反意疑问句', '选择疑问句',
+            // 从句
+            '定语从句', '状语从句', '宾语从句', '主语从句', '同位语从句', '表语从句',
+            '名词性从句',
+            // 非谓语
+            '动名词', '不定式', '现在分词', '过去分词', '非谓语',
+            // 词类
+            '情态动词', '助动词', '系动词', '连词', '介词', '冠词',
+            '形容词', '副词', '代词', '人称代词', '物主代词',
+            '可数名词', '不可数名词',
+            // 语法概念
+            '第三人称单数', '主谓一致', '比较级', '最高级',
+            '双宾语', '宾语补足语', '后置定语',
+            '句子结构', '主语', '谓语', '宾语', '定语', '状语', '表语',
+            // 动词相关
+            '动词形态', '动词过去式', '过去分词', '不规则动词',
+            // 其他
+            '词性', '构词法', '称呼', '称谓',
+            // v4.3.0 新增：常见英文动词和短语（用于混合文本匹配）
+            'spend', 'take', 'cost', 'pay', 'make', 'let', 'have', 'get',
+            'see', 'hear', 'watch', 'feel', 'notice',
+            'tell', 'ask', 'want', 'wish', 'hope', 'expect',
+            'there be', 'it is', 'be going to', 'used to', 'had better',
+            // 常见语法短语
+            'to do', 'doing', 'done', 'be done'
+        ];
+        
+        // v4.3.0: 近义词映射（用于处理同义词）
+        this.synonymMap = {
+            '称谓': '称呼',
+            '称呼': '称谓'
+        };
         
         // 模板占位符正则
         this.templatePattern = /\b(sb\.|sth\.|doing|to do|one's|oneself|\.\.\.)\b/i;
@@ -200,6 +255,63 @@ class MatchingService {
         this.refreshCache();
     }
 
+    // ============================================
+    // v4.3.0: 详细日志输出
+    // ============================================
+    
+    /**
+     * v4.3.0: 详细日志输出
+     * @param {string} message - 日志消息
+     * @param {string} level - 日志级别 (info/debug/warn/error)
+     */
+    verboseOutput(message, level = 'info') {
+        if (!this.verboseLog) return;
+        
+        const timestamp = new Date().toLocaleTimeString('zh-CN');
+        const prefix = {
+            info: '📋',
+            debug: '🔍',
+            warn: '⚠️',
+            error: '❌',
+            success: '✅',
+            match: '🎯'
+        }[level] || '📋';
+        
+        console.log(`${prefix} [${timestamp}] ${message}`);
+    }
+    
+    /**
+     * v4.3.0: 输出匹配报告
+     */
+    printMatchReport(input, candidates, bestMatch, bestScore, threshold) {
+        if (!this.verboseLog) return;
+        
+        console.log('\n' + '='.repeat(80));
+        console.log(`🔍 语法匹配报告`);
+        console.log('='.repeat(80));
+        console.log(`📝 输入文本: "${input}"`);
+        console.log(`📊 匹配阈值: ${(threshold * 100).toFixed(0)}%`);
+        console.log('-'.repeat(80));
+        
+        if (candidates.length > 0) {
+            console.log(`📋 候选匹配 (Top ${Math.min(5, candidates.length)}):`);
+            candidates.slice(0, 5).forEach((c, i) => {
+                const icon = c.score >= threshold ? '✅' : '❌';
+                console.log(`   ${i + 1}. ${icon} "${c.text}" - ${(c.score * 100).toFixed(1)}% ${c.reason || ''}`);
+            });
+        }
+        
+        console.log('-'.repeat(80));
+        if (bestMatch && bestScore >= threshold) {
+            console.log(`✅ 匹配成功: "${bestMatch}" (${(bestScore * 100).toFixed(1)}%)`);
+        } else if (bestMatch) {
+            console.log(`❌ 匹配失败: 最佳候选 "${bestMatch}" 只有 ${(bestScore * 100).toFixed(1)}%，低于阈值 ${(threshold * 100).toFixed(0)}%`);
+        } else {
+            console.log(`❌ 匹配失败: 没有找到任何候选`);
+        }
+        console.log('='.repeat(80) + '\n');
+    }
+
     /**
      * 刷新缓存（v2.2: 过滤黑名单）
      */
@@ -228,9 +340,9 @@ class MatchingService {
             const filteredWords = words.length - this.cache.words.length;
             const filteredPhrases = phrases.length - this.cache.phrases.length;
             
-            console.log(`[MatchingService] v3.3 缓存已刷新`);
+            console.log(`[MatchingService] 缓存已刷新: ${this.cache.words.length} 单词, ${this.cache.phrases.length} 短语, ${this.cache.patterns.length} 句型, ${this.cache.grammar.length} 语法`);
             if (filteredWords > 0 || filteredPhrases > 0) {
-                console.log(`[MatchingService] 已过滤黑名单: ${filteredWords}个单词, ${filteredPhrases}个短语`);
+                console.log(`[MatchingService] 已过滤黑名单: ${filteredWords} 单词, ${filteredPhrases} 短语`);
             }
         } catch (e) {
             console.error('[MatchingService] 刷新缓存失败:', e.message);
@@ -238,20 +350,20 @@ class MatchingService {
     }
 
     /**
-     * 检查缓存是否需要刷新
+     * 检查缓存是否需要刷新（10分钟）
      */
     checkCache() {
-        if (!this.cache.lastUpdate || Date.now() - this.cache.lastUpdate > 5 * 60 * 1000) {
+        if (!this.cache.lastUpdate || Date.now() - this.cache.lastUpdate > 10 * 60 * 1000) {
             this.refreshCache();
         }
     }
 
     /**
-     * 调试日志
+     * 调试日志输出
      */
-    log(...args) {
+    log(message) {
         if (this.debug) {
-            console.log('[MatchingService]', ...args);
+            console.log(`[MatchingService] ${message}`);
         }
     }
 
@@ -262,39 +374,43 @@ class MatchingService {
         const w = word.toLowerCase().trim();
         const results = [w];
         
+        // 检查不规则变形
         if (this.irregularVerbs[w]) {
             results.push(this.irregularVerbs[w]);
         }
-        
         if (this.adjectiveVariants[w]) {
             results.push(this.adjectiveVariants[w]);
         }
         
         // -ing 结尾
         if (w.endsWith('ing') && w.length > 4) {
-            const base1 = w.slice(0, -3);
-            if (base1.length >= 2 && base1[base1.length - 1] === base1[base1.length - 2]) {
-                results.push(base1.slice(0, -1));
+            results.push(w.slice(0, -3));
+            results.push(w.slice(0, -3) + 'e');
+            if (w.length > 5 && w[w.length - 4] === w[w.length - 5]) {
+                results.push(w.slice(0, -4));
             }
-            results.push(base1 + 'e');
-            results.push(base1);
         }
         
         // -ed 结尾
         if (w.endsWith('ed') && w.length > 3) {
-            const base1 = w.slice(0, -2);
-            const base2 = w.slice(0, -1);
-            results.push(base1);
-            results.push(base2);
-            if (base1.length >= 2 && base1[base1.length - 1] === base1[base1.length - 2]) {
-                results.push(base1.slice(0, -1));
+            results.push(w.slice(0, -2));
+            results.push(w.slice(0, -1));
+            results.push(w.slice(0, -2) + 'y');
+            if (w.length > 4 && w[w.length - 3] === w[w.length - 4]) {
+                results.push(w.slice(0, -3));
             }
         }
         
-        // -s/-es 结尾
+        // -ies/-ied 结尾
         if (w.endsWith('ies') && w.length > 4) {
             results.push(w.slice(0, -3) + 'y');
-        } else if (w.endsWith('es') && w.length > 3) {
+        }
+        if (w.endsWith('ied') && w.length > 4) {
+            results.push(w.slice(0, -3) + 'y');
+        }
+        
+        // -es/-s 结尾
+        if (w.endsWith('es') && w.length > 3) {
             results.push(w.slice(0, -2));
             results.push(w.slice(0, -1));
         } else if (w.endsWith('s') && w.length > 2 && !w.endsWith('ss')) {
@@ -339,7 +455,6 @@ class MatchingService {
             .trim();
         
         // v3.7: 把所有动名词（-ing结尾）统一转换为 "doing"
-        // 排除常见的非动名词：thing, something, nothing, anything, morning, evening, etc.
         const nonVerbIng = ['thing', 'something', 'nothing', 'anything', 'everything', 
                            'morning', 'evening', 'spring', 'string', 'ring', 'king', 
                            'sing', 'bring', 'wing', 'ceiling', 'feeling', 'meeting',
@@ -347,22 +462,16 @@ class MatchingService {
         
         cleaned = cleaned.replace(/\b(\w{4,})ing\b/gi, (match, stem) => {
             const word = match.toLowerCase();
-            // 如果是非动名词，保留原样
             if (nonVerbIng.includes(word)) {
                 return match;
             }
-            // 如果已经是 doing，保留
             if (word === 'doing') {
                 return 'doing';
             }
-            // 其他 -ing 结尾的词转换为 doing
             return 'doing';
         });
         
-        // 把 doing 也统一处理
         cleaned = cleaned.replace(/\bdoing\b/gi, 'do');
-        
-        // 去掉尾部的标点
         cleaned = cleaned.replace(/[.,;:!?]+$/, '').trim();
         
         return cleaned;
@@ -413,7 +522,6 @@ class MatchingService {
         
         if (inputWords.length === 0 || targetWords.length === 0) return true;
         
-        // 找到核心词（第一个非模板词）
         const templateWords = ['sb.', 'sth.', 'sb', 'sth', 'to', 'do', 'doing', "one's", 'oneself'];
         
         let inputCore = null;
@@ -434,57 +542,39 @@ class MatchingService {
         
         if (!inputCore || !targetCore) return true;
         
-        // 完全相等
         if (inputCore === targetCore) return true;
         
-        // ========== v3.2 修复：前缀检查 ==========
-        // 如果一个核心词是另一个的前缀，认为不匹配
-        // 防止 plant vs plan, explain vs explain 这类误匹配
-        // 因为 "plan" 是 "plant" 的前缀，但它们是完全不同的词
         if (inputCore.startsWith(targetCore) || targetCore.startsWith(inputCore)) {
             this.log(`[v3.2] 核心词前缀冲突，拒绝匹配: "${inputCore}" vs "${targetCore}"`);
             return false;
         }
-        // ========================================
         
         const distance = this.levenshteinDistance(inputCore, targetCore);
         const maxLen = Math.max(inputCore.length, targetCore.length);
         
-        // 短词（<=4字符）必须完全匹配
         if (maxLen <= 4) {
             return distance === 0;
         }
         
-        // 长词允许1个字符的差异（但已排除前缀关系）
         return distance <= 1;
     }
 
     /**
      * v3.3 新增：模板参数兼容性检查
-     * 检查两个短语的模板参数是否兼容
-     * sb. 和 oneself 是不兼容的（前者泛指某人，后者指主语自己）
-     * @param {string} input - 输入文本
-     * @param {string} target - 目标文本
-     * @returns {boolean} 是否兼容
      */
     templateParamsCompatible(input, target) {
         const inputLower = input.toLowerCase();
         const targetLower = target.toLowerCase();
         
-        // 检查 sb. 和 oneself 的冲突
-        // sb./sb 表示泛指某人，oneself 表示反身代词（主语自己）
         const inputHasSb = /\bsb\.?\b/.test(inputLower);
         const targetHasSb = /\bsb\.?\b/.test(targetLower);
         const inputHasOneself = /\boneself\b/.test(inputLower);
         const targetHasOneself = /\boneself\b/.test(targetLower);
         
-        // 如果一个有 sb. 另一个有 oneself，不兼容
         if ((inputHasSb && targetHasOneself) || (inputHasOneself && targetHasSb)) {
             this.log(`[v3.3] 模板参数不兼容: sb. vs oneself - "${input}" vs "${target}"`);
             return false;
         }
-        
-        // 检查 one's 和 sb's 的关系（这个相对兼容，暂不做严格限制）
         
         return true;
     }
@@ -496,30 +586,268 @@ class MatchingService {
         return /[\u4e00-\u9fa5]/.test(text);
     }
 
+    // ============================================
+    // v4.3.0: 重写中文相似度计算
+    // ============================================
+
     /**
-     * v2.2 新增：中文相似度计算
+     * v4.3.0: 提取中文文本中的核心术语
+     * @param {string} text - 输入文本
+     * @returns {Array} 找到的核心术语列表
+     */
+    extractCoreTerms(text) {
+        if (!text) return [];
+        
+        const found = [];
+        const lowerText = text.toLowerCase();
+        
+        for (const term of this.grammarCoreTerms) {
+            // 中文术语用原始文本匹配，英文术语用小写匹配
+            if (this.isChinese(term)) {
+                if (text.includes(term)) {
+                    found.push(term);
+                }
+            } else {
+                // 英文术语：用单词边界匹配
+                const regex = new RegExp(`\\b${term}\\b`, 'i');
+                if (regex.test(lowerText)) {
+                    found.push(term.toLowerCase());
+                }
+            }
+        }
+        
+        // v4.3.0: 处理近义词
+        for (const term of found) {
+            if (this.synonymMap && this.synonymMap[term]) {
+                const synonym = this.synonymMap[term];
+                if (!found.includes(synonym)) {
+                    found.push(synonym);
+                }
+            }
+        }
+        
+        // 按长度降序排列（优先匹配长的术语）
+        found.sort((a, b) => b.length - a.length);
+        
+        return found;
+    }
+    
+    /**
+     * v4.3.0: 中文分词（简单实现）
+     * 基于核心术语 + 字符切分
+     * @param {string} text - 输入文本
+     * @returns {Array} 分词结果
+     */
+    segmentChinese(text) {
+        if (!text) return [];
+        
+        let remaining = text;
+        const segments = [];
+        
+        // 先提取核心术语
+        const coreTerms = this.extractCoreTerms(text);
+        for (const term of coreTerms) {
+            if (remaining.includes(term)) {
+                segments.push(term);
+                // 标记已处理（但不从 remaining 中删除，因为可能有重叠）
+            }
+        }
+        
+        // 提取英文单词
+        const englishWords = text.match(/[a-zA-Z]+/g) || [];
+        segments.push(...englishWords.map(w => w.toLowerCase()));
+        
+        // 提取剩余的中文字符（2-4字组合）
+        const chineseOnly = text.replace(/[a-zA-Z0-9\s\.\(\)（）\/\-\+\:：、，。！？""'']+/g, '');
+        
+        // 添加2字、3字、4字组合
+        for (let len = 4; len >= 2; len--) {
+            for (let i = 0; i <= chineseOnly.length - len; i++) {
+                const segment = chineseOnly.substring(i, i + len);
+                if (!segments.includes(segment)) {
+                    segments.push(segment);
+                }
+            }
+        }
+        
+        return [...new Set(segments)];
+    }
+    
+    /**
+     * v4.3.0: 计算词汇重叠度
+     * @param {Array} segments1 - 第一个文本的分词
+     * @param {Array} segments2 - 第二个文本的分词
+     * @returns {number} 重叠度 (0-1)
+     */
+    calculateOverlap(segments1, segments2) {
+        if (segments1.length === 0 || segments2.length === 0) return 0;
+        
+        let matchCount = 0;
+        let totalWeight = 0;
+        
+        for (const seg of segments1) {
+            // 核心术语权重更高
+            const weight = this.grammarCoreTerms.includes(seg) ? 3 : 1;
+            totalWeight += weight;
+            
+            if (segments2.includes(seg)) {
+                matchCount += weight;
+            }
+        }
+        
+        return totalWeight > 0 ? matchCount / totalWeight : 0;
+    }
+
+    /**
+     * v4.3.0: 重写中文相似度计算
+     * 结合多种策略：核心术语匹配、分词重叠、编辑距离
+     * @param {string} input - 输入文本
+     * @param {string} target - 目标文本
+     * @returns {Object} { score, reason }
      */
     calculateChineseSimilarity(input, target) {
         const s1 = input.trim();
         const s2 = target.trim();
         
-        if (!s1 || !s2) return 0;
-        if (s1 === s2) return 1.0;
+        if (!s1 || !s2) return { score: 0, reason: '空文本' };
+        if (s1 === s2) return { score: 1.0, reason: '完全相同' };
         
-        if (s2.includes(s1)) {
-            return s1.length / s2.length * 0.95;
-        }
-        if (s1.includes(s2)) {
-            return s2.length / s1.length * 0.95;
+        // 标准化：去除空格和标点差异
+        const normalize = (str) => str.replace(/[\s\(\)（）\/\-\+\:：、，。！？""''\.]+/g, '').toLowerCase();
+        const n1 = normalize(s1);
+        const n2 = normalize(s2);
+        
+        if (n1 === n2) {
+            return { score: 0.98, reason: '标准化后相同' };
         }
         
-        const distance = this.levenshteinDistance(s1, s2);
-        const maxLen = Math.max(s1.length, s2.length);
-        return 1 - distance / maxLen;
+        // ===== v4.3.1 新增：检查 "X + Y" 结构模式 =====
+        // 例如 "without + 动名词" 不应匹配 "动名词 (v.-ing作名词)"
+        const structurePatternRegex = /\S\s*\+\s*\S/;
+        const inputIsStructure = structurePatternRegex.test(s1);
+        const targetIsStructure = structurePatternRegex.test(s2);
+        
+        if (inputIsStructure && !targetIsStructure) {
+            this.verboseOutput(`  ⚠️ 输入是结构模式 (X + Y)，目标不是`, 'debug');
+            const parts = s1.split(/\s*\+\s*/);
+            if (parts.length >= 2) {
+                const leftPart = parts[0].trim();
+                const rightPart = parts[1].trim();
+                
+                // 检查目标是否同时包含左右两部分
+                const targetContainsLeft = s2.includes(leftPart) || 
+                    this.extractCoreTerms(leftPart).some(t => s2.includes(t));
+                const targetContainsRight = s2.includes(rightPart) || 
+                    this.extractCoreTerms(rightPart).some(t => s2.includes(t));
+                
+                this.verboseOutput(`    左部分 "${leftPart}": ${targetContainsLeft ? '包含' : '不包含'}`, 'debug');
+                this.verboseOutput(`    右部分 "${rightPart}": ${targetContainsRight ? '包含' : '不包含'}`, 'debug');
+                
+                // 如果目标只包含其中一部分，不应该高分匹配
+                if (!targetContainsLeft || !targetContainsRight) {
+                    const distance = this.levenshteinDistance(n1, n2);
+                    const maxLen = Math.max(n1.length, n2.length);
+                    const editScore = 1 - distance / maxLen;
+                    return { 
+                        score: Math.min(editScore, 0.60),  // 最高60%
+                        reason: '结构模式不完整匹配' 
+                    };
+                }
+            }
+        }
+        // ===== v4.3.1 新增结束 =====
+        
+        // 策略1: 核心术语匹配
+        const terms1 = this.extractCoreTerms(s1);
+        const terms2 = this.extractCoreTerms(s2);
+        
+        this.verboseOutput(`  输入核心术语: [${terms1.join(', ')}]`, 'debug');
+        this.verboseOutput(`  目标核心术语: [${terms2.join(', ')}]`, 'debug');
+        
+        // 检查是否有完全匹配的核心术语
+        const commonTerms = terms1.filter(t => terms2.includes(t));
+        
+        if (commonTerms.length > 0) {
+            // 找到最长的共同术语
+            const longestCommon = commonTerms.reduce((a, b) => a.length >= b.length ? a : b, '');
+            
+            // v4.3.0 优化：核心术语匹配成功，给一个更高的基础分
+            // 基础分 = 0.78 + (共同术语长度占比) * 0.18
+            // 这样 5 字术语通常能达到 85%+
+            const termRatio = longestCommon.length / Math.max(s1.length, s2.length);
+            let baseScore = 0.78 + termRatio * 0.18;
+            
+            // 如果核心术语本身较长（>=4字），额外加分
+            if (longestCommon.length >= 4) {
+                baseScore += 0.03;
+            }
+            if (longestCommon.length >= 6) {
+                baseScore += 0.02;
+            }
+            
+            // v4.3.0: 短术语（2-3字）如果是独立的语法概念，也给一定加分
+            // 因为短术语占总长度的比例较低，需要补偿
+            if (longestCommon.length >= 2 && longestCommon.length <= 3) {
+                // 短术语加分：确保能达到85%左右
+                baseScore += 0.06;
+            }
+            
+            // 如果有多个共同术语，额外加分
+            if (commonTerms.length > 1) {
+                baseScore += 0.03 * (commonTerms.length - 1);
+            }
+            
+            baseScore = Math.min(baseScore, 0.96);
+            
+            this.verboseOutput(`  核心术语匹配: "${longestCommon}" → 基础分 ${(baseScore * 100).toFixed(1)}%`, 'debug');
+            
+            return { 
+                score: baseScore, 
+                reason: `核心术语匹配: "${longestCommon}"` 
+            };
+        }
+        
+        // 策略2: 分词重叠
+        const segments1 = this.segmentChinese(s1);
+        const segments2 = this.segmentChinese(s2);
+        
+        const overlap1 = this.calculateOverlap(segments1, segments2);
+        const overlap2 = this.calculateOverlap(segments2, segments1);
+        const avgOverlap = (overlap1 + overlap2) / 2;
+        
+        this.verboseOutput(`  分词重叠度: ${(avgOverlap * 100).toFixed(1)}%`, 'debug');
+        
+        // 策略3: 包含关系
+        if (n2.includes(n1)) {
+            const ratio = n1.length / n2.length;
+            const score = Math.max(ratio * 0.95, avgOverlap);
+            return { score, reason: `目标包含输入 (${(ratio * 100).toFixed(0)}%)` };
+        }
+        if (n1.includes(n2)) {
+            const ratio = n2.length / n1.length;
+            const score = Math.max(ratio * 0.95, avgOverlap);
+            return { score, reason: `输入包含目标 (${(ratio * 100).toFixed(0)}%)` };
+        }
+        
+        // 策略4: 编辑距离（作为补充）
+        const distance = this.levenshteinDistance(n1, n2);
+        const maxLen = Math.max(n1.length, n2.length);
+        const editSimilarity = 1 - distance / maxLen;
+        
+        this.verboseOutput(`  编辑距离相似度: ${(editSimilarity * 100).toFixed(1)}%`, 'debug');
+        
+        // 综合得分：取分词重叠和编辑距离中的较高者
+        const finalScore = Math.max(avgOverlap, editSimilarity);
+        
+        return { 
+            score: finalScore, 
+            reason: avgOverlap > editSimilarity ? '分词重叠' : '编辑距离'
+        };
     }
 
     /**
      * 计算相似度分数 (0-1)
+     * v4.3.0: 语法匹配使用新的中文相似度计算
      */
     calculateSimilarity(input, target, options = {}) {
         const s1 = input.toLowerCase().trim();
@@ -531,8 +859,10 @@ class MatchingService {
             return 1.0;
         }
 
+        // v4.3.0: 语法匹配使用新的中文相似度计算
         if (options.isGrammarMatch && this.isChinese(input)) {
-            return this.calculateChineseSimilarity(input, target);
+            const result = this.calculateChineseSimilarity(input, target);
+            return result.score;
         }
 
         if (options.isWordMatch) {
@@ -558,22 +888,24 @@ class MatchingService {
             return 0.5;
         }
 
-        // v3.2: 核心词检查现在包含前缀检测
-        // v3.3: 添加模板参数兼容性检查
         if (options.isPhraseMatch || options.isPatternMatch) {
             if (!this.coreWordMatches(s1, s2)) {
                 this.log(`核心词不匹配: "${s1}" vs "${s2}"`);
+                // v4.3.1: 核心词不匹配时，强制返回低分，确保不会误匹配
                 const distance = this.levenshteinDistance(s1, s2);
                 const maxLen = Math.max(s1.length, s2.length);
-                return 1 - distance / maxLen;
+                const rawScore = 1 - distance / maxLen;
+                // 核心词不匹配，最高只给 0.70，绝对不超过阈值
+                return Math.min(rawScore, 0.70);
             }
             
-            // v3.3: 检查模板参数兼容性（sb. vs oneself 等）
             if (!this.templateParamsCompatible(s1, s2)) {
                 this.log(`模板参数不兼容: "${s1}" vs "${s2}"`);
                 const distance = this.levenshteinDistance(s1, s2);
                 const maxLen = Math.max(s1.length, s2.length);
-                return 1 - distance / maxLen;
+                const rawScore = 1 - distance / maxLen;
+                // v4.3.1: 模板参数不兼容，最高只给 0.70
+                return Math.min(rawScore, 0.70);
             }
         }
 
@@ -606,8 +938,6 @@ class MatchingService {
                     return 0.95;
                 }
                 
-                // ========== v3.2 修复：清理后的文本也要检查前缀关系 ==========
-                // 如果清理后一个是另一个的前缀/后缀，不能返回高相似度
                 const isPrefixRelation = cleanS1.startsWith(cleanS2) || cleanS2.startsWith(cleanS1);
                 
                 if (!isPrefixRelation) {
@@ -618,7 +948,6 @@ class MatchingService {
                         return 0.90;
                     }
                 }
-                // ============================================================
             }
         }
 
@@ -646,14 +975,12 @@ class MatchingService {
             
             const normalizedTarget = target.toLowerCase().trim();
             
-            // v4.1: 先检查精确匹配（标准化后完全相同 = 100%）
             if (normalizedInput === normalizedTarget) {
                 console.log(`[findBestMatch] 精确匹配: "${input}" === "${target}" → 100%`);
                 return { match: item, score: 1.0 };
             }
 
             for (const variant of inputVariants) {
-                // 词形变化也检查精确匹配
                 if (variant === normalizedTarget) {
                     console.log(`[findBestMatch] 词形精确匹配: "${input}" → "${variant}" === "${target}" → 100%`);
                     return { match: item, score: 1.0 };
@@ -671,7 +998,6 @@ class MatchingService {
             }
         }
         
-        // 调试：如果没有精确匹配但分数很高，输出警告
         if (bestMatch && bestScore >= 0.85) {
             const targetText = bestMatch[textField];
             console.log(`[findBestMatch] 模糊匹配: "${input}" ≈ "${targetText}" → ${(bestScore * 100).toFixed(1)}%`);
@@ -682,30 +1008,20 @@ class MatchingService {
 
     /**
      * v4.1: 查询替换库（使用 matchingDictService）
-     * 支持精确匹配和模糊匹配
-     * 匹配顺序：
-     * 1. 精确匹配 original_text → 100% 信任，不上报
-     * 2. 模糊匹配 original_text ≥90% → 使用替换规则，上报到模糊匹配
-     * 
-     * @param {string} text - 原始文本
-     * @param {string} type - 类型 (word/phrase/pattern/grammar)
-     * @returns {Object|null} { action: 'replace'|'exclude'|'replace_multi', ... } 或 null
      */
     checkReplaceRule(text, type) {
         try {
-            // ===== 第1步：精确匹配 =====
             const rule = this.matchingDictService.findRule(text, type);
             
             if (rule) {
-                return this._processReplaceRule(rule, text, type, false);  // false = 精确匹配
+                return this._processReplaceRule(rule, text, type, false);
             }
             
-            // ===== 第2步：模糊匹配（≥90%）=====
             const fuzzyResult = this._findReplaceRuleFuzzy(text, type);
             
             if (fuzzyResult) {
                 console.log(`[MatchingService] 替换库模糊匹配: "${text}" ≈ "${fuzzyResult.rule.original_text}" (${(fuzzyResult.score * 100).toFixed(1)}%)`);
-                return this._processReplaceRule(fuzzyResult.rule, text, type, true, fuzzyResult.score);  // true = 模糊匹配
+                return this._processReplaceRule(fuzzyResult.rule, text, type, true, fuzzyResult.score);
             }
             
             return null;
@@ -717,43 +1033,34 @@ class MatchingService {
     
     /**
      * v4.1: 替换库模糊匹配
-     * 在替换库中查找相似度 ≥85% 的规则（类型必须一致）
-     * @param {string} text - 原始文本
-     * @param {string} type - 类型
-     * @returns {Object|null} { rule, score } 或 null
      */
     _findReplaceRuleFuzzy(text, type) {
-        // 确保缓存已刷新
         this.matchingDictService.checkCache();
         
         const rules = this.matchingDictService.cache.rules || [];
         const normalizedType = type.toLowerCase().trim();
         const normalizedText = text.toLowerCase().trim();
-        const threshold = 0.85;  // 模糊匹配阈值 85%
+        const threshold = 0.85;
         
         let bestRule = null;
         let bestScore = 0;
         
         for (const rule of rules) {
-            // 类型必须一致
             if (rule.original_type.toLowerCase().trim() !== normalizedType) {
                 continue;
             }
             
-            // 跳过排除规则（target_text 为空）
             if (!rule.target_text || rule.target_text.trim() === '') {
                 continue;
             }
             
             const normalizedOriginal = rule.original_text.toLowerCase().trim();
             
-            // v4.1: 先检查精确匹配（标准化后完全相同 = 100%）
             if (normalizedText === normalizedOriginal) {
                 this.matchingDictService.incrementUseCount(rule.id);
                 return { rule: rule, score: 1.0 };
             }
             
-            // 计算相似度
             const score = this.calculateSimilarity(text, rule.original_text, {
                 isWordMatch: type === 'word',
                 isPhraseMatch: type === 'phrase',
@@ -768,7 +1075,6 @@ class MatchingService {
         }
         
         if (bestRule) {
-            // 增加使用次数
             this.matchingDictService.incrementUseCount(bestRule.id);
             return { rule: bestRule, score: bestScore };
         }
@@ -777,16 +1083,9 @@ class MatchingService {
     }
     
     /**
-     * v4.1: 处理替换规则（精确匹配或模糊匹配）
-     * @param {Object} rule - 替换规则
-     * @param {string} originalText - 原始文本
-     * @param {string} type - 类型
-     * @param {boolean} isFuzzy - 是否为模糊匹配
-     * @param {number} fuzzyScore - 模糊匹配分数
-     * @returns {Object} 处理结果
+     * v4.1: 处理替换规则
      */
     _processReplaceRule(rule, originalText, type, isFuzzy = false, fuzzyScore = 1.0) {
-        // 排除规则
         if (!rule.target_text || rule.target_text.trim() === '') {
             this.log(`[替换库命中-排除] "${originalText}" → 跳过`);
             console.log(`[MatchingService] 替换库命中-排除: "${originalText}" (${type}) → 跳过不展示`);
@@ -799,7 +1098,6 @@ class MatchingService {
             };
         }
         
-        // 尝试解析 JSON 格式（多词条替换）
         const targetText = rule.target_text.trim();
         if (targetText.startsWith('[') && targetText.endsWith(']')) {
             try {
@@ -823,7 +1121,6 @@ class MatchingService {
             }
         }
         
-        // 单个替换
         const matchType = isFuzzy ? '模糊' : '精确';
         this.log(`[替换库${matchType}匹配-替换] "${originalText}" → "${rule.target_text}"`);
         console.log(`[MatchingService] 替换库${matchType}匹配-替换: "${originalText}" → "${rule.target_text}"`);
@@ -840,15 +1137,13 @@ class MatchingService {
 
     /**
      * 匹配单词
-     * v4.2: 调整匹配顺序，词库精确匹配优先于替换库模糊匹配
      */
     matchWord(word) {
         this.checkCache();
         
         const normalizedWord = word.toLowerCase().trim();
-        const wordVariants = this.lemmatize(word);  // 包含词形变化
+        const wordVariants = this.lemmatize(word);
         
-        // ===== 第1步：替换库精确匹配 =====
         const exactRule = this.matchingDictService.findRule(word, 'word');
         if (exactRule) {
             if (!exactRule.target_text || exactRule.target_text.trim() === '') {
@@ -857,12 +1152,10 @@ class MatchingService {
             return this._processAndApplyReplaceRule(exactRule, word, 'word', false);
         }
         
-        // ===== 第2步：词库精确匹配（包括词形变化）=====
         for (const item of this.cache.words) {
             if (!item.word) continue;
             const normalizedTarget = item.word.toLowerCase().trim();
             
-            // 检查原词或词形变化
             for (const variant of wordVariants) {
                 if (variant === normalizedTarget) {
                     console.log(`[matchWord] 词库精确匹配: "${word}" → "${variant}" === "${item.word}" → 100%`);
@@ -879,19 +1172,16 @@ class MatchingService {
             }
         }
         
-        // ===== 第3步：替换库模糊匹配 =====
         const fuzzyRule = this._findReplaceRuleFuzzyOnly(word, 'word');
         if (fuzzyRule) {
             return this._processAndApplyReplaceRule(fuzzyRule.rule, word, 'word', true, fuzzyRule.score);
         }
         
-        // ===== 第4步：词库模糊匹配 =====
         return this._matchWordInternal(word);
     }
     
     /**
      * 内部单词匹配
-     * v3.5: 直接模糊匹配（删除了 checkMatchingDict）
      */
     _matchWordInternal(word) {
         const { match, score } = this.findBestMatch(
@@ -919,26 +1209,20 @@ class MatchingService {
 
     /**
      * 匹配短语
-     * v4.2: 调整匹配顺序，词库精确匹配优先于替换库模糊匹配
-     * 顺序：替换库精确 → 词库精确 → 替换库模糊 → 词库模糊
      */
     matchPhrase(phrase) {
         this.checkCache();
         
         const normalizedPhrase = phrase.toLowerCase().trim();
         
-        // ===== 第1步：替换库精确匹配 =====
         const exactRule = this.matchingDictService.findRule(phrase, 'phrase');
         if (exactRule) {
-            // 排除规则
             if (!exactRule.target_text || exactRule.target_text.trim() === '') {
                 return { excluded: true, reason: exactRule.notes || '已标记为排除' };
             }
-            // 多词条或单个替换
             return this._processAndApplyReplaceRule(exactRule, phrase, 'phrase', false);
         }
         
-        // ===== 第2步：词库精确匹配（优先于替换库模糊匹配）=====
         for (const item of this.cache.phrases) {
             if (!item.phrase) continue;
             if (item.phrase.toLowerCase().trim() === normalizedPhrase) {
@@ -955,23 +1239,18 @@ class MatchingService {
             }
         }
         
-        // ===== 第3步：替换库模糊匹配 =====
         const fuzzyRule = this._findReplaceRuleFuzzyOnly(phrase, 'phrase');
         if (fuzzyRule) {
             return this._processAndApplyReplaceRule(fuzzyRule.rule, phrase, 'phrase', true, fuzzyRule.score);
         }
         
-        // ===== 第4步：词库模糊匹配 =====
         return this._matchPhraseInternal(phrase);
     }
     
     /**
-     * v4.2: 只做替换库模糊匹配（不包含精确匹配）
-     * v4.2.1: 如果输入包含模板占位符，跳过模糊匹配
+     * v4.2.1: 只检查模糊匹配（跳过精确匹配）
      */
     _findReplaceRuleFuzzyOnly(text, type) {
-        // v4.2.1: 检查是否包含模板占位符
-        // 如果是通用模板（如 "without doing sth."），不应该模糊匹配到具体短语
         if (this._containsTemplatePlaceholder(text)) {
             console.log(`[MatchingService] 跳过替换库模糊匹配: "${text}" 是通用模板`);
             return null;
@@ -993,7 +1272,6 @@ class MatchingService {
             
             const normalizedOriginal = rule.original_text.toLowerCase().trim();
             
-            // 跳过精确匹配（精确匹配已经在第1步处理过了）
             if (normalizedText === normalizedOriginal) continue;
             
             const score = this.calculateSimilarity(text, rule.original_text, {
@@ -1020,22 +1298,18 @@ class MatchingService {
     
     /**
      * v4.2.1: 检查文本是否包含模板占位符
-     * 如果包含，说明它已经是通用模板，不应该和具体短语模糊匹配
-     * @param {string} text - 输入文本
-     * @returns {boolean} 是否包含模板占位符
      */
     _containsTemplatePlaceholder(text) {
         if (!text) return false;
         
         const lowerText = text.toLowerCase();
         
-        // 模板占位符列表
         const placeholders = [
-            'doing sth', 'do sth', 'done sth',  // 动词形式
-            'sb.', 'sth.',                       // 人/物
-            "one's", 'oneself',                  // 反身代词
-            'adj.', 'adv.',                      // 形容词/副词
-            '...'                                // 省略号
+            'doing sth', 'do sth', 'done sth',
+            'sb.', 'sth.',
+            "one's", 'oneself',
+            'adj.', 'adv.',
+            '...'
         ];
         
         for (const placeholder of placeholders) {
@@ -1053,7 +1327,6 @@ class MatchingService {
     _processAndApplyReplaceRule(rule, originalText, type, isFuzzy, fuzzyScore = 1.0) {
         const targetText = rule.target_text.trim();
         
-        // 多词条替换
         if (targetText.startsWith('[') && targetText.endsWith(']')) {
             try {
                 const items = JSON.parse(targetText);
@@ -1074,7 +1347,6 @@ class MatchingService {
             }
         }
         
-        // 单个替换
         const matchType = isFuzzy ? '模糊' : '精确';
         console.log(`[MatchingService] 替换库${matchType}匹配-替换: "${originalText}" → "${rule.target_text}"`);
         
@@ -1107,7 +1379,6 @@ class MatchingService {
     
     /**
      * 内部短语匹配
-     * v3.5: 直接模糊匹配（删除了 checkMatchingDict）
      */
     _matchPhraseInternal(phrase) {
         const { match, score } = this.findBestMatch(
@@ -1135,14 +1406,12 @@ class MatchingService {
 
     /**
      * 匹配句型
-     * v4.2: 调整匹配顺序，词库精确匹配优先于替换库模糊匹配
      */
     matchPattern(pattern) {
         this.checkCache();
         
         const normalizedPattern = pattern.toLowerCase().trim();
         
-        // ===== 第1步：替换库精确匹配 =====
         const exactRule = this.matchingDictService.findRule(pattern, 'pattern');
         if (exactRule) {
             if (!exactRule.target_text || exactRule.target_text.trim() === '') {
@@ -1151,7 +1420,6 @@ class MatchingService {
             return this._processAndApplyReplaceRule(exactRule, pattern, 'pattern', false);
         }
         
-        // ===== 第2步：词库精确匹配 =====
         for (const item of this.cache.patterns) {
             if (!item.pattern) continue;
             if (item.pattern.toLowerCase().trim() === normalizedPattern) {
@@ -1168,19 +1436,16 @@ class MatchingService {
             }
         }
         
-        // ===== 第3步：替换库模糊匹配 =====
         const fuzzyRule = this._findReplaceRuleFuzzyOnly(pattern, 'pattern');
         if (fuzzyRule) {
             return this._processAndApplyReplaceRule(fuzzyRule.rule, pattern, 'pattern', true, fuzzyRule.score);
         }
         
-        // ===== 第4步：词库模糊匹配 =====
         return this._matchPatternInternal(pattern);
     }
     
     /**
      * 内部句型匹配
-     * v3.5: 直接模糊匹配（删除了 checkMatchingDict）
      */
     _matchPatternInternal(pattern) {
         const { match, score } = this.findBestMatch(
@@ -1208,27 +1473,36 @@ class MatchingService {
 
     /**
      * 匹配语法
-     * v4.2: 调整匹配顺序，语法库精确匹配优先于替换库模糊匹配
+     * v4.3.0: 添加详细的匹配日志
      */
     matchGrammar(grammarText) {
         this.checkCache();
         
         const normalizedGrammar = grammarText.toLowerCase().trim();
         
+        this.verboseOutput(`\n${'─'.repeat(60)}`, 'info');
+        this.verboseOutput(`开始匹配语法: "${grammarText}"`, 'info');
+        this.verboseOutput(`${'─'.repeat(60)}`, 'info');
+        
         // ===== 第1步：替换库精确匹配 =====
+        this.verboseOutput(`[步骤1] 检查替换库精确匹配...`, 'debug');
         const exactRule = this.matchingDictService.findRule(grammarText, 'grammar');
         if (exactRule) {
             if (!exactRule.target_text || exactRule.target_text.trim() === '') {
+                this.verboseOutput(`  → 命中排除规则: "${grammarText}"`, 'warn');
                 return { excluded: true, reason: exactRule.notes || '已标记为排除' };
             }
+            this.verboseOutput(`  → 命中替换规则: "${grammarText}" → "${exactRule.target_text}"`, 'success');
             return this._processAndApplyReplaceRule(exactRule, grammarText, 'grammar', false);
         }
+        this.verboseOutput(`  → 未找到精确匹配`, 'debug');
         
         // ===== 第2步：语法库精确匹配 =====
+        this.verboseOutput(`[步骤2] 检查语法库精确匹配...`, 'debug');
         for (const item of this.cache.grammar) {
             if (!item.title) continue;
             if (item.title.toLowerCase().trim() === normalizedGrammar) {
-                console.log(`[matchGrammar] 语法库精确匹配: "${grammarText}" === "${item.title}" → 100%`);
+                this.verboseOutput(`  → 语法库精确匹配: "${grammarText}" === "${item.title}"`, 'success');
                 return {
                     matched: true,
                     score: 1.0,
@@ -1240,30 +1514,35 @@ class MatchingService {
                 };
             }
         }
+        this.verboseOutput(`  → 未找到精确匹配`, 'debug');
         
         // ===== 第3步：替换库模糊匹配 =====
+        this.verboseOutput(`[步骤3] 检查替换库模糊匹配 (≥85%)...`, 'debug');
         const fuzzyRule = this._findReplaceRuleFuzzyOnly(grammarText, 'grammar');
         if (fuzzyRule) {
+            this.verboseOutput(`  → 替换库模糊匹配: "${grammarText}" ≈ "${fuzzyRule.rule.original_text}" (${(fuzzyRule.score * 100).toFixed(1)}%)`, 'success');
             return this._processAndApplyReplaceRule(fuzzyRule.rule, grammarText, 'grammar', true, fuzzyRule.score);
         }
+        this.verboseOutput(`  → 未找到模糊匹配`, 'debug');
         
-        // ===== 第4步：语法库模糊匹配（包括关键词匹配）=====
+        // ===== 第4步：语法库模糊匹配 =====
+        this.verboseOutput(`[步骤4] 检查语法库模糊匹配 (≥85%)...`, 'debug');
         return this._matchGrammarInternal(grammarText);
     }
     
     /**
      * 内部语法匹配
-     * v4.2.1: 去掉关键词匹配，统一逻辑：<85% 就 AI 生成
-     * 匹配优先级：
-     * 1. 精确匹配（标准化后完全相同）→ 100%
-     * 2. 相似度 ≥85% → 匹配成功
-     * 3. <85% → 未匹配，AI 生成
+     * v4.3.0: 使用新的中文相似度计算，添加详细日志
      */
     _matchGrammarInternal(grammarText) {
         let bestMatch = null;
         let bestScore = 0;
+        let bestReason = '';
+        const candidates = [];
         
         const normalizedInput = grammarText.toLowerCase().trim();
+        
+        this.verboseOutput(`  正在与 ${this.cache.grammar.length} 条语法规则比较...`, 'debug');
         
         for (const item of this.cache.grammar) {
             const target = item.title;
@@ -1271,8 +1550,9 @@ class MatchingService {
             
             const normalizedTarget = target.toLowerCase().trim();
             
-            // 先检查精确匹配（标准化后完全相同 = 100%）
+            // 先检查精确匹配
             if (normalizedInput === normalizedTarget) {
+                this.verboseOutput(`  → 发现精确匹配: "${target}"`, 'success');
                 return {
                     matched: true,
                     score: 1.0,
@@ -1284,19 +1564,44 @@ class MatchingService {
                 };
             }
             
-            // 计算相似度
-            const score = this.calculateSimilarity(grammarText, target, { isGrammarMatch: true });
+            // v4.3.0: 使用新的中文相似度计算
+            const result = this.calculateChineseSimilarity(grammarText, target);
+            const score = result.score;
+            
+            // 收集候选（用于报告）
+            if (score >= 0.5) {
+                candidates.push({
+                    text: target,
+                    score: score,
+                    reason: result.reason,
+                    id: item.id
+                });
+            }
             
             if (score > bestScore) {
                 bestScore = score;
                 bestMatch = item;
+                bestReason = result.reason;
             }
         }
         
-        const threshold = this.thresholds.grammar;  // 0.85
+        // 排序候选
+        candidates.sort((a, b) => b.score - a.score);
+        
+        const threshold = this.thresholds.grammar;
+        
+        // 输出匹配报告
+        this.printMatchReport(
+            grammarText, 
+            candidates, 
+            bestMatch ? bestMatch.title : null, 
+            bestScore, 
+            threshold
+        );
         
         // 相似度 ≥85% 才算匹配成功
         if (bestScore >= threshold && bestMatch) {
+            this.verboseOutput(`✅ 语法模糊匹配成功: "${grammarText}" → "${bestMatch.title}" (${(bestScore * 100).toFixed(1)}%, ${bestReason})`, 'match');
             return {
                 matched: true,
                 score: bestScore,
@@ -1304,18 +1609,18 @@ class MatchingService {
                 source_table: 'grammar',
                 source_id: bestMatch.id,
                 matched_text: bestMatch.title,
-                matched_data: bestMatch
+                matched_data: bestMatch,
+                matchReason: bestReason
             };
         }
         
         // <85% 未匹配，交给 AI 生成
+        this.verboseOutput(`❌ 语法匹配失败: "${grammarText}" 最佳候选 ${bestMatch ? `"${bestMatch.title}"` : '无'} 只有 ${(bestScore * 100).toFixed(1)}%，将由 AI 生成`, 'warn');
         return { matched: false, score: bestScore };
     }
     
     /**
      * v4.0: 从文本中提取语法关键词
-     * @param {string} text - 输入文本
-     * @returns {Array} 匹配到的关键词列表
      */
     _extractGrammarKeywords(text) {
         if (!text) return [];
@@ -1331,14 +1636,13 @@ class MatchingService {
 
     /**
      * 批量匹配
-     * v4.0: 支持多词条替换（replaced_multi）
      */
     batchMatch(extractedData) {
         const result = {
             matched: [],
             unmatched: [],
             excluded: [],
-            replaced: []  // v3.1: 记录被替换的项
+            replaced: []
         };
 
         // 匹配单词
@@ -1355,7 +1659,6 @@ class MatchingService {
                     continue;
                 }
                 
-                // v4.0: 处理多词条替换
                 if (matchResult.replaced_multi) {
                     console.log(`[batchMatch] 多词条替换: "${word}" → ${matchResult.items.length} 个词条`);
                     result.replaced.push({
@@ -1364,14 +1667,12 @@ class MatchingService {
                         replace_items: matchResult.items
                     });
                     
-                    // 把每个词条加入匹配结果
                     for (const item of matchResult.items) {
                         this._addMultiReplaceItem(result, item, word);
                     }
                     continue;
                 }
                 
-                // v3.1: 记录单个替换
                 if (matchResult.replaced) {
                     result.replaced.push({
                         item_type: 'word',
@@ -1410,7 +1711,6 @@ class MatchingService {
                     continue;
                 }
                 
-                // v4.0: 处理多词条替换
                 if (matchResult.replaced_multi) {
                     console.log(`[batchMatch] 多词条替换: "${phrase}" → ${matchResult.items.length} 个词条`);
                     result.replaced.push({
@@ -1419,7 +1719,6 @@ class MatchingService {
                         replace_items: matchResult.items
                     });
                     
-                    // 把每个词条加入匹配结果
                     for (const item of matchResult.items) {
                         this._addMultiReplaceItem(result, item, phrase);
                     }
@@ -1464,7 +1763,6 @@ class MatchingService {
                     continue;
                 }
                 
-                // v4.0: 处理多词条替换
                 if (matchResult.replaced_multi) {
                     console.log(`[batchMatch] 多词条替换: "${pattern}" → ${matchResult.items.length} 个词条`);
                     result.replaced.push({
@@ -1505,6 +1803,10 @@ class MatchingService {
 
         // 匹配语法
         if (extractedData.grammar && Array.isArray(extractedData.grammar)) {
+            console.log('\n' + '═'.repeat(80));
+            console.log('📚 开始语法匹配流程');
+            console.log('═'.repeat(80));
+            
             for (const grammar of extractedData.grammar) {
                 const matchResult = this.matchGrammar(grammar);
                 
@@ -1517,7 +1819,6 @@ class MatchingService {
                     continue;
                 }
                 
-                // v4.0: 处理多词条替换
                 if (matchResult.replaced_multi) {
                     console.log(`[batchMatch] 多词条替换: "${grammar}" → ${matchResult.items.length} 个词条`);
                     result.replaced.push({
@@ -1554,9 +1855,12 @@ class MatchingService {
                     });
                 }
             }
+            
+            console.log('═'.repeat(80));
+            console.log('📚 语法匹配流程结束');
+            console.log('═'.repeat(80) + '\n');
         }
 
-        // v3.1: 日志输出
         if (result.excluded.length > 0) {
             console.log(`[MatchingService] 已排除 ${result.excluded.length} 个项目`);
         }
@@ -1569,16 +1873,11 @@ class MatchingService {
     
     /**
      * v4.0: 处理多词条替换中的单个词条
-     * 根据词条的 id 和 type，从词库获取完整数据并加入匹配结果
-     * @param {Object} result - batchMatch 的结果对象
-     * @param {Object} item - 替换词条 { text, type, id, source, meaning, example }
-     * @param {string} originalText - 原始文本（用于记录来源）
      */
     _addMultiReplaceItem(result, item, originalText) {
         const itemType = item.type || 'word';
         const text = item.text;
         
-        // 如果有 id，从词库获取完整数据
         if (item.id) {
             let vocabData = null;
             let sourceTable = '';
@@ -1602,14 +1901,14 @@ class MatchingService {
                     item_type: itemType,
                     original_text: text,
                     matched: true,
-                    score: 1.0,  // 用户选的，强制 100% 匹配
+                    score: 1.0,
                     source_db: itemType === 'grammar' ? 'grammar' : 'vocabulary',
                     source_table: sourceTable,
                     source_id: item.id,
                     matched_text: vocabData.word || vocabData.phrase || vocabData.pattern || vocabData.title || text,
                     matched_data: vocabData,
                     fromReplaceDict: true,
-                    fromMultiReplace: true,  // 标记来自多词条替换
+                    fromMultiReplace: true,
                     multiReplaceOriginal: originalText
                 });
                 console.log(`[_addMultiReplaceItem] 已加入(ID ${item.id}): ${text} (${itemType})`);
@@ -1617,7 +1916,6 @@ class MatchingService {
             }
         }
         
-        // 没有 id 或找不到数据，尝试用文本匹配
         let matchResult = null;
         if (itemType === 'word') {
             matchResult = this._matchWordInternal(text);
@@ -1630,7 +1928,7 @@ class MatchingService {
         }
         
         if (matchResult && matchResult.matched) {
-            matchResult.score = 1.0;  // 用户选的，强制 100%
+            matchResult.score = 1.0;
             matchResult.fromReplaceDict = true;
             matchResult.fromMultiReplace = true;
             matchResult.multiReplaceOriginal = originalText;
@@ -1642,7 +1940,6 @@ class MatchingService {
             });
             console.log(`[_addMultiReplaceItem] 已加入(匹配): ${text} (${itemType})`);
         } else {
-            // 用用户提供的信息构建数据
             const userData = {
                 id: null,
                 [itemType === 'grammar' ? 'title' : itemType]: text,
@@ -1694,6 +1991,14 @@ class MatchingService {
     setDebug(enabled) {
         this.debug = enabled;
         console.log(`[MatchingService] 调试模式: ${enabled ? '开启' : '关闭'}`);
+    }
+    
+    /**
+     * v4.3.0: 开启/关闭详细日志
+     */
+    setVerboseLog(enabled) {
+        this.verboseLog = enabled;
+        console.log(`[MatchingService] 详细日志: ${enabled ? '开启' : '关闭'}`);
     }
 
     /**
