@@ -173,10 +173,11 @@
         
         <div class="header">
             <h1>🔄 替换库管理</h1>
-            <p>管理识别错误的替换规则，自动将错误文本替换为正确文本</p>
+            <p>管理替换规则和排除规则（目标为空=排除）</p>
             <div class="stats-bar">
                 <div class="stat-item"><strong id="statTotal">0</strong> 总规则数</div>
                 <div class="stat-item"><strong id="statReplace">0</strong> 替换规则</div>
+                <div class="stat-item"><strong id="statExclude">0</strong> 排除规则</div>
                 <div class="stat-item"><strong id="statUseCount">0</strong> 累计使用</div>
             </div>
         </div>
@@ -385,6 +386,7 @@
                 if (data.success) {
                     document.getElementById('statTotal').textContent = data.data.total || 0;
                     document.getElementById('statReplace').textContent = data.data.replace || 0;
+                    document.getElementById('statExclude').textContent = data.data.exclude || 0;
                     document.getElementById('statUseCount').textContent = data.data.totalUseCount || 0;
                 }
             } catch (e) { console.error(e); }
@@ -498,12 +500,19 @@
                 const time = r.created_at ? new Date(r.created_at).toLocaleString('zh-CN', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
                 const useCount = r.use_count || 0;
                 
+                // v3.0: 区分显示替换和排除
+                const isExclude = !r.target_text || r.target_text.trim() === '';
+                const targetDisplay = isExclude 
+                    ? '<span style="color: #dc2626; font-weight: 500;">🚫 排除（跳过）</span>'
+                    : escapeHtml(r.target_text);
+                const rowStyle = isExclude ? 'background: #fef2f2;' : '';
+                
                 return `
-                <tr>
+                <tr style="${rowStyle}">
                     <td>${r.id}</td>
                     <td>${escapeHtml(r.original_text)}</td>
                     <td><span class="type-badge ${typeClass}">${typeLabel}</span></td>
-                    <td>${escapeHtml(r.target_text || '-')}</td>
+                    <td>${targetDisplay}</td>
                     <td>${useCount}</td>
                     <td>${time}</td>
                     <td>
@@ -564,8 +573,9 @@
             const target = document.getElementById('editTarget').value.trim();
             const notes = document.getElementById('editNotes').value.trim();
 
-            if (!original || !target) {
-                showToast('原始文本和替换文本必填', 'error');
+            // v3.0: 原始文本必填，目标可以为空（空=排除规则）
+            if (!original) {
+                showToast('原始文本必填', 'error');
                 return;
             }
 

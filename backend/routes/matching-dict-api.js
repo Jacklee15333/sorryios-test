@@ -1,6 +1,11 @@
 /**
- * 替换库 API 路由 v2.0
+ * 替换库 API 路由 v3.0
  * 文件位置: backend/routes/matching-dict-api.js
+ * 
+ * 📦 v3.0 更新：
+ * - 合并：排除库功能（不再使用 exclude-api.js）
+ * - 新增：/api/matching-dict/exclude 接口（添加排除规则）
+ * - 逻辑：target_text 为空 = 排除
  * 
  * 📦 v2.0 更新：
  * - 改名：匹配词典 → 替换库
@@ -271,6 +276,86 @@ router.get('/find', (req, res) => {
         });
     } catch (error) {
         console.error('[替换库 API] 查找规则失败:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// v3.0 新增：排除规则接口
+// ============================================
+
+/**
+ * POST /api/matching-dict/exclude
+ * 添加排除规则（target_text 为空）
+ * 前端"排除"按钮调用此接口
+ */
+router.post('/exclude', (req, res) => {
+    try {
+        const {
+            original_text,
+            original_type,
+            notes,
+            created_by = 'admin'
+        } = req.body;
+
+        // 验证必填字段
+        if (!original_text || !original_type) {
+            return res.status(400).json({
+                success: false,
+                error: '请提供 original_text 和 original_type'
+            });
+        }
+
+        // 添加排除规则（target_text 为空）
+        const result = dictService.addRule({
+            original_text,
+            original_type,
+            action: 'exclude',
+            target_text: '',  // 排除规则的 target_text 为空
+            notes: notes || '已标记为排除',
+            created_by
+        });
+
+        if (result.success) {
+            console.log(`[替换库 API] 添加排除: "${original_text}" (${original_type})`);
+            res.json({
+                success: true,
+                message: '已添加到排除规则',
+                id: result.id,
+                updated: result.updated
+            });
+        } else {
+            res.status(400).json({ success: false, error: result.error });
+        }
+    } catch (error) {
+        console.error('[替换库 API] 添加排除失败:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/matching-dict/check-exclude
+ * 检查是否被排除
+ */
+router.get('/check-exclude', (req, res) => {
+    try {
+        const { text, type } = req.query;
+
+        if (!text || !type) {
+            return res.status(400).json({
+                success: false,
+                error: '请提供 text 和 type'
+            });
+        }
+
+        const isExcluded = dictService.isExcluded(text, type);
+
+        res.json({
+            success: true,
+            excluded: isExcluded
+        });
+    } catch (error) {
+        console.error('[替换库 API] 检查排除失败:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

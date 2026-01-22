@@ -532,14 +532,14 @@
                     <div class="sub">处理的文件数</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">待审核匹配</div>
+                    <div class="label">模糊匹配</div>
                     <div class="value" id="statPendingMatches">0</div>
-                    <div class="sub">85-99% 模糊匹配</div>
+                    <div class="sub">85-99% 待审核</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">待完善入库</div>
+                    <div class="label">AI 生成</div>
                     <div class="value" id="statPendingUnmatched">0</div>
-                    <div class="sub">AI 生成待审核</div>
+                    <div class="sub">待完善入库</div>
                 </div>
                 <div class="stat-card">
                     <div class="label">今日入库</div>
@@ -552,11 +552,11 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('tasks')">📝 处理任务</button>
             <button class="tab-btn" onclick="switchTab('pending-matches')">
-                🟡 待审核匹配
+                🟡 模糊匹配
                 <span class="badge" id="badgePendingMatches" style="display:none;">0</span>
             </button>
             <button class="tab-btn" onclick="switchTab('pending-unmatched')">
-                ❌ 待完善入库
+                ❌ AI 生成
                 <span class="badge" id="badgePendingUnmatched" style="display:none;">0</span>
             </button>
         </div>
@@ -579,7 +579,7 @@
         <div class="tab-content" id="tab-pending-matches">
             <div class="list-container">
                 <div class="toolbar">
-                    <span class="title">待审核的模糊匹配 (85-99%)</span>
+                    <span class="title">模糊匹配 (85-99%)</span>
                     <span class="spacer"></span>
                     <button class="btn btn-success" onclick="confirmAllMatches()">✓ 全部确认</button>
                     <button class="btn btn-secondary" onclick="loadPendingMatches()">🔄 刷新</button>
@@ -594,7 +594,7 @@
         <div class="tab-content" id="tab-pending-unmatched">
             <div class="list-container">
                 <div class="toolbar">
-                    <span class="title">待完善入库 (AI 生成数据)</span>
+                    <span class="title">AI 生成数据</span>
                     <span class="spacer"></span>
                     <button class="btn btn-secondary" onclick="loadPendingUnmatched()">🔄 刷新</button>
                 </div>
@@ -681,15 +681,14 @@
                 </div>
             </div>
             <div class="modal-footer" style="justify-content: space-between; padding: 12px 16px;">
-                <!-- v6.2 简化按钮布局 -->
-                <div style="display: flex; gap: 6px;">
-                    <button class="btn btn-sm" id="excludeBtn" onclick="openExcludeModal()" style="padding: 6px 10px; font-size: 12px; color: #dc2626; border-color: #fecaca;">排除</button>
-                    <button class="btn btn-sm" id="matchBtn" onclick="openMatchModal()" style="padding: 6px 10px; font-size: 12px; color: #d97706; border-color: #fcd34d;">替换</button>
-                    <button class="btn btn-sm" id="toGrammarBtn" onclick="openToGrammarModal()" style="padding: 6px 10px; font-size: 12px; color: #7c3aed; border-color: #c4b5fd;">转语法</button>
+                <!-- v7.0 简化按钮布局：删除排除按钮 -->
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn" id="matchBtn" onclick="openMatchModal()" style="padding: 10px 20px; font-size: 14px; font-weight: 600; color: #d97706; border-color: #fcd34d; background: #fffbeb;">🔄 替换</button>
+                    <button class="btn" id="toGrammarBtn" onclick="openToGrammarModal()" style="padding: 10px 20px; font-size: 14px; font-weight: 600; color: #7c3aed; border-color: #c4b5fd; background: #f5f3ff;">📗 转语法</button>
                 </div>
-                <div style="display: flex; gap: 6px;">
-                    <button class="btn btn-sm" onclick="saveAndImport()" style="padding: 6px 12px; font-size: 12px; color: #059669; border-color: #a7f3d0;">保存</button>
-                    <button class="btn btn-secondary btn-sm" onclick="closeModal('editModal')" style="padding: 6px 12px; font-size: 12px;">取消</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" onclick="saveAndImport()" style="padding: 10px 20px; font-size: 14px; font-weight: 600; color: #059669; border-color: #a7f3d0; background: #ecfdf5;">💾 保存</button>
+                    <button class="btn btn-secondary" onclick="closeModal('editModal')" style="padding: 10px 16px; font-size: 14px;">取消</button>
                 </div>
             </div>
         </div>
@@ -793,10 +792,21 @@
                 <!-- 选择正确词条的区域（默认隐藏） -->
                 <div id="correctMatchSection" style="margin-top: 16px; padding: 12px; background: #f0fdf4; border-radius: 8px;">
                     <label style="display: block; font-size: 13px; color: #166534; margin-bottom: 8px; font-weight: 500;">请选择或输入正确的词条：</label>
-                    <input type="text" id="correctMatchSearch" placeholder="搜索词库..." style="width: 100%; padding: 10px; border: 1px solid #86efac; border-radius: 6px; margin-bottom: 8px;">
-                    <select id="correctMatchSelect" style="width: 100%; padding: 10px; border: 1px solid #86efac; border-radius: 6px;">
-                        <option value="">-- 请选择 --</option>
-                    </select>
+                    <div style="position: relative;">
+                        <input type="text" id="correctMatchSearch" placeholder="🔍 输入关键词搜索词库..." 
+                            style="width: 100%; padding: 12px 12px 12px 12px; border: 2px solid #86efac; border-radius: 8px; font-size: 14px; box-sizing: border-box;"
+                            oninput="searchVocabulary(this.value)">
+                        <div id="searchLoading" style="display: none; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #22c55e;">搜索中...</div>
+                    </div>
+                    <div id="searchResultsContainer" style="margin-top: 8px; max-height: 200px; overflow-y: auto; border: 1px solid #86efac; border-radius: 8px; display: none;">
+                        <!-- 搜索结果会动态填充到这里 -->
+                    </div>
+                    <input type="hidden" id="correctMatchSelect" value="">
+                    <div id="selectedMatch" style="margin-top: 8px; padding: 10px; background: #dcfce7; border-radius: 6px; display: none;">
+                        <span style="color: #166534; font-weight: 500;">✓ 已选择：</span>
+                        <span id="selectedMatchText" style="color: #15803d;"></span>
+                        <button onclick="clearSelectedMatch()" style="float: right; background: none; border: none; color: #dc2626; cursor: pointer; font-size: 12px;">✕ 清除</button>
+                    </div>
                 </div>
                 
                 <!-- v5.5 新增：新建词条的输入区域（默认隐藏） -->
@@ -933,13 +943,29 @@
 
                 <!-- 短语组合区 -->
                 <div style="margin-bottom: 16px;">
-                    <div style="font-size: 13px; color: #7c3aed; margin-bottom: 8px; font-weight: 600;">🔗 短语组合区（拖入单词，点击生成）</div>
+                    <div style="font-size: 13px; color: #7c3aed; margin-bottom: 8px; font-weight: 600;">🔗 短语组合区（拖入单词或直接输入）</div>
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <div id="matchPhraseBuilder" style="flex: 1; display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; padding: 10px; background: #faf5ff; border: 2px dashed #c4b5fd; border-radius: 8px;"
+                        <div id="matchPhraseBuilder" style="flex: 1; display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; padding: 10px; background: #faf5ff; border: 2px dashed #c4b5fd; border-radius: 8px; position: relative;"
                              ondrop="dropToBuilder(event)" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)">
-                            <span style="color: #a78bfa; font-size: 13px;" id="builderPlaceholder">拖入单词...</span>
+                            <input type="text" id="builderInput" placeholder="拖入单词或直接输入..." 
+                                   style="flex: 1; min-width: 150px; border: none; background: transparent; outline: none; font-size: 14px; color: #5b21b6;"
+                                   onkeydown="if(event.key==='Enter'){buildPhrase(); event.preventDefault();}">
                         </div>
                         <button class="btn btn-sm" onclick="buildPhrase()" style="background: #7c3aed; color: white; padding: 8px 12px; white-space: nowrap;">生成短语</button>
+                    </div>
+                </div>
+
+                <!-- v6.4 新增：词库搜索区 -->
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 13px; color: #0891b2; margin-bottom: 8px; font-weight: 600;">🔍 搜索词库（可选，帮助精准匹配）</div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="vocabSearchInput" placeholder="输入关键词搜索词库中的短语/单词..." 
+                               style="flex: 1; padding: 10px; border: 1px solid #67e8f9; border-radius: 6px;"
+                               onkeydown="if(event.key==='Enter'){searchVocabForMatch(); event.preventDefault();}">
+                        <button class="btn btn-sm" onclick="searchVocabForMatch()" style="background: #0891b2; color: white; padding: 8px 12px; white-space: nowrap;">🔍 搜索</button>
+                    </div>
+                    <!-- 搜索结果 -->
+                    <div id="vocabSearchResults" style="display: none; margin-top: 8px; max-height: 200px; overflow-y: auto; border: 1px solid #e5e5e5; border-radius: 8px;">
                     </div>
                 </div>
 
@@ -959,12 +985,36 @@
                 <div id="matchFilteredWords" style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;"></div>
 
                 <div style="background: #f3f4f6; padding: 10px 12px; border-radius: 8px; font-size: 12px; color: #6b7280;">
-                    💡 操作：点击单词直接选中 | 拖动单词到组合区生成短语 | 点击已选择项移除
+                    💡 操作：点击单词直接选中 | 拖动单词到组合区或直接输入文本生成短语 | 搜索词库找到精确匹配 | 点击已选择项移除
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('matchModal')">取消</button>
                 <button class="btn" onclick="executeMatchNew()" style="background: #f59e0b; color: white;">确认替换</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- v7.0: 批量填写词条信息弹窗 -->
+    <div class="modal" id="batchFillModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                <h2 style="color: #92400e;">📝 填写词条信息</h2>
+                <button class="modal-close" onclick="closeModal('batchFillModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <div style="background: #fffbeb; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-size: 12px; color: #92400e; margin-bottom: 4px;">以下词条需要填写信息后才能入库</div>
+                    <div style="font-size: 11px; color: #b45309;">填写完成后，词条会自动添加到词库，下次可以直接匹配</div>
+                </div>
+                
+                <div id="batchFillItems">
+                    <!-- 动态生成的词条填写表单 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('batchFillModal')">取消</button>
+                <button class="btn" onclick="submitBatchFill()" style="background: #f59e0b; color: white;">✓ 确认保存</button>
             </div>
         </div>
     </div>
@@ -1474,35 +1524,97 @@
             });
         }
         
-        // 加载词库选项
+        // v7.0: 当前搜索类型（用于搜索时知道要搜哪个库）
+        let currentSearchType = 'phrase';
+        let searchTimeout = null;
+        
+        // 加载词库选项（初始化时调用，设置搜索类型）
         async function loadVocabularyOptions(type) {
-            const select = document.getElementById('correctMatchSelect');
-            select.innerHTML = '<option value="">加载中...</option>';
+            currentSearchType = type;
+            // 清空搜索框和结果
+            document.getElementById('correctMatchSearch').value = '';
+            document.getElementById('correctMatchSelect').value = '';
+            document.getElementById('searchResultsContainer').style.display = 'none';
+            document.getElementById('searchResultsContainer').innerHTML = '';
+            document.getElementById('selectedMatch').style.display = 'none';
             
-            try {
-                let url = '';
-                if (type === 'grammar') {
-                    url = '/api/grammar';
-                } else {
-                    url = `/api/vocabulary/${type}s`;  // words, phrases, patterns
-                }
-                
-                const res = await fetch(url);
-                const data = await res.json();
-                
-                if (data.success && data.data) {
-                    const items = data.data.slice(0, 200);  // 限制数量
-                    select.innerHTML = '<option value="">-- 请选择 --</option>' +
-                        items.map(item => {
-                            const text = item.word || item.phrase || item.pattern || item.title;
-                            const db = type === 'grammar' ? 'grammar' : 'vocabulary';
-                            const table = type === 'grammar' ? 'grammar' : (type + 's');
-                            return `<option value="${item.id}|${db}|${table}|${text}">${text}</option>`;
-                        }).join('');
-                }
-            } catch (e) {
-                select.innerHTML = '<option value="">加载失败</option>';
+            // 设置搜索框占位符
+            const typeLabel = {word: '单词', phrase: '短语', pattern: '句型', grammar: '语法'}[type] || type;
+            document.getElementById('correctMatchSearch').placeholder = `🔍 输入关键词搜索${typeLabel}库...`;
+        }
+        
+        // v7.0: 搜索词库
+        async function searchVocabulary(keyword) {
+            // 防抖
+            if (searchTimeout) clearTimeout(searchTimeout);
+            
+            const container = document.getElementById('searchResultsContainer');
+            const loading = document.getElementById('searchLoading');
+            
+            if (!keyword || keyword.trim().length < 1) {
+                container.style.display = 'none';
+                return;
             }
+            
+            searchTimeout = setTimeout(async () => {
+                loading.style.display = 'block';
+                
+                try {
+                    let url = '';
+                    if (currentSearchType === 'grammar') {
+                        url = `/api/grammar?search=${encodeURIComponent(keyword)}&limit=50`;
+                    } else {
+                        url = `/api/vocabulary/${currentSearchType}s?search=${encodeURIComponent(keyword)}&limit=50`;
+                    }
+                    
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    loading.style.display = 'none';
+                    
+                    if (data.success && data.data && data.data.length > 0) {
+                        container.innerHTML = data.data.map(item => {
+                            const text = item.word || item.phrase || item.pattern || item.title;
+                            const meaning = item.meaning || item.definition || '';
+                            const db = currentSearchType === 'grammar' ? 'grammar' : 'vocabulary';
+                            const table = currentSearchType === 'grammar' ? 'grammar' : (currentSearchType + 's');
+                            const value = `${item.id}|${db}|${table}|${text}`;
+                            
+                            return `
+                                <div class="search-result-item" onclick="selectVocabularyItem('${value.replace(/'/g, "\\'")}', '${text.replace(/'/g, "\\'")}')" 
+                                    style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #e5e7eb; transition: background 0.2s;"
+                                    onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='white'">
+                                    <div style="font-weight: 500; color: #15803d;">${escapeHtml(text)}</div>
+                                    ${meaning ? `<div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${escapeHtml(meaning)}</div>` : ''}
+                                </div>
+                            `;
+                        }).join('');
+                        container.style.display = 'block';
+                    } else {
+                        container.innerHTML = '<div style="padding: 12px; color: #6b7280; text-align: center;">没有找到匹配的词条</div>';
+                        container.style.display = 'block';
+                    }
+                } catch (e) {
+                    loading.style.display = 'none';
+                    container.innerHTML = '<div style="padding: 12px; color: #dc2626; text-align: center;">搜索失败，请重试</div>';
+                    container.style.display = 'block';
+                }
+            }, 300);  // 300ms 防抖
+        }
+        
+        // v7.0: 选择词条
+        function selectVocabularyItem(value, text) {
+            document.getElementById('correctMatchSelect').value = value;
+            document.getElementById('selectedMatchText').textContent = text;
+            document.getElementById('selectedMatch').style.display = 'block';
+            document.getElementById('searchResultsContainer').style.display = 'none';
+            document.getElementById('correctMatchSearch').value = '';
+        }
+        
+        // v7.0: 清除选择
+        function clearSelectedMatch() {
+            document.getElementById('correctMatchSelect').value = '';
+            document.getElementById('selectedMatch').style.display = 'none';
         }
         
         // 执行标记错误操作
@@ -1807,7 +1919,7 @@
                 document.getElementById('editModal').classList.add('active');
                 
                 // v6.2: 排除按钮统一为"排除"
-                document.getElementById('excludeBtn').textContent = '排除';
+                // v7.0: excludeBtn 已删除
             } catch (e) {
                 showToast('加载失败', 'error');
             }
@@ -1922,7 +2034,7 @@
                         
                         // 恢复弹窗状态
                         document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑数据';
-                        document.getElementById('excludeBtn').style.display = 'block';
+                        // v7.0: excludeBtn 已删除
                         
                         // 如果在替换流程中，更新状态并继续
                         if (window._pendingReplaceItems && window._pendingReplaceIndex < window._pendingReplaceItems.length) {
@@ -1972,7 +2084,7 @@
                         
                         // 恢复弹窗标题和排除按钮
                         document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑数据';
-                        document.getElementById('excludeBtn').style.display = 'block';
+                        // v7.0: excludeBtn 已删除
                         
                         // v6.3: 检查是否在替换流程中
                         if (window._pendingReplaceItems && window._pendingReplaceIndex < window._pendingReplaceItems.length) {
@@ -2027,7 +2139,7 @@
                             closeModal('editModal', true);
                             
                             document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑数据';
-                            document.getElementById('excludeBtn').style.display = 'block';
+                            // v7.0: excludeBtn 已删除
                             
                             // 替换流程继续
                             if (window._pendingReplaceItems && window._pendingReplaceIndex < window._pendingReplaceItems.length) {
@@ -2263,7 +2375,7 @@
         
         /**
          * 执行排除操作（批量处理）
-         * v5.6: 改为调用新的排除库API /api/exclude
+         * v7.0: 改为调用替换库API /api/matching-dict/exclude（排除库已合并）
          * v6.1: 支持从模糊匹配触发（需要标记原匹配为错误）
          */
         async function executeExcludeFromEdit() {
@@ -2282,14 +2394,14 @@
             });
             
             try {
-                // 1. 添加到排除库（新API）
-                const excludeRes = await fetch('/api/exclude/items', {
+                // 1. 添加到替换库（排除规则，target_text 为空）
+                const excludeRes = await fetch('/api/matching-dict/exclude', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         original_text: originalText,
                         original_type: originalType,
-                        reason: `不是${getTypeLabel(originalType)}`,
+                        notes: `不是${getTypeLabel(originalType)}`,
                         created_by: 'admin'
                     })
                 });
@@ -2300,8 +2412,8 @@
                     return;
                 }
                 
-                console.log(`[排除] 已添加到排除库: ${originalText} (${originalType})`);
-                showToast(`已添加到：排除库管理 exclude.db`, 'success');
+                console.log(`[排除] 已添加到替换库(排除): ${originalText} (${originalType})`);
+                showToast(`已添加到：替换库(排除规则)`, 'success');
                 
                 // 2. 根据来源标记原记录
                 if (fromRejectMatch && rejectMatchId) {
@@ -2312,8 +2424,8 @@
                         body: JSON.stringify({ 
                             reviewedBy: 'admin', 
                             notes: checkedWords.length > 0 
-                                ? `已排除到exclude.db，待提取: ${checkedWords.join(', ')}` 
-                                : '已排除到exclude.db'
+                                ? `已排除，待提取: ${checkedWords.join(', ')}` 
+                                : '已排除'
                         })
                     });
                     // 清理状态
@@ -2326,8 +2438,8 @@
                         body: JSON.stringify({ 
                             reviewedBy: 'admin',
                             notes: checkedWords.length > 0 
-                                ? `已排除到exclude.db，待提取: ${checkedWords.join(', ')}` 
-                                : '已排除到exclude.db'
+                                ? `已排除，待提取: ${checkedWords.join(', ')}` 
+                                : '已排除'
                         })
                     });
                 }
@@ -2708,18 +2820,22 @@
         }
 
         /**
-         * 渲染组合区
+         * 渲染组合区 - v6.4 支持输入框
          */
         function renderBuilderArea() {
             const container = document.getElementById('matchPhraseBuilder');
-            const placeholder = document.getElementById('builderPlaceholder');
+            const input = document.getElementById('builderInput');
             
             if (window._matchBuilderWords.length === 0) {
-                container.innerHTML = '<span style="color: #a78bfa; font-size: 13px;" id="builderPlaceholder">拖入单词...</span>';
+                // 保留输入框
+                container.innerHTML = `<input type="text" id="builderInput" placeholder="拖入单词或直接输入..." 
+                    style="flex: 1; min-width: 150px; border: none; background: transparent; outline: none; font-size: 14px; color: #5b21b6;"
+                    onkeydown="if(event.key==='Enter'){buildPhrase(); event.preventDefault();}">`;
                 return;
             }
             
-            container.innerHTML = window._matchBuilderWords.map((word, idx) => `
+            // 显示已拖入的单词 + 输入框
+            let html = window._matchBuilderWords.map((word, idx) => `
                 <span onclick="removeFromBuilder(${idx})"
                       style="display: inline-block; padding: 5px 10px; background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 4px; cursor: pointer; font-weight: 500; color: #5b21b6;"
                       onmouseover="this.style.background='#fecaca'; this.style.borderColor='#f87171'"
@@ -2728,10 +2844,17 @@
                     ${escapeHtml(word.text)} ✕
                 </span>
             `).join('');
+            
+            // 末尾加上输入框
+            html += `<input type="text" id="builderInput" placeholder="继续输入..." 
+                style="flex: 1; min-width: 80px; border: none; background: transparent; outline: none; font-size: 14px; color: #5b21b6;"
+                onkeydown="if(event.key==='Enter'){buildPhrase(); event.preventDefault();}">`;
+            
+            container.innerHTML = html;
         }
 
         /**
-         * 渲染已选择项（支持点击编辑）
+         * 渲染已选择项（v7.0: 分类显示单词/短语/语法）
          */
         function renderSelectedItems() {
             const container = document.getElementById('matchSelectedItems');
@@ -2743,21 +2866,83 @@
                 return;
             }
             
-            container.innerHTML = window._matchSelectedItems.map((item, idx) => {
-                const bgColor = item.type === 'phrase' ? '#ede9fe' : '#dbeafe';
-                const borderColor = item.type === 'phrase' ? '#c4b5fd' : '#93c5fd';
-                const textColor = item.type === 'phrase' ? '#5b21b6' : '#1e40af';
-                
-                return `
-                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 6px; font-weight: 500; color: ${textColor};">
-                        <span onclick="editSelectedItem(${idx})" 
-                              style="cursor: pointer; border-bottom: 1px dashed ${textColor};"
-                              title="点击编辑">${escapeHtml(item.text)}</span>
-                        <span onclick="removeSelected(${idx})" 
-                              style="cursor: pointer; color: #ef4444; font-size: 14px; margin-left: 4px;"
-                              title="移除">✕</span>
-                    </span>
-                `}).join('');
+            // v7.0: 分类
+            const words = window._matchSelectedItems.filter(item => item.type === 'word');
+            const phrases = window._matchSelectedItems.filter(item => item.type === 'phrase');
+            const grammars = window._matchSelectedItems.filter(item => item.type === 'grammar');
+            
+            let html = '';
+            
+            // 单词区
+            if (words.length > 0) {
+                html += `<div style="width: 100%; margin-bottom: 8px;">
+                    <div style="font-size: 11px; color: #1e40af; margin-bottom: 4px; font-weight: 600;">📚 单词 (${words.length})</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                html += words.map((item, idx) => {
+                    const realIdx = window._matchSelectedItems.indexOf(item);
+                    const statusIcon = item.inVocab ? '✓' : '✎';
+                    const statusColor = item.inVocab ? '#22c55e' : '#f59e0b';
+                    return `
+                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: #dbeafe; border: 1px solid #93c5fd; border-radius: 6px; font-weight: 500; color: #1e40af; font-size: 13px;">
+                            <span style="color: ${statusColor}; font-size: 10px;">${statusIcon}</span>
+                            <span onclick="editSelectedItem(${realIdx})" 
+                                  style="cursor: pointer; border-bottom: 1px dashed #1e40af;"
+                                  title="点击编辑">${escapeHtml(item.text)}</span>
+                            <span onclick="removeSelected(${realIdx})" 
+                                  style="cursor: pointer; color: #ef4444; font-size: 12px; margin-left: 2px;"
+                                  title="移除">×</span>
+                        </span>`;
+                }).join('');
+                html += `</div></div>`;
+            }
+            
+            // 短语区
+            if (phrases.length > 0) {
+                html += `<div style="width: 100%; margin-bottom: 8px;">
+                    <div style="font-size: 11px; color: #5b21b6; margin-bottom: 4px; font-weight: 600;">📖 短语 (${phrases.length})</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                html += phrases.map((item, idx) => {
+                    const realIdx = window._matchSelectedItems.indexOf(item);
+                    const statusIcon = item.inVocab ? '✓' : '✎';
+                    const statusColor = item.inVocab ? '#22c55e' : '#f59e0b';
+                    return `
+                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 6px; font-weight: 500; color: #5b21b6; font-size: 13px;">
+                            <span style="color: ${statusColor}; font-size: 10px;">${statusIcon}</span>
+                            <span onclick="editSelectedItem(${realIdx})" 
+                                  style="cursor: pointer; border-bottom: 1px dashed #5b21b6;"
+                                  title="点击编辑">${escapeHtml(item.text)}</span>
+                            <span onclick="removeSelected(${realIdx})" 
+                                  style="cursor: pointer; color: #ef4444; font-size: 12px; margin-left: 2px;"
+                                  title="移除">×</span>
+                        </span>`;
+                }).join('');
+                html += `</div></div>`;
+            }
+            
+            // 语法区
+            if (grammars.length > 0) {
+                html += `<div style="width: 100%;">
+                    <div style="font-size: 11px; color: #059669; margin-bottom: 4px; font-weight: 600;">📗 语法 (${grammars.length})</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+                html += grammars.map((item, idx) => {
+                    const realIdx = window._matchSelectedItems.indexOf(item);
+                    const statusIcon = item.inVocab ? '✓' : '✎';
+                    const statusColor = item.inVocab ? '#22c55e' : '#f59e0b';
+                    return `
+                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: #d1fae5; border: 1px solid #86efac; border-radius: 6px; font-weight: 500; color: #059669; font-size: 13px;">
+                            <span style="color: ${statusColor}; font-size: 10px;">${statusIcon}</span>
+                            <span onclick="editSelectedItem(${realIdx})" 
+                                  style="cursor: pointer; border-bottom: 1px dashed #059669;"
+                                  title="点击编辑">${escapeHtml(item.text)}</span>
+                            <span onclick="removeSelected(${realIdx})" 
+                                  style="cursor: pointer; color: #ef4444; font-size: 12px; margin-left: 2px;"
+                                  title="移除">×</span>
+                        </span>`;
+                }).join('');
+                html += `</div></div>`;
+            }
+            
+            container.innerHTML = html;
             
             // 检查是否有未在词库的（需要重新检查，因为可能编辑过）
             checkSelectedItemsVocab();
@@ -2889,15 +3074,26 @@
         }
         
         /**
-         * 生成短语
+         * 生成短语 - v6.4 支持输入框输入
          */
         async function buildPhrase() {
-            if (window._matchBuilderWords.length < 2) {
-                showToast('请至少拖入2个单词', 'warning');
+            // 获取输入框内容
+            const inputEl = document.getElementById('builderInput');
+            const inputText = inputEl ? inputEl.value.trim() : '';
+            
+            // 组合：拖入的单词 + 输入框的内容
+            let phraseText = '';
+            if (window._matchBuilderWords.length > 0) {
+                phraseText = window._matchBuilderWords.map(w => w.text).join(' ');
+                if (inputText) {
+                    phraseText += ' ' + inputText;
+                }
+            } else if (inputText) {
+                phraseText = inputText;
+            } else {
+                showToast('请拖入单词或输入文本', 'warning');
                 return;
             }
-            
-            const phraseText = window._matchBuilderWords.map(w => w.text).join(' ');
             
             // 检查是否已选择
             if (window._matchSelectedItems.some(item => 
@@ -2917,12 +3113,121 @@
                 vocabInfo: searchRes.info
             });
             
-            // 清空组合区
+            // 清空组合区和输入框
             window._matchBuilderWords = [];
             renderBuilderArea();
             renderSelectedItems();
             
             showToast('已生成短语: ' + phraseText, 'success');
+        }
+        
+        /**
+         * v6.4 新增：搜索词库（模糊搜索）
+         */
+        async function searchVocabForMatch() {
+            const searchInput = document.getElementById('vocabSearchInput');
+            const keyword = searchInput.value.trim();
+            const resultsDiv = document.getElementById('vocabSearchResults');
+            
+            if (!keyword) {
+                showToast('请输入搜索关键词', 'warning');
+                return;
+            }
+            
+            try {
+                // 同时搜索单词和短语
+                const [wordsRes, phrasesRes, patternsRes] = await Promise.all([
+                    fetch(`/api/vocabulary/words?search=${encodeURIComponent(keyword)}&limit=20`).then(r => r.json()),
+                    fetch(`/api/vocabulary/phrases?search=${encodeURIComponent(keyword)}&limit=20`).then(r => r.json()),
+                    fetch(`/api/vocabulary/patterns?search=${encodeURIComponent(keyword)}&limit=10`).then(r => r.json())
+                ]);
+                
+                let html = '';
+                let totalCount = 0;
+                
+                // 显示单词结果
+                if (wordsRes.success && wordsRes.data && wordsRes.data.length > 0) {
+                    html += '<div style="padding: 8px 12px; background: #f0f9ff; font-size: 12px; color: #0369a1; font-weight: 600;">📝 单词 (' + wordsRes.data.length + ')</div>';
+                    wordsRes.data.forEach(item => {
+                        totalCount++;
+                        html += `
+                            <div onclick="selectSearchResult('${escapeJs(item.word)}', 'word', ${item.id}, '${escapeJs(item.meaning || '')}')"
+                                 style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #e5e5e5; display: flex; justify-content: space-between; align-items: center;"
+                                 onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                <span style="font-weight: 500;">${escapeHtml(item.word)}</span>
+                                <span style="font-size: 12px; color: #6b7280;">${escapeHtml(item.meaning || '').substring(0, 30)}</span>
+                            </div>`;
+                    });
+                }
+                
+                // 显示短语结果
+                if (phrasesRes.success && phrasesRes.data && phrasesRes.data.length > 0) {
+                    html += '<div style="padding: 8px 12px; background: #faf5ff; font-size: 12px; color: #7c3aed; font-weight: 600;">🔗 短语 (' + phrasesRes.data.length + ')</div>';
+                    phrasesRes.data.forEach(item => {
+                        totalCount++;
+                        html += `
+                            <div onclick="selectSearchResult('${escapeJs(item.phrase)}', 'phrase', ${item.id}, '${escapeJs(item.meaning || '')}')"
+                                 style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #e5e5e5; display: flex; justify-content: space-between; align-items: center;"
+                                 onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                <span style="font-weight: 500;">${escapeHtml(item.phrase)}</span>
+                                <span style="font-size: 12px; color: #6b7280;">${escapeHtml(item.meaning || '').substring(0, 30)}</span>
+                            </div>`;
+                    });
+                }
+                
+                // 显示句型结果
+                if (patternsRes.success && patternsRes.data && patternsRes.data.length > 0) {
+                    html += '<div style="padding: 8px 12px; background: #fef3c7; font-size: 12px; color: #92400e; font-weight: 600;">📐 句型 (' + patternsRes.data.length + ')</div>';
+                    patternsRes.data.forEach(item => {
+                        totalCount++;
+                        html += `
+                            <div onclick="selectSearchResult('${escapeJs(item.pattern)}', 'pattern', ${item.id}, '${escapeJs(item.meaning || '')}')"
+                                 style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #e5e5e5; display: flex; justify-content: space-between; align-items: center;"
+                                 onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                <span style="font-weight: 500;">${escapeHtml(item.pattern)}</span>
+                                <span style="font-size: 12px; color: #6b7280;">${escapeHtml(item.meaning || '').substring(0, 30)}</span>
+                            </div>`;
+                    });
+                }
+                
+                if (totalCount === 0) {
+                    html = '<div style="padding: 20px; text-align: center; color: #9ca3af;">未找到相关结果</div>';
+                }
+                
+                resultsDiv.innerHTML = html;
+                resultsDiv.style.display = 'block';
+                
+            } catch (e) {
+                console.error('搜索词库失败:', e);
+                showToast('搜索失败: ' + e.message, 'error');
+            }
+        }
+        
+        /**
+         * v6.4 新增：选择搜索结果
+         */
+        function selectSearchResult(text, type, id, meaning) {
+            // 检查是否已选择
+            if (window._matchSelectedItems.some(item => 
+                item.text.toLowerCase() === text.toLowerCase()
+            )) {
+                showToast('该项已选择', 'warning');
+                return;
+            }
+            
+            window._matchSelectedItems.push({
+                text: text,
+                type: type,
+                inVocab: true,
+                vocabInfo: { id: id, type: type, meaning: meaning }
+            });
+            
+            renderSelectedItems();
+            showToast('已选择: ' + text, 'success');
+            
+            // 隐藏搜索结果
+            document.getElementById('vocabSearchResults').style.display = 'none';
+            document.getElementById('vocabSearchInput').value = '';
         }
         
         /**
@@ -2935,7 +3240,7 @@
         }
 
         /**
-         * 执行替换操作 v6.3.3 - 先检查词库状态
+         * 执行替换操作 v7.0 - 使用批量填写弹窗
          */
         async function executeMatchNew() {
             const id = document.getElementById('matchItemId').value;
@@ -2966,47 +3271,195 @@
                     }
                 }
                 
-                // 2. 显示检查结果
-                let confirmMsg = `📋 检查结果：\n\n`;
+                // 更新显示
+                renderSelectedItems();
                 
-                if (existItems.length > 0) {
-                    confirmMsg += `✅ 词库已有（${existItems.length}项，直接关联）：\n`;
-                    confirmMsg += existItems.map(it => `   • ${it.text}`).join('\n');
-                    confirmMsg += '\n\n';
-                }
-                
+                // 2. 如果有需要新建的，打开批量填写弹窗
                 if (newItems.length > 0) {
-                    confirmMsg += `📝 需要新建（${newItems.length}项，需填写含义）：\n`;
-                    confirmMsg += newItems.map(it => `   • ${it.text}`).join('\n');
-                    confirmMsg += '\n\n';
-                }
-                
-                confirmMsg += '确定继续？';
-                
-                if (!confirm(confirmMsg)) {
-                    return;
-                }
-                
-                // 3. 如果有需要新建的，进入填写流程
-                if (newItems.length > 0) {
-                    window._pendingReplaceItems = newItems;
-                    window._pendingReplaceIndex = 0;
-                    window._replaceOriginalText = originalText;
-                    window._replaceItemType = itemType;
-                    window._replaceItemId = id;
-                    window._replaceSelected = [...window._matchSelectedItems];
+                    // 保存状态
+                    window._batchFillContext = {
+                        originalText,
+                        itemType,
+                        id,
+                        existItems,
+                        newItems,
+                        allItems: [...window._matchSelectedItems]
+                    };
                     
-                    closeModal('matchModal');
-                    processNextReplaceItem();
+                    openBatchFillModal(newItems);
                     return;
                 }
                 
-                // 4. 所有词条都在词库中，直接保存
-                await saveReplaceRule(originalText, itemType, id, window._matchSelectedItems);
+                // 3. 所有词条都在词库中，直接保存
+                await saveReplaceRuleV2(originalText, itemType, id, window._matchSelectedItems);
                 
             } catch (e) {
                 console.error('替换操作失败:', e);
                 showToast('操作失败: ' + e.message, 'error');
+            }
+        }
+        
+        /**
+         * v7.0: 打开批量填写弹窗
+         */
+        function openBatchFillModal(newItems) {
+            const container = document.getElementById('batchFillItems');
+            
+            container.innerHTML = newItems.map((item, idx) => {
+                const typeLabel = item.type === 'word' ? '单词' : (item.type === 'phrase' ? '短语' : '语法');
+                const typeColor = item.type === 'word' ? '#1e40af' : (item.type === 'phrase' ? '#5b21b6' : '#059669');
+                const typeBg = item.type === 'word' ? '#dbeafe' : (item.type === 'phrase' ? '#ede9fe' : '#d1fae5');
+                
+                return `
+                <div class="batch-fill-item" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 12px;" data-idx="${idx}">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="background: ${typeBg}; color: ${typeColor}; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">${typeLabel}</span>
+                        <span style="font-size: 16px; font-weight: 600; color: #1f2937;">${escapeHtml(item.text)}</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">中文含义 <span style="color: #ef4444;">*</span></label>
+                            <input type="text" class="batch-meaning" data-idx="${idx}" placeholder="输入中文含义..." 
+                                style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">例句（选填）</label>
+                            <input type="text" class="batch-example" data-idx="${idx}" placeholder="输入例句..." 
+                                style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        ${item.type === 'word' ? `
+                        <div>
+                            <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">音标（选填）</label>
+                            <input type="text" class="batch-phonetic" data-idx="${idx}" placeholder="如 /ˈæpl/" 
+                                style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">词性（选填）</label>
+                            <input type="text" class="batch-pos" data-idx="${idx}" placeholder="如 n. / v. / adj." 
+                                style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            document.getElementById('batchFillModal').classList.add('active');
+        }
+        
+        /**
+         * v7.0: 提交批量填写
+         */
+        async function submitBatchFill() {
+            const ctx = window._batchFillContext;
+            if (!ctx) {
+                showToast('状态丢失，请重试', 'error');
+                return;
+            }
+            
+            // 1. 收集填写的数据
+            const filledItems = [];
+            let hasError = false;
+            
+            ctx.newItems.forEach((item, idx) => {
+                const meaning = document.querySelector(`.batch-meaning[data-idx="${idx}"]`)?.value?.trim();
+                const example = document.querySelector(`.batch-example[data-idx="${idx}"]`)?.value?.trim();
+                const phonetic = document.querySelector(`.batch-phonetic[data-idx="${idx}"]`)?.value?.trim();
+                const pos = document.querySelector(`.batch-pos[data-idx="${idx}"]`)?.value?.trim();
+                
+                if (!meaning) {
+                    hasError = true;
+                    document.querySelector(`.batch-meaning[data-idx="${idx}"]`).style.borderColor = '#ef4444';
+                } else {
+                    document.querySelector(`.batch-meaning[data-idx="${idx}"]`).style.borderColor = '#d1d5db';
+                }
+                
+                filledItems.push({
+                    ...item,
+                    meaning,
+                    example,
+                    phonetic,
+                    pos
+                });
+            });
+            
+            if (hasError) {
+                showToast('请填写所有必填项（中文含义）', 'error');
+                return;
+            }
+            
+            try {
+                showToast('正在保存...', 'info');
+                
+                // 2. 把新词条入库到词库
+                for (const item of filledItems) {
+                    let url = '';
+                    let body = {};
+                    
+                    if (item.type === 'word') {
+                        url = '/api/vocabulary/words';
+                        body = {
+                            word: item.text,
+                            meaning: item.meaning,
+                            phonetic: item.phonetic || '',
+                            pos: item.pos || '',
+                            example: item.example || ''
+                        };
+                    } else if (item.type === 'phrase') {
+                        url = '/api/vocabulary/phrases';
+                        body = {
+                            phrase: item.text,
+                            meaning: item.meaning,
+                            example: item.example || ''
+                        };
+                    } else if (item.type === 'grammar') {
+                        url = '/api/grammar';
+                        body = {
+                            title: item.text,
+                            definition: item.meaning,
+                            example: item.example || ''
+                        };
+                    }
+                    
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        item.inVocab = true;
+                        item.newlyAdded = true;
+                        item.vocabInfo = {
+                            id: data.id,
+                            type: item.type,
+                            meaning: item.meaning
+                        };
+                        console.log(`[批量填写] 已入库: ${item.text} (${item.type})`);
+                    } else {
+                        console.error(`[批量填写] 入库失败: ${item.text}`, data.error);
+                        // 即使入库失败也继续，因为可能是重复
+                        item.inVocab = true;  // 标记为已处理
+                    }
+                }
+                
+                // 3. 更新 allItems 中对应的项
+                for (const filled of filledItems) {
+                    const found = ctx.allItems.find(it => it.text === filled.text && it.type === filled.type);
+                    if (found) {
+                        Object.assign(found, filled);
+                    }
+                }
+                
+                // 4. 保存替换规则
+                closeModal('batchFillModal');
+                await saveReplaceRuleV2(ctx.originalText, ctx.itemType, ctx.id, ctx.allItems);
+                
+            } catch (e) {
+                console.error('批量填写保存失败:', e);
+                showToast('保存失败: ' + e.message, 'error');
             }
         }
 
@@ -3044,18 +3497,26 @@
             
             document.querySelector('#editModal .modal-header h2').textContent = 
                 `✎ 填写含义 (${current}/${total})`;
-            document.getElementById('excludeBtn').style.display = 'none';
+            // v7.0: excludeBtn 已删除
             
             window._currentReplaceItem = item;
             document.getElementById('editModal').classList.add('active');
         }
 
         /**
-         * 保存替换规则到替换库
+         * 保存替换规则到替换库 v7.0 - 使用 JSON 格式
          */
-        async function saveReplaceRule(originalText, itemType, id, selected) {
+        async function saveReplaceRuleV2(originalText, itemType, id, selected) {
             try {
-                const targetText = selected.map(item => item.text).join('\n');
+                // v7.0: 构建 target_items JSON
+                const targetItems = selected.map(item => ({
+                    text: item.text,
+                    type: item.type,
+                    id: item.vocabInfo?.id || null,
+                    source: item.vocabInfo?.id ? 'vocabulary' : 'user_input',
+                    meaning: item.meaning || item.vocabInfo?.meaning || '',
+                    example: item.example || ''
+                }));
                 
                 // 1. 保存替换规则到 matching.db
                 const res = await fetch(MATCHING_DICT_API + '/rules', {
@@ -3065,7 +3526,7 @@
                         original_text: originalText,
                         original_type: itemType,
                         action: 'replace',
-                        target_text: targetText,
+                        target_text: JSON.stringify(targetItems),  // v7.0: JSON 格式
                         notes: `替换为 ${selected.length} 项: ${selected.map(s => s.text).join(', ')}`,
                         created_by: 'admin'
                     })
@@ -3116,12 +3577,14 @@
                 window._replaceItemId = null;
                 window._replaceSelected = null;
                 window._currentReplaceItem = null;
+                window._batchFillContext = null;
                 
                 closeModal('matchModal');
                 closeModal('editModal');
+                closeModal('batchFillModal');
                 
                 document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑数据';
-                document.getElementById('excludeBtn').style.display = 'block';
+                // v7.0: excludeBtn 已删除
                 
                 loadStats();
                 loadPendingUnmatched();
@@ -3130,6 +3593,11 @@
                 console.error('保存替换规则失败:', e);
                 showToast('保存失败: ' + e.message, 'error');
             }
+        }
+        
+        // 保留旧函数兼容性
+        async function saveReplaceRule(originalText, itemType, id, selected) {
+            return saveReplaceRuleV2(originalText, itemType, id, selected);
         }
 
         // 保留旧函数兼容性
@@ -3667,7 +4135,7 @@
             }
             
             // 隐藏排除按钮（新建模式不需要）
-            document.getElementById('excludeBtn').style.display = 'none';
+            // v7.0: excludeBtn 已删除
             
             // 显示弹窗
             document.getElementById('editModal').classList.add('active');
@@ -3727,7 +4195,7 @@
                 // 恢复弹窗标题
                 document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑数据';
                 // 恢复排除按钮
-                document.getElementById('excludeBtn').style.display = 'block';
+                // v7.0: excludeBtn 已删除
                 
                 // 如果是用户手动关闭（不是程序调用），且还有待处理的单词，询问是否继续
                 if (!skipCheck && window._pendingNewWords && window._pendingNewWordsIndex < window._pendingNewWords.length) {

@@ -1,5 +1,15 @@
 /**
- * AI 处理器服务 - 英语课堂专用版 v4.3.5
+ * AI 处理器服务 - 英语课堂专用版 v4.3.8
+ * 
+ * 【v4.3.8 更新】
+ * - 优化：添加正确性检查（Ms→Ms.等）
+ * - 优化：转换规则归类到语法（some→any等）
+ * 
+ * 【v4.3.7 更新】
+ * - 优化：进一步加强短语判断规则，排除更多伪短语
+ * 
+ * 【v4.3.6 更新】
+ * - 优化：短语判断规则 - 只提取真正的固定搭配，避免伪短语
  * 
  * 【v4.3.5 更新】
  * - 修复：排除库过滤 - 排除库中的项不再出现在"待完善入库"
@@ -17,7 +27,7 @@
  * - 每个阶段都推送详细执行信息
  * 
  * @author Sorryios AI Team
- * @version 4.3.5
+ * @version 4.3.8
  * @date 2026-01-20
  */
 
@@ -94,21 +104,108 @@ const CONFIG = {
 - 例如：turn off, go out, look for, put on 等
 - 如果是短语的一部分，提取完整短语，不要单独提取介词
 
-⚠️【短语必须模板化】
-- 短语必须使用通用模板，不能太具体！
-- ✅ 正确：protect sth., clean sth., speak sth.
-- ❌ 错误：protect the environment, clean the air, speak English（这些是例句，不是短语）
-- ❌ 错误：in summer, in the morning（太具体，不是固定搭配）
-- 模板规则：
-  - 具体名词 → sb./sth.
-  - 具体动词 → do/doing
-  - 具体地点/时间 → 不提取，除非是固定搭配
+⚠️⚠️⚠️【短语判断规则 - 非常重要】⚠️⚠️⚠️
 
-⚠️【语法分类规则】含以下术语的必须放grammar：
-主语、谓语、宾语、动词、名词、形容词、副词、第三人称单数、时态、语态、从句、不定式、动名词、分词、被动语态
+只有以下情况才算【真正的短语】，才放入 phrases：
+
+✅ 动词 + 固定介词/副词（介词/副词是固定搭配，换了就错）
+   look at, look after, look for, look up
+   give up, give in, give out
+   put on, put off, put up, turn on, turn off
+   get up, get on, get off, take off
+   speak up, stand up, wake up
+
+✅ 固定搭配（整体意义 ≠ 单词意义相加）
+   look forward to, be good at, be interested in
+   take care of, pay attention to, make sure
+   a lot of, a kind of, instead of
+
+✅ 特殊句型框架（有固定语法结构）
+   it takes sb. + 时间 + to do sth.
+   there be...
+   so...that..., such...that...
+   not only...but also...
+   either...or..., neither...nor...
+
+✅ 特殊词性用法（搭配不寻常）
+   look + adj.（看起来...，系动词用法）
+   the + adj.（表示一类人）
+   find it + adj. + to do
+
+❌❌❌ 以下【不是短语】，不要放入 phrases ❌❌❌
+
+❌ 及物动词 + sth./sb.（这只是动词的基本用法，不是短语！）
+   protect sth. ❌ → 只提取单词 protect
+   clean sth. ❌ → 只提取单词 clean
+   speak sth. ❌ → 只提取单词 speak
+   
+❌ 动词 + 普通名词宾语（宾语可以随便换）
+   plant trees ❌ → 只提取单词 plant
+   build houses ❌ → 只提取单词 build
+   share ideas ❌ → 只提取单词 share
+   read books ❌ → 只提取单词 read
+
+❌ 动词 + 宾语 + 介词短语（整个太长，不是固定搭配）
+   share ideas on a website ❌ → 只提取 share（动词）
+   build houses for people ❌ → 只提取 build（动词）
+
+❌ 介词 + 名词短语（不以动词开头的不是动词短语！）
+   for a successful experiment ❌ → 只提取 successful, experiment
+   from the article ❌ → 只提取 article
+   in science class ❌ → 不提取
+   in the morning ❌ → 不提取
+
+❌ 动词 + 介词 + 普通名词（介词后面可以换任何名词）
+   go to school ❌ → go to 不是固定短语
+   live in Beijing ❌ → live in 不是固定短语
+
+❌ 完整句子（句子不是短语！）
+   is this your book ❌ → 不提取
+   what do you think ❌ → 不提取
+
+❌ 不完整/不规范的片段（不是通用模板）
+   not rich families ❌ → 不是短语
+   the whole summer ❌ → 不是短语
+   very important ❌ → 只提取 important
+
+❌ 转换规则（应该放到 grammar）
+   some → any ❌ → 放grammar，不是短语
+   do → does ❌ → 放grammar，不是短语
+
+✅ 例外：介词考点（老师特别强调的介词用法）
+   on a website ✅ → 如果老师强调 on 的用法，可以提取
+   at night ✅ → 如果老师强调 at 的用法，可以提取
+
+【短语判断口诀】
+1. 必须以动词或be开头（for/from/in开头的不是动词短语）
+2. 介词/副词是固定的吗？能换吗？不能换→短语，能换→只是单词
+3. 整体意义 ≠ 各部分意义相加 → 才是短语
+4. 不是通用模板的不算短语（如 build houses, not rich families）
+
+⚠️【语法分类规则 - 非常重要】
+以下情况必须放入 grammar，不是短语！
+
+1. 含语法术语的（中文或英文）：
+   主语、谓语、宾语、动词、名词、形容词、副词、时态、语态、从句、不定式、动名词、分词、被动语态
+
+2. 转换规则/变化规则（A→B格式）：
+   some → any ✅ 放grammar（肯定句变否定句/疑问句的变化）
+   a/an → the ✅ 放grammar（冠词用法）
+   do → does ✅ 放grammar（第三人称单数变化）
+   
+3. 语法现象描述：
+   "肯定句中用some，否定句/疑问句中用any" → 放grammar
+   "可数名词复数加s/es" → 放grammar
+
+⚠️【正确性检查】
+提取的单词必须是正确完整的形式：
+   Ms ❌ → Ms. ✅（称呼要带点）
+   Mr ❌ → Mr. ✅
+   Dr ❌ → Dr. ✅
+   etc ❌ → etc. ✅
 
 【输出格式】：
-{"words":["environment"],"phrases":["look forward to doing sth."],"patterns":["so...that..."],"grammar":["现在完成时"]}
+{"words":["environment"],"phrases":["look forward to doing sth."],"patterns":["so...that..."],"grammar":["现在完成时","some和any的用法"]}
 
 【待分析内容】
 ---`,

@@ -1,6 +1,9 @@
 /**
- * 处理日志 API 路由 v5.2
+ * 处理日志 API 路由 v5.3
  * 文件位置: backend/routes/processing-log-api.js
+ * 
+ * 📦 v5.3 更新：
+ * - 修复：确认匹配后自动保存到替换库，下次直接100%匹配
  * 
  * 📦 v5.1 更新：
  * - 新增：清空所有数据接口 POST /clear-all
@@ -16,11 +19,13 @@ const router = express.Router();
 const { getProcessingLogService } = require('../services/processingLogService');
 const { getVocabularyService } = require('../services/vocabularyService');
 const { getGrammarService } = require('../services/grammarService');
+const { getMatchingDictService } = require('../services/matchingDictService');
 
 // 获取服务实例
 const logService = getProcessingLogService();
 const vocabularyService = getVocabularyService();
 const grammarService = getGrammarService();
+const matchingDictService = getMatchingDictService();
 
 // ============================================
 // 统计接口
@@ -149,15 +154,44 @@ router.get('/pending-matches', (req, res) => {
 /**
  * POST /api/processing-log/matches/:id/confirm
  * 确认匹配正确
+ * v5.3: 确认后自动保存到替换库
  */
 router.post('/matches/:id/confirm', (req, res) => {
     try {
         const { id } = req.params;
         const { reviewedBy } = req.body;
 
+        // v5.3: 先获取匹配记录详情
+        const matchedItem = logService.db.prepare('SELECT * FROM matched_items WHERE id = ?').get(parseInt(id));
+        
+        if (!matchedItem) {
+            return res.status(404).json({ success: false, error: '匹配记录不存在' });
+        }
+
+        // 确认匹配状态
         const result = logService.confirmMatch(parseInt(id), reviewedBy);
+        
         if (result.success) {
-            res.json({ success: true, message: '已确认' });
+            // v5.3: 同时保存到替换库，这样下次就100%匹配了
+            if (matchedItem.original_text && matchedItem.matched_text) {
+                const ruleResult = matchingDictService.addRule({
+                    original_text: matchedItem.original_text,
+                    original_type: matchedItem.item_type || 'phrase',
+                    action: 'replace',
+                    target_text: matchedItem.matched_text,
+                    target_db: matchedItem.matched_db,
+                    target_table: matchedItem.matched_table,
+                    target_id: matchedItem.matched_id,
+                    notes: `确认匹配: ${matchedItem.original_text} → ${matchedItem.matched_text}`,
+                    created_by: reviewedBy || 'admin'
+                });
+                
+                if (ruleResult.success) {
+                    console.log(`[ProcessingLog API] v5.3 已保存替换规则: "${matchedItem.original_text}" → "${matchedItem.matched_text}"`);
+                }
+            }
+            
+            res.json({ success: true, message: '已确认，替换规则已保存' });
         } else {
             res.status(400).json({ success: false, error: '确认失败' });
         }
@@ -191,6 +225,7 @@ router.post('/matches/:id/reject', (req, res) => {
 /**
  * POST /api/processing-log/matches/confirm-all
  * 批量确认任务的所有待审核匹配
+ * v5.3: 批量确认后也保存到替换库
  */
 router.post('/matches/confirm-all', (req, res) => {
     try {
@@ -199,11 +234,41 @@ router.post('/matches/confirm-all', (req, res) => {
             return res.status(400).json({ success: false, error: '请提供任务ID' });
         }
 
+        // v5.3: 先获取所有待确认的匹配记录
+        const pendingMatches = logService.db.prepare(`
+            SELECT * FROM matched_items 
+            WHERE task_id = ? AND status = 'pending'
+        `).all(taskId);
+
+        // 执行批量确认
         const result = logService.confirmMatchesByTask(taskId, reviewedBy);
+        
+        // v5.3: 批量保存到替换库
+        let savedCount = 0;
+        for (const item of pendingMatches) {
+            if (item.original_text && item.matched_text) {
+                const ruleResult = matchingDictService.addRule({
+                    original_text: item.original_text,
+                    original_type: item.item_type || 'phrase',
+                    action: 'replace',
+                    target_text: item.matched_text,
+                    target_db: item.matched_db,
+                    target_table: item.matched_table,
+                    target_id: item.matched_id,
+                    notes: `批量确认: ${item.original_text} → ${item.matched_text}`,
+                    created_by: reviewedBy || 'admin'
+                });
+                if (ruleResult.success) savedCount++;
+            }
+        }
+        
+        console.log(`[ProcessingLog API] v5.3 批量确认: ${result.count} 条记录, 保存替换规则: ${savedCount} 条`);
+        
         res.json({
             success: true,
-            message: `已确认 ${result.count} 条记录`,
-            count: result.count
+            message: `已确认 ${result.count} 条记录，保存 ${savedCount} 条替换规则`,
+            count: result.count,
+            savedRules: savedCount
         });
     } catch (error) {
         console.error('[ProcessingLog API] 批量确认失败:', error);
