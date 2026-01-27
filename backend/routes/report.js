@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Report API 路由 - 调试版本 v3
  * 提供报告相关的API接口
  */
@@ -280,6 +280,94 @@ router.get('/tasks/:id/report', async (req, res) => {
  * 获取报告信息（保留原有接口）
  * GET /api/report/:id
  */
+
+/**
+ * GET /processing-stats
+ * 获取待处理数据统计
+ */
+router.get('/processing-stats', (req, res) => {
+    try {
+        const { db } = require('../services/database');
+        const exactMatch = db.prepare(`SELECT COUNT(*) as count FROM matched_items WHERE status = 'auto_confirmed'`).get().count;
+        const fuzzyMatch = db.prepare(`SELECT COUNT(*) as count FROM matched_items WHERE status = 'pending'`).get().count;
+        const unmatched = db.prepare(`SELECT COUNT(*) as count FROM unmatched_items WHERE status IN ('pending', 'edited')`).get().count;
+        res.json({success: true, exactMatch, fuzzyMatch, unmatched, total: exactMatch + fuzzyMatch + unmatched});
+        console.log(`[API] 统计: 精准=${exactMatch}, 模糊=${fuzzyMatch}, AI=${unmatched}`);
+    } catch (error) {
+        console.error('[API] 获取统计失败:', error);
+        res.status(500).json({success: false, error: '获取统计失败', exactMatch: 0, fuzzyMatch: 0, unmatched: 0});
+    }
+});
+
+/**
+ * GET /exact-matches
+ * 获取精准匹配列表
+ */
+router.get('/exact-matches', (req, res) => {
+    try {
+        const { db } = require('../services/database');
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 50;
+        const offset = (page - 1) * pageSize;
+        
+        // 简单查询
+        const items = db.prepare(`
+            SELECT * FROM matched_items 
+            WHERE status = 'auto_confirmed' 
+            ORDER BY created_at DESC 
+            LIMIT ? OFFSET ?
+        `).all(pageSize, offset);
+        
+        const total = db.prepare(`
+            SELECT COUNT(*) as total FROM matched_items 
+            WHERE status = 'auto_confirmed'
+        `).get().total;
+        
+        const processedItems = items.map(item => ({
+            ...item,
+            matched_data: JSON.parse(item.matched_data || '{}')
+        }));
+        
+        res.json({
+            success: true,
+            items: processedItems,
+            pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) }
+        });
+        
+        console.log(`[API] 返回 ${items.length} 条精准匹配记录`);
+    } catch (error) {
+        console.error('[API] 获取精准匹配列表失败:', error);
+        res.status(500).json({ success: false, error: '获取列表失败' });
+    }
+});
+
+/**
+ * GET /fuzzy-matches
+ * 获取模糊匹配列表
+ */
+router.get('/fuzzy-matches', (req, res) => {
+    try {
+        const { db } = require('../services/database');
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 50;
+        const search = req.query.search || '';
+        const itemType = req.query.itemType || '';
+        const offset = (page - 1) * pageSize;
+        let whereConditions = ["status = 'pending'"];
+        let params = [];
+        if (search) { whereConditions.push("(m.original_text LIKE ? OR m.matched_text LIKE ?)"); params.push(`%${search}%`, `%${search}%`); }
+        if (itemType) { whereConditions.push("m.item_type = ?"); params.push(itemType); }
+        const whereClause = whereConditions.join(' AND ');
+        const { total } = db.prepare(`SELECT COUNT(*) as total FROM matched_items WHERE ${whereClause}`).get(...params);
+        const items = db.prepare(`SELECT m.*, t.title as task_title FROM matched_items m LEFT JOIN tasks t ON m.task_id = t.id WHERE ${whereClause} ORDER BY m.match_score ASC, m.created_at DESC LIMIT ? OFFSET ?`).all(...params, pageSize, offset);
+        const processedItems = items.map(item => ({ ...item, matched_data: JSON.parse(item.matched_data || '{}') }));
+        res.json({ success: true, items: processedItems, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
+    } catch (error) {
+        console.error('[API] 获取模糊匹配列表失败:', error);
+        res.status(500).json({ success: false, error: '获取列表失败' });
+    }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const reportPath = path.join(__dirname, '../../reports', req.params.id);
@@ -317,4 +405,12 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+
+
+
 module.exports = router;
+
+
+
+
+

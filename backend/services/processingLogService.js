@@ -281,6 +281,7 @@ class ProcessingLogService {
 
     /**
      * v5.3: 更新未匹配记录的AI生成内容
+     * v5.1 新增: 增强匹配能力（第二道防线）
      * @param {string} taskId - 任务ID
      * @param {string} originalText - 原始文本
      * @param {string} itemType - 类型 (word/phrase/pattern/grammar)
@@ -289,29 +290,34 @@ class ProcessingLogService {
      */
     updateUnmatchedAiContent(taskId, originalText, itemType, aiContent) {
         try {
-            // 先查找记录
+            // 策略1: 精确匹配
             const stmt = db.prepare(`
-                SELECT id FROM unmatched_items 
+                SELECT id, original_text FROM unmatched_items 
                 WHERE task_id = ? AND original_text = ? AND item_type = ?
                 LIMIT 1
             `);
             const row = stmt.get(taskId, originalText, itemType);
             
-            if (!row) {
-                // 如果找不到精确匹配，尝试模糊匹配（忽略大小写）
-                const stmtFuzzy = db.prepare(`
-                    SELECT id FROM unmatched_items 
-                    WHERE task_id = ? AND LOWER(original_text) = LOWER(?) AND item_type = ?
-                    LIMIT 1
+            if (row) {
+                const updateStmt = db.prepare(`
+                    UPDATE unmatched_items 
+                    SET ai_generated = ?
+                    WHERE id = ?
                 `);
-                const rowFuzzy = stmtFuzzy.get(taskId, originalText, itemType);
-                
-                if (!rowFuzzy) {
-                    console.warn(`[ProcessingLogService] 未找到记录: ${originalText} (${itemType})`);
-                    return { success: false, error: '记录不存在' };
-                }
-                
-                // 更新找到的记录
+                updateStmt.run(JSON.stringify(aiContent), row.id);
+                return { success: true, updated: true };
+            }
+            
+            // 策略2: 忽略大小写匹配
+            const stmtFuzzy = db.prepare(`
+                SELECT id, original_text FROM unmatched_items 
+                WHERE task_id = ? AND LOWER(original_text) = LOWER(?) AND item_type = ?
+                LIMIT 1
+            `);
+            const rowFuzzy = stmtFuzzy.get(taskId, originalText, itemType);
+            
+            if (rowFuzzy) {
+                console.log(`[ProcessingLogService] 匹配成功(忽略大小写): "${originalText}" -> "${rowFuzzy.original_text}"`);
                 const updateStmt = db.prepare(`
                     UPDATE unmatched_items 
                     SET ai_generated = ?
@@ -321,15 +327,52 @@ class ProcessingLogService {
                 return { success: true, updated: true };
             }
             
-            // 更新AI生成内容
-            const updateStmt = db.prepare(`
-                UPDATE unmatched_items 
-                SET ai_generated = ?
-                WHERE id = ?
+            // 策略3: 包含关系匹配（数据库文本包含查询文本）
+            const stmtContains = db.prepare(`
+                SELECT id, original_text FROM unmatched_items 
+                WHERE task_id = ? 
+                  AND item_type = ?
+                  AND LOWER(original_text) LIKE '%' || LOWER(?) || '%'
+                LIMIT 1
             `);
-            updateStmt.run(JSON.stringify(aiContent), row.id);
+            const rowContains = stmtContains.get(taskId, itemType, originalText);
             
-            return { success: true, updated: true };
+            if (rowContains) {
+                console.log(`[ProcessingLogService] 匹配成功(包含): "${originalText}" -> "${rowContains.original_text}"`);
+                const updateStmt = db.prepare(`
+                    UPDATE unmatched_items 
+                    SET ai_generated = ?
+                    WHERE id = ?
+                `);
+                updateStmt.run(JSON.stringify(aiContent), rowContains.id);
+                return { success: true, updated: true };
+            }
+            
+            // 策略4: 反向包含匹配（查询文本包含数据库文本）
+            const stmtReverseContains = db.prepare(`
+                SELECT id, original_text FROM unmatched_items 
+                WHERE task_id = ? 
+                  AND item_type = ?
+                  AND LOWER(?) LIKE '%' || LOWER(original_text) || '%'
+                LIMIT 1
+            `);
+            const rowReverseContains = stmtReverseContains.get(taskId, itemType, originalText);
+            
+            if (rowReverseContains) {
+                console.log(`[ProcessingLogService] 匹配成功(反向包含): "${originalText}" -> "${rowReverseContains.original_text}"`);
+                const updateStmt = db.prepare(`
+                    UPDATE unmatched_items 
+                    SET ai_generated = ?
+                    WHERE id = ?
+                `);
+                updateStmt.run(JSON.stringify(aiContent), rowReverseContains.id);
+                return { success: true, updated: true };
+            }
+            
+            // 所有策略都失败
+            console.warn(`[ProcessingLogService] 未找到记录: ${originalText} (${itemType})`);
+            return { success: false, error: '记录不存在' };
+            
         } catch (e) {
             console.error('[ProcessingLogService] 更新AI内容失败:', e.message);
             return { success: false, error: e.message };

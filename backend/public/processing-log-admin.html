@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -666,13 +666,17 @@
         </div>
         
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('tasks')">📝 处理任务</button>
+            <button class="tab-btn active" onclick="switchTab('tasks')">📜 历史记录</button>
+            <button class="tab-btn" onclick="console.log('点击了100%匹配按钮'); switchTab('exact-matches');">
+                ✅ 100%匹配
+                <span class="badge" id="badgeExactMatches">0</span>
+            </button>
             <button class="tab-btn" onclick="switchTab('pending-matches')">
-                🟡 模糊匹配
+                🟡 ﹥85%匹配
                 <span class="badge" id="badgePendingMatches" style="display:none;">0</span>
             </button>
             <button class="tab-btn" onclick="switchTab('pending-unmatched')">
-                ❌ AI 生成
+                🔴 ﹤85%匹配
                 <span class="badge" id="badgePendingUnmatched" style="display:none;">0</span>
             </button>
         </div>
@@ -681,7 +685,7 @@
         <div class="tab-content active" id="tab-tasks">
             <div class="list-container">
                 <div class="toolbar">
-                    <span class="title">📝 处理任务列表</span>
+                    <span class="title">📜 历史记录列表</span>
                     <span class="spacer"></span>
                     <button class="btn btn-secondary" onclick="loadTasks()">🔄 刷新</button>
                 </div>
@@ -695,10 +699,15 @@
         <div class="tab-content" id="tab-pending-matches">
             <div class="list-container">
                 <div class="toolbar">
-                    <span class="title">模糊匹配 (85-99%)</span>
+                    <span class="title">🟡 ﹥85%匹配列表</span>
                     <span class="spacer"></span>
                     <button class="btn btn-success" onclick="confirmAllMatches()">✓ 全部确认</button>
                     <button class="btn btn-secondary" onclick="loadPendingMatches()">🔄 刷新</button>
+                </div>
+                <div style="padding:12px 20px; background:#fffbeb; border-bottom:1px solid #fef3c7;">
+                    <div style="font-size:13px; color:#b45309; line-height:1.6;">
+                        <strong>💡 说明：</strong>AI提取的内容与词库部分匹配（相似度85%-99%），需要人工审核。确认后将保存匹配规则，下次自动识别为100%匹配。
+                    </div>
                 </div>
                 <div id="pendingMatchesList">
                     <div class="loading">加载中...</div>
@@ -710,14 +719,41 @@
         <div class="tab-content" id="tab-pending-unmatched">
             <div class="list-container">
                 <div class="toolbar">
-                    <span class="title">AI 生成数据</span>
+                    <span class="title">🔴 ﹤85%匹配列表</span>
                     <span class="spacer"></span>
                     <button class="btn btn-secondary" onclick="loadPendingUnmatched()">🔄 刷新</button>
+                </div>
+                <div style="padding:12px 20px; background:#fef2f2; border-bottom:1px solid #fecaca;">
+                    <div style="font-size:13px; color:#b91c1c; line-height:1.6;">
+                        <strong>💡 说明：</strong>AI提取的内容与词库匹配度低（相似度﹤85%），由AI自动生成释义。请编辑完善后入库，或直接替换为已有词条。
+                    </div>
                 </div>
                 <div id="pendingUnmatchedList">
                     <div class="loading">加载中...</div>
                 </div>
             </div>
+        </div>
+            
+        <!-- 精准匹配内容区域 -->
+        <div class="tab-content" id="tab-exact-matches">
+            <div class="list-container">
+                <div class="toolbar">
+                    <span class="title">✅ 100%匹配列表</span>
+                    <span class="spacer"></span>
+                    <button class="btn btn-secondary" onclick="loadExactMatches()">🔄 刷新</button>
+                </div>
+                <div style="padding:12px 20px; background:#ecfdf5; border-bottom:1px solid #d1fae5;">
+                    <div style="font-size:13px; color:#047857; line-height:1.6;">
+                        <strong>💡 说明：</strong>AI提取的内容与词库完全匹配（相似度=100%），自动通过无需审核。这些记录已成功识别并可直接使用。
+                    </div>
+                </div>
+                <div id="exactMatchesContainer">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
         </div>
     </div>
     
@@ -1293,11 +1329,30 @@
         // 页面加载
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
             loadTasks();
         });
         
         // 加载统计
         async function loadStats() {
+        // 加载精准匹配数量
+        fetch('/api/processing-stats')
+            .then(res => res.json())
+            .then(data => {
+                console.log('精准匹配数据:', data);
+                const exactBadge = document.getElementById('badgeExactMatches');
+                if (exactBadge) {
+                    exactBadge.textContent = data.exactMatch || 0;
+                    if (data.exactMatch > 0) {
+                        exactBadge.style.display = '';
+                    }
+                    console.log('精准匹配已更新:', data.exactMatch);
+                }
+            })
+            .catch(err => console.error('加载精准匹配失败:', err));
             try {
                 const res = await fetch(API_BASE + '/stats');
                 const data = await res.json();
@@ -1313,6 +1368,17 @@
                     updateBadge('badgePendingUnmatched', 
                         data.data.pending.pendingUnmatched + data.data.pending.editedUnmatched);
                 }
+        // 加载精准匹配统计
+        fetch('/api/processing-stats')
+            .then(res => res.json())
+            .then(data => {
+                const exactBadge = document.getElementById('badgeExactMatches');
+                if (exactBadge && data.exactMatch) {
+                    exactBadge.textContent = data.exactMatch;
+                    exactBadge.style.display = '';
+                }
+            })
+            .catch(err => console.error('加载统计失败:', err));
             } catch (e) {
                 console.error('加载统计失败:', e);
             }
@@ -1329,7 +1395,93 @@
         }
         
         // 切换标签页
-        function switchTab(tab) {
+        
+        // 加载精准匹配列表
+        function loadExactMatches() {
+            const container = document.getElementById('exactMatchesContainer');
+            container.innerHTML = '<div class="loading">加载中...</div>';
+            
+            fetch('/api/processing-log/exact-matches?limit=50')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.items && data.items.length > 0) {
+                        let html = '<div class="item-list">';
+                        data.items.forEach(item => {
+                            const matchData = item.matched_data || {};
+                            html += `
+                                <div class="match-item">
+                                    <div class="match-header">
+                                        <span class="match-text">${item.original_text}</span>
+                                        <span class="match-badge">100%</span>
+                                    </div>
+                                    <div class="match-body">
+                                        <div class="match-result">
+                                            <strong>匹配结果：</strong>${item.matched_text || '-'}
+                                        </div>
+                                        ${matchData.meaning ? `<div class="match-meaning">含义：${matchData.meaning}</div>` : ''}
+                                    </div>
+                                    <div class="match-footer">
+                                        <span class="match-time">${item.created_at || '-'}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<div class="empty-state"><h3>✅ 没有精准匹配数据</h3></div>';
+                    }
+                })
+                .catch(err => {
+                    console.error('加载精准匹配失败:', err);
+                    container.innerHTML = '<div class="empty-state"><h3>❌ 加载失败</h3></div>';
+                });
+        }
+
+
+        // 加载精准匹配列表
+        function loadExactMatches() {
+            const container = document.getElementById('exactMatchesContainer');
+            container.innerHTML = '<div class="loading">加载中...</div>';
+            
+            fetch('/api/processing-log/exact-matches?limit=50')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.items && data.items.length > 0) {
+                        let html = '<div class="item-list">';
+                        data.items.forEach(item => {
+                            const matchData = item.matched_data || {};
+                            html += `
+                                <div class="match-item">
+                                    <div class="match-header">
+                                        <span class="match-text">${item.original_text}</span>
+                                        <span class="match-badge">100%</span>
+                                    </div>
+                                    <div class="match-body">
+                                        <div class="match-result">
+                                            <strong>匹配结果：</strong>${item.matched_text || '-'}
+                                        </div>
+                                        ${matchData.meaning ? `<div class="match-meaning">含义：${matchData.meaning}</div>` : ''}
+                                    </div>
+                                    <div class="match-footer">
+                                        <span class="match-time">${item.created_at || '-'}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<div class="empty-state"><h3>✅ 没有精准匹配数据</h3></div>';
+                    }
+                })
+                .catch(err => {
+                    console.error('加载精准匹配失败:', err);
+                    container.innerHTML = '<div class="empty-state"><h3>❌ 加载失败</h3></div>';
+                });
+        }
+
+function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
@@ -1651,6 +1803,10 @@
                     
                     showToast('已确认并记录到匹配词典', 'success');
                     loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                     loadPendingMatches();
                 } else {
                     showToast(data.error || '操作失败', 'error');
@@ -1839,6 +1995,10 @@
                 if (data.success) {
                     showToast('已加入替换库（排除）', 'success');
                     loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                     loadPendingMatches();
                 } else {
                     showToast(data.error || '操作失败', 'error');
@@ -2118,6 +2278,10 @@
                 
                 closeModal('rejectModal');
                 loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                 loadPendingMatches();
             } catch (e) {
                 console.error('操作失败:', e);
@@ -2142,6 +2306,10 @@
                     }
                     showToast(`已确认 ${data.data.length} 条记录`, 'success');
                     loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                     loadPendingMatches();
                 } else {
                     showToast('没有待确认的记录', 'success');
@@ -2429,6 +2597,10 @@
                         
                         closeModal('editModal', true);
                         loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                         loadPendingMatches();
                     } else {
                         showToast(updateResult.error || '更新失败', 'error');
@@ -2526,6 +2698,10 @@
                             window._pendingNewWords = null;
                             window._pendingNewWordsIndex = 0;
                             loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                             loadPendingUnmatched();
                         }
                         return;
@@ -2588,6 +2764,10 @@
                             window._pendingNewWordsIndex = 0;
                             window._aiGeneratedContent = null;
                             loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                             loadPendingUnmatched();
                         }
                     } else {
@@ -2625,6 +2805,10 @@
                                 window._pendingNewWords = null;
                                 window._pendingNewWordsIndex = 0;
                                 loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                                 loadPendingUnmatched();
                             }
                         } else {
@@ -2663,6 +2847,10 @@
                     showToast(`入库成功！已添加到：${dbInfo}`, 'success');
                     closeModal('editModal');
                     loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                     loadPendingUnmatched();
                 } else {
                     showToast(data.error || '入库失败', 'error');
@@ -2699,6 +2887,10 @@
                 if (data.success) {
                     showToast('已忽略', 'success');
                     loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                     loadPendingUnmatched();
                 } else {
                     showToast(data.error || '操作失败', 'error');
@@ -2957,6 +3149,10 @@
                         }, 500);
                     } else {
                         loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                         // v6.1: 根据来源刷新正确的列表
                         if (fromRejectMatch) {
                             loadPendingMatches();
@@ -2970,6 +3166,10 @@
                     closeModal('editModal');
                     showToast('已排除！下次不会再识别为' + getTypeLabel(originalType), 'success');
                     loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                     // v6.1: 根据来源刷新正确的列表
                     if (fromRejectMatch) {
                         loadPendingMatches();
@@ -3121,6 +3321,10 @@
                 closeModal('replaceModal');
                 closeModal('editModal');
                 loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                 loadPendingUnmatched();
 
             } catch (e) {
@@ -3593,6 +3797,10 @@
                 closeModal('matchModal');
                 closeModal('editModal', true);
                 loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                 loadPendingUnmatched();
                 
             } catch (e) {
@@ -4121,6 +4329,10 @@
                 // v7.0: excludeBtn 已删除
                 
                 loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                 loadPendingUnmatched();
                 
             } catch (e) {
@@ -4451,6 +4663,10 @@
             closeModal('toGrammarModal');
             closeModal('editModal');
             loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
             loadPendingUnmatched();
         }
         
@@ -4637,6 +4853,10 @@
                 window._aiGeneratedContent = null;
                 showToast('所有单词处理完成！', 'success');
                 loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                 loadPendingUnmatched();
                 return;
             }
@@ -4712,6 +4932,10 @@
                     showToast(`清空成功！已删除 ${data.deleted.tasks || 0} 个任务、${(data.deleted.matched || 0) + (data.deleted.unmatched || 0)} 条记录`, 'success');
                     closeModal('clearModal');
                     loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                     loadTasks();
                     loadPendingMatches();
                     loadPendingUnmatched();
@@ -4747,6 +4971,10 @@
                         window._pendingNewWords = null;
                         window._pendingNewWordsIndex = 0;
                         loadStats();
+        fetch('/api/processing-stats').then(res => res.json()).then(data => {
+            const el = document.getElementById('badgeExactMatches');
+            if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
+        });
                         loadPendingUnmatched();
                     }
                 }
@@ -4841,5 +5069,335 @@
             return parts.join(' · ') || JSON.stringify(content).substring(0, 100);
         }
     </script>
+<script>
+// 加载统计数据
+fetch('/api/processing-stats')
+    .then(res => res.json())
+    .then(data => {
+        const exactCountEl = document.getElementById('exact-match-count');
+        if (exactCountEl) {
+            exactCountEl.textContent = data.exactMatch || 0;
+        }
+    })
+    .catch(err => console.error('加载统计失败:', err));
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/processing-stats')
+        .then(res => res.json())
+        .then(data => {
+            const badge = document.getElementById('badgeExactMatches');
+            if (badge) {
+                badge.textContent = data.exactMatch || 0;
+                badge.style.display = '';
+            }
+        });
+});
+</script>
+<script>
+// 页面加载时更新精准匹配数字
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('开始加载精准匹配数据...');
+    fetch('/api/processing-stats')
+        .then(res => res.json())
+        .then(data => {
+            console.log('精准匹配API返回:', data);
+            const badge = document.getElementById('badgeExactMatches');
+            if (badge && data.exactMatch) {
+                badge.textContent = data.exactMatch;
+                badge.style.display = '';
+                console.log('精准匹配数字已更新:', data.exactMatch);
+            }
+        })
+        .catch(err => console.error('加载精准匹配失败:', err));
+});
+</script>
+
+<!-- 精准匹配内容区域 -->
+</script>
+
+
+<script>
+// ============================================
+// 精准匹配功能 - v5.4.3 带分页版本
+// ============================================
+
+// 分页状态
+const exactMatchesState = {
+    currentPage: 1,
+    pageSize: 50,
+    total: 0
+};
+
+/**
+ * 加载精准匹配列表（带分页）
+ */
+function loadExactMatches(page = 1) {
+    console.log(`[精准匹配] 加载第 ${page} 页，每页 ${exactMatchesState.pageSize} 条`);
+    const container = document.getElementById('exactMatchesContainer');
+    
+    if (!container) {
+        console.error('[精准匹配] 找不到容器');
+        return;
+    }
+    
+    exactMatchesState.currentPage = page;
+    const offset = (page - 1) * exactMatchesState.pageSize;
+    
+    container.innerHTML = '<div class="loading">加载中...</div>';
+    
+    fetch(`/api/processing-log/exact-matches?limit=${exactMatchesState.pageSize}&offset=${offset}`)
+        .then(res => {
+            console.log('[精准匹配] API响应状态:', res.status);
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            return res.json();
+        })
+        .then(data => {
+            console.log('[精准匹配] 收到数据:', data);
+            
+            if (!data.success) {
+                throw new Error(data.error || '请求失败');
+            }
+            
+            exactMatchesState.total = data.total || 0;
+            
+            if (data.items && data.items.length > 0) {
+                let html = '<div style="padding:16px;">';
+                
+                data.items.forEach((item, index) => {
+                    const date = new Date(item.created_at);
+                    const timeStr = date.toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    const typeIcon = {
+                        'word': '📝',
+                        'phrase': '💬',
+                        'pattern': '🔤',
+                        'grammar': '📚'
+                    }[item.item_type] || '📄';
+                    
+                    const rowNumber = offset + index + 1;
+                    
+                    html += `
+                        <div style="padding:14px; margin-bottom:10px; background:white; border:1px solid #e5e5e5; border-radius:8px; transition: all 0.2s;">
+                            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
+                                <div style="flex:1;">
+                                    <div style="font-weight:600; font-size:15px; color:#1a1a1a; margin-bottom:4px;">
+                                        <span style="color:#9ca3af; font-size:13px; margin-right:8px;">#${rowNumber}</span>
+                                        ${typeIcon} ${item.original_text}
+                                    </div>
+                                    <div style="color:#059669; font-size:14px; margin-bottom:4px;">
+                                        → ${item.matched_text || '(无匹配文本)'}
+                                    </div>
+                                </div>
+                                <div style="background:#10b981; color:white; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">
+                                    ${(item.match_score * 100).toFixed(0)}%
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:16px; color:#6b7280; font-size:12px; padding-top:8px; border-top:1px solid #f3f4f6;">
+                                <span>📁 ${item.item_type}</span>
+                                <span>🗂️ ${item.source_db}.${item.source_table}</span>
+                                ${item.file_name ? `<span>📄 ${item.file_name}</span>` : ''}
+                                <span>🕒 ${timeStr}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                
+                // 添加分页控件
+                html += renderPagination();
+                
+                container.innerHTML = html;
+                console.log(`[精准匹配] ✅ 已显示第 ${page} 页，${data.items.length} 条记录（共 ${data.total} 条）`);
+                
+            } else {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 暂无精准匹配数据</h3>
+                        <p style="color:#6b7280; margin-top:8px;">
+                            处理新任务后，系统会自动记录100%匹配的词条
+                        </p>
+                    </div>
+                `;
+                console.log('[精准匹配] ℹ️ 暂无数据');
+            }
+        })
+        .catch(err => {
+            console.error('[精准匹配] ❌ 加载失败:', err);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>❌ 加载失败</h3>
+                    <p style="color:#dc2626; margin-top:8px;">${err.message}</p>
+                    <button class="btn btn-primary" onclick="loadExactMatches(${page})" style="margin-top:16px;">
+                        🔄 重新加载
+                    </button>
+                </div>
+            `;
+        });
+}
+
+/**
+ * 渲染分页控件
+ */
+function renderPagination() {
+    const totalPages = Math.ceil(exactMatchesState.total / exactMatchesState.pageSize);
+    const currentPage = exactMatchesState.currentPage;
+    
+    if (totalPages <= 1) {
+        return `
+            <div style="padding:12px 16px; border-top:1px solid #e5e5e5; color:#6b7280; font-size:13px; text-align:center;">
+                共 ${exactMatchesState.total} 条记录
+            </div>
+        `;
+    }
+    
+    let html = `
+        <div style="padding:12px 16px; border-top:1px solid #e5e5e5; display:flex; justify-content:space-between; align-items:center;">
+            <div style="color:#6b7280; font-size:13px;">
+                显示第 ${(currentPage - 1) * exactMatchesState.pageSize + 1} - ${Math.min(currentPage * exactMatchesState.pageSize, exactMatchesState.total)} 条，共 ${exactMatchesState.total} 条记录
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <!-- 每页显示数量 -->
+                <select onchange="changePageSize(this.value)" style="padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; cursor:pointer;">
+                    <option value="50" ${exactMatchesState.pageSize === 50 ? 'selected' : ''}>50条/页</option>
+                    <option value="100" ${exactMatchesState.pageSize === 100 ? 'selected' : ''}>100条/页</option>
+                    <option value="200" ${exactMatchesState.pageSize === 200 ? 'selected' : ''}>200条/页</option>
+                    <option value="9999" ${exactMatchesState.pageSize === 9999 ? 'selected' : ''}>全部</option>
+                </select>
+                
+                <!-- 上一页 -->
+                <button 
+                    onclick="loadExactMatches(${currentPage - 1})" 
+                    ${currentPage === 1 ? 'disabled' : ''}
+                    style="padding:6px 12px; border:1px solid #d1d5db; border-radius:6px; background:white; cursor:${currentPage === 1 ? 'not-allowed' : 'pointer'}; font-size:13px; color:#374151;">
+                    ← 上一页
+                </button>
+                
+                <!-- 页码 -->
+                <div style="display:flex; gap:4px;">
+    `;
+    
+    // 生成页码按钮（最多显示7个）
+    let startPage = Math.max(1, currentPage - 3);
+    let endPage = Math.min(totalPages, startPage + 6);
+    if (endPage - startPage < 6) {
+        startPage = Math.max(1, endPage - 6);
+    }
+    
+    // 第一页
+    if (startPage > 1) {
+        html += `
+            <button onclick="loadExactMatches(1)" style="padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; background:white; cursor:pointer; font-size:13px; min-width:36px;">1</button>
+        `;
+        if (startPage > 2) {
+            html += `<span style="padding:6px 4px; color:#9ca3af;">...</span>`;
+        }
+    }
+    
+    // 中间页码
+    for (let i = startPage; i <= endPage; i++) {
+        const isActive = i === currentPage;
+        html += `
+            <button 
+                onclick="loadExactMatches(${i})" 
+                style="padding:6px 10px; border:1px solid ${isActive ? '#2563eb' : '#d1d5db'}; border-radius:6px; background:${isActive ? '#eff6ff' : 'white'}; color:${isActive ? '#2563eb' : '#374151'}; cursor:pointer; font-size:13px; font-weight:${isActive ? '600' : '400'}; min-width:36px;">
+                ${i}
+            </button>
+        `;
+    }
+    
+    // 最后一页
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            html += `<span style="padding:6px 4px; color:#9ca3af;">...</span>`;
+        }
+        html += `
+            <button onclick="loadExactMatches(${totalPages})" style="padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; background:white; cursor:pointer; font-size:13px; min-width:36px;">${totalPages}</button>
+        `;
+    }
+    
+    html += `
+                </div>
+                
+                <!-- 下一页 -->
+                <button 
+                    onclick="loadExactMatches(${currentPage + 1})" 
+                    ${currentPage === totalPages ? 'disabled' : ''}
+                    style="padding:6px 12px; border:1px solid #d1d5db; border-radius:6px; background:white; cursor:${currentPage === totalPages ? 'not-allowed' : 'pointer'}; font-size:13px; color:#374151;">
+                    下一页 →
+                </button>
+                
+                <!-- 跳转 -->
+                <div style="display:flex; align-items:center; gap:6px; margin-left:8px;">
+                    <span style="font-size:13px; color:#6b7280;">跳转</span>
+                    <input 
+                        type="number" 
+                        id="jumpToPage" 
+                        min="1" 
+                        max="${totalPages}" 
+                        placeholder="${currentPage}"
+                        onkeypress="if(event.key==='Enter') jumpToPage()"
+                        style="width:50px; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; text-align:center;">
+                    <button onclick="jumpToPage()" style="padding:6px 10px; border:1px solid #d1d5db; border-radius:6px; background:white; cursor:pointer; font-size:13px;">Go</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+/**
+ * 改变每页显示数量
+ */
+function changePageSize(newSize) {
+    exactMatchesState.pageSize = parseInt(newSize);
+    exactMatchesState.currentPage = 1; // 重置到第一页
+    loadExactMatches(1);
+}
+
+/**
+ * 跳转到指定页
+ */
+function jumpToPage() {
+    const input = document.getElementById('jumpToPage');
+    const page = parseInt(input.value);
+    const totalPages = Math.ceil(exactMatchesState.total / exactMatchesState.pageSize);
+    
+    if (page >= 1 && page <= totalPages) {
+        loadExactMatches(page);
+    } else {
+        alert(`请输入 1-${totalPages} 之间的页码`);
+    }
+}
+
+// 增强 switchTab 函数
+(function() {
+    const originalSwitchTab = window.switchTab;
+    if (originalSwitchTab) {
+        window.switchTab = function(tab) {
+            console.log('[switchTab] 切换到:', tab);
+            originalSwitchTab.call(this, tab);
+            if (tab === 'exact-matches') {
+                console.log('[switchTab] 触发精准匹配加载');
+                loadExactMatches(1);
+            }
+        };
+        console.log('[精准匹配] switchTab 增强已启用');
+    }
+})();
+
+console.log('[精准匹配] 模块加载完成 v5.4.3（带分页）');
+</script>
+
 </body>
 </html>

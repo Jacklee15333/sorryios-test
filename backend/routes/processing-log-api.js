@@ -1,6 +1,9 @@
 /**
- * 处理日志 API 路由 v5.4.1
+ * 处理日志 API 路由 v5.4.2
  * 文件位置: backend/routes/processing-log-api.js
+ * 
+ * 📦 v5.4.2 修复：
+ * - 新增：GET /exact-matches - 获取所有精准匹配记录(100%)
  * 
  * 📦 v5.4.1 修复：
  * - 简化：排除逻辑改为 action='replace' + target_text=''
@@ -136,6 +139,71 @@ router.get('/tasks/:taskId', (req, res) => {
 });
 
 // ============================================
+// v5.4.2 新增：精准匹配列表接口
+// ============================================
+
+/**
+ * GET /api/processing-log/exact-matches
+ * 获取所有精准匹配记录（match_score = 1.0）
+ * v5.4.2 新增
+ */
+router.get('/exact-matches', (req, res) => {
+    try {
+        const { limit = 100, offset = 0 } = req.query;
+        
+        // 查询所有100%匹配的记录
+        const stmt = logService.db.prepare(`
+            SELECT 
+                m.id,
+                m.task_id,
+                m.item_type,
+                m.original_text,
+                m.matched_text,
+                m.match_score,
+                m.source_db,
+                m.source_table,
+                m.source_id,
+                m.matched_data,
+                m.status,
+                m.created_at,
+                t.title as file_name,
+                u.username
+            FROM matched_items m
+            LEFT JOIN tasks t ON m.task_id = t.id
+            LEFT JOIN users u ON t.user_id = u.id
+            WHERE m.match_score >= 1.0
+            ORDER BY m.created_at DESC
+            LIMIT ? OFFSET ?
+        `);
+        
+        const items = stmt.all(parseInt(limit), parseInt(offset));
+        
+        // 获取总数
+        const countStmt = logService.db.prepare(`
+            SELECT COUNT(*) as total FROM matched_items WHERE match_score >= 1.0
+        `);
+        const { total } = countStmt.get();
+        
+        // 解析 matched_data
+        const parsedItems = items.map(item => ({
+            ...item,
+            matched_data: item.matched_data ? JSON.parse(item.matched_data) : {}
+        }));
+
+        res.json({
+            success: true,
+            items: parsedItems,
+            total,
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+    } catch (error) {
+        console.error('[ProcessingLog API] 获取精准匹配列表失败:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
 // 匹配记录接口
 // ============================================
 
@@ -256,189 +324,63 @@ router.get('/matches/:id', (req, res) => {
             try {
                 matchedItem.matched_data = JSON.parse(matchedItem.matched_data);
             } catch (e) {
-                console.error('[ProcessingLog API] 解析matched_data失败:', e);
+                console.warn('[ProcessingLog API] matched_data 不是有效的 JSON:', matchedItem.matched_data);
             }
         }
-        
-        // 兼容字段名
-        matchedItem.source_db = matchedItem.matched_db;
-        matchedItem.source_table = matchedItem.matched_table;
-        matchedItem.source_id = matchedItem.matched_id;
-        
-        res.json({
-            success: true,
-            data: matchedItem
-        });
-    } catch (error) {
-        console.error('[ProcessingLog API] 获取匹配记录失败:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/processing-log/matches/:id/exclude
- * 排除误匹配（加入排除库）
- * v5.4 新增
- */
-router.post('/matches/:id/exclude', (req, res) => {
-    try {
-        const { id } = req.params;
-        const { reason } = req.body;
-        
-        // 1. 获取匹配记录
-        const matchedItem = logService.db.prepare('SELECT * FROM matched_items WHERE id = ?').get(parseInt(id));
-        
-        if (!matchedItem) {
-            return res.status(404).json({ 
-                success: false, 
-                error: '匹配记录不存在' 
-            });
-        }
-        
-        // 2. 添加到排除库（使用 matchingDictService）
-        // 排除规则：只排除当前这一对匹配（original_text → matched_text）
-        const excludeResult = matchingDictService.addRule({
-            original_text: matchedItem.original_text,
-            original_type: matchedItem.item_type || 'phrase',
-            action: 'exclude',
-            target_text: matchedItem.matched_text,  // 记录匹配到的目标，精确排除
-            notes: reason || `用户手动排除：${matchedItem.original_text} → ${matchedItem.matched_text}`,
-            created_by: 'admin'
-        });
-        
-        if (!excludeResult.success) {
-            return res.status(400).json({ 
-                success: false, 
-                error: excludeResult.error || '添加排除规则失败' 
-            });
-        }
-        
-        // 3. 更新匹配记录状态为 'excluded'
-        logService.db.prepare(`
-            UPDATE matched_items 
-            SET status = 'excluded',
-                reviewed_at = CURRENT_TIMESTAMP,
-                reviewed_by = 'admin'
-            WHERE id = ?
-        `).run(parseInt(id));
-        
-        console.log(`[ProcessingLog API] 已排除匹配: "${matchedItem.original_text}" → "${matchedItem.matched_text}"`);
-        
-        res.json({
-            success: true,
-            message: '已加入排除库',
-            rule_id: excludeResult.id
-        });
-        
-    } catch (error) {
-        console.error('[ProcessingLog API] 排除匹配失败:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * GET /api/processing-log/matches/:id
- * v4.5.0 新增：获取单条匹配记录（用于编辑功能）
- */
-router.get('/matches/:id', (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        // 从 matched_items 表获取记录
-        const matchedItem = logService.db.prepare(`
-            SELECT * FROM matched_items WHERE id = ?
-        `).get(parseInt(id));
-        
-        if (!matchedItem) {
-            return res.status(404).json({ success: false, error: '匹配记录不存在' });
-        }
-        
-        // 解析 matched_data（如果是JSON字符串）
-        if (matchedItem.matched_data && typeof matchedItem.matched_data === 'string') {
-            try {
-                matchedItem.matched_data = JSON.parse(matchedItem.matched_data);
-            } catch (e) {
-                console.error('[ProcessingLog API] 解析 matched_data 失败:', e);
-            }
-        }
-        
-        res.json({
-            success: true,
-            data: {
-                id: matchedItem.id,
-                task_id: matchedItem.task_id,
-                original_text: matchedItem.original_text,
-                matched_text: matchedItem.matched_text,
-                matched_data: matchedItem.matched_data,
-                match_score: matchedItem.match_score,
-                item_type: matchedItem.item_type,
-                source_db: matchedItem.matched_db || 'vocabulary',
-                source_table: matchedItem.matched_table || '',
-                source_id: matchedItem.matched_id || 0,
-                status: matchedItem.status,
-                created_at: matchedItem.created_at
-            }
-        });
-    } catch (error) {
-        console.error('[ProcessingLog API] 获取匹配记录失败:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/processing-log/matches/:id/exclude
- * v4.5.0 新增：排除误匹配（加入替换库，target_text为空）
- */
-router.post('/matches/:id/exclude', (req, res) => {
-    try {
-        const { id } = req.params;
-        const { reason } = req.body;
-        
-        // 1. 获取匹配记录
-        const matchedItem = logService.db.prepare(`
-            SELECT * FROM matched_items WHERE id = ?
-        `).get(parseInt(id));
-        
-        if (!matchedItem) {
-            return res.status(404).json({ success: false, error: '匹配记录不存在' });
-        }
-        
-        // 2. 添加到替换库（target_text 为空 = 排除）
-        // v4.5.1: 简化排除逻辑 - 排除就是替换成空值
-        const excludeResult = matchingDictService.addRule({
-            original_text: matchedItem.original_text,
-            original_type: matchedItem.item_type || 'phrase',
-            action: 'replace',      // 统一用 replace
-            target_text: '',        // 空字符串 = 跳过不处理
-            notes: reason || '用户手动排除（误匹配）',
-            created_by: 'admin'
-        });
-        
-        if (!excludeResult.success) {
-            return res.status(400).json({ 
-                success: false, 
-                error: excludeResult.error || '加入替换库失败' 
-            });
-        }
-        
-        // 3. 更新匹配记录状态为 'excluded'
-        logService.db.prepare(`
-            UPDATE matched_items 
-            SET status = 'excluded', reviewed_at = datetime('now')
-            WHERE id = ?
-        `).run(parseInt(id));
-        
-        console.log(`[ProcessingLog API] v4.5.1 已排除: "${matchedItem.original_text}" (替换为空值)`);
         
         res.json({ 
             success: true, 
-            message: '已加入替换库（排除）',
-            rule: {
-                original_text: matchedItem.original_text,
-                action: 'replace',
-                target_text: ''  // 空值 = 跳过
-            }
+            data: matchedItem 
         });
+    } catch (error) {
+        console.error('[ProcessingLog API] 获取匹配记录失败:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/processing-log/matches/:id/exclude
+ * 排除误匹配（添加到排除规则）
+ * v5.4 新增
+ * v5.4.1 简化: 改为使用 action='exclude' + target_text=''
+ */
+router.post('/matches/:id/exclude', (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reviewedBy } = req.body;
+
+        // 获取匹配记录
+        const matchedItem = logService.db.prepare('SELECT * FROM matched_items WHERE id = ?').get(parseInt(id));
+        
+        if (!matchedItem) {
+            return res.status(404).json({ success: false, error: '匹配记录不存在' });
+        }
+
+        // v5.4.1: 使用 action='exclude' + target_text='' 的新逻辑
+        const ruleResult = matchingDictService.addRule({
+            original_text: matchedItem.original_text,
+            original_type: matchedItem.item_type || 'phrase',
+            action: 'exclude',  // v5.4.1: 明确标记为排除
+            target_text: '',    // v5.4.1: 排除规则的 target_text 为空
+            notes: `排除误匹配: ${matchedItem.original_text}`,
+            created_by: reviewedBy || 'admin'
+        });
+        
+        if (!ruleResult.success) {
+            return res.status(400).json({ success: false, error: '添加排除规则失败' });
+        }
+        
+        // 标记原匹配记录为已拒绝
+        logService.rejectMatch(parseInt(id), reviewedBy, '已添加到排除规则');
+        
+        console.log(`[ProcessingLog API] v5.4.1 已排除: "${matchedItem.original_text}"`);
+        
+        res.json({ 
+            success: true, 
+            message: '已添加到排除规则',
+            ruleId: ruleResult.id
+        });
+        
     } catch (error) {
         console.error('[ProcessingLog API] 排除匹配失败:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -446,25 +388,25 @@ router.post('/matches/:id/exclude', (req, res) => {
 });
 
 /**
- * POST /api/processing-log/matches/confirm-all
- * 批量确认任务的所有待审核匹配
- * v5.3: 批量确认后也保存到替换库
+ * POST /api/processing-log/confirm-all-pending
+ * 批量确认所有待审核匹配
+ * v5.3: 批量保存到替换库
  */
-router.post('/matches/confirm-all', (req, res) => {
+router.post('/confirm-all-pending', (req, res) => {
     try {
-        const { taskId, reviewedBy } = req.body;
-        if (!taskId) {
-            return res.status(400).json({ success: false, error: '请提供任务ID' });
-        }
-
-        // v5.3: 先获取所有待确认的匹配记录
-        const pendingMatches = logService.db.prepare(`
-            SELECT * FROM matched_items 
-            WHERE task_id = ? AND status = 'pending'
-        `).all(taskId);
-
-        // 执行批量确认
-        const result = logService.confirmMatchesByTask(taskId, reviewedBy);
+        const { reviewedBy } = req.body;
+        
+        // v5.3: 先获取所有待审核的匹配记录
+        const pendingMatches = logService.getAllPendingMatches(1000);
+        
+        // 批量确认
+        const result = logService.db.prepare(`
+            UPDATE matched_items 
+            SET status = 'confirmed', 
+                reviewed_by = ?,
+                reviewed_at = CURRENT_TIMESTAMP
+            WHERE status = 'pending'
+        `).run(reviewedBy || 'admin');
         
         // v5.3: 批量保存到替换库
         let savedCount = 0;
@@ -485,12 +427,12 @@ router.post('/matches/confirm-all', (req, res) => {
             }
         }
         
-        console.log(`[ProcessingLog API] v5.3 批量确认: ${result.count} 条记录, 保存替换规则: ${savedCount} 条`);
+        console.log(`[ProcessingLog API] v5.3 批量确认: ${result.changes} 条记录, 保存替换规则: ${savedCount} 条`);
         
         res.json({
             success: true,
-            message: `已确认 ${result.count} 条记录，保存 ${savedCount} 条替换规则`,
-            count: result.count,
+            message: `已确认 ${result.changes} 条记录，保存 ${savedCount} 条替换规则`,
+            count: result.changes,
             savedRules: savedCount
         });
     } catch (error) {
