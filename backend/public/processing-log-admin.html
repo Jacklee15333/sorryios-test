@@ -329,6 +329,122 @@
             flex-shrink: 0;
         }
         
+        /* v4.4.0 新增：子话题相关样式 */
+        .subtopic-arrow {
+            color: #9ca3af;
+            margin: 0 4px;
+        }
+        .subtopic-highlight {
+            color: #e74c3c;
+            font-weight: bold;
+            background: #ffe5e5;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .knowledge-system {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #1976d2;
+        }
+        .main-topic-section {
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .knowledge-system .field {
+            margin-bottom: 6px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .knowledge-system .field label {
+            color: #666;
+            font-weight: 500;
+            margin-right: 6px;
+        }
+        .knowledge-system .field code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .subtopics-section {
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+        }
+        .subtopic-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            background: #fafafa;
+            border-left: 3px solid #e0e0e0;
+        }
+        .subtopic-item.hit {
+            background: #ffe5e5;
+            border-left-color: #e74c3c;
+        }
+        .subtopic-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .subtopic-icon {
+            font-size: 12px;
+        }
+        .subtopic-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 13px;
+        }
+        .subtopic-item.hit .subtopic-name {
+            color: #e74c3c;
+        }
+        .hit-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .subtopic-field {
+            margin-left: 20px;
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .subtopic-field label {
+            color: #777;
+            font-weight: 500;
+            margin-right: 4px;
+        }
+        .subtopic-field code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .array-item {
+            display: inline-block;
+            margin-right: 4px;
+            padding: 2px 0;
+        }
+        .array-item:not(:last-child)::after {
+            content: ';';
+            margin-right: 4px;
+            color: #999;
+        }
+        
         /* AI 生成内容 */
         .item-ai-content {
             margin-top: 8px;
@@ -1362,30 +1478,97 @@
                     return;
                 }
                 
-                container.innerHTML = data.data.map(m => `
-                    <div class="match-item">
+                container.innerHTML = data.data.map(m => {
+                    // v4.4.0: 检查是否匹配到子话题
+                    const hasSubtopic = m.matched_subtopic_title && m.matched_data;
+                    
+                    // 基础信息行
+                    let html = `
+                    <div class="match-item ${hasSubtopic ? 'has-subtopic' : ''}">
                         <div class="item-icon fuzzy">🟡</div>
                         <div class="item-content">
                             <div class="item-original">${escapeHtml(m.original_text)}</div>
                             <div class="item-matched">
                                 <span class="arrow">→</span>
                                 <span class="matched-text">${escapeHtml(m.matched_text)}</span>
+                                ${hasSubtopic ? `<span class="subtopic-arrow">&gt;</span><span class="subtopic-highlight">${escapeHtml(m.matched_subtopic_title)}</span>` : ''}
                                 <span class="score">${(m.match_score * 100).toFixed(0)}%</span>
                                 <span class="item-type">${getTypeLabel(m.item_type)}</span>
-                            </div>
-                            <div style="font-size:12px;color:#94a3b8;">
+                            </div>`;
+                    
+                    // v4.4.0: 如果匹配到子话题，展示完整知识体系
+                    if (hasSubtopic) {
+                        const mainData = m.matched_data;
+                        let subTopics = [];
+                        try {
+                            subTopics = typeof mainData.sub_topics === 'string' 
+                                ? JSON.parse(mainData.sub_topics) 
+                                : (mainData.sub_topics || []);
+                        } catch (e) {
+                            subTopics = [];
+                        }
+                        
+                        html += `
+                            <div class="knowledge-system">
+                                <div class="main-topic-section">
+                                    <div class="section-title">【主话题】${escapeHtml(m.matched_text)}</div>
+                                    ${mainData.definition ? `<div class="field"><label>定义:</label>${escapeHtml(mainData.definition)}</div>` : ''}
+                                    ${mainData.structure ? `<div class="field"><label>结构:</label><code>${escapeHtml(mainData.structure)}</code></div>` : ''}
+                                    ${mainData.usage ? `<div class="field"><label>用法:</label>${formatArrayField(mainData.usage)}</div>` : ''}
+                                    ${mainData.examples ? `<div class="field"><label>例句:</label>${formatArrayField(mainData.examples)}</div>` : ''}
+                                </div>
+                                
+                                ${subTopics.length > 0 ? `
+                                <div class="subtopics-section">
+                                    <div class="section-title">【子话题列表】</div>
+                                    ${subTopics.map((st, idx) => {
+                                        const isHit = idx === m.matched_subtopic_index;
+                                        return `
+                                        <div class="subtopic-item ${isHit ? 'hit' : ''}">
+                                            <div class="subtopic-header">
+                                                <span class="subtopic-icon">${isHit ? '🔴' : '⚪'}</span>
+                                                <span class="subtopic-name">${escapeHtml(st.title)}</span>
+                                                ${isHit ? '<span class="hit-badge">击中</span>' : ''}
+                                            </div>
+                                            ${st.definition ? `<div class="subtopic-field"><label>定义:</label>${escapeHtml(st.definition)}</div>` : ''}
+                                            ${st.structure ? `<div class="subtopic-field"><label>结构:</label><code>${escapeHtml(st.structure)}</code></div>` : ''}
+                                            ${st.examples && st.examples.length > 0 ? `<div class="subtopic-field"><label>例句:</label>${formatArrayField(st.examples)}</div>` : ''}
+                                        </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                                ` : ''}
+                            </div>`;
+                    }
+                    
+                    html += `
+                            <div style="font-size:12px;color:#94a3b8;margin-top:6px;">
                                 来自: ${escapeHtml(m.username || '匿名')} · ${escapeHtml(m.file_name || '')} · <span style="color:#f59e0b;">${formatTime(m.created_at)}</span>
                             </div>
                         </div>
                         <div class="item-actions">
                             <button class="btn btn-success btn-sm" onclick="confirmMatch(${m.id}, '${escapeJs(m.original_text)}', '${m.item_type}', '${escapeJs(m.matched_text)}', '${m.source_db || 'vocabulary'}', '${m.source_table || ''}', ${m.source_id || 0})">✓ 确认正确</button>
-                            <button class="btn btn-danger btn-sm" onclick="rejectMatch(${m.id}, '${escapeJs(m.original_text)}', '${m.item_type}', '${escapeJs(m.matched_text)}', ${m.match_score || 0}, '${m.source_db || 'vocabulary'}', '${m.source_table || ''}', ${m.source_id || 0})">✗ 标记错误</button>
+                            <button class="btn btn-primary btn-sm" onclick="editMatch(${m.id})">✎ 编辑</button>
+                            <button class="btn btn-secondary btn-sm" onclick="excludeMatch(${m.id}, '${escapeJs(m.original_text)}', '${escapeJs(m.matched_text)}')">🗑 排除</button>
                         </div>
                     </div>
-                `).join('');
+                    `;
+                    
+                    return html;
+                }).join('');
             } catch (e) {
+                console.error('[loadPendingMatches] 渲染失败:', e);
                 container.innerHTML = '<div class="empty-state"><h3>加载失败</h3></div>';
             }
+        }
+        
+        // v4.4.0 新增：格式化数组字段
+        function formatArrayField(arr) {
+            if (!arr || !Array.isArray(arr) || arr.length === 0) return '';
+            if (typeof arr[0] === 'string') {
+                return arr.map(item => `<span class="array-item">${escapeHtml(item)}</span>`).join('');
+            }
+            return escapeHtml(JSON.stringify(arr));
         }
         
         // 加载待完善入库
@@ -1529,6 +1712,141 @@
                         this.value === 'new' ? 'block' : 'none';
                 };
             });
+        }
+        
+        // v4.5.0 新增：编辑模糊匹配
+        async function editMatch(id) {
+            try {
+                // 1. 加载模糊匹配记录
+                const res = await fetch(API_BASE + '/matches/' + id);
+                const data = await res.json();
+                
+                if (!data.success) {
+                    showToast('加载失败', 'error');
+                    return;
+                }
+                
+                const match = data.data;
+                
+                // 2. 获取匹配到的完整数据
+                let matchedData = match.matched_data;
+                if (typeof matchedData === 'string') {
+                    try {
+                        matchedData = JSON.parse(matchedData);
+                    } catch (e) {
+                        console.error('解析matched_data失败:', e);
+                        matchedData = {};
+                    }
+                }
+                
+                // 3. 标记当前正在编辑模糊匹配（用于saveAndImport判断）
+                window._editingMatchId = id;
+                window._editingMatchData = {
+                    original_text: match.original_text,
+                    original_type: match.item_type,
+                    matched_text: match.matched_text,
+                    source_db: match.source_db,
+                    source_table: match.source_table,
+                    source_id: match.source_id
+                };
+                
+                // 4. 填充编辑弹窗
+                document.getElementById('editItemId').value = '';  // 清空，表示这是模糊匹配编辑
+                document.getElementById('editItemType').value = match.item_type;
+                document.getElementById('editOriginalText').textContent = match.original_text;
+                document.getElementById('editTargetType').value = match.item_type;
+                document.getElementById('editCategory').value = matchedData.category || '';
+                
+                // 5. 根据类型显示不同字段
+                if (match.item_type === 'grammar') {
+                    document.getElementById('vocabFields').style.display = 'none';
+                    document.getElementById('grammarFields').style.display = 'block';
+                    document.getElementById('editDefinition').value = matchedData.definition || '';
+                    document.getElementById('editStructure').value = matchedData.structure || '';
+                    document.getElementById('editUsage').value = Array.isArray(matchedData.usage) 
+                        ? matchedData.usage.join('\n') 
+                        : (matchedData.usage || '');
+                    document.getElementById('editExamples').value = Array.isArray(matchedData.examples) 
+                        ? matchedData.examples.join('\n') 
+                        : (matchedData.examples || '');
+                    document.getElementById('editMistakes').value = Array.isArray(matchedData.mistakes) 
+                        ? matchedData.mistakes.join('\n') 
+                        : (matchedData.mistakes || '');
+                } else {
+                    document.getElementById('vocabFields').style.display = 'block';
+                    document.getElementById('grammarFields').style.display = 'none';
+                    document.getElementById('editPhonetic').value = matchedData.phonetic || '';
+                    
+                    // 自动格式化词性和含义
+                    const formatted = formatPosAndMeaning(matchedData.pos, matchedData.meaning);
+                    document.getElementById('editPos').value = formatted.pos;
+                    document.getElementById('editMeaning').value = formatted.meaning;
+                    
+                    document.getElementById('editExample').value = matchedData.example || '';
+                }
+                
+                // 6. 修改弹窗标题
+                document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑匹配项';
+                
+                // 7. 显示提示信息
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'info-block';
+                infoDiv.id = 'matchEditInfo';
+                infoDiv.innerHTML = `
+                    <div style="font-size:12px;color:#92400e;">
+                        <strong>📝 编辑说明：</strong><br>
+                        匹配到：${escapeHtml(match.matched_text)} (${(match.match_score * 100).toFixed(0)}%)<br>
+                        保存后将更新原记录，完善词库内容
+                    </div>
+                `;
+                
+                // 插入到弹窗顶部
+                const modalBody = document.querySelector('#editModal .modal-body');
+                const existingInfo = document.getElementById('matchEditInfo');
+                if (existingInfo) {
+                    existingInfo.remove();
+                }
+                modalBody.insertBefore(infoDiv, modalBody.firstChild);
+                
+                // 8. 打开弹窗
+                document.getElementById('editModal').classList.add('active');
+                
+            } catch (e) {
+                console.error('[editMatch] 失败:', e);
+                showToast('加载失败', 'error');
+            }
+        }
+        
+        // v4.5.0 新增：排除误匹配
+        // v4.5.0 新增：排除误匹配
+        // v4.5.1 更新：排除 = 替换成空值 = 跳过不处理
+        async function excludeMatch(id, originalText, matchedText) {
+            if (!confirm(`确定排除此匹配？\n\n原文：${originalText}\n匹配到：${matchedText}\n\n排除后：\n• 保存到替换库（替换为空值）\n• 下次遇到相同内容将跳过不处理`)) {
+                return;
+            }
+            
+            try {
+                const res = await fetch(API_BASE + '/matches/' + id + '/exclude', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        reason: '用户手动排除（误匹配）'
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('已加入替换库（排除）', 'success');
+                    loadStats();
+                    loadPendingMatches();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            } catch (e) {
+                console.error('[excludeMatch] 失败:', e);
+                showToast('操作失败', 'error');
+            }
         }
         
         // v7.0: 当前搜索类型（用于搜索时知道要搜哪个库）
@@ -1885,6 +2203,12 @@
         // 编辑未匹配项
         async function editUnmatched(id) {
             try {
+                // 清除模糊匹配的编辑提示（如果存在）
+                const existingInfo = document.getElementById('matchEditInfo');
+                if (existingInfo) {
+                    existingInfo.remove();
+                }
+                
                 const res = await fetch(API_BASE + '/unmatched/' + id);
                 const data = await res.json();
                 if (!data.success) {
@@ -1986,6 +2310,136 @@
             const id = document.getElementById('editItemId').value;
             const targetType = document.getElementById('editTargetType').value;
             const originalText = document.getElementById('editOriginalText').textContent;
+            
+            // v4.5.0: 处理模糊匹配的编辑保存
+            if (window._editingMatchId) {
+                const matchId = window._editingMatchId;
+                const matchData = window._editingMatchData;
+                
+                // 收集编辑后的内容
+                let editedContent = {
+                    category: document.getElementById('editCategory').value
+                };
+                
+                if (targetType === 'grammar') {
+                    editedContent.definition = document.getElementById('editDefinition').value;
+                    editedContent.structure = document.getElementById('editStructure').value;
+                    editedContent.usage = document.getElementById('editUsage').value.split('\n').filter(s => s.trim());
+                    editedContent.examples = document.getElementById('editExamples').value.split('\n').filter(s => s.trim());
+                    editedContent.mistakes = document.getElementById('editMistakes').value.split('\n').filter(s => s.trim());
+                } else {
+                    editedContent.phonetic = document.getElementById('editPhonetic').value;
+                    editedContent.pos = document.getElementById('editPos').value;
+                    editedContent.meaning = document.getElementById('editMeaning').value;
+                    editedContent.example = document.getElementById('editExample').value;
+                }
+                
+                try {
+                    // 1. 更新原记录（方案A：更新原匹配到的位置）
+                    let updateApiUrl = '';
+                    let updateData = {};
+                    
+                    if (matchData.source_db === 'grammar' || targetType === 'grammar') {
+                        updateApiUrl = `/api/grammar/${matchData.source_id}`;
+                        updateData = {
+                            title: matchData.matched_text,
+                            definition: editedContent.definition,
+                            structure: editedContent.structure,
+                            usage: editedContent.usage,
+                            examples: editedContent.examples,
+                            mistakes: editedContent.mistakes,
+                            category: editedContent.category
+                        };
+                    } else {
+                        // 词库更新
+                        const table = matchData.source_table || 'words';
+                        if (table === 'words') {
+                            updateApiUrl = `/api/vocabulary/words/${matchData.source_id}`;
+                            updateData = {
+                                word: matchData.matched_text,
+                                phonetic: editedContent.phonetic,
+                                pos: editedContent.pos,
+                                meaning: editedContent.meaning,
+                                example: editedContent.example,
+                                category: editedContent.category
+                            };
+                        } else if (table === 'phrases') {
+                            updateApiUrl = `/api/vocabulary/phrases/${matchData.source_id}`;
+                            updateData = {
+                                phrase: matchData.matched_text,
+                                meaning: editedContent.meaning,
+                                example: editedContent.example,
+                                category: editedContent.category
+                            };
+                        } else if (table === 'patterns') {
+                            updateApiUrl = `/api/vocabulary/patterns/${matchData.source_id}`;
+                            updateData = {
+                                pattern: matchData.matched_text,
+                                meaning: editedContent.meaning,
+                                example: editedContent.example,
+                                category: editedContent.category
+                            };
+                        }
+                    }
+                    
+                    const updateRes = await fetch(updateApiUrl, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+                    
+                    const updateResult = await updateRes.json();
+                    
+                    if (updateResult.success) {
+                        // 2. 确认匹配并保存到匹配词典
+                        await fetch(API_BASE + '/matches/' + matchId + '/confirm', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reviewedBy: 'admin' })
+                        });
+                        
+                        await fetch(MATCHING_DICT_API + '/confirm-match', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                original_text: matchData.original_text,
+                                original_type: matchData.original_type,
+                                target_db: matchData.source_db ? matchData.source_db + '.db' : 'vocabulary.db',
+                                target_table: matchData.source_table,
+                                target_id: matchData.source_id,
+                                target_text: matchData.matched_text,
+                                created_by: 'admin'
+                            })
+                        });
+                        
+                        showToast('已更新词库并确认匹配', 'success');
+                        
+                        // 清理状态
+                        window._editingMatchId = null;
+                        window._editingMatchData = null;
+                        
+                        // 移除提示信息
+                        const matchEditInfo = document.getElementById('matchEditInfo');
+                        if (matchEditInfo) {
+                            matchEditInfo.remove();
+                        }
+                        
+                        // 恢复弹窗标题
+                        document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑数据';
+                        
+                        closeModal('editModal', true);
+                        loadStats();
+                        loadPendingMatches();
+                    } else {
+                        showToast(updateResult.error || '更新失败', 'error');
+                    }
+                } catch (e) {
+                    console.error('[saveAndImport] 模糊匹配保存失败:', e);
+                    showToast('保存失败', 'error');
+                }
+                
+                return;
+            }
             
             // v5.5: 新建模式（从排除弹窗触发 或 v6.3 替换流程触发）
             if (!id) {
@@ -3541,6 +3995,12 @@
          * 处理下一个需要填写含义的词条
          */
         function processNextReplaceItem() {
+            // 清除模糊匹配的编辑提示（如果存在）
+            const existingInfo = document.getElementById('matchEditInfo');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            
             if (!window._pendingReplaceItems || window._pendingReplaceIndex >= window._pendingReplaceItems.length) {
                 saveReplaceRule(
                     window._replaceOriginalText,
@@ -4164,6 +4624,12 @@
          * v5.6: 预填AI生成的内容
          */
         function processNextNewWord() {
+            // 清除模糊匹配的编辑提示（如果存在）
+            const existingInfo = document.getElementById('matchEditInfo');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            
             if (!window._pendingNewWords || window._pendingNewWordsIndex >= window._pendingNewWords.length) {
                 // 全部处理完成，清理状态
                 window._pendingNewWords = null;
