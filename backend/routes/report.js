@@ -1,335 +1,320 @@
 /**
- * 报告路由
- * GET /api/report/:id - 获取报告信息
- * GET /api/report/:id/download - 下载报告文件
- * 
- * v2.3: 返回用户信息和正确的报告标题
+ * Report API 路由 - 调试版本 v3
+ * 提供报告相关的API接口
  */
 
 const express = require('express');
+const router = express.Router();
 const path = require('path');
 const fs = require('fs');
-const taskQueue = require('../services/taskQueue');
-const { TaskDB, db } = require('../services/database');
+const { getProcessingLogService } = require('../services/processingLogService');
 
-const router = express.Router();
-
-const OUTPUTS_DIR = path.join(__dirname, '../outputs');
+const processingLogService = getProcessingLogService();
 
 /**
- * 根据 taskId 查找输出目录
- * 目录格式: task_{taskId前8位}_{timestamp}
+ * 获取任务报告
+ * GET /api/tasks/:id/report
  */
-function findOutputDir(taskId) {
-    const prefix = `task_${taskId.substring(0, 8)}`;
-    
-    try {
-        const dirs = fs.readdirSync(OUTPUTS_DIR);
-        const matchedDir = dirs.find(d => d.startsWith(prefix));
-        
-        if (matchedDir) {
-            return matchedDir;
-        }
-    } catch (e) {
-        console.error('[Report] 查找输出目录失败:', e.message);
-    }
-    
-    return null;
-}
-
-/**
- * 获取用户信息
- */
-function getUserInfo(userId) {
-    if (!userId) return null;
-    
-    try {
-        const user = db.prepare(`
-            SELECT id, username, nickname FROM users WHERE id = ?
-        `).get(userId);
-        
-        return user || null;
-    } catch (e) {
-        console.error('[Report] 获取用户信息失败:', e.message);
-        return null;
-    }
-}
-
-/**
- * 构建报告信息
- */
-function buildReportInfo(taskId, outputDirName, baseUrl, taskInfo = {}) {
-    const outputDir = path.join(OUTPUTS_DIR, outputDirName);
-    
-    // 检查文件是否存在
-    const htmlPath = path.join(outputDir, 'report.html');
-    const mdPath = path.join(outputDir, 'report.md');
-    const jsonPath = path.join(outputDir, 'report.json');
-    
-    // 读取 JSON 获取统计信息
-    let stats = { totalSegments: 0, successCount: 0, failCount: 0 };
-    if (fs.existsSync(jsonPath)) {
-        try {
-            const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-            stats = {
-                totalCharacters: jsonData.metadata?.totalCharacters || 0,
-                totalSegments: jsonData.metadata?.totalSegments || 1,
-                successCount: jsonData.metadata?.successCount || 1,
-                failCount: jsonData.metadata?.failCount || 0
-            };
-        } catch (e) {
-            console.error('[Report] 解析 JSON 失败:', e.message);
-        }
-    }
-    
-    return {
-        taskId,
-        outputDir: outputDirName,
-        // 🆕 添加报告标题（用户输入的标题）
-        title: taskInfo.title || taskInfo.customTitle || '课堂笔记',
-        stats,
-        files: {
-            html: {
-                name: 'report.html',
-                exists: fs.existsSync(htmlPath),
-                preview: `${baseUrl}/outputs/${outputDirName}/report.html`,
-                download: `${baseUrl}/api/report/${taskId}/download?format=html`
-            },
-            markdown: {
-                name: 'report.md',
-                exists: fs.existsSync(mdPath),
-                preview: `${baseUrl}/outputs/${outputDirName}/report.md`,
-                download: `${baseUrl}/api/report/${taskId}/download?format=md`
-            },
-            json: {
-                name: 'report.json',
-                exists: fs.existsSync(jsonPath),
-                preview: `${baseUrl}/outputs/${outputDirName}/report.json`,
-                download: `${baseUrl}/api/report/${taskId}/download?format=json`
-            }
-        }
-    };
-}
-
-/**
- * GET /api/report/:id
- * 获取报告信息（包含预览URL）
- */
-router.get('/report/:id', (req, res) => {
+router.get('/tasks/:id/report', async (req, res) => {
+  try {
     const { id } = req.params;
-    
-    // 1. 先尝试从内存获取
-    let task = taskQueue.getTask(id);
-    let userId = null;
-    let customTitle = null;
-    
-    // 2. 如果内存没有，从数据库获取
-    if (!task) {
-        try {
-            const dbTask = TaskDB.getById(id);
-            if (dbTask) {
-                task = {
-                    id: dbTask.id,
-                    status: dbTask.status,
-                    progress: dbTask.progress || 0,
-                    createdAt: dbTask.created_at,
-                    completedAt: dbTask.completed_at,
-                    file: { originalName: dbTask.file_name }
-                };
-                userId = dbTask.user_id;
-                customTitle = dbTask.custom_title || dbTask.title;
-            }
-        } catch (e) {
-            console.error('[Report] 从数据库获取任务失败:', e.message);
-        }
-    } else {
-        // 从内存任务获取用户ID和标题
-        userId = task.userId;
-        customTitle = task.customTitle || task.title;
-    }
+    console.log(`[Report] 获取任务数据: ${id}`);
+
+    // 使用正确的方法获取数据
+    const task = processingLogService.getTask(id);
     
     if (!task) {
-        return res.status(404).json({
-            success: false,
-            error: '任务不存在',
-            message: `找不到任务: ${id}`
-        });
-    }
-    
-    if (task.status !== 'completed') {
-        return res.status(400).json({
-            success: false,
-            error: '报告未就绪',
-            message: `任务状态: ${task.status}`,
-            task: {
-                id: task.id,
-                status: task.status,
-                progress: task.progress
-            }
-        });
-    }
-    
-    // 3. 查找输出目录
-    const outputDirName = findOutputDir(id);
-    
-    if (!outputDirName) {
-        return res.status(404).json({
-            success: false,
-            error: '报告不存在',
-            message: '任务已完成但未找到报告文件'
-        });
-    }
-    
-    // 4. 获取用户信息
-    const user = getUserInfo(userId);
-    
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const report = buildReportInfo(id, outputDirName, baseUrl, {
-        title: customTitle,
-        customTitle: customTitle
-    });
-    
-    res.json({
+      console.log(`[Report] ❌ 未找到任务: ${id}`);
+      return res.json({
         success: true,
-        report,
-        // 🆕 返回用户信息
-        user: user ? {
-            id: user.id,
-            username: user.username,
-            nickname: user.nickname
-        } : null,
-        createdAt: task.createdAt,
-        completedAt: task.completedAt
-    });
-});
+        words: [],
+        phrases: [],
+        patterns: [],
+        grammar: []
+      });
+    }
 
-/**
- * GET /api/report/:id/download
- * 下载报告文件
- * Query params: format = html | md | json
- */
-router.get('/report/:id/download', (req, res) => {
-    const { id } = req.params;
-    const format = req.query.format || 'html';
-    
-    // 查找输出目录
-    const outputDirName = findOutputDir(id);
-    
-    if (!outputDirName) {
-        return res.status(404).json({
-            error: '报告不存在'
-        });
-    }
-    
-    // 🆕 获取任务标题用于下载文件名
-    let downloadName = '课堂笔记';
-    try {
-        const dbTask = TaskDB.getById(id);
-        if (dbTask && (dbTask.custom_title || dbTask.title)) {
-            downloadName = dbTask.custom_title || dbTask.title;
-        }
-    } catch (e) {
-        console.error('[Report] 获取任务标题失败:', e.message);
-    }
-    
-    // 清理文件名中的特殊字符
-    const safeFileName = downloadName.replace(/[\\/:*?"<>|]/g, '_');
-    
-    // 确定文件路径和类型
-    let fileName, contentType, ext;
-    
-    switch (format.toLowerCase()) {
-        case 'html':
-            fileName = 'report.html';
-            contentType = 'text/html; charset=utf-8';
-            ext = '.html';
-            break;
-        case 'md':
-        case 'markdown':
-            fileName = 'report.md';
-            contentType = 'text/markdown; charset=utf-8';
-            ext = '.md';
-            break;
-        case 'json':
-            fileName = 'report.json';
-            contentType = 'application/json; charset=utf-8';
-            ext = '.json';
-            break;
-        default:
-            return res.status(400).json({
-                error: '不支持的格式',
-                message: `支持的格式: html, md, json`
-            });
-    }
-    
-    const filePath = path.join(OUTPUTS_DIR, outputDirName, fileName);
-    
-    // 检查文件是否存在
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).json({
-            error: '文件不存在',
-            message: `找不到文件: ${fileName}`
-        });
-    }
-    
-    // 设置响应头
-    res.setHeader('Content-Type', contentType);
-    
-    // 🆕 使用用户输入的标题作为下载文件名
-    // 使用 RFC 5987 编码支持中文文件名
-    const encodedFileName = encodeURIComponent(`${safeFileName}${ext}`);
-    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodedFileName}`);
-    
-    // 发送文件
-    res.sendFile(filePath);
-});
+    // 获取匹配项和未匹配项
+    const matchedItems = processingLogService.getMatchedItems(id);
+    const unmatchedItems = processingLogService.getUnmatchedItems(id);
 
-/**
- * GET /api/report/:id/content
- * 直接获取报告内容（用于前端预览）
- */
-router.get('/report/:id/content', (req, res) => {
-    const { id } = req.params;
-    const format = req.query.format || 'html';
-    
-    // 查找输出目录
-    const outputDirName = findOutputDir(id);
-    
-    if (!outputDirName) {
-        return res.status(404).json({
-            error: '报告不存在'
+    console.log(`[Report] 📊 数据获取成功:`);
+    console.log(`  - matched_items: ${matchedItems.length}`);
+    console.log(`  - unmatched_items: ${unmatchedItems.length}`);
+
+    // 解析和展示数据结构
+    if (matchedItems.length > 0) {
+      console.log(`[Report] 📝 matched_items 示例 (前3条):`);
+      matchedItems.slice(0, 3).forEach((item, index) => {
+        const matchedDataStr = typeof item.matched_data === 'string' 
+          ? item.matched_data 
+          : JSON.stringify(item.matched_data || {});
+        console.log(`  [${index}]`, {
+          keys: Object.keys(item),
+          item_type: item.item_type,
+          match_type: item.match_type,
+          original_text: item.original_text?.substring(0, 50),
+          matched_data_type: typeof item.matched_data,
+          matched_data_preview: matchedDataStr.substring(0, 100)
         });
+      });
     }
-    
-    let fileName;
-    
-    switch (format.toLowerCase()) {
-        case 'html':
-            fileName = 'report.html';
-            break;
-        case 'md':
-            fileName = 'report.md';
-            break;
-        case 'json':
-            fileName = 'report.json';
-            break;
-        default:
-            return res.status(400).json({ error: '不支持的格式' });
+
+    if (unmatchedItems.length > 0) {
+      console.log(`[Report] 📝 unmatched_items 示例 (前3条):`);
+      unmatchedItems.slice(0, 3).forEach((item, index) => {
+        const aiGeneratedStr = typeof item.ai_generated === 'string'
+          ? item.ai_generated
+          : JSON.stringify(item.ai_generated || {});
+        console.log(`  [${index}]`, {
+          keys: Object.keys(item),
+          item_type: item.item_type,
+          original_text: item.original_text?.substring(0, 50),
+          ai_generated_type: typeof item.ai_generated,
+          ai_generated_preview: aiGeneratedStr.substring(0, 100)
+        });
+      });
     }
-    
-    const filePath = path.join(OUTPUTS_DIR, outputDirName, fileName);
-    
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: '文件不存在' });
+
+    // 专门打印原始语法数据（用于调试）
+    const grammarMatched = matchedItems.filter(i => i.item_type === 'grammar');
+    const grammarUnmatched = unmatchedItems.filter(i => i.item_type === 'grammar');
+    if (grammarMatched.length > 0 || grammarUnmatched.length > 0) {
+      console.log(`[Report] 📚 原始语法数据统计: matched=${grammarMatched.length}, unmatched=${grammarUnmatched.length}`);
+      
+      if (grammarMatched.length > 0) {
+        console.log(`[Report] 📚 matched语法示例 (第1条原始数据):`);
+        const first = grammarMatched[0];
+        const data = typeof first.matched_data === 'string' 
+          ? JSON.parse(first.matched_data) 
+          : first.matched_data;
+        console.log('    原始字段:', Object.keys(data));
+        console.log('    数据内容:', data);
+      }
+      
+      if (grammarUnmatched.length > 0) {
+        console.log(`[Report] 📚 unmatched语法示例 (第1条原始数据):`);
+        const first = grammarUnmatched[0];
+        const data = typeof first.ai_generated === 'string'
+          ? JSON.parse(first.ai_generated)
+          : first.ai_generated;
+        console.log('    原始字段:', Object.keys(data));
+        console.log('    数据内容:', data);
+      }
     }
-    
-    const content = fs.readFileSync(filePath, 'utf-8');
-    
-    if (format === 'json') {
-        res.json(JSON.parse(content));
+
+    // 字段映射函数：统一不同来源的数据格式
+    const normalizeItem = (data, itemType) => {
+      // 基础字段
+      const normalized = {
+        type: itemType
+      };
+
+      // 根据类型映射字段
+      if (itemType === 'word') {
+        normalized.content = data.word || data.content || '';
+        normalized.phonetic = data.phonetic || '';
+        normalized.pos = data.pos || data.wordClass || '';
+        normalized.meaning = data.meaning || data.translation || '';
+        normalized.example = data.example || '';
+      } else if (itemType === 'phrase') {
+        normalized.content = data.phrase || data.content || '';
+        normalized.meaning = data.meaning || data.translation || '';
+        normalized.example = data.example || '';
+      } else if (itemType === 'pattern') {
+        normalized.content = data.pattern || data.content || '';
+        normalized.meaning = data.meaning || data.translation || '';
+        normalized.example = data.example || '';
+      } else if (itemType === 'grammar') {
+        // 语法数据 - 返回完整字段（与 grammar 表结构一致）
+        // 保留所有原始字段，确保 ReportViewer 可以正确渲染
+        normalized.id = data.id;
+        normalized.title = data.title || '';
+        normalized.keywords = Array.isArray(data.keywords) ? data.keywords : [];
+        normalized.definition = data.definition || '';
+        normalized.structure = data.structure || '';
+        normalized.usage = Array.isArray(data.usage) ? data.usage : [];
+        normalized.mistakes = Array.isArray(data.mistakes) ? data.mistakes : [];
+        normalized.examples = Array.isArray(data.examples) ? data.examples : [];
+        normalized.category = data.category || '';
+        normalized.difficulty = data.difficulty || '';
+        normalized.sub_topics = Array.isArray(data.sub_topics) ? data.sub_topics : [];
+        normalized.enabled = data.enabled;
+        normalized.is_new = data.is_new;
+      }
+
+      return normalized;
+    };
+
+    // 解析 matched_items 的 matched_data (JSON字符串)
+    const parsedMatchedItems = matchedItems.map(item => {
+      try {
+        const matchedData = typeof item.matched_data === 'string' 
+          ? JSON.parse(item.matched_data) 
+          : item.matched_data;
+        
+        // 使用字段映射
+        return normalizeItem(matchedData, item.item_type);
+      } catch (e) {
+        console.error(`[Report] ❌ 解析 matched_data 失败:`, e.message);
+        return null;
+      }
+    }).filter(item => item !== null);
+
+    // 解析 unmatched_items 的 ai_generated (JSON字符串)
+    const parsedUnmatchedItems = unmatchedItems.map(item => {
+      try {
+        const aiGenerated = typeof item.ai_generated === 'string'
+          ? JSON.parse(item.ai_generated)
+          : item.ai_generated;
+        
+        // 使用字段映射
+        return normalizeItem(aiGenerated, item.item_type);
+      } catch (e) {
+        console.error(`[Report] ❌ 解析 ai_generated 失败:`, e.message);
+        return null;
+      }
+    }).filter(item => item !== null);
+
+    // 合并所有项目 (优先使用 unmatched，因为是AI生成的新内容)
+    const allItems = [...parsedUnmatchedItems, ...parsedMatchedItems];
+
+    console.log(`[Report] 📦 解析后总数: ${allItems.length}`);
+
+    // 输出几个示例看看映射后的结构
+    if (allItems.length > 0) {
+      console.log(`[Report] 📋 映射后的数据示例 (前3条):`);
+      allItems.slice(0, 3).forEach((item, index) => {
+        console.log(`  [${index}]`, {
+          type: item.type,
+          content: item.content?.substring(0, 30),
+          phonetic: item.phonetic,
+          pos: item.pos,
+          meaning: item.meaning?.substring(0, 30),
+          example: item.example?.substring(0, 30)
+        });
+      });
+    }
+
+    // 专门打印语法数据示例（用于调试）
+    const grammarItems = allItems.filter(item => item.type === 'grammar');
+    if (grammarItems.length > 0) {
+      console.log(`[Report] 📚 语法数据示例 (前3条):`);
+      grammarItems.slice(0, 3).forEach((item, index) => {
+        console.log(`  [${index}]`, {
+          type: item.type,
+          content: item.content?.substring(0, 50),
+          meaning: item.meaning?.substring(0, 50),
+          example: item.example?.substring(0, 50),
+          usage: Array.isArray(item.usage) ? item.usage.join('; ').substring(0, 50) : item.usage
+        });
+      });
     } else {
-        res.type(format === 'html' ? 'text/html' : 'text/plain').send(content);
+      console.log(`[Report] ⚠️ 警告: 映射后没有找到语法数据！`);
+      console.log(`[Report] 🔍 原始数据中的语法项数量: ${matchedItems.filter(i => i.item_type === 'grammar').length + unmatchedItems.filter(i => i.item_type === 'grammar').length}`);
     }
+
+    // 统计类型分布
+    const typeDistribution = {};
+    allItems.forEach(item => {
+      const type = item.type || 'unknown';
+      typeDistribution[type] = (typeDistribution[type] || 0) + 1;
+    });
+
+    console.log(`[Report] 📊 类型分布统计:`, typeDistribution);
+
+    // 按类型分类
+    const words = allItems.filter(item => {
+      const type = item.type;
+      return type === 'word' || type === 'words' || type === 'vocabulary';
+    });
+
+    const phrases = allItems.filter(item => {
+      const type = item.type;
+      return type === 'phrase' || type === 'phrases' || type === 'idiom';
+    });
+
+    const patterns = allItems.filter(item => {
+      const type = item.type;
+      return type === 'pattern' || type === 'patterns' || type === 'sentence';
+    });
+
+    const grammar = allItems.filter(item => {
+      const type = item.type;
+      return type === 'grammar' || type === 'grammars' || type === 'grammarPoint';
+    });
+
+    console.log(`[Report] ✅ 返回数据统计:`);
+    console.log(`  - words: ${words.length}`);
+    console.log(`  - phrases: ${phrases.length}`);
+    console.log(`  - patterns: ${patterns.length}`);
+    console.log(`  - grammar: ${grammar.length}`);
+
+    res.json({
+      success: true,
+      words,
+      phrases,
+      patterns,
+      grammar,
+      // 调试信息
+      _debug: {
+        totalItems: allItems.length,
+        typeDistribution,
+        matchedCount: matchedItems.length,
+        unmatchedCount: unmatchedItems.length,
+        parsedMatchedCount: parsedMatchedItems.length,
+        parsedUnmatchedCount: parsedUnmatchedItems.length
+      }
+    });
+
+  } catch (error) {
+    console.error('[Report] 错误:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * 获取报告信息（保留原有接口）
+ * GET /api/report/:id
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    const reportPath = path.join(__dirname, '../../reports', req.params.id);
+    
+    // 检查报告是否存在
+    if (!fs.existsSync(reportPath)) {
+      return res.status(404).json({
+        success: false,
+        error: '报告不存在'
+      });
+    }
+
+    // 读取报告文件信息
+    const files = fs.readdirSync(reportPath);
+    const report = {
+      taskId: req.params.id,
+      title: `报告_${req.params.id}`,
+      files: {
+        html: files.find(f => f.endsWith('.html')),
+        markdown: files.find(f => f.endsWith('.md')),
+        json: files.find(f => f.endsWith('.json'))
+      }
+    };
+
+    res.json({
+      success: true,
+      report
+    });
+  } catch (error) {
+    console.error('[Report] 错误:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 module.exports = router;

@@ -1,6 +1,12 @@
 /**
- * 替换库服务 v3.0
+ * 替换库服务 v3.1
  * 文件位置: backend/services/matchingDictService.js
+ * 
+ * 📦 v3.1 更新：
+ * - 新增：findRuleFuzzy() 双向模糊匹配方法
+ * - 优化：同时匹配 original_text 和 target_text
+ * - 优化：精确匹配优先 + 类型过滤 + 提前终止
+ * - 配置：阈值 80%，高置信度 90%
  * 
  * 📦 v3.0 更新：
  * - 合并：排除库功能合并进来（不再使用 exclude.db）
@@ -153,6 +159,103 @@ class MatchingDictService {
     isExcluded(text, type) {
         const rule = this.findRule(text, type);
         return rule && rule.isExclude;
+    }
+
+    /**
+     * v4.5.1 新增：模糊匹配替换规则（双向匹配）
+     * 同时匹配 original_text 和 target_text，返回最接近的规则
+     * 
+     * @param {string} text - 输入文本
+     * @param {string} type - 类型 (word/phrase/pattern/grammar)
+     * @param {function} calculateSimilarity - 相似度计算函数
+     * @returns {Object|null} { rule, score, matchedVia: 'original'|'target' }
+     */
+    findRuleFuzzy(text, type, calculateSimilarity) {
+        // 配置
+        const CONFIG = {
+            MIN_THRESHOLD: 0.80,      // 最低阈值 80%
+            HIGH_THRESHOLD: 0.90,     // 高置信度 90%
+            EARLY_STOP: 0.98          // 提前终止 98%
+        };
+        
+        // Step 1: 精确匹配优先（最快，覆盖90%情况）
+        const exactMatch = this.findRule(text, type);
+        if (exactMatch) {
+            console.log(`[替换库] 精确匹配: "${text}" → "${exactMatch.target_text || '[排除]'}"`);
+            return {
+                rule: exactMatch,
+                score: 1.0,
+                matchedVia: 'exact'
+            };
+        }
+        
+        // Step 2: 按类型过滤候选规则（性能优化）
+        this.checkCache();
+        const normalizedType = type.toLowerCase().trim();
+        const candidates = this.cache.rules.filter(r => 
+            r.original_type.toLowerCase().trim() === normalizedType
+        );
+        
+        if (candidates.length === 0) {
+            return null;  // 没有候选规则
+        }
+        
+        console.log(`[替换库] 模糊匹配: "${text}" (候选规则: ${candidates.length}条)`);
+        
+        // Step 3: 双向模糊匹配
+        let bestScore = 0;
+        let bestMatch = null;
+        let bestSource = '';
+        
+        for (const rule of candidates) {
+            // 计算 vs original_text（用户输入的原文）
+            const scoreOriginal = calculateSimilarity(text, rule.original_text);
+            if (scoreOriginal > bestScore) {
+                bestScore = scoreOriginal;
+                bestMatch = rule;
+                bestSource = 'original';
+            }
+            
+            // 计算 vs target_text（匹配到的目标文本）
+            // 只有当 target_text 不为空时才计算（排除规则跳过）
+            if (rule.target_text && rule.target_text.trim()) {
+                const scoreTarget = calculateSimilarity(text, rule.target_text);
+                if (scoreTarget > bestScore) {
+                    bestScore = scoreTarget;
+                    bestMatch = rule;
+                    bestSource = 'target';
+                }
+            }
+            
+            // Step 4: 提前终止优化（98%以上已经很完美）
+            if (bestScore >= CONFIG.EARLY_STOP) {
+                console.log(`[替换库] 提前终止: ${(bestScore * 100).toFixed(0)}% ≥ ${CONFIG.EARLY_STOP * 100}%`);
+                break;
+            }
+        }
+        
+        // Step 5: 阈值判断
+        if (bestScore >= CONFIG.MIN_THRESHOLD) {
+            // 增加使用次数
+            this.incrementUseCount(bestMatch.id);
+            
+            // 添加 isExclude 标识
+            bestMatch.isExclude = !bestMatch.target_text || bestMatch.target_text.trim() === '';
+            
+            const confidence = bestScore >= CONFIG.HIGH_THRESHOLD ? '高' : '中';
+            console.log(`[替换库] 模糊匹配成功: "${text}" → "${bestMatch.target_text || '[排除]'}" (${(bestScore * 100).toFixed(0)}%, 置信度:${confidence}, 匹配方式:${bestSource === 'original' ? '原文' : '目标'})`);
+            
+            return {
+                rule: bestMatch,
+                score: bestScore,
+                matchedVia: bestSource,  // 'original' 或 'target'
+                confidence: confidence
+            };
+        }
+        
+        // 没有找到满足阈值的规则
+        console.log(`[替换库] 未找到匹配: "${text}" (最高分: ${(bestScore * 100).toFixed(0)}% < ${CONFIG.MIN_THRESHOLD * 100}%)`);
+        return null;
     }
 
     /**

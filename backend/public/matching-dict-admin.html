@@ -208,17 +208,18 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th style="width: 60px;">序号</th>
                         <th>原始词</th>
                         <th>类型</th>
                         <th>替换为</th>
                         <th>使用次数</th>
                         <th>创建时间</th>
+                        <th style="width: 60px;">ID</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody id="rulesList">
-                    <tr><td colspan="7" class="loading">加载中...</td></tr>
+                    <tr><td colspan="8" class="loading">加载中...</td></tr>
                 </tbody>
             </table>
             <div class="pagination-wrap" id="paginationWrap" style="display:none;">
@@ -417,7 +418,7 @@
                 const start = (page - 1) * pageSize;
                 displayData = data.slice(start, start + pageSize);
             }
-            renderRules(displayData);
+            renderRules(displayData, page, pageSize);
             renderPaginationNav();
         }
         
@@ -478,7 +479,8 @@
                 if (data.success) {
                     allRules = data.data || [];
                     pagination.data = allRules;
-                    pagination.total = allRules.length;
+                    // 修复：使用API返回的total，而不是data.length
+                    pagination.total = data.total || allRules.length;
                     pagination.page = 1;
                     renderPaginated();
                 }
@@ -487,18 +489,21 @@
             }
         }
 
-        function renderRules(rules) {
+        function renderRules(rules, page = 1, pageSize = 100) {
             const tbody = document.getElementById('rulesList');
             if (!rules.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><h3>暂无规则</h3></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><h3>暂无规则</h3></td></tr>';
                 return;
             }
             
-            tbody.innerHTML = rules.map(r => {
+            tbody.innerHTML = rules.map((r, index) => {
                 const typeClass = r.original_type || 'phrase';
                 const typeLabel = {word: '单词', phrase: '短语', pattern: '句型', grammar: '语法'}[typeClass] || typeClass;
                 const time = r.created_at ? new Date(r.created_at).toLocaleString('zh-CN', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
                 const useCount = r.use_count || 0;
+                
+                // 计算序号
+                const rowNumber = (page - 1) * pageSize + index + 1;
                 
                 // v3.0: 区分显示替换和排除
                 const isExclude = !r.target_text || r.target_text.trim() === '';
@@ -509,12 +514,13 @@
                 
                 return `
                 <tr style="${rowStyle}">
-                    <td>${r.id}</td>
+                    <td style="font-weight: 500; color: #6b7280;">${rowNumber}</td>
                     <td>${escapeHtml(r.original_text)}</td>
                     <td><span class="type-badge ${typeClass}">${typeLabel}</span></td>
                     <td>${targetDisplay}</td>
                     <td>${useCount}</td>
                     <td>${time}</td>
+                    <td style="color: #9ca3af; font-size: 12px;">${r.id}</td>
                     <td>
                         <button class="btn btn-secondary btn-sm" onclick="editRule(${r.id})">编辑</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteRule(${r.id})">删除</button>

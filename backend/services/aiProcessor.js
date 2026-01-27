@@ -1,5 +1,11 @@
 /**
- * AI 处理器服务 - 英语课堂专用版 v4.3.8
+ * AI 处理器服务 - 英语课堂专用版 v5.0
+ * 
+ * 【v5.0 更新】 (2026-01-26)
+ * - 新增：文本自动清洗功能（去除加号、统一符号）
+ * - 新增：textCleaner 服务集成
+ * - 优化：短语和句型统一使用 sb., sth. 等通用符号
+ * - 优化：自动删除括号内的示例
  * 
  * 【v4.3.8 更新】
  * - 优化：添加正确性检查（Ms→Ms.等）
@@ -27,8 +33,8 @@
  * - 每个阶段都推送详细执行信息
  * 
  * @author Sorryios AI Team
- * @version 4.3.8
- * @date 2026-01-20
+ * @version 5.0
+ * @date 2026-01-26
  */
 
 const fs = require('fs');
@@ -55,6 +61,18 @@ try {
     console.log('[AIProcessor] ✓ 排除库服务已加载');
 } catch (e) {
     console.warn('[AIProcessor] ✗ 处理日志服务未加载:', e.message);
+}
+
+// ============================================
+// 文本清洗服务 v5.0
+// ============================================
+let textCleaner = null;
+try {
+    const { getTextCleaner } = require('./textCleaner');
+    textCleaner = getTextCleaner();
+    console.log('[AIProcessor] ✓ 文本清洗服务已加载');
+} catch (e) {
+    console.warn('[AIProcessor] ✗ 文本清洗服务未加载:', e.message);
 }
 
 // ============================================
@@ -488,6 +506,41 @@ class KeywordNormalizer {
         console.log('[FinalNormalizer] ───────────────────────────────────────');
         console.log(`[FinalNormalizer] 最终: 单词${result.vocabulary.words.length}, 短语${result.vocabulary.phrases.length}, 句型${result.vocabulary.patterns.length}, 语法${result.grammar.length}`);
         console.log('[FinalNormalizer] ═══════════════════════════════════════\n');
+        
+        // ========== v5.0: 文本清洗 ==========
+        // 去除加号、替换通用符号（sb., sth.）、删除括号示例
+        if (textCleaner) {
+            console.log('[TextCleaner] ═══════════════════════════════════════');
+            console.log('[TextCleaner] 开始清洗文本（去除+号、统一符号）');
+            console.log('[TextCleaner] ═══════════════════════════════════════');
+            
+            const beforeClean = {
+                words: result.vocabulary.words.length,
+                phrases: result.vocabulary.phrases.length,
+                patterns: result.vocabulary.patterns.length,
+                grammar: result.grammar.length
+            };
+            
+            try {
+                // 清洗词汇数据
+                result.vocabulary = textCleaner.cleanVocabulary(result.vocabulary);
+                
+                // 清洗语法数据
+                result.grammar = textCleaner.cleanGrammarList(result.grammar);
+                
+                console.log(`[TextCleaner] ✅ 清洗完成:`);
+                console.log(`[TextCleaner]   - 单词: ${beforeClean.words} 项`);
+                console.log(`[TextCleaner]   - 短语: ${beforeClean.phrases} 项`);
+                console.log(`[TextCleaner]   - 句型: ${beforeClean.patterns} 项`);
+                console.log(`[TextCleaner]   - 语法: ${beforeClean.grammar} 项`);
+                console.log('[TextCleaner] ═══════════════════════════════════════\n');
+            } catch (cleanError) {
+                console.error('[TextCleaner] ❌ 清洗失败:', cleanError.message);
+                console.warn('[TextCleaner] ⚠️  将使用未清洗的数据');
+            }
+        } else {
+            console.warn('[TextCleaner] ⚠️  文本清洗服务未启用，跳过清洗');
+        }
         
         return result;
     }
