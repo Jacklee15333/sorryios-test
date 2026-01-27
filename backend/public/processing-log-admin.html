@@ -1114,17 +1114,17 @@
                     </div>
                 </div>
 
-                <!-- v6.4 新增：词库搜索区 -->
+                <!-- v6.4 统一搜索区（词库+语法库+替换库） -->
                 <div style="margin-bottom: 16px;">
-                    <div style="font-size: 13px; color: #0891b2; margin-bottom: 8px; font-weight: 600;">🔍 搜索词库（可选，帮助精准匹配）</div>
+                    <div style="font-size: 13px; color: #0891b2; margin-bottom: 8px; font-weight: 600;">🔍 智能搜索（词库+语法库+替换库）</div>
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="text" id="vocabSearchInput" placeholder="输入关键词搜索词库中的短语/单词..." 
+                        <input type="text" id="unifiedSearchInput" placeholder="输入关键词，自动搜索全部词库、语法库和替换库..." 
                                style="flex: 1; padding: 10px; border: 1px solid #67e8f9; border-radius: 6px;"
-                               onkeydown="if(event.key==='Enter'){searchVocabForMatch(); event.preventDefault();}">
-                        <button class="btn btn-sm" onclick="searchVocabForMatch()" style="background: #0891b2; color: white; padding: 8px 12px; white-space: nowrap;">🔍 搜索</button>
+                               onkeydown="if(event.key==='Enter'){searchAllForMatch(); event.preventDefault();}">
+                        <button class="btn btn-sm" onclick="searchAllForMatch()" style="background: #0891b2; color: white; padding: 8px 12px; white-space: nowrap;">🔍 搜索</button>
                     </div>
-                    <!-- 搜索结果 -->
-                    <div id="vocabSearchResults" style="display: none; margin-top: 8px; max-height: 200px; overflow-y: auto; border: 1px solid #e5e5e5; border-radius: 8px;">
+                    <!-- 统一搜索结果 -->
+                    <div id="unifiedSearchResults" style="display: none; margin-top: 8px; max-height: 400px; overflow-y: auto; border: 1px solid #e5e5e5; border-radius: 8px;">
                     </div>
                 </div>
 
@@ -1144,7 +1144,7 @@
                 <div id="matchFilteredWords" style="font-size: 11px; color: #9ca3af; margin-bottom: 12px;"></div>
 
                 <div style="background: #f3f4f6; padding: 10px 12px; border-radius: 8px; font-size: 12px; color: #6b7280;">
-                    💡 操作：点击单词直接选中 | 拖动单词到组合区或直接输入文本生成短语 | 搜索词库找到精确匹配 | 点击已选择项移除
+                    💡 操作：点击单词直接选中 | 拖动单词到组合区或直接输入文本生成短语 | 使用统一搜索查找词库/语法库/替换库 | 点击已选择项移除
                 </div>
             </div>
             <div class="modal-footer">
@@ -2097,7 +2097,7 @@ function switchTab(tab) {
         }
         
         // v7.0: 清除选择
-        function clearSelectedMatch() {
+        window.clearSelectedMatch = function clearSelectedMatch() {
             document.getElementById('correctMatchSelect').value = '';
             document.getElementById('selectedMatch').style.display = 'none';
         }
@@ -3258,7 +3258,7 @@ function switchTab(tab) {
         /**
          * 执行替换操作
          */
-        async function executeReplace() {
+        window.executeReplace = async function executeReplace() {
             const id = document.getElementById('replaceItemId').value;
             const originalText = document.getElementById('replaceOriginalText').textContent;
             const itemType = document.getElementById('replaceItemType').value;
@@ -3373,6 +3373,43 @@ function switchTab(tab) {
             
             // 分析原文
             await analyzeTextForOptions(originalText);
+            
+            // 添加点击外部区域关闭搜索结果的监听器
+            setTimeout(() => {
+                if (!window._searchClickHandlerAdded) {
+                    document.addEventListener('click', handleSearchOutsideClick);
+                    window._searchClickHandlerAdded = true;
+                    console.log('[搜索] 已添加外部点击监听器');
+                }
+            }, 100);
+        }
+        
+        /**
+         * 处理点击搜索框外部区域，关闭搜索结果
+         */
+        function handleSearchOutsideClick(e) {
+            // 获取统一搜索相关的元素
+            const unifiedInput = document.getElementById('unifiedSearchInput');
+            const unifiedResults = document.getElementById('unifiedSearchResults');
+            
+            // 检查点击是否是搜索按钮
+            const isSearchButton = e.target.closest && (
+                e.target.closest('button[onclick*="searchAllForMatch"]') || 
+                e.target.closest('button[onclick*="searchGrammarLib"]')
+            );
+            
+            // 如果是搜索按钮，不做任何处理
+            if (isSearchButton) {
+                return;
+            }
+            
+            // 检查点击是否在搜索区域内
+            const clickedInSearch = unifiedInput && (unifiedInput.contains(e.target) || unifiedResults.contains(e.target));
+            
+            // 如果点击在外部，关闭搜索结果
+            if (!clickedInSearch && unifiedResults) {
+                unifiedResults.style.display = 'none';
+            }
         }
 
         /**
@@ -3940,6 +3977,292 @@ function switchTab(tab) {
         }
         
         /**
+         * 统一搜索：同时搜索词库、语法库、替换库
+         */
+        window.searchAllForMatch = async function searchAllForMatch() {
+            const searchInput = document.getElementById('unifiedSearchInput');
+            const keyword = searchInput.value.trim();
+            const resultsDiv = document.getElementById('unifiedSearchResults');
+            
+            if (!keyword) {
+                showToast('请输入搜索关键词', 'warning');
+                return;
+            }
+            
+            try {
+                resultsDiv.innerHTML = '<div style="padding: 16px; text-align: center; color: #0891b2;">搜索中...</div>';
+                resultsDiv.style.display = 'block';
+                
+                // 并行搜索三个库
+                const [wordsRes, phrasesRes, patternsRes, grammarRes, replaceRes] = await Promise.all([
+                    fetch(`/api/vocabulary/words?search=${encodeURIComponent(keyword)}&limit=15`).then(r => r.json()),
+                    fetch(`/api/vocabulary/phrases?search=${encodeURIComponent(keyword)}&limit=15`).then(r => r.json()),
+                    fetch(`/api/vocabulary/patterns?search=${encodeURIComponent(keyword)}&limit=10`).then(r => r.json()),
+                    fetch(`/api/grammar?search=${encodeURIComponent(keyword)}&limit=50`).then(r => r.json()),
+                    fetch(`/api/matching-dict/rules?search=${encodeURIComponent(keyword)}&limit=15`).then(r => r.json())
+                ]);
+                
+                let html = '';
+                let totalCount = 0;
+                
+                // 1. 显示单词结果
+                if (wordsRes.success && wordsRes.data && wordsRes.data.length > 0) {
+                    html += '<div style="padding: 8px 12px; background: #f0f9ff; font-size: 12px; color: #0369a1; font-weight: 600; border-bottom: 1px solid #bae6fd;">📝 单词 (' + wordsRes.data.length + ')</div>';
+                    wordsRes.data.forEach(item => {
+                        totalCount++;
+                        html += `
+                            <div onclick="window.selectUnifiedResult('${escapeJs(item.word)}', 'word', ${item.id}, '${escapeJs(item.meaning || '')}', true)"
+                                 style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;"
+                                 onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                <span style="font-weight: 500;">${escapeHtml(item.word)}</span>
+                                <span style="font-size: 12px; color: #6b7280;">${escapeHtml(item.meaning || '').substring(0, 30)}</span>
+                            </div>`;
+                    });
+                }
+                
+                // 2. 显示短语结果
+                if (phrasesRes.success && phrasesRes.data && phrasesRes.data.length > 0) {
+                    html += '<div style="padding: 8px 12px; background: #faf5ff; font-size: 12px; color: #7c3aed; font-weight: 600; border-bottom: 1px solid #e9d5ff;">🔗 短语 (' + phrasesRes.data.length + ')</div>';
+                    phrasesRes.data.forEach(item => {
+                        totalCount++;
+                        html += `
+                            <div onclick="window.selectUnifiedResult('${escapeJs(item.phrase)}', 'phrase', ${item.id}, '${escapeJs(item.meaning || '')}', true)"
+                                 style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;"
+                                 onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                <span style="font-weight: 500;">${escapeHtml(item.phrase)}</span>
+                                <span style="font-size: 12px; color: #6b7280;">${escapeHtml(item.meaning || '').substring(0, 30)}</span>
+                            </div>`;
+                    });
+                }
+                
+                // 3. 显示句型结果
+                if (patternsRes.success && patternsRes.data && patternsRes.data.length > 0) {
+                    html += '<div style="padding: 8px 12px; background: #fef3c7; font-size: 12px; color: #92400e; font-weight: 600; border-bottom: 1px solid #fde68a;">📐 句型 (' + patternsRes.data.length + ')</div>';
+                    patternsRes.data.forEach(item => {
+                        totalCount++;
+                        html += `
+                            <div onclick="window.selectUnifiedResult('${escapeJs(item.pattern)}', 'pattern', ${item.id}, '${escapeJs(item.meaning || '')}', true)"
+                                 style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;"
+                                 onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                <span style="font-weight: 500;">${escapeHtml(item.pattern)}</span>
+                                <span style="font-size: 12px; color: #6b7280;">${escapeHtml(item.meaning || '').substring(0, 30)}</span>
+                            </div>`;
+                    });
+                }
+                
+                // 4. 显示语法结果（带关键词过滤）
+                if (grammarRes.success && grammarRes.data && grammarRes.data.length > 0) {
+                    // 过滤和排序
+                    let filteredGrammar = grammarRes.data.filter(item => {
+                        const titleMatch = item.title && item.title.toLowerCase().includes(keyword.toLowerCase());
+                        const keywordsMatch = item.keywords && item.keywords.some(kw => 
+                            kw.toLowerCase().includes(keyword.toLowerCase())
+                        );
+                        return titleMatch || keywordsMatch;
+                    });
+                    
+                    filteredGrammar.sort((a, b) => {
+                        const aKeywordExact = a.keywords && a.keywords.some(kw => 
+                            kw.toLowerCase() === keyword.toLowerCase()
+                        );
+                        const bKeywordExact = b.keywords && b.keywords.some(kw => 
+                            kw.toLowerCase() === keyword.toLowerCase()
+                        );
+                        if (aKeywordExact && !bKeywordExact) return -1;
+                        if (!aKeywordExact && bKeywordExact) return 1;
+                        return 0;
+                    });
+                    
+                    filteredGrammar = filteredGrammar.slice(0, 10);
+                    
+                    if (filteredGrammar.length > 0) {
+                        html += '<div style="padding: 8px 12px; background: #faf5ff; font-size: 12px; color: #7c3aed; font-weight: 600; border-bottom: 1px solid #e9d5ff;">📚 语法 (' + filteredGrammar.length + ')</div>';
+                        filteredGrammar.forEach(item => {
+                            totalCount++;
+                            const matchedKeywords = item.keywords ? item.keywords.filter(kw => 
+                                kw.toLowerCase().includes(keyword.toLowerCase())
+                            ).slice(0, 2).join(', ') : '';
+                            
+                            html += `
+                                <div onclick="window.selectUnifiedResult('${escapeJs(item.title)}', 'grammar', ${item.id}, '${escapeJs(item.definition || '')}', true)"
+                                     style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0;"
+                                     onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                    <div style="font-weight: 500; margin-bottom: 2px;">${escapeHtml(item.title)}</div>
+                                    ${matchedKeywords ? `<div style="font-size: 11px; color: #7c3aed; margin-bottom: 2px;">🏷️ ${escapeHtml(matchedKeywords)}</div>` : ''}
+                                    <div style="font-size: 12px; color: #6b7280;">${escapeHtml(item.definition || '').substring(0, 40)}...</div>
+                                </div>`;
+                        });
+                    }
+                }
+                
+                // 5. 显示替换库结果（只显示有target_text的）
+                if (replaceRes.success && replaceRes.data && replaceRes.data.length > 0) {
+                    const validReplaces = replaceRes.data.filter(item => item.target_text && item.target_text.trim());
+                    if (validReplaces.length > 0) {
+                        html += '<div style="padding: 8px 12px; background: #fef3c7; font-size: 12px; color: #f59e0b; font-weight: 600; border-bottom: 1px solid #fde68a;">🔄 替换规则 (' + validReplaces.length + ')</div>';
+                        validReplaces.forEach(item => {
+                            totalCount++;
+                            
+                            // 容错处理：如果target_text是JSON格式，自动提取text字段
+                            let displayTargetText = item.target_text;
+                            try {
+                                // 检测是否是JSON格式（以 [{ 或 {" 开头）
+                                if (displayTargetText.trim().startsWith('[{') || displayTargetText.trim().startsWith('{"')) {
+                                    const parsed = JSON.parse(displayTargetText);
+                                    // 如果是数组，取第一个元素的text
+                                    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].text) {
+                                        displayTargetText = parsed[0].text;
+                                    }
+                                    // 如果是对象，直接取text
+                                    else if (parsed.text) {
+                                        displayTargetText = parsed.text;
+                                    }
+                                }
+                            } catch (e) {
+                                // JSON解析失败，使用原值（不影响正常数据）
+                            }
+                            
+                            html += `
+                                <div onclick="window.selectUnifiedResultReplace('${escapeJs(item.original_text)}', '${escapeJs(displayTargetText)}', '${escapeJs(item.original_type)}')"
+                                     style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0;"
+                                     onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                                        <span style="font-weight: 500;">${escapeHtml(item.original_text)}</span>
+                                        <span style="color: #f59e0b;">→</span>
+                                        <span style="color: #059669; font-weight: 500;">${escapeHtml(displayTargetText)}</span>
+                                    </div>
+                                    <div style="font-size: 11px; color: #9ca3af;">类型: ${item.original_type}</div>
+                                </div>`;
+                        });
+                    }
+                }
+                
+                if (totalCount === 0) {
+                    html = '<div style="padding: 20px; text-align: center; color: #9ca3af;">未找到"' + escapeHtml(keyword) + '"相关的结果</div>';
+                } else {
+                    html = `<div style="padding: 8px 12px; background: #ecfdf5; font-size: 12px; color: #059669; font-weight: 600; border-bottom: 2px solid #10b981;">找到 ${totalCount} 条结果</div>` + html;
+                }
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (e) {
+                console.error('统一搜索失败:', e);
+                resultsDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #dc2626;">搜索失败: ' + e.message + '</div>';
+                showToast('搜索失败: ' + e.message, 'error');
+            }
+        }
+        
+        /**
+         * 选择统一搜索结果（词库/语法库）
+         */
+        window.selectUnifiedResult = function selectUnifiedResult(text, type, id, meaning, inVocab) {
+            // 检查是否已选择
+            if (window._matchSelectedItems.some(item => 
+                item.text.toLowerCase() === text.toLowerCase()
+            )) {
+                showToast('该项已选择', 'warning');
+                return;
+            }
+            
+            window._matchSelectedItems.push({
+                text: text,
+                type: type,
+                inVocab: inVocab,
+                vocabInfo: { id: id, type: type, meaning: meaning }
+            });
+            
+            renderSelectedItems();
+            showToast('已选择: ' + text, 'success');
+            
+            // 隐藏搜索结果
+            document.getElementById('unifiedSearchResults').style.display = 'none';
+            document.getElementById('unifiedSearchInput').value = '';
+        }
+        
+        /**
+         * 选择统一搜索结果（替换库）
+         */
+        window.selectUnifiedResultReplace = async function selectUnifiedResultReplace(originalText, targetText, type) {
+            // 检查是否已选择
+            if (window._matchSelectedItems.some(item => 
+                item.text.toLowerCase() === targetText.toLowerCase()
+            )) {
+                showToast('该项已选择', 'warning');
+                return;
+            }
+            
+            try {
+                let searchRes;
+                
+                // 对于grammar类型，直接查询grammar表
+                if (type === 'grammar') {
+                    showToast('正在查询语法库...', 'info');
+                    const response = await fetch(`/api/grammar?search=${encodeURIComponent(targetText)}`);
+                    const result = await response.json();
+                    
+                    // 正确的数据路径是 result.data，不是 result.items
+                    const items = result.data || result.items || [];
+                    
+                    // 查找精确匹配
+                    const exactMatch = items.find(item => item.title === targetText);
+                    
+                    if (exactMatch) {
+                        searchRes = {
+                            found: true,
+                            info: {
+                                id: exactMatch.id,
+                                type: 'grammar',
+                                meaning: exactMatch.definition || exactMatch.title
+                            }
+                        };
+                    } else {
+                        searchRes = { found: false, info: null };
+                    }
+                } else {
+                    // 对于非grammar类型，使用原来的searchVocabQuick
+                    showToast('正在查询词库...', 'info');
+                    searchRes = await searchVocabQuick(targetText, type);
+                }
+                
+                window._matchSelectedItems.push({
+                    text: targetText,
+                    type: type,
+                    inVocab: searchRes.found,
+                    vocabInfo: searchRes.info,
+                    replaceRule: { original: originalText, target: targetText }
+                });
+                
+                renderSelectedItems();
+                
+                if (searchRes.found) {
+                    showToast('已选择: ' + targetText + ' (词库已有)', 'success');
+                } else {
+                    showToast('已选择: ' + targetText + ' (需补充信息)', 'warning');
+                }
+                
+                // 隐藏搜索结果
+                document.getElementById('unifiedSearchResults').style.display = 'none';
+                document.getElementById('unifiedSearchInput').value = '';
+                
+            } catch (e) {
+                console.error('查询词库失败:', e);
+                // 如果查询失败，按不在词库处理
+                window._matchSelectedItems.push({
+                    text: targetText,
+                    type: type,
+                    inVocab: false,
+                    replaceRule: { original: originalText, target: targetText }
+                });
+                
+                renderSelectedItems();
+                showToast('已选择: ' + targetText, 'success');
+                
+                document.getElementById('unifiedSearchResults').style.display = 'none';
+                document.getElementById('unifiedSearchInput').value = '';
+            }
+        }
+        
+        /**
          * v6.4 新增：选择搜索结果
          */
         function selectSearchResult(text, type, id, meaning) {
@@ -3964,6 +4287,220 @@ function switchTab(tab) {
             // 隐藏搜索结果
             document.getElementById('vocabSearchResults').style.display = 'none';
             document.getElementById('vocabSearchInput').value = '';
+        }
+        
+        /**
+         * 新增：搜索语法库（改进版 - 更精准）
+         */
+        async function searchGrammarForMatch() {
+            const searchInput = document.getElementById('grammarSearchInputMatch');
+            const keyword = searchInput.value.trim();
+            const resultsDiv = document.getElementById('grammarSearchResultsMatch');
+            
+            if (!keyword) {
+                showToast('请输入搜索关键词', 'warning');
+                return;
+            }
+            
+            try {
+                // 改进：同时搜索title和keywords，使用keywords字段更精准
+                const res = await fetch(`/api/grammar?search=${encodeURIComponent(keyword)}&limit=50`);
+                const data = await res.json();
+                
+                let html = '';
+                let filteredResults = [];
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    // 过滤：优先显示关键词匹配的，然后是标题匹配的
+                    filteredResults = data.data.filter(item => {
+                        const titleMatch = item.title && item.title.toLowerCase().includes(keyword.toLowerCase());
+                        const keywordsMatch = item.keywords && item.keywords.some(kw => 
+                            kw.toLowerCase().includes(keyword.toLowerCase())
+                        );
+                        return titleMatch || keywordsMatch;
+                    });
+                    
+                    // 排序：关键词精确匹配优先
+                    filteredResults.sort((a, b) => {
+                        const aKeywordExact = a.keywords && a.keywords.some(kw => 
+                            kw.toLowerCase() === keyword.toLowerCase()
+                        );
+                        const bKeywordExact = b.keywords && b.keywords.some(kw => 
+                            kw.toLowerCase() === keyword.toLowerCase()
+                        );
+                        if (aKeywordExact && !bKeywordExact) return -1;
+                        if (!aKeywordExact && bKeywordExact) return 1;
+                        return 0;
+                    });
+                    
+                    // 限制最多显示20条
+                    filteredResults = filteredResults.slice(0, 20);
+                }
+                
+                if (filteredResults.length > 0) {
+                    html += '<div style="padding: 8px 12px; background: #faf5ff; font-size: 12px; color: #7c3aed; font-weight: 600;">📚 语法 (' + filteredResults.length + ')</div>';
+                    filteredResults.forEach(item => {
+                        // 显示匹配的关键词
+                        const matchedKeywords = item.keywords ? item.keywords.filter(kw => 
+                            kw.toLowerCase().includes(keyword.toLowerCase())
+                        ).slice(0, 3).join(', ') : '';
+                        
+                        html += `
+                            <div onclick="selectGrammarResult('${escapeJs(item.title)}', ${item.id}, '${escapeJs(item.definition || '')}')"
+                                 style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #e5e5e5;"
+                                 onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                <div style="font-weight: 500; margin-bottom: 4px;">${escapeHtml(item.title)}</div>
+                                ${matchedKeywords ? `<div style="font-size: 11px; color: #7c3aed; margin-bottom: 2px;">🏷️ ${escapeHtml(matchedKeywords)}</div>` : ''}
+                                <div style="font-size: 12px; color: #6b7280;">${escapeHtml(item.definition || '').substring(0, 50)}...</div>
+                            </div>`;
+                    });
+                } else {
+                    html = '<div style="padding: 20px; text-align: center; color: #9ca3af;">未找到包含"' + escapeHtml(keyword) + '"的语法</div>';
+                }
+                
+                resultsDiv.innerHTML = html;
+                resultsDiv.style.display = 'block';
+                
+            } catch (e) {
+                console.error('搜索语法库失败:', e);
+                showToast('搜索失败: ' + e.message, 'error');
+            }
+        }
+        
+        /**
+         * 选择语法搜索结果
+         */
+        function selectGrammarResult(title, id, definition) {
+            // 检查是否已选择
+            if (window._matchSelectedItems.some(item => 
+                item.text.toLowerCase() === title.toLowerCase()
+            )) {
+                showToast('该项已选择', 'warning');
+                return;
+            }
+            
+            window._matchSelectedItems.push({
+                text: title,
+                type: 'grammar',
+                inVocab: true,
+                vocabInfo: { id: id, type: 'grammar', meaning: definition }
+            });
+            
+            renderSelectedItems();
+            showToast('已选择: ' + title, 'success');
+            
+            // 隐藏搜索结果
+            document.getElementById('grammarSearchResultsMatch').style.display = 'none';
+            document.getElementById('grammarSearchInputMatch').value = '';
+        }
+        
+        /**
+         * 新增：搜索替换库
+         */
+        async function searchReplaceForMatch() {
+            const searchInput = document.getElementById('replaceSearchInput');
+            const keyword = searchInput.value.trim();
+            const resultsDiv = document.getElementById('replaceSearchResults');
+            
+            if (!keyword) {
+                showToast('请输入搜索关键词', 'warning');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/matching-dict/rules?search=${encodeURIComponent(keyword)}&limit=20`);
+                const data = await res.json();
+                
+                let html = '';
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    html += '<div style="padding: 8px 12px; background: #fef3c7; font-size: 12px; color: #f59e0b; font-weight: 600;">🔄 替换规则 (' + data.data.length + ')</div>';
+                    data.data.forEach(item => {
+                        // 只显示有target_text的替换规则，跳过排除规则
+                        if (item.target_text && item.target_text.trim()) {
+                            html += `
+                                <div onclick="selectReplaceResult('${escapeJs(item.original_text)}', '${escapeJs(item.target_text)}', '${escapeJs(item.original_type)}')"
+                                     style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #e5e5e5;"
+                                     onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                        <span style="font-weight: 500;">${escapeHtml(item.original_text)}</span>
+                                        <span style="color: #f59e0b;">→</span>
+                                        <span style="color: #059669; font-weight: 500;">${escapeHtml(item.target_text)}</span>
+                                    </div>
+                                    <div style="font-size: 11px; color: #9ca3af;">类型: ${item.original_type}</div>
+                                </div>`;
+                        }
+                    });
+                    
+                    if (!html.includes('onclick=')) {
+                        html = '<div style="padding: 20px; text-align: center; color: #9ca3af;">未找到可用的替换规则</div>';
+                    }
+                } else {
+                    html = '<div style="padding: 20px; text-align: center; color: #9ca3af;">未找到相关替换规则</div>';
+                }
+                
+                resultsDiv.innerHTML = html;
+                resultsDiv.style.display = 'block';
+                
+            } catch (e) {
+                console.error('搜索替换库失败:', e);
+                showToast('搜索失败: ' + e.message, 'error');
+            }
+        }
+        
+        /**
+         * 选择替换规则结果（改进版 - 自动查询词库）
+         */
+        async function selectReplaceResult(originalText, targetText, type) {
+            // 使用targetText作为选择的内容
+            if (window._matchSelectedItems.some(item => 
+                item.text.toLowerCase() === targetText.toLowerCase()
+            )) {
+                showToast('该项已选择', 'warning');
+                return;
+            }
+            
+            try {
+                // 查询targetText是否在词库中
+                showToast('正在查询词库...', 'info');
+                const searchRes = await searchVocabQuick(targetText, type);
+                
+                window._matchSelectedItems.push({
+                    text: targetText,
+                    type: type,
+                    inVocab: searchRes.found,
+                    vocabInfo: searchRes.info,
+                    replaceRule: { original: originalText, target: targetText }
+                });
+                
+                renderSelectedItems();
+                
+                if (searchRes.found) {
+                    showToast('已选择: ' + targetText + ' (词库已有)', 'success');
+                } else {
+                    showToast('已选择: ' + targetText + ' (需补充信息)', 'warning');
+                }
+                
+                // 隐藏搜索结果
+                document.getElementById('replaceSearchResults').style.display = 'none';
+                document.getElementById('replaceSearchInput').value = '';
+                
+            } catch (e) {
+                console.error('查询词库失败:', e);
+                // 如果查询失败，按不在词库处理
+                window._matchSelectedItems.push({
+                    text: targetText,
+                    type: type,
+                    inVocab: false,
+                    replaceRule: { original: originalText, target: targetText }
+                });
+                
+                renderSelectedItems();
+                showToast('已选择: ' + targetText, 'success');
+                
+                document.getElementById('replaceSearchResults').style.display = 'none';
+                document.getElementById('replaceSearchInput').value = '';
+            }
         }
         
         /**
@@ -3996,19 +4533,31 @@ function switchTab(tab) {
                 const newItems = [];     // 需要新建
                 
                 for (const item of window._matchSelectedItems) {
+                    // 如果已经标记为在词库中（通过搜索选择的），跳过检查
+                    if (item.inVocab && item.vocabInfo && item.vocabInfo.id) {
+                        existItems.push(item);
+                        console.log(`[替换] 已确认在库: ${item.text} (${item.type})`);
+                        continue;
+                    }
+                    
+                    // 否则进行词库检查
                     const searchRes = await searchVocabQuick(item.text, item.type);
                     item.inVocab = searchRes.found;
                     item.vocabInfo = searchRes.info;
                     
                     if (searchRes.found) {
                         existItems.push(item);
+                        console.log(`[替换] 检查后确认: ${item.text} (${item.type})`);
                     } else {
                         newItems.push(item);
+                        console.log(`[替换] 需要新建: ${item.text} (${item.type})`);
                     }
                 }
                 
                 // 更新显示
                 renderSelectedItems();
+                
+                console.log(`[替换] 已有: ${existItems.length}, 需新建: ${newItems.length}`);
                 
                 // 2. 如果有需要新建的，打开批量填写弹窗
                 if (newItems.length > 0) {
@@ -4027,6 +4576,7 @@ function switchTab(tab) {
                 }
                 
                 // 3. 所有词条都在词库中，直接保存
+                console.log('[替换] 所有词条都在词库中，直接保存替换规则');
                 await saveReplaceRuleV2(originalText, itemType, id, window._matchSelectedItems);
                 
             } catch (e) {
@@ -4416,7 +4966,7 @@ function switchTab(tab) {
         /**
          * 搜索语法库
          */
-        async function searchGrammarLib() {
+        window.searchGrammarLib = async function searchGrammarLib() {
             const keyword = document.getElementById('grammarSearchInput').value.trim();
             
             if (!keyword) {
@@ -5111,6 +5661,37 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(err => console.error('加载精准匹配失败:', err));
 });
+
+// ============================================
+// 点击外部关闭搜索结果框
+// ============================================
+document.addEventListener('click', function(e) {
+    // 获取所有搜索结果框
+    const searchResults = [
+        { input: 'vocabSearchInput', results: 'vocabSearchResults' },
+        { input: 'grammarSearchInputMatch', results: 'grammarSearchResultsMatch' },
+        { input: 'replaceSearchInput', results: 'replaceSearchResults' }
+    ];
+    
+    searchResults.forEach(item => {
+        const inputElem = document.getElementById(item.input);
+        const resultsElem = document.getElementById(item.results);
+        
+        if (!inputElem || !resultsElem) return;
+        
+        // 如果点击的不是输入框、搜索按钮或结果框本身，则关闭
+        if (!inputElem.contains(e.target) && 
+            !resultsElem.contains(e.target) &&
+            e.target.textContent !== '🔍 搜索' &&
+            !e.target.closest('.btn-sm')) {
+            if (resultsElem.style.display === 'block') {
+                resultsElem.style.display = 'none';
+                console.log(`[搜索框] 自动关闭: ${item.results}`);
+            }
+        }
+    });
+});
+
 </script>
 
 <!-- 精准匹配内容区域 -->
