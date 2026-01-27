@@ -1169,48 +1169,130 @@ async function processTask(task, onProgress) {
                     // ========== v4.3.4: 更新数据库中的未匹配记录 ==========
                     if (processingLogService) {
                         try {
-                            // 更新单词
+                            // v5.1 新增: 构建AI文本到original_text的映射（第一道防线）
+                            const textMapping = {};
+                            let mappingCount = 0;
+                            
+                            // 构建单词映射
                             if (aiData.vocabulary?.words) {
                                 for (const word of aiData.vocabulary.words) {
-                                    processingLogService.updateUnmatchedAiContent(
+                                    const originalWord = unmatchedKeywords.words.find(w => 
+                                        w.toLowerCase() === word.word.toLowerCase() ||
+                                        w.toLowerCase().includes(word.word.toLowerCase()) ||
+                                        word.word.toLowerCase().includes(w.toLowerCase())
+                                    );
+                                    if (originalWord) {
+                                        textMapping[`word:${word.word}`] = originalWord;
+                                        mappingCount++;
+                                    }
+                                }
+                            }
+                            
+                            // 构建短语映射
+                            if (aiData.vocabulary?.phrases) {
+                                for (const phrase of aiData.vocabulary.phrases) {
+                                    const originalPhrase = unmatchedKeywords.phrases.find(p => 
+                                        p.toLowerCase() === phrase.phrase.toLowerCase() ||
+                                        p.toLowerCase().includes(phrase.phrase.toLowerCase()) ||
+                                        phrase.phrase.toLowerCase().includes(p.toLowerCase())
+                                    );
+                                    if (originalPhrase) {
+                                        textMapping[`phrase:${phrase.phrase}`] = originalPhrase;
+                                        mappingCount++;
+                                    }
+                                }
+                            }
+                            
+                            // 构建句型映射
+                            if (aiData.vocabulary?.patterns) {
+                                for (const pattern of aiData.vocabulary.patterns) {
+                                    const originalPattern = unmatchedKeywords.patterns.find(p => 
+                                        p.toLowerCase() === pattern.pattern.toLowerCase() ||
+                                        p.toLowerCase().includes(pattern.pattern.toLowerCase()) ||
+                                        pattern.pattern.toLowerCase().includes(p.toLowerCase())
+                                    );
+                                    if (originalPattern) {
+                                        textMapping[`pattern:${pattern.pattern}`] = originalPattern;
+                                        mappingCount++;
+                                    }
+                                }
+                            }
+                            
+                            // 构建语法映射
+                            if (aiData.grammar) {
+                                for (const grammar of aiData.grammar) {
+                                    const originalGrammar = unmatchedKeywords.grammar.find(g => 
+                                        g.toLowerCase() === grammar.title.toLowerCase() ||
+                                        g.toLowerCase().includes(grammar.title.toLowerCase()) ||
+                                        grammar.title.toLowerCase().includes(g.toLowerCase())
+                                    );
+                                    if (originalGrammar) {
+                                        textMapping[`grammar:${grammar.title}`] = originalGrammar;
+                                        mappingCount++;
+                                    }
+                                }
+                            }
+                            
+                            console.log(`[阶段7] 📋 构建文本映射: ${mappingCount} 项`);
+                            
+                            // 更新单词（使用映射后的original_text）
+                            if (aiData.vocabulary?.words) {
+                                for (const word of aiData.vocabulary.words) {
+                                    const originalText = textMapping[`word:${word.word}`] || word.word;
+                                    const result = processingLogService.updateUnmatchedAiContent(
                                         taskId, 
-                                        word.word, 
+                                        originalText, 
                                         'word', 
                                         word
                                     );
+                                    if (!result.success) {
+                                        console.warn(`[阶段7] ⚠️ 更新单词失败: "${originalText}" (AI: "${word.word}")`);
+                                    }
                                 }
                             }
-                            // 更新短语
+                            // 更新短语（使用映射后的original_text）
                             if (aiData.vocabulary?.phrases) {
                                 for (const phrase of aiData.vocabulary.phrases) {
-                                    processingLogService.updateUnmatchedAiContent(
+                                    const originalText = textMapping[`phrase:${phrase.phrase}`] || phrase.phrase;
+                                    const result = processingLogService.updateUnmatchedAiContent(
                                         taskId, 
-                                        phrase.phrase, 
+                                        originalText, 
                                         'phrase', 
                                         phrase
                                     );
+                                    if (!result.success) {
+                                        console.warn(`[阶段7] ⚠️ 更新短语失败: "${originalText}" (AI: "${phrase.phrase}")`);
+                                    }
                                 }
                             }
-                            // 更新句型
+                            // 更新句型（使用映射后的original_text）
                             if (aiData.vocabulary?.patterns) {
                                 for (const pattern of aiData.vocabulary.patterns) {
-                                    processingLogService.updateUnmatchedAiContent(
+                                    const originalText = textMapping[`pattern:${pattern.pattern}`] || pattern.pattern;
+                                    const result = processingLogService.updateUnmatchedAiContent(
                                         taskId, 
-                                        pattern.pattern, 
+                                        originalText, 
                                         'pattern', 
                                         pattern
                                     );
+                                    if (!result.success) {
+                                        console.warn(`[阶段7] ⚠️ 更新句型失败: "${originalText}" (AI: "${pattern.pattern}")`);
+                                    }
                                 }
                             }
-                            // 更新语法
+                            // 更新语法（使用映射后的original_text）
                             if (aiData.grammar) {
                                 for (const grammar of aiData.grammar) {
-                                    processingLogService.updateUnmatchedAiContent(
+                                    const originalText = textMapping[`grammar:${grammar.title}`] || grammar.title;
+                                    const result = processingLogService.updateUnmatchedAiContent(
                                         taskId, 
-                                        grammar.title, 
+                                        originalText, 
                                         'grammar', 
                                         grammar
                                     );
+                                    if (!result.success) {
+                                        console.warn(`[阶段7] ⚠️ 更新语法失败: "${originalText}" (AI: "${grammar.title}")`);
+                                    }
                                 }
                             }
                             console.log(`[阶段7] 💾 AI生成内容已更新到数据库`);
