@@ -168,25 +168,6 @@
     </style>
 </head>
 <body>
-<!-- 导航栏 -->
-<style>
-.admin-nav{background:white;border-radius:12px;padding:12px 16px;margin-bottom:16px;border:1px solid #e5e5e5;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.nav-tab{padding:10px 16px;border-radius:8px;text-decoration:none;color:#666;font-size:14px;font-weight:500;transition:all .2s;border:1px solid transparent;display:inline-flex;align-items:center;gap:6px}
-.nav-tab:hover{background:#f5f5f5;color:#1a1a1a;border-color:#e5e5e5}
-.nav-tab.active{background:#007aff;color:white;border-color:#007aff}
-.nav-count{display:inline-block;background:rgba(0,0,0,0.08);padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;min-width:24px;text-align:center}
-.nav-tab.active .nav-count{background:rgba(255,255,255,0.25)}
-</style>
-<nav class="admin-nav">
-<a href="processing-log-admin.html" class="nav-tab" id="nav-history">📜 历史记录</a>
-<a href="exact-match-admin.html" class="nav-tab" id="nav-exact">✅ 精准匹配 <span class="nav-count" id="nav-exact-count">0</span></a>
-<a href="matching-dict-admin.html" class="nav-tab" id="nav-fuzzy">🟡 模糊匹配 <span class="nav-count" id="nav-fuzzy-count">0</span></a>
-<a href="processing-log-admin.html" class="nav-tab" id="nav-ai">❌ AI生成 <span class="nav-count" id="nav-ai-count">0</span></a>
-</nav>
-<script>
-(function(){function setActiveNav(){const path=window.location.pathname;const navItems={'processing-log-admin':'nav-history','exact-match-admin':'nav-exact','matching-dict-admin':'nav-fuzzy'};for(const[key,id]of Object.entries(navItems)){if(path.includes(key)){document.getElementById(id).classList.add('active');break}}}function loadNavStats(){fetch('/api/processing-stats').then(res=>res.json()).then(data=>{document.getElementById('nav-exact-count').textContent=data.exactMatch||0;document.getElementById('nav-fuzzy-count').textContent=data.fuzzyMatch||0;document.getElementById('nav-ai-count').textContent=data.unmatched||0}).catch(err=>console.error('加载失败:',err))}setActiveNav();loadNavStats();setInterval(loadNavStats,30000)})();
-</script>
-<!-- 导航栏结束 -->
 
     <div class="container">
         <a href="/admin" class="back-link">← 返回管理后台</a>
@@ -194,11 +175,6 @@
         <div class="header">
             <h1>🔄 替换库管理</h1>
             <p>管理替换规则和排除规则（目标为空=排除）</p>
-            <div class="stats-bar">
-                <div class="stat-item">✅ 精准: <strong>141</strong></div>
-                <div class="stat-item">🟡 模糊: <strong>0</strong></div>
-                <div class="stat-item">❌ AI: <strong>10</strong></div>
-            </div>
         </div>
         
         <div class="toolbar">

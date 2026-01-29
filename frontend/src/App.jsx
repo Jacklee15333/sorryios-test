@@ -8,7 +8,7 @@ import useTaskProgress from './hooks/useTaskProgress';
 
 /**
  * 主应用内容组件 - 全屏侧边栏布局
- * v4.2.2: 修复任务完成后不跳转，在当前页面显示查看报告按钮
+ * v4.2.3: 修复PDF导出 - 隐藏侧边栏和悬浮框
  */
 function AppContent() {
     const { user, loading, logout, isAuthenticated } = useAuth();
@@ -173,252 +173,293 @@ function AppContent() {
         }
     };
 
-    // 侧边栏菜单
-    const menuItems = [
-        { id: 'upload', icon: '📤', label: '上传笔记', badge: null },
-        { id: 'history', icon: '📋', label: '历史记录', badge: taskHistory.length || null },
-        { id: 'filter', icon: '🔧', label: '过滤器', badge: masteredStats?.total || null },
-        { id: 'settings', icon: '⚙️', label: '设置', badge: null },
-    ];
-
     return (
-        <div className="min-h-screen bg-gray-100 flex">
-            {/* 侧边栏 */}
-            <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-slate-800 text-white flex flex-col transition-all duration-300`}>
-                {/* Logo */}
-                <div className="p-4 border-b border-slate-700">
-                    <div className="flex items-center gap-3">
-                        <span className="text-2xl">🤖</span>
-                        {!sidebarCollapsed && (
+        <div className="flex h-screen bg-gray-50 overflow-hidden">
+            {/* ========== 🖨️ 打印时隐藏侧边栏和悬浮元素 ========== */}
+            <style>{`
+                @media print {
+                    /* 强制隐藏侧边栏 */
+                    aside,
+                    aside * {
+                        display: none !important;
+                        visibility: hidden !important;
+                        opacity: 0 !important;
+                        width: 0 !important;
+                        height: 0 !important;
+                        position: absolute !important;
+                        left: -9999px !important;
+                    }
+                    
+                    /* 强制隐藏AI助手按钮 */
+                    .ai-chat-button,
+                    .ai-chat-button * {
+                        display: none !important;
+                        visibility: hidden !important;
+                        opacity: 0 !important;
+                        width: 0 !important;
+                        height: 0 !important;
+                        position: absolute !important;
+                        left: -9999px !important;
+                    }
+                    
+                    /* 主内容区占满整个页面 */
+                    main {
+                        margin-left: 0 !important;
+                        width: 100% !important;
+                    }
+                    
+                    /* 确保背景纯白 */
+                    html, body {
+                        background: white !important;
+                    }
+                }
+            `}</style>
+
+            {/* 左侧导航栏 */}
+            <aside className={`
+                ${sidebarCollapsed ? 'w-16' : 'w-64'}
+                bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900
+                text-white flex flex-col transition-all duration-300 shadow-2xl
+            `}>
+                {/* Logo区域 */}
+                <div className="p-6 flex items-center justify-between border-b border-gray-700">
+                    {!sidebarCollapsed && (
+                        <div className="flex items-center gap-3">
+                            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
                             <div>
-                                <h1 className="font-bold text-lg">Sorryios AI</h1>
-                                <p className="text-xs text-slate-400">智能笔记助手 v4.2</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* 用户信息 */}
-                <div className="p-4 border-b border-slate-700">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-lg font-bold">
-                            {(user?.username || 'U').charAt(0).toUpperCase()}
-                        </div>
-                        {!sidebarCollapsed && (
-                            <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{user?.nickname || user?.username}</p>
-                                <p className="text-xs text-slate-400">@{user?.username}</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* 统计卡片 */}
-                {!sidebarCollapsed && (
-                    <div className="p-4 border-b border-slate-700">
-                        <div className="grid grid-cols-2 gap-2 text-center">
-                            <div className="bg-slate-700/50 rounded-lg p-2">
-                                <div className="text-lg font-bold text-indigo-400">{stats?.totalTasks || 0}</div>
-                                <div className="text-xs text-slate-400">处理文件</div>
-                            </div>
-                            <div className="bg-slate-700/50 rounded-lg p-2">
-                                <div className="text-lg font-bold text-green-400">{masteredStats?.total || 0}</div>
-                                <div className="text-xs text-slate-400">已掌握</div>
+                                <h1 className="font-bold text-lg">Sorryios</h1>
+                                <p className="text-xs text-gray-400">AI 智能笔记助手 v4.2</p>
                             </div>
                         </div>
-                    </div>
-                )}
-
-                {/* 菜单 */}
-                <nav className="flex-1 p-2">
-                    {menuItems.map(item => (
-                        <button
-                            key={item.id}
-                            onClick={() => setCurrentPage(item.id)}
-                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg mb-1 transition-colors ${
-                                currentPage === item.id
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'text-slate-300 hover:bg-slate-700'
-                            }`}
-                        >
-                            <span className="text-xl">{item.icon}</span>
-                            {!sidebarCollapsed && (
-                                <>
-                                    <span className="flex-1 text-left">{item.label}</span>
-                                    {item.badge && (
-                                        <span className="bg-slate-600 text-xs px-2 py-0.5 rounded-full">
-                                            {item.badge}
-                                        </span>
-                                    )}
-                                </>
-                            )}
-                        </button>
-                    ))}
-                </nav>
-
-                {/* 底部 */}
-                <div className="p-2 border-t border-slate-700">
+                    )}
                     <button
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-slate-700 transition-colors"
+                        className="p-2 hover:bg-gray-700 rounded-lg transition"
                     >
-                        <span className="text-xl">{sidebarCollapsed ? '→' : '←'}</span>
-                        {!sidebarCollapsed && <span>收起侧边栏</span>}
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
                     </button>
+                </div>
+
+                {/* 导航菜单 */}
+                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                     <button
-                        onClick={logout}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-slate-700 transition-colors mt-1"
+                        onClick={() => setCurrentPage('upload')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                            currentPage === 'upload'
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                                : 'text-gray-300 hover:bg-gray-800'
+                        }`}
                     >
-                        <span className="text-xl">🚪</span>
-                        {!sidebarCollapsed && <span>退出登录</span>}
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        {!sidebarCollapsed && <span className="font-medium">上传笔记</span>}
                     </button>
+
+                    <button
+                        onClick={() => setCurrentPage('history')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                            currentPage === 'history'
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                                : 'text-gray-300 hover:bg-gray-800'
+                        }`}
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {!sidebarCollapsed && <span className="font-medium">历史记录</span>}
+                        {!sidebarCollapsed && taskHistory.length > 0 && (
+                            <span className="ml-auto bg-indigo-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                {taskHistory.length}
+                            </span>
+                        )}
+                    </button>
+
+                    <button
+                        onClick={() => setCurrentPage('filter')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                            currentPage === 'filter'
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                                : 'text-gray-300 hover:bg-gray-800'
+                        }`}
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        {!sidebarCollapsed && <span className="font-medium">过滤器</span>}
+                    </button>
+
+                    <button
+                        onClick={() => setCurrentPage('settings')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                            currentPage === 'settings'
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                                : 'text-gray-300 hover:bg-gray-800'
+                        }`}
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {!sidebarCollapsed && <span className="font-medium">设置</span>}
+                    </button>
+                </nav>
+
+                {/* 底部用户信息 */}
+                <div className="p-4 border-t border-gray-700">
+                    {!sidebarCollapsed ? (
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center font-bold text-white">
+                                    {user?.nickname?.[0] || user?.username?.[0] || 'U'}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm truncate">{user?.nickname || user?.username}</p>
+                                    <p className="text-xs text-gray-400">{user?.role === 'admin' ? '管理员' : '用户'}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={logout}
+                                className="p-2 hover:bg-gray-700 rounded-lg transition"
+                                title="退出登录"
+                            >
+                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={logout}
+                            className="w-full p-2 hover:bg-gray-700 rounded-lg transition"
+                            title="退出登录"
+                        >
+                            <svg className="w-5 h-5 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
             </aside>
 
-            {/* 主内容区 */}
-            <main className="flex-1 flex flex-col min-h-screen">
-                {/* 顶部栏 */}
-                <header className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-bold text-gray-800">
-                            {currentPage === 'upload' && '📤 上传笔记'}
-                            {currentPage === 'processing' && '⏳ 处理中'}
-                            {currentPage === 'report' && '📊 查看报告'}
-                            {currentPage === 'history' && '📋 历史记录'}
-                            {currentPage === 'filter' && '🔧 过滤器管理'}
-                            {currentPage === 'settings' && '⚙️ 设置'}
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                            {currentPage === 'upload' && '上传课堂录音转文字文件，AI 自动提取关键词'}
-                            {currentPage === 'processing' && '正在处理文件，请稍候...'}
-                            {currentPage === 'report' && '查看和管理提取结果'}
-                            {currentPage === 'history' && '查看所有处理过的文件'}
-                            {currentPage === 'filter' && '管理已掌握的词汇，下次生成时自动过滤'}
-                            {currentPage === 'settings' && '账户信息和系统设置'}
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
-                            <span className="text-sm text-gray-500">{connected ? '已连接' : '未连接'}</span>
-                        </div>
-                    </div>
-                </header>
+            {/* ========== 🖨️ 打印时隐藏悬浮按钮 ========== */}
+            {/* AI智能助手悬浮按钮 */}
+            <button className="ai-chat-button fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-indigo-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center z-50">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+            </button>
 
-                {/* 内容区 */}
-                <div className="flex-1 p-6 overflow-auto">
+            {/* 主内容区 */}
+            <main className="flex-1 overflow-y-auto">
+                <div className="p-8">
                     {/* 上传页面 */}
                     {currentPage === 'upload' && (
-                        <div className="max-w-2xl mx-auto">
-                            <div className="bg-white rounded-xl shadow-sm p-6">
-                                <FileUploader
-                                    onUploadStart={() => setLastCompletedTask(null)}
-                                    onUploadSuccess={handleUploadSuccess}
-                                    onUploadError={(err) => alert('上传失败: ' + err)}
-                                />
-                            </div>
-
-                            {/* 任务完成提示 */}
-                            {lastCompletedTask && (
-                                <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-                                    <div className="text-5xl mb-4">🎉</div>
-                                    <h3 className="text-xl font-bold text-green-800 mb-2">处理完成！</h3>
-                                    <p className="text-green-600 mb-4">
-                                        {lastCompletedTask.title || '课堂笔记'} 已成功生成报告
-                                    </p>
-                                    <button
-                                        onClick={() => handleViewReport(lastCompletedTask.id)}
-                                        className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all"
-                                    >
-                                        📊 查看报告
-                                    </button>
+                        <div className="space-y-6">
+                            {/* 头部统计 */}
+                            <div className="grid grid-cols-4 gap-4">
+                                <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
+                                    <div className="text-3xl font-bold mb-2">{stats?.totalTasks || 0}</div>
+                                    <div className="text-blue-100">总任务数</div>
                                 </div>
-                            )}
-
-                            {/* 功能说明 */}
-                            <div className="mt-6 grid grid-cols-3 gap-4">
-                                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                                    <div className="text-2xl mb-2">📝</div>
-                                    <div className="font-medium text-gray-700">智能分段</div>
-                                    <div className="text-xs text-gray-500 mt-1">自动切分长文本</div>
+                                <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
+                                    <div className="text-3xl font-bold mb-2">{stats?.totalFiles || 0}</div>
+                                    <div className="text-green-100">总文件数</div>
                                 </div>
-                                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                                    <div className="text-2xl mb-2">🤖</div>
-                                    <div className="font-medium text-gray-700">AI 分析</div>
-                                    <div className="text-xs text-gray-500 mt-1">提取关键词汇语法</div>
+                                <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
+                                    <div className="text-3xl font-bold mb-2">{stats?.totalItems || 0}</div>
+                                    <div className="text-purple-100">提取词条</div>
                                 </div>
-                                <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-                                    <div className="text-2xl mb-2">📊</div>
-                                    <div className="font-medium text-gray-700">生成报告</div>
-                                    <div className="text-xs text-gray-500 mt-1">多格式导出下载</div>
+                                <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-6 shadow-lg">
+                                    <div className="text-3xl font-bold mb-2">{masteredStats?.total || 0}</div>
+                                    <div className="text-orange-100">已掌握</div>
                                 </div>
                             </div>
+
+                            {/* 文件上传器 */}
+                            <FileUploader onUploadSuccess={handleUploadSuccess} />
                         </div>
                     )}
 
-                    {/* 🔧 修改：处理中页面 - 不再区分完成状态，统一由 ProgressTracker 处理 */}
-                    {currentPage === 'processing' && taskInfo && (
-                        <div className="max-w-3xl mx-auto">
-                            <ProgressTracker
-                                task={taskInfo}
-                                logs={logs}
-                                onCancel={handleReset}
-                                onViewReport={() => setCurrentPage('report')}
-                            />
-                            
-                            {/* 只在处理中显示提示 - Claude 风格 */}
-                            {taskInfo.status !== 'completed' && taskInfo.status !== 'failed' && (
-                                <div className="mt-4 rounded-lg p-4 border border-stone-200 text-center" style={{ backgroundColor: '#faf8f5' }}>
-                                    <p className="text-sm text-stone-600">
-                                        正在处理，请不要关闭浏览器窗口。
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                    {/* 处理中页面 */}
+                    {currentPage === 'processing' && (
+                        <ProgressTracker
+                            taskInfo={taskInfo}
+                            connected={connected}
+                            logs={logs}
+                            onReset={handleReset}
+                            onViewReport={() => handleViewReport(currentTaskId)}
+                            lastCompletedTask={lastCompletedTask}
+                        />
                     )}
 
                     {/* 报告页面 */}
-                    {currentPage === 'report' && currentTaskId && (
-                        <div>
-                            <ReportViewer taskId={currentTaskId} onBack={handleReset} />
-                        </div>
+                    {currentPage === 'report' && (
+                        <ReportViewer taskId={currentTaskId} />
                     )}
 
                     {/* 历史记录 */}
                     {currentPage === 'history' && (
-                        <div className="bg-white rounded-xl shadow-sm">
-                            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                                <h3 className="font-bold text-gray-800">处理历史</h3>
-                                <span className="text-sm text-gray-500">共 {taskHistory.length} 条</span>
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-800">📚 历史记录</h2>
+                                    <p className="text-gray-500 mt-1">查看您的处理历史</p>
+                                </div>
                             </div>
+
                             {taskHistory.length > 0 ? (
-                                <div className="divide-y divide-gray-100">
-                                    {taskHistory.map((task, index) => (
-                                        <div key={task.id || index} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                                            <div className="flex items-center gap-4">
-                                                <span className="text-2xl">
-                                                    {task.status === 'completed' ? '✅' : task.status === 'failed' ? '❌' : '⏳'}
-                                                </span>
-                                                <div>
-                                                    <p className="font-medium text-gray-800">{task.title || task.fileName || '未命名'}</p>
-                                                    <p className="text-sm text-gray-500">{new Date(task.createdAt).toLocaleString('zh-CN')}</p>
+                                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                                    <div className="divide-y divide-gray-100">
+                                        {taskHistory.map((task, index) => (
+                                            <div key={index} className="p-6 hover:bg-gray-50 transition">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3 mb-2">
+                                                            <h3 className="font-bold text-gray-800 text-lg">{task.title}</h3>
+                                                            <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                                                                task.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                                task.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                                                                task.status === 'error' ? 'bg-red-100 text-red-700' :
+                                                                'bg-gray-100 text-gray-700'
+                                                            }`}>
+                                                                {task.status === 'completed' ? '✓ 已完成' :
+                                                                 task.status === 'processing' ? '⏳ 处理中' :
+                                                                 task.status === 'error' ? '✗ 失败' : '等待中'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-6 text-sm text-gray-500">
+                                                            <span>📄 {task.fileName}</span>
+                                                            <span>🕒 {new Date(task.createdAt).toLocaleString('zh-CN')}</span>
+                                                            {task.totalItems > 0 && (
+                                                                <span>📊 提取 {task.totalItems} 项</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {task.status === 'completed' && (
+                                                        <button
+                                                            onClick={() => handleViewReport(task.id)}
+                                                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
+                                                        >
+                                                            查看报告
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
-                                            {task.status === 'completed' && (
-                                                <button
-                                                    onClick={() => handleViewReport(task.id)}
-                                                    className="px-4 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-sm"
-                                                >
-                                                    查看报告
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="p-12 text-center text-gray-500">
-                                    <span className="text-4xl block mb-4">📭</span>
-                                    <p>暂无处理记录</p>
+                                <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+                                    <span className="text-6xl block mb-4">📭</span>
+                                    <p className="text-gray-500 text-lg">暂无历史记录</p>
+                                    <p className="text-gray-400 text-sm mt-2">上传笔记后将在此显示</p>
                                 </div>
                             )}
                         </div>
@@ -565,7 +606,7 @@ function AppContent() {
                                 <h3 className="font-bold text-gray-800 mb-4">ℹ️ 关于</h3>
                                 <div className="space-y-2 text-sm text-gray-600">
                                     <p><span className="font-medium">应用名称：</span>Sorryios AI 智能笔记助手</p>
-                                    <p><span className="font-medium">版本：</span>v4.2.2</p>
+                                    <p><span className="font-medium">版本：</span>v4.2.3</p>
                                     <p><span className="font-medium">功能：</span>课堂笔记自动化处理系统</p>
                                 </div>
                             </div>
