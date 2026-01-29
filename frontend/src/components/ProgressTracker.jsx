@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
  * - 简约专业
  * - 去掉花哨的颜色
  */
-function ProgressTracker({ task, logs = [], onCancel, onViewReport }) {
+function ProgressTracker({ taskInfo, logs = [], onReset, onViewReport, connected, lastCompletedTask }) {
     const [expandedStages, setExpandedStages] = useState({});
     const [showTimestamp, setShowTimestamp] = useState(false);
     const [startTime] = useState(() => Date.now());
@@ -30,9 +30,9 @@ function ProgressTracker({ task, logs = [], onCancel, onViewReport }) {
         setExpandedStages(prev => ({ ...prev, ...stages }));
     }, [logs]);
 
-    if (!task) return null;
+    if (!taskInfo) return null;
 
-    const { status, progress = 0, currentStep, error } = task;
+    const { status, progress = 0, currentStep, error } = taskInfo;
 
     const isProcessing = status === 'processing' || status === 'pending';
     const isCompleted = status === 'completed';
@@ -263,7 +263,7 @@ function ProgressTracker({ task, logs = [], onCancel, onViewReport }) {
             <div className="p-4 border-t border-stone-200 flex gap-3" style={{ backgroundColor: '#faf8f5' }}>
                 {isProcessing && (
                     <button
-                        onClick={onCancel}
+                        onClick={onReset}
                         className="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-stone-600 bg-white border border-stone-300 hover:bg-stone-50 transition-colors"
                     >
                         取消处理
@@ -279,7 +279,7 @@ function ProgressTracker({ task, logs = [], onCancel, onViewReport }) {
                 )}
                 {(isFailed || status === 'cancelled') && (
                     <button
-                        onClick={onCancel}
+                        onClick={onReset}
                         className="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium text-stone-600 bg-white border border-stone-300 hover:bg-stone-50 transition-colors"
                     >
                         重新上传

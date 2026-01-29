@@ -1045,10 +1045,25 @@ async function processTask(task, onProgress) {
                             status: m.score >= 1.0 ? 'confirmed' : 'pending'
                         }));
                         
-                        if (matchedItems.length > 0) {
-                            processingLogService.addMatchedItems(matchedItems);
-                            console.log(`[阶段6] 💾 保存匹配记录: ${matchedItems.length} 条`);
-                            onProgress({ currentStep: `💾 保存匹配记录: ${matchedItems.length} 条`, progress: 69 });
+                        // 🔧 去重：同一task中相同的词只保存一次
+                        const seenMatched = new Set();
+                        const uniqueMatchedItems = matchedItems.filter(item => {
+                            const key = `${item.item_type}:${item.original_text.toLowerCase()}`;
+                            if (seenMatched.has(key)) {
+                                console.log(`[阶段6] 🔄 去重(matched): ${item.original_text} (${item.item_type})`);
+                                return false;
+                            }
+                            seenMatched.add(key);
+                            return true;
+                        });
+                        
+                        if (uniqueMatchedItems.length > 0) {
+                            processingLogService.addMatchedItems(uniqueMatchedItems);
+                            const dedupeInfo = matchedItems.length > uniqueMatchedItems.length 
+                                ? ` (去重前: ${matchedItems.length})` 
+                                : '';
+                            console.log(`[阶段6] 💾 保存匹配记录: ${uniqueMatchedItems.length} 条${dedupeInfo}`);
+                            onProgress({ currentStep: `💾 保存匹配记录: ${uniqueMatchedItems.length} 条${dedupeInfo}`, progress: 69 });
                         }
                         
                         // 保存未匹配记录（v4.3.5: 先过滤排除库）
@@ -1071,18 +1086,33 @@ async function processTask(task, onProgress) {
                             status: 'pending'
                         }));
                         
-                        if (unmatchedItemsToSave.length > 0) {
-                            processingLogService.addUnmatchedItems(unmatchedItemsToSave);
-                            console.log(`[阶段6] 💾 保存未匹配记录: ${unmatchedItemsToSave.length} 条`);
-                            onProgress({ currentStep: `💾 保存未匹配记录: ${unmatchedItemsToSave.length} 条`, progress: 69 });
+                        // 🔧 去重：同一task中相同的词只保存一次
+                        const seenUnmatched = new Set();
+                        const uniqueUnmatchedItems = unmatchedItemsToSave.filter(item => {
+                            const key = `${item.item_type}:${item.original_text.toLowerCase()}`;
+                            if (seenUnmatched.has(key)) {
+                                console.log(`[阶段6] 🔄 去重(unmatched): ${item.original_text} (${item.item_type})`);
+                                return false;
+                            }
+                            seenUnmatched.add(key);
+                            return true;
+                        });
+                        
+                        if (uniqueUnmatchedItems.length > 0) {
+                            processingLogService.addUnmatchedItems(uniqueUnmatchedItems);
+                            const dedupeInfo = unmatchedItemsToSave.length > uniqueUnmatchedItems.length 
+                                ? ` (去重前: ${unmatchedItemsToSave.length})` 
+                                : '';
+                            console.log(`[阶段6] 💾 保存未匹配记录: ${uniqueUnmatchedItems.length} 条${dedupeInfo}`);
+                            onProgress({ currentStep: `💾 保存未匹配记录: ${uniqueUnmatchedItems.length} 条${dedupeInfo}`, progress: 69 });
                         }
                         
-                        // 更新任务统计（使用过滤后的数量）
+                        // 更新任务统计（使用去重后的数量）
                         processingLogService.updateTaskStats(taskId, {
-                            total_items: matchResult.matched.length + unmatchedToSave.length,
-                            exact_match_count: matchResult.matched.filter(m => m.score >= 1.0).length,
-                            fuzzy_match_count: matchResult.matched.filter(m => m.score < 1.0).length,
-                            unmatched_count: unmatchedToSave.length
+                            total_items: uniqueMatchedItems.length + uniqueUnmatchedItems.length,
+                            exact_match_count: uniqueMatchedItems.filter(m => m.match_score >= 1.0).length,
+                            fuzzy_match_count: uniqueMatchedItems.filter(m => m.match_score < 1.0).length,
+                            unmatched_count: uniqueUnmatchedItems.length
                         });
                         console.log(`[阶段6] 💾 更新任务统计完成`);
                         
