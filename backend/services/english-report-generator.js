@@ -28,60 +28,109 @@ class EnglishReportGenerator {
 
     /**
      * 合并所有词汇为统一列表
+     * v5.1: 添加去重逻辑作为最后防线
      */
     mergeVocabulary(vocabulary) {
         const merged = [];
+        const seen = new Set(); // 用于去重
+        
+        console.log('[ReportGenerator] ═══════════════════════════════════════');
+        console.log('[ReportGenerator] 开始合并词汇数据');
+        console.log('[ReportGenerator] ═══════════════════════════════════════');
+        
+        let addedCount = 0;
+        let duplicateCount = 0;
         
         // 添加单词
         if (vocabulary.words && vocabulary.words.length > 0) {
+            console.log(`[ReportGenerator] 处理单词: ${vocabulary.words.length} 个`);
             for (const w of vocabulary.words) {
-                merged.push({
-                    type: 'word',
-                    name: w.word || '',
-                    phonetic: w.phonetic || '',
-                    pos: w.pos || '',
-                    meaning: w.meaning || '',
-                    example: w.example || '',
-                    forms: w.forms || null,
-                    note: w.note || '',
-                    _source: w._source
-                });
+                const key = (w.word || '').toLowerCase().trim();
+                if (!key) continue;
+                
+                if (!seen.has(key)) {
+                    merged.push({
+                        type: 'word',
+                        name: w.word || '',
+                        phonetic: w.phonetic || '',
+                        pos: w.pos || '',
+                        meaning: w.meaning || '',
+                        example: w.example || '',
+                        forms: w.forms || null,
+                        note: w.note || '',
+                        _source: w._source
+                    });
+                    seen.add(key);
+                    addedCount++;
+                } else {
+                    console.log(`[ReportGenerator] 🔄 跳过重复单词: "${w.word}"`);
+                    duplicateCount++;
+                }
             }
         }
         
         // 添加短语
         if (vocabulary.phrases && vocabulary.phrases.length > 0) {
+            console.log(`[ReportGenerator] 处理短语: ${vocabulary.phrases.length} 个`);
             for (const p of vocabulary.phrases) {
-                merged.push({
-                    type: 'phrase',
-                    name: p.phrase || '',
-                    phonetic: '',
-                    pos: '',
-                    meaning: p.meaning || '',
-                    example: p.example || '',
-                    forms: null,
-                    note: '',
-                    _source: p._source
-                });
+                const key = (p.phrase || '').toLowerCase().trim();
+                if (!key) continue;
+                
+                if (!seen.has(key)) {
+                    merged.push({
+                        type: 'phrase',
+                        name: p.phrase || '',
+                        phonetic: '',
+                        pos: '',
+                        meaning: p.meaning || '',
+                        example: p.example || '',
+                        forms: null,
+                        note: '',
+                        _source: p._source
+                    });
+                    seen.add(key);
+                    addedCount++;
+                } else {
+                    console.log(`[ReportGenerator] 🔄 跳过重复短语: "${p.phrase}"`);
+                    duplicateCount++;
+                }
             }
         }
         
         // 添加句型
         if (vocabulary.patterns && vocabulary.patterns.length > 0) {
+            console.log(`[ReportGenerator] 处理句型: ${vocabulary.patterns.length} 个`);
             for (const p of vocabulary.patterns) {
-                merged.push({
-                    type: 'pattern',
-                    name: p.pattern || '',
-                    phonetic: '',
-                    pos: '',
-                    meaning: p.meaning || '',
-                    example: p.example || '',
-                    forms: null,
-                    note: '',
-                    _source: p._source
-                });
+                const key = (p.pattern || '').toLowerCase().trim();
+                if (!key) continue;
+                
+                if (!seen.has(key)) {
+                    merged.push({
+                        type: 'pattern',
+                        name: p.pattern || '',
+                        phonetic: '',
+                        pos: '',
+                        meaning: p.meaning || '',
+                        example: p.example || '',
+                        forms: null,
+                        note: '',
+                        _source: p._source
+                    });
+                    seen.add(key);
+                    addedCount++;
+                } else {
+                    console.log(`[ReportGenerator] 🔄 跳过重复句型: "${p.pattern}"`);
+                    duplicateCount++;
+                }
             }
         }
+        
+        console.log('[ReportGenerator] ───────────────────────────────────────');
+        console.log(`[ReportGenerator] 合并完成:`);
+        console.log(`[ReportGenerator]   - 添加: ${addedCount} 项`);
+        console.log(`[ReportGenerator]   - 跳过重复: ${duplicateCount} 项`);
+        console.log(`[ReportGenerator]   - 最终: ${merged.length} 项`);
+        console.log('[ReportGenerator] ═══════════════════════════════════════\n');
         
         return merged;
     }

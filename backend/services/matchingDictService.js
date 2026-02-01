@@ -64,6 +64,13 @@ function initDatabase() {
         // 列已存在，忽略
     }
 
+    // v3.1: 尝试添加 is_new 列（如果不存在）
+    try {
+        db.exec(`ALTER TABLE matching_rules ADD COLUMN is_new INTEGER DEFAULT 0`);
+    } catch (e) {
+        // 列已存在，忽略
+    }
+
     // 创建索引
     db.exec(`
         CREATE INDEX IF NOT EXISTS idx_matching_original ON matching_rules(original_text, original_type);
@@ -335,8 +342,8 @@ class MatchingDictService {
                 INSERT INTO matching_rules (
                     original_text, original_type, action,
                     target_db, target_table, target_id, target_text,
-                    notes, created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    notes, created_by, is_new
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
             `);
 
             const result = stmt.run(
@@ -371,6 +378,22 @@ class MatchingDictService {
             action: 'exclude',
             target_text: ''  // 排除规则的 target_text 为空
         });
+    }
+
+    /**
+     * v3.1 新增：确认规则（取消NEW标记）
+     * @param {number} id - 规则ID
+     * @returns {Object} { success, error? }
+     */
+    confirm(id) {
+        try {
+            const result = db.prepare('UPDATE matching_rules SET is_new = 0 WHERE id = ?').run(id);
+            this.refreshCache();
+            return { success: result.changes > 0 };
+        } catch (e) {
+            console.error('[MatchingDictService] 确认规则失败:', e.message);
+            return { success: false, error: e.message };
+        }
     }
 
     /**

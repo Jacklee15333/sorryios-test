@@ -116,6 +116,48 @@ const CONFIG = {
 3. patterns: 句型模板（如 so...that...）
 4. grammar: 语法知识点名称（必须用中文）
 
+⚠️⚠️⚠️【单词 vs 语法的严格区分 - 极其重要】⚠️⚠️⚠️
+
+【words（单词）】
+✅ 任何具体的英文单词本身
+   - proper, environment, protect, important, beautiful
+   - 即使老师讲了这个词的"用法"、"结构"，也只是在教这个**单词**
+   - 提取为：words: ["proper"]
+   - 绝对不要提取为：grammar: ["proper"] ❌
+   - 绝对不要提取为：grammar: ["proper的用法"] ❌
+
+【grammar（语法）】
+✅ 语法规则、时态、句式等**系统性语法知识**（必须用中文）
+   - 现在完成时、被动语态、宾语从句
+   - some和any的用法、可数名词和不可数名词
+   - 第三人称单数、冠词用法
+   
+❌ 以下【不是语法】，是单词！
+   - proper ❌ → 这是单词
+   - beautiful ❌ → 这是单词
+   - important ❌ → 这是单词
+   - 任何单个英文单词 ❌ → 都是单词，不是语法
+   
+【核心判断原则】
+1. 如果是**一个具体的英文单词**（不管老师怎么讲它）→ words
+2. 如果是**一种语法规则/现象**（用中文描述）→ grammar
+3. grammar 必须是中文，如果是纯英文 → 100%是words
+
+【对比示例】
+❌ 错误：
+  老师讲："proper这个词，形容词，表示合适的，用法是proper + 名词"
+  → 提取为 grammar: ["proper"] ✗
+  
+✅ 正确：
+  老师讲："proper这个词，形容词，表示合适的，用法是proper + 名词"
+  → 提取为 words: ["proper"] ✓
+  → 原因：这是在教一个**单词**，不是在讲语法规则
+
+✅ 正确：
+  老师讲："现在完成时的构成是have/has + 过去分词"
+  → 提取为 grammar: ["现在完成时"] ✓
+  → 原因：这是在讲**语法规则**
+
 ⚠️【介词特别注意】
 - 单独出现的介词（on, off, up, down, in, out, to, for...）要检查前后文！
 - 很可能是动词短语的一部分被语音识别分开了
@@ -138,19 +180,28 @@ const CONFIG = {
    take care of, pay attention to, make sure
    a lot of, a kind of, instead of
 
-✅ 特殊句型框架（有固定语法结构）
-   it takes sb. + 时间 + to do sth.
-   there be...
-   so...that..., such...that...
-   not only...but also...
-   either...or..., neither...nor...
+✅ 特殊词性用法（不含多个占位符的固定搭配）
+   look adj.（看起来...，系动词用法）
+   the adj.（表示一类人）
 
-✅ 特殊词性用法（搭配不寻常）
-   look + adj.（看起来...，系动词用法）
-   the + adj.（表示一类人）
-   find it + adj. + to do
+❌❌❌ 以下是【句型模板】，要放入 patterns，不是 phrases ❌❌❌
 
-❌❌❌ 以下【不是短语】，不要放入 phrases ❌❌❌
+句型模板特征：含多个占位符，可灵活替换成分
+   it takes sb. time to do sth. → patterns
+   it is adj. to do sth. → patterns
+   it is adj. for sb. to do sth. → patterns
+   find it adj. to do → patterns
+   make sb. do sth. → patterns
+   so...that..., such...that... → patterns
+   not only...but also... → patterns
+   either...or..., neither...nor... → patterns
+   there be... → patterns
+
+【短语 vs 句型的判断标准】
+- phrases: 固定搭配，整体记忆（如 look at, give up, be good at）
+- patterns: 句型框架，可替换成分（如 it is adj. to do sth.）
+
+✅ 例外：介词考点（老师特别强调的介词用法）
 
 ❌ 及物动词 + sth./sb.（这只是动词的基本用法，不是短语！）
    protect sth. ❌ → 只提取单词 protect
@@ -199,6 +250,13 @@ const CONFIG = {
 2. 介词/副词是固定的吗？能换吗？不能换→短语，能换→只是单词
 3. 整体意义 ≠ 各部分意义相加 → 才是短语
 4. 不是通用模板的不算短语（如 build houses, not rich families）
+5. 含多个占位符（sb./sth./adj./adv.）→ 句型模板（patterns），不是短语
+
+【phrases vs patterns 快速判断】
+- 固定搭配，整体记忆 → phrases（如 look at, give up）
+- 句型框架，可替换成分 → patterns（如 it is adj. to do sth.）
+- 只有sb./sth.占位符 → phrases（如 tell sb. sth.）
+- 有adj./adv./doing等多种占位符 → patterns（如 find it adj. to do）
 
 ⚠️【语法分类规则 - 非常重要】
 以下情况必须放入 grammar，不是短语！
@@ -222,6 +280,45 @@ const CONFIG = {
    Dr ❌ → Dr. ✅
    etc ❌ → etc. ✅
 
+⚠️⚠️⚠️【句型格式规范 - 非常重要】⚠️⚠️⚠️
+
+【禁止使用的格式】：
+❌ 不要使用加号 "+" 连接占位符
+   错误示例：it is + adj. + to do sth. ❌
+   错误示例：make sb. + do sth. ❌
+   错误示例：it takes sb. + time + to do sth. ❌
+
+【必须使用的格式】：
+✅ 使用空格自然连接，占位符保持原样
+   正确示例：it is adj. to do sth. ✅
+   正确示例：make sb. do sth. ✅
+   正确示例：it takes sb. time to do sth. ✅
+   正确示例：spend time doing sth. ✅
+   正确示例：find it adj. to do ✅
+
+【常用占位符标准格式】：
+   sb. = somebody（某人）
+   sth. = something（某物）
+   adj. = adjective（形容词）
+   adv. = adverb（副词）
+   doing sth. = 动名词短语
+   to do sth. = 不定式短语
+
+【句型提取示例】：
+   ✅ it is adj. to do sth.
+   ✅ it is adj. for sb. to do sth.
+   ✅ make sb. do sth.
+   ✅ let sb. do sth.
+   ✅ have sb. do sth.
+   ✅ see sb. do sth.
+   ✅ see sb. doing sth.
+   ✅ spend time doing sth.
+   ✅ stop sb. from doing sth.
+   ✅ ask sb. to do sth.
+   ✅ tell sb. to do sth.
+
+记住：占位符之间用【空格】连接，不要用【加号】！
+
 【输出格式】：
 {"words":["environment"],"phrases":["look forward to doing sth."],"patterns":["so...that..."],"grammar":["现在完成时","some和any的用法"]}
 
@@ -232,6 +329,16 @@ const CONFIG = {
 禁止：开头语、结尾语、\`\`\`代码块
 
 请为以下词汇/语法生成详细信息。
+
+⚠️【重要提醒】⚠️
+- 如果是单个英文单词（如proper, environment），生成到words
+- 如果是中文语法点（如现在完成时），生成到grammar
+- 不要把单词放入grammar！
+
+⚠️【句型格式要求】⚠️
+- 禁止使用加号"+"连接占位符
+- 占位符之间使用空格自然连接
+- 示例：it is adj. to do sth.（正确） ❌ it is + adj. + to do sth.（错误）
 
 【输出格式】
 {"vocabulary":{"words":[{"word":"","phonetic":"","pos":"","meaning":"","example":""}],"phrases":[{"phrase":"","meaning":"","example":""}],"patterns":[{"pattern":"","meaning":"","example":""}]},"grammar":[{"title":"","definition":"","structure":"","usage":[],"examples":[]}]}
@@ -273,52 +380,163 @@ class JsonExtractor {
 class KeywordNormalizer {
     constructor() {
         this.grammarMapping = {
+            // 时态
             'present perfect': '现在完成时', 'present perfect tense': '现在完成时',
             'simple past': '一般过去时', 'past tense': '一般过去时', 'past': '一般过去时',
             'simple present': '一般现在时', 'present tense': '一般现在时',
             'past continuous': '过去进行时', 'present continuous': '现在进行时',
             'future tense': '一般将来时', 'past perfect': '过去完成时',
+            'present perfect continuous': '现在完成进行时', 'past perfect continuous': '过去完成进行时',
+            
+            // 语态
             'passive voice': '被动语态', 'passive': '被动语态', 'active voice': '主动语态',
+            
+            // 非谓语动词
             'infinitive': '不定式', 'to do': '不定式', 'to do sth': '不定式', 'to do sth.': '不定式',
             'gerund': '动名词', 'v-ing': '动名词', 'v-ing as subject': '动名词作主语',
             'participle': '分词', 'present participle': '现在分词', 'past participle': '过去分词',
+            
+            // 从句
             'clause': '从句', 'attributive clause': '定语从句', 'relative clause': '定语从句',
             'object clause': '宾语从句', 'adverbial clause': '状语从句',
+            'subject clause': '主语从句', 'predicative clause': '表语从句',
+            'appositive clause': '同位语从句', 'noun clause': '名词性从句',
+            
+            // 句子成分
             'subject': '主语', 'predicate': '谓语', 'object': '宾语',
             'complement': '补语', 'attributive': '定语', 'adverbial': '状语',
+            'appositive': '同位语',
+            
+            // 基本词类（新增）
             'verb': '动词', 'noun': '名词', 'adjective': '形容词', 'adverb': '副词',
-            'third person singular': '第三人称单数',
+            'preposition': '介词', 'pronoun': '代词', 'conjunction': '连词', 
+            'article': '冠词', 'interjection': '感叹词',
+            
+            // 动词类型（新增）
+            'transitive verb': '及物动词', 'intransitive verb': '不及物动词',
             'modal verb': '情态动词', 'auxiliary verb': '助动词', 'auxiliary': '助动词',
+            'linking verb': '系动词', 'phrasal verb': '短语动词',
+            
+            // 名词类型（新增）
+            'countable noun': '可数名词', 'uncountable noun': '不可数名词',
+            'proper noun': '专有名词', 'common noun': '普通名词',
+            'abstract noun': '抽象名词', 'concrete noun': '具体名词',
+            'collective noun': '集体名词',
+            
+            // 代词类型（新增）
+            'personal pronoun': '人称代词', 'possessive pronoun': '物主代词',
+            'demonstrative pronoun': '指示代词', 'reflexive pronoun': '反身代词',
+            'relative pronoun': '关系代词', 'indefinite pronoun': '不定代词',
+            'interrogative pronoun': '疑问代词', 'reciprocal pronoun': '相互代词',
+            
+            // 形容词/副词类型（新增）
+            'comparative adjective': '形容词比较级', 'superlative adjective': '形容词最高级',
+            'comparative adverb': '副词比较级', 'superlative adverb': '副词最高级',
+            
+            // 冠词类型（新增）
+            'definite article': '定冠词', 'indefinite article': '不定冠词',
+            
+            // 连词类型（新增）
+            'coordinating conjunction': '并列连词', 'subordinating conjunction': '从属连词',
+            
+            // 介词相关（新增）
+            'prepositional phrase': '介词短语',
+            
+            // 数和格
+            'singular': '单数', 'plural': '复数',
+            'third person singular': '第三人称单数',
+            
+            // 句型
             'negative sentence': '否定句', 'negative': '否定句',
+            'interrogative sentence': '疑问句', 'interrogative': '疑问句',
+            'imperative sentence': '祈使句', 'imperative': '祈使句',
+            'exclamatory sentence': '感叹句', 'exclamatory': '感叹句',
+            'declarative sentence': '陈述句', 'declarative': '陈述句',
+            
+            // 比较级和最高级
             'comparative': '比较级', 'superlative': '最高级',
+            
+            // 其他
+            'subjunctive mood': '虚拟语气', 'conditional sentence': '条件句',
+            'inversion': '倒装', 'emphasis': '强调',
         };
         
+        // ✅ v4.3.6 修复：移除基本词性标记，避免误判
+        // 问题：proper的释义"形容词，表示合适的"会因为包含"形容词"而被误判为语法点
+        // 解决：只保留真正的语法概念（时态、语态、从句等），移除词性标记
         this.grammarKeywords = {
-            chinese: ['主语', '谓语', '宾语', '补语', '定语', '状语', '同位语',
-                '动词', '名词', '形容词', '副词', '代词', '介词', '连词',
+            chinese: [
+                // 句子成分（保留）
+                '主语', '谓语', '宾语', '补语', '定语', '状语', '同位语',
+                
+                // ❌ 已移除基本词性：'动词', '名词', '形容词', '副词', '代词', '介词', '连词'
+                // 原因：单词释义本应包含词性，不应因此被判定为语法点
+                
+                // 时态和语态（保留）
                 '时态', '语态', '现在时', '过去时', '将来时', '完成时', '进行时',
                 '一般现在时', '一般过去时', '一般将来时', '现在进行时', '过去进行时',
                 '现在完成时', '过去完成时', '被动语态', '主动语态',
+                
+                // 从句和非谓语（保留）
                 '从句', '定语从句', '宾语从句', '状语从句', '主语从句',
                 '不定式', '动名词', '分词', '现在分词', '过去分词',
+                
+                // 数和人称（保留）
                 '第三人称', '单数', '复数', '原形',
+                
+                // 句型（保留）
                 '否定句', '疑问句', '感叹句', '祈使句',
+                
+                // 其他语法概念（保留）
                 '比较级', '最高级', '情态动词', '助动词', '系动词',
-                '目的状语', '结果状语', '表语', '宾补'],
-            english: ['subject', 'predicate', 'object', 'complement', 'attributive', 'adverbial',
-                'verb', 'noun', 'adjective', 'adverb', 'tense', 'voice',
-                'passive', 'active', 'clause', 'infinitive', 'gerund', 'participle',
-                'singular', 'plural', 'negative', 'comparative', 'superlative', 'modal', 'auxiliary']
+                '目的状语', '结果状语', '表语', '宾补'
+            ],
+            english: [
+                // 句子成分（保留）
+                'subject', 'predicate', 'object', 'complement', 'attributive', 'adverbial', 'appositive',
+                
+                // ❌ 已移除基本词类标记
+                // 'verb', 'noun', 'adjective', 'adverb', 'preposition', 'pronoun', 'conjunction', 'article', 'interjection',
+                
+                // ❌ 已移除动词类型标记
+                // 'transitive', 'intransitive', 'modal', 'auxiliary', 'linking', 'phrasal',
+                
+                // ❌ 已移除名词类型标记（包括 'proper'）
+                // 'countable', 'uncountable', 'proper', 'common', 'abstract', 'concrete', 'collective',
+                
+                // ❌ 已移除代词类型标记
+                // 'personal', 'possessive', 'demonstrative', 'reflexive', 'relative', 'indefinite', 'interrogative', 'reciprocal',
+                
+                // 时态和语态（保留）
+                'tense', 'voice', 'passive', 'active',
+                'present', 'past', 'future', 'perfect', 'continuous', 'progressive',
+                'simple', 'perfect continuous',
+                
+                // 从句和非谓语（保留）
+                'clause', 'infinitive', 'gerund', 'participle',
+                
+                // 数（保留）
+                'singular', 'plural',
+                
+                // 句型（保留）
+                'negative', 'interrogative', 'imperative', 'exclamatory', 'declarative',
+                
+                // 比较级和最高级（保留）
+                'comparative', 'superlative',
+                
+                // 其他语法概念（保留）
+                'subjunctive', 'conditional', 'inversion', 'emphasis'
+            ]
         };
         
         // 语法模式：这些词/短语本身就是语法内容（加强版）
         this.grammarPatterns = [
             /^to do\b/i,                    // to do 开头
-            /^to do sth\.?$/i,              // to do sth.
-            /to do sth/i,                   // 任何位置的 to do sth（关键！）
+            /^to do sth\.?$/i,              // to do sth.（完整匹配）
+            /^to do sth\b/i,                // to do sth 开头（但不匹配 how to do sth）
             /^v-?ing/i,                     // v-ing 或 ving 开头
             /\bv-?s\b/i,                    // v-s 或 vs
-            /doing sth\.?/i,                // doing sth（任何位置）
+            /^doing sth\.?/i,               // doing sth 开头（避免误匹配句型）
             /做.*语/,                        // 做...语
             /作.*语/,                        // 作...语
             /sb\.\s*do/i,                   // sb. do
@@ -547,6 +765,26 @@ class KeywordNormalizer {
 
     isGrammarPattern(text) {
         if (!text) return false;
+        
+        // v4.3.9: 排除疑问句型（如 how to do sth., what to do 等）
+        // 这些是句型，不是语法内容
+        const questionPatterns = [
+            /^how\s+to\s+(do|be|make|get|use)/i,
+            /^what\s+to\s+(do|be|make|get|use)/i,
+            /^when\s+to\s+(do|be|make|get|use)/i,
+            /^where\s+to\s+(do|be|make|get|go)/i,
+            /^why\s+to\s+(do|be|make|get|use)/i,
+            /^which\s+to\s+(do|be|make|get|use|choose)/i,
+            /^whether\s+to\s+(do|be|make|get|use)/i,
+        ];
+        
+        for (const qPattern of questionPatterns) {
+            if (qPattern.test(text)) {
+                return false;  // 疑问句型，不是语法
+            }
+        }
+        
+        // 继续原有的语法模式匹配
         for (const pattern of this.grammarPatterns) {
             if (pattern.test(text)) return true;
         }
@@ -626,13 +864,31 @@ class KeywordNormalizer {
     dedupeObjects(array, keyField) {
         if (!Array.isArray(array) || array.length === 0) return [];
         const seen = new Map();
-        return array.filter(item => {
+        const duplicates = [];
+        const result = array.filter(item => {
             if (!item || !item[keyField]) return false;
             const key = String(item[keyField]).toLowerCase().trim();
-            if (seen.has(key)) return false;
+            if (seen.has(key)) {
+                duplicates.push({
+                    key,
+                    original: seen.get(key)[keyField],
+                    duplicate: item[keyField]
+                });
+                return false;
+            }
             seen.set(key, item);
             return true;
         });
+        
+        // 输出去重详情
+        if (duplicates.length > 0) {
+            console.log(`[dedupeObjects] 🔄 发现 ${duplicates.length} 个重复项 (字段: ${keyField}):`);
+            duplicates.forEach(d => {
+                console.log(`[dedupeObjects]   - "${d.duplicate}" (重复的key: "${d.key}")`);
+            });
+        }
+        
+        return result;
     }
 
     correctClassification(keywords) {
@@ -1000,15 +1256,84 @@ async function processTask(task, onProgress) {
                 console.log(`[阶段6] ${matchInfo}`);
                 onProgress({ currentStep: matchInfo, progress: 67 });
                 
+                // ========== v5.1: 添加去重检查 ==========
+                console.log('[阶段6] ─────────────────────────────────────');
+                console.log('[阶段6] 开始添加匹配结果到 mergedData');
+                console.log('[阶段6] ─────────────────────────────────────');
+                
+                const addedItems = { words: 0, phrases: 0, patterns: 0, grammar: 0 };
+                const skippedDuplicates = { words: 0, phrases: 0, patterns: 0, grammar: 0 };
+                
                 for (const match of matchResult.matched) {
                     if (match.matched_data) {
                         const item = { ...match.matched_data, _source: 'database', _matchScore: match.score };
-                        if (match.item_type === 'word') mergedData.vocabulary.words.push(item);
-                        else if (match.item_type === 'phrase') mergedData.vocabulary.phrases.push(item);
-                        else if (match.item_type === 'pattern') mergedData.vocabulary.patterns.push(item);
-                        else if (match.item_type === 'grammar') mergedData.grammar.push(item);
+                        
+                        // 去重检查函数（v5.1.1 - 添加null安全检查）
+                        const isDuplicate = (arr, keyField, value) => {
+                            if (!value) return false; // 如果value为空，不算重复
+                            const normalizedValue = String(value).toLowerCase().trim();
+                            return arr.some(existingItem => 
+                                existingItem[keyField] && 
+                                String(existingItem[keyField]).toLowerCase().trim() === normalizedValue
+                            );
+                        };
+                        
+                        if (match.item_type === 'word') {
+                            if (!isDuplicate(mergedData.vocabulary.words, 'word', item.word)) {
+                                mergedData.vocabulary.words.push(item);
+                                addedItems.words++;
+                                console.log(`[阶段6] ✅ 添加单词: "${item.word}" (来源: ${item._source}, 分数: ${match.score.toFixed(2)})`);
+                            } else {
+                                skippedDuplicates.words++;
+                                console.log(`[阶段6] 🔄 跳过重复单词: "${item.word}"`);
+                            }
+                        }
+                        else if (match.item_type === 'phrase') {
+                            if (!isDuplicate(mergedData.vocabulary.phrases, 'phrase', item.phrase)) {
+                                mergedData.vocabulary.phrases.push(item);
+                                addedItems.phrases++;
+                                console.log(`[阶段6] ✅ 添加短语: "${item.phrase}" (来源: ${item._source}, 分数: ${match.score.toFixed(2)})`);
+                            } else {
+                                skippedDuplicates.phrases++;
+                                console.log(`[阶段6] 🔄 跳过重复短语: "${item.phrase}"`);
+                            }
+                        }
+                        else if (match.item_type === 'pattern') {
+                            if (!isDuplicate(mergedData.vocabulary.patterns, 'pattern', item.pattern)) {
+                                mergedData.vocabulary.patterns.push(item);
+                                addedItems.patterns++;
+                                console.log(`[阶段6] ✅ 添加句型: "${item.pattern}" (来源: ${item._source}, 分数: ${match.score.toFixed(2)})`);
+                            } else {
+                                skippedDuplicates.patterns++;
+                                console.log(`[阶段6] 🔄 跳过重复句型: "${item.pattern}"`);
+                            }
+                        }
+                        else if (match.item_type === 'grammar') {
+                            if (!isDuplicate(mergedData.grammar, 'title', item.title)) {
+                                mergedData.grammar.push(item);
+                                addedItems.grammar++;
+                                console.log(`[阶段6] ✅ 添加语法: "${item.title}" (来源: ${item._source}, 分数: ${match.score.toFixed(2)})`);
+                            } else {
+                                skippedDuplicates.grammar++;
+                                console.log(`[阶段6] 🔄 跳过重复语法: "${item.title}"`);
+                            }
+                        }
                     }
                 }
+                
+                console.log('[阶段6] ─────────────────────────────────────');
+                console.log(`[阶段6] 📊 添加统计:`);
+                console.log(`[阶段6]   - 单词: ${addedItems.words} 个 (跳过重复: ${skippedDuplicates.words})`);
+                console.log(`[阶段6]   - 短语: ${addedItems.phrases} 个 (跳过重复: ${skippedDuplicates.phrases})`);
+                console.log(`[阶段6]   - 句型: ${addedItems.patterns} 个 (跳过重复: ${skippedDuplicates.patterns})`);
+                console.log(`[阶段6]   - 语法: ${addedItems.grammar} 个 (跳过重复: ${skippedDuplicates.grammar})`);
+                console.log(`[阶段6] 📦 当前 mergedData 总计:`);
+                console.log(`[阶段6]   - 单词: ${mergedData.vocabulary.words.length}`);
+                console.log(`[阶段6]   - 短语: ${mergedData.vocabulary.phrases.length}`);
+                console.log(`[阶段6]   - 句型: ${mergedData.vocabulary.patterns.length}`);
+                console.log(`[阶段6]   - 语法: ${mergedData.grammar.length}`);
+                console.log('[阶段6] ─────────────────────────────────────');
+
                 for (const unmatched of matchResult.unmatched) {
                     // v4.3.5: 检查是否在排除库中，如果在则跳过
                     if (excludeService && excludeService.isExcluded(unmatched.original_text, unmatched.item_type)) {
@@ -1169,30 +1494,101 @@ async function processTask(task, onProgress) {
                 
                 if (detailResult.success && detailResult.output) {
                     const aiData = detailResult.output;
-                    if (aiData.vocabulary?.words) { 
-                        mergedData.vocabulary.words.push(...aiData.vocabulary.words.map(w => ({ ...w, _source: 'ai' }))); 
-                        const msg = `✅ AI生成单词: ${aiData.vocabulary.words.length} 个`;
+                    
+                    console.log('[阶段7] ─────────────────────────────────────');
+                    console.log('[阶段7] 开始添加AI生成内容到 mergedData');
+                    console.log('[阶段7] ─────────────────────────────────────');
+                    
+                    const aiAddedItems = { words: 0, phrases: 0, patterns: 0, grammar: 0 };
+                    const aiSkippedDuplicates = { words: 0, phrases: 0, patterns: 0, grammar: 0 };
+                    
+                    // 去重检查函数
+                    const isDuplicate = (arr, keyField, value) => {
+                            if (!value) return false;
+                            const normalizedValue = String(value).toLowerCase().trim();
+                            return arr.some(existingItem => 
+                                existingItem[keyField] && 
+                                String(existingItem[keyField]).toLowerCase().trim() === normalizedValue
+                            );
+                        };
+                    
+                    if (aiData.vocabulary?.words) {
+                        for (const w of aiData.vocabulary.words) {
+                            if (!isDuplicate(mergedData.vocabulary.words, 'word', w.word)) {
+                                mergedData.vocabulary.words.push({ ...w, _source: 'ai' });
+                                aiAddedItems.words++;
+                                console.log(`[阶段7] ✅ 添加AI单词: "${w.word}"`);
+                            } else {
+                                aiSkippedDuplicates.words++;
+                                console.log(`[阶段7] 🔄 跳过重复AI单词: "${w.word}"`);
+                            }
+                        }
+                        const msg = `✅ AI生成单词: ${aiAddedItems.words} 个 (跳过重复: ${aiSkippedDuplicates.words})`;
                         console.log(`[阶段7] ${msg}`);
                         onProgress({ currentStep: msg, progress: 80 });
                     }
-                    if (aiData.vocabulary?.phrases) { 
-                        mergedData.vocabulary.phrases.push(...aiData.vocabulary.phrases.map(p => ({ ...p, _source: 'ai' }))); 
-                        const msg = `✅ AI生成短语: ${aiData.vocabulary.phrases.length} 个`;
+                    
+                    if (aiData.vocabulary?.phrases) {
+                        for (const p of aiData.vocabulary.phrases) {
+                            if (!isDuplicate(mergedData.vocabulary.phrases, 'phrase', p.phrase)) {
+                                mergedData.vocabulary.phrases.push({ ...p, _source: 'ai' });
+                                aiAddedItems.phrases++;
+                                console.log(`[阶段7] ✅ 添加AI短语: "${p.phrase}"`);
+                            } else {
+                                aiSkippedDuplicates.phrases++;
+                                console.log(`[阶段7] 🔄 跳过重复AI短语: "${p.phrase}"`);
+                            }
+                        }
+                        const msg = `✅ AI生成短语: ${aiAddedItems.phrases} 个 (跳过重复: ${aiSkippedDuplicates.phrases})`;
                         console.log(`[阶段7] ${msg}`);
                         onProgress({ currentStep: msg, progress: 82 });
                     }
-                    if (aiData.vocabulary?.patterns) { 
-                        mergedData.vocabulary.patterns.push(...aiData.vocabulary.patterns.map(p => ({ ...p, _source: 'ai' }))); 
-                        const msg = `✅ AI生成句型: ${aiData.vocabulary.patterns.length} 个`;
+                    
+                    if (aiData.vocabulary?.patterns) {
+                        for (const p of aiData.vocabulary.patterns) {
+                            if (!isDuplicate(mergedData.vocabulary.patterns, 'pattern', p.pattern)) {
+                                mergedData.vocabulary.patterns.push({ ...p, _source: 'ai' });
+                                aiAddedItems.patterns++;
+                                console.log(`[阶段7] ✅ 添加AI句型: "${p.pattern}"`);
+                            } else {
+                                aiSkippedDuplicates.patterns++;
+                                console.log(`[阶段7] 🔄 跳过重复AI句型: "${p.pattern}"`);
+                            }
+                        }
+                        const msg = `✅ AI生成句型: ${aiAddedItems.patterns} 个 (跳过重复: ${aiSkippedDuplicates.patterns})`;
                         console.log(`[阶段7] ${msg}`);
                         onProgress({ currentStep: msg, progress: 84 });
                     }
-                    if (aiData.grammar?.length) { 
-                        mergedData.grammar.push(...aiData.grammar.map(g => ({ ...g, _source: 'ai' }))); 
-                        const msg = `✅ AI生成语法: ${aiData.grammar.length} 个`;
+                    
+                    if (aiData.grammar?.length) {
+                        for (const g of aiData.grammar) {
+                            if (!isDuplicate(mergedData.grammar, 'title', g.title)) {
+                                mergedData.grammar.push({ ...g, _source: 'ai' });
+                                aiAddedItems.grammar++;
+                                console.log(`[阶段7] ✅ 添加AI语法: "${g.title}"`);
+                            } else {
+                                aiSkippedDuplicates.grammar++;
+                                console.log(`[阶段7] 🔄 跳过重复AI语法: "${g.title}"`);
+                            }
+                        }
+                        const msg = `✅ AI生成语法: ${aiAddedItems.grammar} 个 (跳过重复: ${aiSkippedDuplicates.grammar})`;
                         console.log(`[阶段7] ${msg}`);
                         onProgress({ currentStep: msg, progress: 86 });
                     }
+                    
+                    console.log('[阶段7] ─────────────────────────────────────');
+                    console.log(`[阶段7] 📊 AI生成统计:`);
+                    console.log(`[阶段7]   - 单词: ${aiAddedItems.words} 个 (跳过重复: ${aiSkippedDuplicates.words})`);
+                    console.log(`[阶段7]   - 短语: ${aiAddedItems.phrases} 个 (跳过重复: ${aiSkippedDuplicates.phrases})`);
+                    console.log(`[阶段7]   - 句型: ${aiAddedItems.patterns} 个 (跳过重复: ${aiSkippedDuplicates.patterns})`);
+                    console.log(`[阶段7]   - 语法: ${aiAddedItems.grammar} 个 (跳过重复: ${aiSkippedDuplicates.grammar})`);
+                    console.log(`[阶段7] 📦 当前 mergedData 总计:`);
+                    console.log(`[阶段7]   - 单词: ${mergedData.vocabulary.words.length}`);
+                    console.log(`[阶段7]   - 短语: ${mergedData.vocabulary.phrases.length}`);
+                    console.log(`[阶段7]   - 句型: ${mergedData.vocabulary.patterns.length}`);
+                    console.log(`[阶段7]   - 语法: ${mergedData.grammar.length}`);
+                    console.log('[阶段7] ─────────────────────────────────────');
+                    
                     console.log(`[阶段7] ✅ AI生成完成`);
                     onProgress({ currentStep: '✅ AI详情生成完成', progress: 88 });
                     
@@ -1357,6 +1753,71 @@ async function processTask(task, onProgress) {
         console.log('📌 阶段9: 生成报告'); 
         console.log('─'.repeat(60));
         onProgress({ currentStep: '📌 阶段9: 生成报告', progress: 92 });
+        
+        // ========== v5.1: 报告生成前的最终数据验证 ==========
+        console.log('[阶段9] ═══════════════════════════════════════');
+        console.log('[阶段9] 最终数据验证（检查重复）');
+        console.log('[阶段9] ═══════════════════════════════════════');
+        
+        const validateData = (arr, keyField, label) => {
+            const seen = new Set();
+            const duplicates = [];
+            arr.forEach(item => {
+                if (item && item[keyField]) {
+                    const key = item[keyField].toLowerCase().trim();
+                    if (seen.has(key)) {
+                        duplicates.push(item[keyField]);
+                    } else {
+                        seen.add(key);
+                    }
+                }
+            });
+            
+            if (duplicates.length > 0) {
+                console.log(`[阶段9] ⚠️  ${label} 中发现 ${duplicates.length} 个重复项:`);
+                duplicates.forEach(d => console.log(`[阶段9]   - "${d}"`));
+                return false;
+            } else {
+                console.log(`[阶段9] ✅ ${label}: 无重复，共 ${arr.length} 项`);
+                return true;
+            }
+        };
+        
+        const wordsValid = validateData(mergedData.vocabulary.words, 'word', '单词');
+        const phrasesValid = validateData(mergedData.vocabulary.phrases, 'phrase', '短语');
+        const patternsValid = validateData(mergedData.vocabulary.patterns, 'pattern', '句型');
+        const grammarValid = validateData(mergedData.grammar, 'title', '语法');
+        
+        if (!wordsValid || !phrasesValid || !patternsValid || !grammarValid) {
+            console.error('[阶段9] ❌ 数据验证失败！发现重复数据，将强制去重');
+            
+            // 强制最后一次去重
+            const finalDedupe = (arr, keyField) => {
+                const seen = new Map();
+                return arr.filter(item => {
+                    if (!item || !item[keyField]) return false;
+                    const key = String(item[keyField]).toLowerCase().trim();
+                    if (seen.has(key)) {
+                        console.log(`[阶段9] 🔧 强制去重: "${item[keyField]}"`);
+                        return false;
+                    }
+                    seen.set(key, item);
+                    return true;
+                });
+            };
+            
+            mergedData.vocabulary.words = finalDedupe(mergedData.vocabulary.words, 'word');
+            mergedData.vocabulary.phrases = finalDedupe(mergedData.vocabulary.phrases, 'phrase');
+            mergedData.vocabulary.patterns = finalDedupe(mergedData.vocabulary.patterns, 'pattern');
+            mergedData.grammar = finalDedupe(mergedData.grammar, 'title');
+            
+            console.log('[阶段9] ✅ 强制去重完成');
+        } else {
+            console.log('[阶段9] ✅ 数据验证通过，无重复数据');
+        }
+        
+        console.log('[阶段9] ═══════════════════════════════════════\n');
+
         
         const timestamp = Date.now(); 
         const finalTitle = getFinalTitle(task);

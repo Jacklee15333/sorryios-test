@@ -888,6 +888,12 @@
                 const res = await fetch(API_BASE + '/words?all=true');
                 const data = await res.json();
                 if (data.success) {
+                    // 排序：is_new=1的在前，其他按ID降序
+                    data.data.sort((a, b) => {
+                        if (a.is_new && !b.is_new) return -1;
+                        if (!a.is_new && b.is_new) return 1;
+                        return b.id - a.id;
+                    });
                     pagination.words.data = data.data;
                     pagination.words.total = data.data.length;
                     pagination.words.page = 1;
@@ -939,6 +945,12 @@
                 const res = await fetch(API_BASE + '/phrases?all=true');
                 const data = await res.json();
                 if (data.success) {
+                    // 排序：is_new=1的在前，其他按ID降序
+                    data.data.sort((a, b) => {
+                        if (a.is_new && !b.is_new) return -1;
+                        if (!a.is_new && b.is_new) return 1;
+                        return b.id - a.id;
+                    });
                     pagination.phrases.data = data.data;
                     pagination.phrases.total = data.data.length;
                     pagination.phrases.page = 1;

@@ -1,8 +1,13 @@
 /**
- * Sorryios AI 智能笔记系统 - 后端服务器
+ * Sorryios AI 智能笔记系统 - 后端服务器 - 修复版 v4.6
  * 
- * 版本: v4.5
- * 更新: 集成前端应用
+ * 📦 v4.6 修复内容：
+ * - 删除：exclude-api 和 replace-api 冗余路由（已合并到 matching-dict）
+ * - 删除：对应的页面路由（exclude-admin 和 replace-admin）
+ * - 改进：启动日志更清晰
+ * 
+ * 版本: v4.6
+ * 更新: 删除冗余路由
  */
 
 const express = require('express');
@@ -164,7 +169,7 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        version: '4.5',
+        version: '4.6',
         wsClients: wsClients.size
     });
 });
@@ -185,6 +190,7 @@ function loadRoute(name, routePath, mountPath) {
 
 // ============================================
 // 路由加载顺序（具体路由在前，通配符路由在后）
+// v4.6 修复：删除冗余的 exclude-api 和 replace-api
 // ============================================
 
 loadRoute('admin', './routes/admin', '/api/admin');
@@ -195,8 +201,10 @@ loadRoute('vocabulary-api', './routes/vocabulary-api', '/api/vocabulary');
 loadRoute('processing-log-api', './routes/processing-log-api', '/api/processing-log');
 loadRoute('matching-dict-api', './routes/matching-dict-api', '/api/matching-dict');
 loadRoute('user-mastered-api', './routes/user-mastered-api', '/api/user-mastered');
-loadRoute('exclude-api', './routes/exclude-api', '/api/exclude');
-loadRoute('replace-api', './routes/replace-api', '/api/replace');
+
+// v4.6 删除：以下两个路由已废弃（功能已合并到 matching-dict-api）
+// loadRoute('exclude-api', './routes/exclude-api', '/api/exclude');       // ← 已删除
+// loadRoute('replace-api', './routes/replace-api', '/api/replace');       // ← 已删除
 
 // 通配符路由放最后
 loadRoute('upload', './routes/upload', '/api');
@@ -206,6 +214,7 @@ loadRoute('task', './routes/task', '/api');
 
 // ============================================
 // 页面路由
+// v4.6 修复：删除 exclude-admin 和 replace-admin
 // ============================================
 
 app.get('/admin', (req, res) => {
@@ -253,23 +262,9 @@ app.get('/matching-dict-admin', (req, res) => {
     }
 });
 
-app.get('/exclude-admin', (req, res) => {
-    const excludeAdminPath = path.join(__dirname, 'public/exclude-admin.html');
-    if (fs.existsSync(excludeAdminPath)) {
-        res.sendFile(excludeAdminPath);
-    } else {
-        res.status(404).send('排除库管理页面不存在');
-    }
-});
-
-app.get('/replace-admin', (req, res) => {
-    const replaceAdminPath = path.join(__dirname, 'public/replace-admin.html');
-    if (fs.existsSync(replaceAdminPath)) {
-        res.sendFile(replaceAdminPath);
-    } else {
-        res.status(404).send('替换库管理页面不存在');
-    }
-});
+// v4.6 删除：以下两个页面路由已废弃
+// app.get('/exclude-admin', ...)  // ← 已删除
+// app.get('/replace-admin', ...)  // ← 已删除
 
 // ============================================
 // 根路径和前端应用路由
@@ -283,7 +278,7 @@ app.get('/', (req, res) => {
     } else {
         res.json({
             name: 'Sorryios AI 智能笔记系统',
-            version: '4.5',
+            version: '4.6',
             frontend: '前端应用未部署，请访问 /admin 进入管理后台',
             endpoints: {
                 health: '/api/health',
@@ -291,9 +286,10 @@ app.get('/', (req, res) => {
                 task: '/api/task/:id',
                 admin: '/admin',
                 userMastered: '/api/user-mastered',
-                matchingDict: '/api/matching-dict',
-                exclude: '/api/exclude',
-                replace: '/api/replace'
+                matchingDict: '/api/matching-dict'
+            },
+            changelog: {
+                v46: '删除冗余路由 exclude-api 和 replace-api'
             }
         });
     }
@@ -375,8 +371,8 @@ server.listen(PORT, HOST, () => {
     const hasFrontend = fs.existsSync(path.join(__dirname, 'public/app/index.html'));
     
     console.log('\n' + '='.repeat(60));
-    console.log('  Sorryios AI 智能笔记系统 v4.5');
-    console.log('  🔧 已集成前端应用');
+    console.log('  Sorryios AI 智能笔记系统 v4.6 (修复版)');
+    console.log('  🔧 已删除冗余路由（exclude-api, replace-api）');
     console.log('='.repeat(60));
     console.log(`  🚀 服务器启动成功！`);
     console.log(`  📡 地址: http://localhost:${PORT}`);
@@ -391,14 +387,16 @@ server.listen(PORT, HOST, () => {
     console.log(`     - 语法库管理: http://localhost:${PORT}/grammar-admin`);
     console.log(`     - 词库管理: http://localhost:${PORT}/vocabulary-admin`);
     console.log(`     - 处理日志: http://localhost:${PORT}/processing-log-admin`);
-    console.log(`     - 匹配词典: http://localhost:${PORT}/matching-dict-admin`);
-    console.log(`     - 排除库: http://localhost:${PORT}/exclude-admin`);
-    console.log(`     - 替换库: http://localhost:${PORT}/replace-admin`);
+    console.log(`     - 替换库管理: http://localhost:${PORT}/matching-dict-admin`);
     console.log('');
     console.log('  📌 API 接口:');
     console.log(`     - 健康检查: http://localhost:${PORT}/api/health`);
     console.log(`     - 文件上传: POST http://localhost:${PORT}/api/upload`);
     console.log(`     - 任务查询: GET http://localhost:${PORT}/api/task/:id`);
+    console.log('');
+    console.log('  ⚠️ 已废弃的路由（请使用 matching-dict-api）:');
+    console.log('     - /api/exclude（已删除）');
+    console.log('     - /api/replace（已删除）');
     console.log('='.repeat(60) + '\n');
 });
 
