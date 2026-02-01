@@ -1,11 +1,33 @@
 /**
- * 匹配算法服务 v4.5.2 (修复版)
+ * 匹配算法服务 v4.5.3.4 (修复版 - 结构词阈值调整)
  * 文件位置: backend/services/matchingService.js
  * 
- * 📦 v4.5.2 更新（修复版）：
- * - 修复：语法匹配增加 keywords 字段检查（精确+模糊）
- * - 修复：短语/句型匹配增加归一化处理，忽略可选括号
- * - 优化：提高匹配准确率，减少误报到AI生成模块
+ * 📦 v4.5.3.4 更新（2025-01-31 结构词阈值调整）：
+ * - 修复：_hasEnoughStructureWords 阈值从2降低到1
+ * - 解决："tell sb sth" 被误判为"通用模板"的问题
+ * - 原因：只有1个结构词（tell）不满足之前的 >= 2 要求
+ * 
+ * 📦 v4.5.3.3 更新（2025-01-30 模板检测修复版）：
+ * - 修复：模板检测在归一化之前执行，导致无点号占位符无法识别
+ * - 修复："tell sb sth" 被误判为"无占位符"，无法触发智能匹配
+ * - 解决：在检测占位符前先归一化，统一为 "sb." "sth." 格式
+ * 
+ * 📦 v4.5.3.2 更新（2025-01-30 智能匹配版）：
+ * - 新增：_smartPatternMatch 智能占位符匹配方法
+ * - 修复：允许具体词（better）匹配占位符（adj.）
+ * - 修复：允许具体动词（is）匹配占位符（be）
+ * - 解决："it is better for sb. to do sth." 匹配 "It + be + adj. + for sb." 的问题
+ * 
+ * 📦 v4.5.3.1 更新：
+ * - 修复：方法名错误 (calculatePatternSimilarity → calculateSimilarity)
+ * - 修复：归一化逻辑，确保结果一致
+ * - 修复：优化 usage 字段的句型提取逻辑
+ * 
+ * 📦 v4.5.3 更新（2025-01-30 修复版）：
+ * - 修复：语法匹配增加 structure 和 usage 字段检查
+ * - 修复：句型匹配失败时，自动在语法库中查找
+ * - 优化：新增 normalizePattern 方法，统一各种占位符格式
+ * - 解决：tell sb. to do sth. 等句型存在于语法库却匹配不到的问题
  * 
  * 📦 v4.5.1 更新：
  * - 改进：替换库双向模糊匹配（同时匹配 original_text 和 target_text）
@@ -50,7 +72,7 @@ class MatchingService {
         
         // v3.8: 替换库服务（已合并排除库）
         this.matchingDictService = getMatchingDictService();
-        console.log('[MatchingService] v4.3.0: 替换库服务已加载（已合并排除库）');
+        console.log('[MatchingService] v4.5.3.4: 替换库服务已加载（已合并排除库）+ 语法库结构字段支持 + 智能占位符匹配 + 无点号占位符检测 + 结构词阈值优化');
         
         // v2.2: 提高匹配阈值，更严格
         this.thresholds = {
@@ -262,6 +284,39 @@ class MatchingService {
             'older': 'old', 'oldest': 'old', 'elder': 'old', 'eldest': 'old',
         };
         
+        
+        // ============================================
+        // v5.0 新增：完整句型白名单
+        // ============================================
+        
+        this.completeSentencePatterns = [
+            'it is adj. to do sth.', 'it is adj. for sb. to do sth.', 'it is adj. of sb. to do sth.',
+            'it is adj. that', 'it is n. to do sth.', 'it takes time to do sth.', 'it takes sb. time to do sth.',
+            'it is time to do sth.', 'it is time for sb. to do sth.', 'find it adj. to do sth.',
+            'think it adj. to do sth.', 'make it adj. to do sth.', 'feel it adj. to do sth.',
+            'consider it adj. to do sth.', 'make sb. adj.', 'make sth. adj.', 'make sb. do sth.',
+            'make sb. sth.', 'have sb. do sth.', 'let sb. do sth.', 'get sb. to do sth.',
+            'help sb. do sth.', 'help sb. to do sth.', 'see sb. do sth.', 'see sb. doing sth.',
+            'hear sb. do sth.', 'hear sb. doing sth.', 'watch sb. do sth.', 'watch sb. doing sth.',
+            'notice sb. do sth.', 'notice sb. doing sth.', 'feel sb. do sth.', 'feel sb. doing sth.',
+            'observe sb. do sth.', 'observe sb. doing sth.', 'spend time doing sth.', 'spend time on sth.',
+            'spend money on sth.', 'spend money doing sth.', 'sth. cost sb. money', 'sth. take time',
+            'pay money for sth.', 'pay sb. money', 'stop sb. from doing sth.', 'prevent sb. from doing sth.',
+            'keep sb. from doing sth.', 'protect sb. from sth.', 'save sb. from sth.', 'ask sb. to do sth.',
+            'tell sb. to do sth.', 'want sb. to do sth.', 'wish sb. to do sth.', 'would like sb. to do sth.',
+            'expect sb. to do sth.', 'advise sb. to do sth.', 'allow sb. to do sth.', 'encourage sb. to do sth.',
+            'invite sb. to do sth.', 'order sb. to do sth.', 'warn sb. to do sth.', 'remind sb. to do sth.',
+            'teach sb. to do sth.', 'show sb. how to do sth.', 'be busy doing sth.', 'be busy with sth.',
+            'be worth doing sth.', 'be worth sth.', 'too adj. to do sth.', 'too adv. to do sth.',
+            'adj. enough to do sth.', 'adv. enough to do sth.', 'enough n. to do sth.',
+            'prefer to do sth. rather than do sth.', 'prefer doing sth. to doing sth.',
+            'would rather do sth. than do sth.', 'had better do sth.', 'used to do sth.',
+            'be used to doing sth.', 'be used to do sth.', 'look forward to doing sth.',
+            'pay attention to doing sth.', 'the way to do sth.', 'have trouble doing sth.',
+            'have difficulty doing sth.', 'have a hard time doing sth.', 'there be sb. doing sth.',
+            'with sb. doing sth.', 'without doing sth.'
+        ];
+        console.log(`[MatchingService] v5.0 已加载 ${this.completeSentencePatterns.length} 个完整句型白名单`);
         this.refreshCache();
     }
 
@@ -285,9 +340,114 @@ class MatchingService {
         normalized = normalized.replace(/\s+/g, ' ').trim();
         
         // 去除末尾的点号
-        normalized = normalized.replace(/\.+$/, '');
+        normalized = normalized.replace(/\./g, ''); 
         
         return normalized;
+    }
+    
+    /**
+     * v4.5.3: 统一的句型归一化方法
+     * 用于统一各种占位符格式，提高匹配成功率
+     */
+    normalizePattern(text) {
+        if (!text) return '';
+        
+        let normalized = text.toLowerCase().trim();
+        
+        // 1. 去除括号及其内容
+        normalized = normalized.replace(/\([^)]*\)/g, ' ');
+        
+        // 2. 统一占位符格式（先去掉所有点，再统一加上）
+        // sb/somebody/someone → sb.
+        normalized = normalized.replace(/\b(sb|somebody|someone)\.?\b/gi, 'sb.');
+        // sth/something → sth.
+        normalized = normalized.replace(/\b(sth|something)\.?\b/gi, 'sth.');
+        // adj/adjective → adj.
+        normalized = normalized.replace(/\b(adj|adjective)\.?\b/gi, 'adj.');
+        // adv/adverb → adv.
+        normalized = normalized.replace(/\b(adv|adverb)\.?\b/gi, 'adv.');
+        // v-ing/v.ing/doing → doing
+        normalized = normalized.replace(/\b(v-ing|v\.ing|v\. ing)\b/gi, 'doing');
+        // to v/to do → to do
+        normalized = normalized.replace(/\bto\s+v\.?\b/gi, 'to do');
+        // one's/ones → one's
+        normalized = normalized.replace(/\b(ones|one's)\b/gi, "one's");
+        
+        // 3. 去除加号、斜杠等连接符
+        normalized = normalized.replace(/\s*\+\s*/g, ' ');  // a + b → a b
+        normalized = normalized.replace(/\s*\/\s*/g, ' ');  // a / b → a b（都变空格）
+        normalized = normalized.replace(/\s*\|\s*/g, ' ');  // a | b → a b
+        
+        // 4. 去除多余的点号（.{2,}  → 空，但保留单个点）
+        normalized = normalized.replace(/\.{2,}/g, '.');  // 多个点 → 单个点
+        
+        // 5. 去除其他多余的标点
+        normalized = normalized.replace(/[,，;；]/g, ' ');  // 逗号、分号 → 空格
+        
+        // 6. 统一空格
+        normalized = normalized.replace(/\s+/g, ' ').trim();
+        
+        return normalized;
+    }
+    
+    /**
+     * v4.5.3.2: 智能占位符匹配
+     * 允许具体词（better）匹配占位符（adj.）
+     * @param {string} userText - 用户输入的文本
+     * @param {string} templateText - 模板文本（可能包含占位符）
+     * @returns {boolean} 是否匹配
+     */
+    _smartPatternMatch(userText, templateText) {
+        const userNormalized = this.normalizePattern(userText);
+        const templateNormalized = this.normalizePattern(templateText);
+        
+        // 1. 完全相等，直接返回true
+        if (userNormalized === templateNormalized) {
+            return true;
+        }
+        
+        // 2. 将模板转换为正则表达式
+        // 注意：先替换占位符，再转义特殊字符
+        let pattern = templateNormalized
+            // 先替换占位符为特殊标记
+            .replace(/\badj\./g, '__ADJ__')
+            .replace(/\badv\./g, '__ADV__')
+            .replace(/\bbe\b/g, '__BE__')
+            .replace(/\bdoing\b/g, '__DOING__')
+            .replace(/\bsb\./g, '__SB__')
+            .replace(/\bsth\./g, '__STH__')
+            .replace(/\bto\s+do\b/g, '__TODO__');
+        
+        // 然后转义所有正则特殊字符
+        pattern = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+        
+        // 最后将标记替换为正则模式
+        pattern = pattern
+            .replace(/__ADJ__/g, '\\w+\\.?')  // adj. 匹配任何形容词（带或不带点号）
+            .replace(/__ADV__/g, '\\w+\\.?')  // adv. 匹配任何副词（带或不带点号）
+            .replace(/__BE__/g, '(?:is|am|are|was|were|be)')  // be 匹配各种形式
+            .replace(/__DOING__/g, '\\w+ing')  // doing 匹配 v-ing
+            .replace(/__SB__/g, 'sb\\.?')  // sb. 匹配 sb 或 sb.
+            .replace(/__STH__/g, 'sth\\.?')  // sth. 匹配 sth 或 sth.
+            .replace(/__TODO__/g, 'to\\s+\\w+');  // to do 匹配 to + 动词
+        
+        // 3. 添加开始锚点，不添加结束锚点（允许额外内容）
+        pattern = '^' + pattern;
+        
+        // 4. 测试匹配
+        try {
+            const regex = new RegExp(pattern, 'i');
+            const result = regex.test(userNormalized);
+            if (this.verboseLog && result) {
+                this.verboseOutput(`  [智能匹配] 成功: "${userNormalized}" 匹配 /${pattern}/i`, 'debug');
+            }
+            return result;
+        } catch (e) {
+            if (this.verboseLog) {
+                this.verboseOutput(`  [智能匹配] 正则错误: ${e.message}`, 'warn');
+            }
+            return false;
+        }
     }
     
     /**
@@ -822,6 +982,28 @@ class MatchingService {
         }
         // ===== v4.3.1 新增结束 =====
         
+        // ===== v4.3.2 新增：检测转换模式（如"X变Y"、"X转Y"）=====
+        // 例如 "形容词变副词" 不应该匹配只包含"形容词"的语法点
+        const transformKeywords = ['变', '转', '转换', '变化', '转变', '变为', '转为', '→', '变成'];
+        const inputHasTransform = transformKeywords.some(kw => s1.includes(kw));
+        const targetHasTransform = transformKeywords.some(kw => s2.includes(kw));
+        
+        if (inputHasTransform && !targetHasTransform) {
+            this.verboseOutput(`  ⚠️ 输入是转换模式，目标不是转换模式`, 'debug');
+            
+            // 即使有共同术语（如"形容词"），也不应该高分
+            // 最高给60%，确保不会超过85%阈值
+            const distance = this.levenshteinDistance(n1, n2);
+            const maxLen = Math.max(n1.length, n2.length);
+            const editScore = 1 - distance / maxLen;
+            
+            return { 
+                score: Math.min(editScore, 0.60),
+                reason: '转换模式不匹配' 
+            };
+        }
+        // ===== v4.3.2 新增结束 =====
+        
         // 策略1: 核心术语匹配
         const terms1 = this.extractCoreTerms(s1);
         const terms2 = this.extractCoreTerms(s2);
@@ -1303,35 +1485,102 @@ class MatchingService {
     /**
      * v4.2.1: 只检查模糊匹配（跳过精确匹配）
      */
-    _findReplaceRuleFuzzyOnly(text, type) {
-        if (this._containsTemplatePlaceholder(text)) {
-            console.log(`[MatchingService] 跳过替换库模糊匹配: "${text}" 是通用模板`);
-            return null;
+
+    /**
+     * v5.0: 归一化句型文本
+     */
+    _normalizePatternText(text) {
+        if (!text) return '';
+        return text.toLowerCase().replace(/\s+/g, ' ').replace(/\+\s*/g, ' ').replace(/\s*\+/g, ' ')
+            .replace(/\s*\/\s*/g, '/').replace(/\(\s*/g, '(').replace(/\s*\)/g, ')').replace(/\s+/g, ' ').trim();
+    }
+
+    /**
+     * v5.0: 检查是否是完整句型
+     */
+    _isCompleteSentencePattern(text) {
+        if (!text) return false;
+        const normalized = this._normalizePatternText(text);
+        for (const pattern of this.completeSentencePatterns) {
+            if (normalized === this._normalizePatternText(pattern)) {
+                console.log(`[白名单匹配] "${text}" 是完整句型`);
+                return true;
+            }
         }
+        return false;
+    }
+
+    /**
+     * v5.0: 检查是否包含足够的结构词
+     */
+    _hasEnoughStructureWords(text) {
+        if (!text) return false;
+        const lowerText = text.toLowerCase();
+        const indicators = ['it is', 'it was', 'to do', 'doing', 'for sb', 'of sb', 'make', 'let', 
+            'have', 'get', 'see', 'hear', 'watch', 'spend', 'take', 'stop', 'prevent', 'ask', 'tell'];
+        let count = 0;
+        for (const ind of indicators) if (lowerText.includes(ind)) count++;
+        return count >= 1;  // v4.5.3.4: 降低阈值，1个结构词即可（原为2）
+    }
+
+    /**
+     * v5.0: 检查是否是纯占位符
+     */
+    _isPurePlaceholder(text) {
+        if (!text) return true;
+        const normalized = this._normalizePatternText(text);
+        const pure = ['sb', 'sb.', 'sth', 'sth.', 'adj', 'adj.', 'adv', 'adv.', 'do sth', 'do sth.',
+            'doing sth', 'doing sth.', 'to do sth', 'to do sth.', 'to do', 'doing', "one's", 'oneself', '...'];
+        for (const p of pure) if (normalized === p.toLowerCase()) return true;
+        return false;
+    }
+    
+    /**
+     * v5.0: 查找替换规则（模糊匹配）- 优化版
+     */
+    _findReplaceRuleFuzzyOnly(text, type) {
+        console.log(`\n${'='.repeat(80)}\n[替换库模糊匹配] 输入: "${text}" (${type})`);
         
         this.matchingDictService.checkCache();
-        
         const rules = this.matchingDictService.cache.rules || [];
         const normalizedType = type.toLowerCase().trim();
-        const normalizedText = text.toLowerCase().trim();
-        const threshold = 0.85;
         
-        let bestRule = null;
-        let bestScore = 0;
-        
+        // 高相似度优先检查
+        let highScore = 0, highRule = null;
         for (const rule of rules) {
             if (rule.original_type.toLowerCase().trim() !== normalizedType) continue;
             if (!rule.target_text || rule.target_text.trim() === '') continue;
-            
-            const normalizedOriginal = rule.original_text.toLowerCase().trim();
-            
-            if (normalizedText === normalizedOriginal) continue;
+            const score = this.calculateSimilarity(text, rule.original_text, {
+                isWordMatch: type === 'word', isPhraseMatch: type === 'phrase',
+                isPatternMatch: type === 'pattern', isGrammarMatch: type === 'grammar'
+            });
+            if (score > highScore) { highScore = score; highRule = rule; }
+            if (score >= 0.95) break;
+        }
+        
+        if (highScore >= 0.90) {
+            console.log(`[替换库模糊匹配] ✅ 高相似度规则 (${(highScore*100).toFixed(1)}%)\n${'='.repeat(80)}`);
+            this.matchingDictService.incrementUseCount(highRule.id);
+            return { rule: highRule, score: highScore };
+        }
+        
+        // 模板检测
+        if (this._containsTemplatePlaceholder(text)) {
+            console.log(`[替换库模糊匹配] ⚠️ 跳过: 通用模板\n${'='.repeat(80)}`);
+            return null;
+        }
+        
+        // 模糊匹配
+        const threshold = 0.85;
+        let bestRule = null, bestScore = 0;
+        for (const rule of rules) {
+            if (rule.original_type.toLowerCase().trim() !== normalizedType) continue;
+            if (!rule.target_text || rule.target_text.trim() === '') continue;
+            if (text.toLowerCase().trim() === rule.original_text.toLowerCase().trim()) continue;
             
             const score = this.calculateSimilarity(text, rule.original_text, {
-                isWordMatch: type === 'word',
-                isPhraseMatch: type === 'phrase',
-                isPatternMatch: type === 'pattern',
-                isGrammarMatch: type === 'grammar'
+                isWordMatch: type === 'word', isPhraseMatch: type === 'phrase',
+                isPatternMatch: type === 'pattern', isGrammarMatch: type === 'grammar'
             });
             
             if (score >= threshold && score > bestScore) {
@@ -1342,36 +1591,59 @@ class MatchingService {
         
         if (bestRule) {
             this.matchingDictService.incrementUseCount(bestRule.id);
-            console.log(`[MatchingService] 替换库模糊匹配: "${text}" ≈ "${bestRule.original_text}" (${(bestScore * 100).toFixed(1)}%)`);
+            console.log(`[替换库模糊匹配] ✅ 匹配成功 (${(bestScore*100).toFixed(1)}%)\n${'='.repeat(80)}`);
             return { rule: bestRule, score: bestScore };
         }
         
+        console.log(`[替换库模糊匹配] ❌ 未找到\n${'='.repeat(80)}`);
         return null;
     }
     
     /**
-     * v4.2.1: 检查文本是否包含模板占位符
+     * v5.0: 检查文本是否包含模板占位符 - 智能版
+     * v4.5.3.3: 修复无点号占位符检测问题
      */
     _containsTemplatePlaceholder(text) {
         if (!text) return false;
+        console.log(`\n[模板检测] "${text}"`);
         
-        const lowerText = text.toLowerCase();
+        if (this._isCompleteSentencePattern(text)) {
+            console.log('[模板检测] ✅ 完整句型');
+            return false;
+        }
+        if (this._isPurePlaceholder(text)) {
+            console.log('[模板检测] ❌ 纯占位符');
+            return true;
+        }
         
-        const placeholders = [
-            'doing sth', 'do sth', 'done sth',
-            'sb.', 'sth.',
-            "one's", 'oneself',
-            'adj.', 'adv.',
-            '...'
-        ];
+        // v4.5.3.3: 先归一化，统一占位符格式（sb → sb., sth → sth.）
+        const normalizedText = this.normalizePattern(text);
+        const lowerText = normalizedText.toLowerCase();
         
-        for (const placeholder of placeholders) {
-            if (lowerText.includes(placeholder)) {
-                return true;
+        // 检测标准化后的占位符（都带点号）
+        const placeholders = ['doing sth.', 'do sth.', 'done sth.', 'to do sth.', 'sb.', 'sth.', 
+            "one's", 'oneself', 'adj.', 'adv.', 'n.', 'v.', '...'];
+        
+        let hasPlaceholder = false;
+        for (const p of placeholders) {
+            if (lowerText.includes(p)) { 
+                hasPlaceholder = true; 
+                break; 
             }
         }
         
-        return false;
+        if (!hasPlaceholder) {
+            console.log('[模板检测] ✅ 无占位符');
+            return false;
+        }
+        
+        if (this._hasEnoughStructureWords(text)) {
+            console.log('[模板检测] ✅ 结构完整');
+            return false;
+        }
+        
+        console.log('[模板检测] ❌ 通用模板');
+        return true;
     }
     
     /**
@@ -1533,6 +1805,16 @@ class MatchingService {
                 matched_data: match
             };
         }
+        
+        // v4.5.3: 如果在 patterns 表中找不到，也尝试在 grammar 库中查找
+        // 因为有些句型可能存储在 grammar.structure 或 grammar.usage 中
+        this.verboseOutput(`  → patterns表匹配失败，尝试在grammar库查找...`, 'debug');
+        const grammarMatch = this._matchGrammarInternal(pattern);
+        if (grammarMatch && grammarMatch.matched && grammarMatch.score >= 0.85) {
+            this.verboseOutput(`  → ✅ 在grammar库找到匹配: "${pattern}" → "${grammarMatch.matched_text}" (${(grammarMatch.score * 100).toFixed(1)}%)`, 'success');
+            return grammarMatch;
+        }
+        
         return { matched: false, score };
     }
 
@@ -1611,7 +1893,7 @@ class MatchingService {
     
     /**
      * 内部语法匹配
-     * v4.5.2: 增加keywords字段的模糊匹配
+     * v4.5.3: 增加 structure 和 usage 字段的匹配（修复句型匹配问题）
      */
     _matchGrammarInternal(grammarText) {
         let bestMatch = null;
@@ -1666,7 +1948,7 @@ class MatchingService {
                 }
             }
             
-            // ===== 检查keywords数组（新增）=====
+            // ===== 检查keywords数组 =====
             if (item.keywords && Array.isArray(item.keywords)) {
                 for (const keyword of item.keywords) {
                     if (!keyword) continue;
@@ -1706,6 +1988,124 @@ class MatchingService {
                         bestMatch = item;
                         bestReason = keywordResult.reason;
                         bestSource = `keywords:${keyword}`;
+                    }
+                }
+            }
+            
+            // ===== v4.5.3 新增：检查 structure 字段（句型结构）=====
+            if (item.structure) {
+                const structureText = typeof item.structure === 'string' ? item.structure : '';
+                if (structureText) {
+                    // 将 structure 按分隔符拆分（可能包含多个句型）
+                    const structures = structureText.split(/[/|;、]/).map(s => s.trim()).filter(Boolean);
+                    
+                    for (let struct of structures) {
+                        // 去除 structure 中的加号和多余空格
+                        struct = struct.replace(/\s*\+\s*/g, ' ').trim();
+                        
+                        // structure 精确匹配（使用智能匹配）
+                        if (this._smartPatternMatch(grammarText, struct)) {
+                            this.verboseOutput(`  → 发现structure智能匹配: "${grammarText}" ≈ "${struct}" in "${item.title}"`, 'success');
+                            return {
+                                matched: true,
+                                score: 1.0,
+                                source_db: 'grammar',
+                                source_table: 'grammar',
+                                source_id: item.id,
+                                matched_text: item.title,
+                                matched_data: item,
+                                matchedStructure: struct
+                            };
+                        }
+                        
+                        // structure 模糊匹配
+                        const structScore = this.calculateSimilarity(grammarText, struct, { isPatternMatch: true });
+                        if (structScore >= 0.7) {
+                            candidates.push({
+                                text: `${struct} (${item.title})`,
+                                score: structScore,
+                                reason: 'structure匹配',
+                                source: 'structure',
+                                id: item.id
+                            });
+                            
+                            if (structScore > bestScore) {
+                                bestScore = structScore;
+                                bestMatch = item;
+                                bestReason = 'structure匹配';
+                                bestSource = `structure:${struct}`;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // ===== v4.5.3 新增：检查 usage 字段（用法说明）=====
+            if (item.usage) {
+                let usageArray = [];
+                
+                // usage 可能是数组或字符串
+                if (Array.isArray(item.usage)) {
+                    usageArray = item.usage;
+                } else if (typeof item.usage === 'string') {
+                    try {
+                        usageArray = JSON.parse(item.usage);
+                    } catch (e) {
+                        usageArray = [item.usage];
+                    }
+                }
+                
+                for (const usage of usageArray) {
+                    if (!usage || typeof usage !== 'string') continue;
+                    
+                    // 从用法说明中提取句型
+                    // 方法1: 直接按标点符号分割，找包含占位符的部分
+                    const parts = usage.split(/[,，;；。.、]/);
+                    
+                    for (let part of parts) {
+                        part = part.trim();
+                        
+                        // 检查是否包含占位符（sb., sth., adj., to do 等）
+                        if (!/\b(sb\.?|sth\.?|adj\.?|adv\.?|to\s+do|doing)\b/i.test(part)) {
+                            continue;
+                        }
+                        
+                        // 去除冒号前的描述文本（如 "tell："）
+                        part = part.replace(/^[^:：]*[:：]\s*/, '');
+                        
+                        // usage中的句型匹配（使用智能匹配）
+                        if (this._smartPatternMatch(grammarText, part)) {
+                            this.verboseOutput(`  → 发现usage智能匹配: "${grammarText}" ≈ "${part}" in "${item.title}"`, 'success');
+                            return {
+                                matched: true,
+                                score: 1.0,
+                                source_db: 'grammar',
+                                source_table: 'grammar',
+                                source_id: item.id,
+                                matched_text: item.title,
+                                matched_data: item,
+                                matchedUsage: part
+                            };
+                        }
+                        
+                        // usage中的句型模糊匹配
+                        const usageScore = this.calculateSimilarity(grammarText, part, { isPatternMatch: true });
+                        if (usageScore >= 0.7) {
+                            candidates.push({
+                                text: `${part} (${item.title})`,
+                                score: usageScore,
+                                reason: 'usage匹配',
+                                source: 'usage',
+                                id: item.id
+                            });
+                            
+                            if (usageScore > bestScore) {
+                                bestScore = usageScore;
+                                bestMatch = item;
+                                bestReason = 'usage匹配';
+                                bestSource = `usage:${part}`;
+                            }
+                        }
                     }
                 }
             }

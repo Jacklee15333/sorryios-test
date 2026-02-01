@@ -473,6 +473,14 @@
                 const data = await res.json();
                 if (data.success) {
                     allRules = data.data || [];
+                    // 排序：is_new=1的在前，其他按ID降序
+                    allRules.sort((a, b) => {
+                        const aIsNew = a.is_new === true || a.is_new === 1;
+                        const bIsNew = b.is_new === true || b.is_new === 1;
+                        if (aIsNew && !bIsNew) return -1;
+                        if (!aIsNew && bIsNew) return 1;
+                        return b.id - a.id;
+                    });
                     pagination.data = allRules;
                     // 修复：使用API返回的total，而不是data.length
                     pagination.total = data.total || allRules.length;
@@ -500,23 +508,30 @@
                 // 计算序号
                 const rowNumber = (page - 1) * pageSize + index + 1;
                 
+                // v3.1: 检查是否为新规则
+                const isNew = r.is_new === true || r.is_new === 1;
+                
                 // v3.0: 区分显示替换和排除
                 const isExclude = !r.target_text || r.target_text.trim() === '';
                 const targetDisplay = isExclude 
                     ? '<span style="color: #dc2626; font-weight: 500;">🚫 排除（跳过）</span>'
                     : escapeHtml(r.target_text);
-                const rowStyle = isExclude ? 'background: #fef2f2;' : '';
+                const rowStyle = (isExclude ? 'background: #fef2f2;' : '') + (isNew ? ' border-left: 3px solid #9ca3af;' : '');
                 
                 return `
-                <tr style="${rowStyle}">
+                <tr style="${rowStyle}" class="${isNew ? 'is-new' : ''}">
                     <td style="font-weight: 500; color: #6b7280;">${rowNumber}</td>
-                    <td>${escapeHtml(r.original_text)}</td>
+                    <td>
+                        ${escapeHtml(r.original_text)}
+                        ${isNew ? '<span class="new-badge">NEW</span>' : ''}
+                    </td>
                     <td><span class="type-badge ${typeClass}">${typeLabel}</span></td>
                     <td>${targetDisplay}</td>
                     <td>${useCount}</td>
                     <td>${time}</td>
                     <td style="color: #9ca3af; font-size: 12px;">${r.id}</td>
                     <td>
+                        ${isNew ? '<button class="btn btn-confirm btn-sm" onclick="confirmRule(' + r.id + ')">✓ 确认</button>' : ''}
                         <button class="btn btn-secondary btn-sm" onclick="editRule(${r.id})">编辑</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteRule(${r.id})">删除</button>
                     </td>

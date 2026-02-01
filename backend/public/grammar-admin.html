@@ -660,6 +660,14 @@
                 const res = await fetch(API_BASE + '?all=true');
                 const data = await res.json();
                 if (data.success) {
+                    // 排序：is_new=1的在前，其他按ID降序
+                    data.data.sort((a, b) => {
+                        const aIsNew = a.is_new === true || a.is_new === 1;
+                        const bIsNew = b.is_new === true || b.is_new === 1;
+                        if (aIsNew && !bIsNew) return -1;
+                        if (!aIsNew && bIsNew) return 1;
+                        return b.id - a.id;
+                    });
                     allGrammar = data.data;
                     filterAndRender();
                 }

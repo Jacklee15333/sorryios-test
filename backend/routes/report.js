@@ -181,10 +181,170 @@ router.get('/tasks/:id/report', async (req, res) => {
 
     console.log(`[Report] 📦 解析后总数: ${allItems.length}`);
 
+    // ========== v5.1: 去重逻辑 ==========
+    console.log('[Report] ─────────────────────────────────────');
+    console.log('[Report] 开始去重处理');
+    console.log('[Report] ─────────────────────────────────────');
+
+    /**
+     * 去重函数：根据指定字段去重（v5.1.1 - 增强错误处理）
+     */
+    const deduplicateItems = (items, keyField) => {
+      if (!Array.isArray(items) || items.length === 0) {
+        return [];
+      }
+      
+      const seen = new Map();
+      const duplicates = [];
+      const skippedEmpty = [];
+      
+      const result = items.filter(item => {
+        // 检查item是否有效
+        if (!item) {
+          console.log(`[Report] ⚠️  跳过null/undefined项`);
+          return false;
+        }
+        
+        // 检查字段是否存在
+        if (!item[keyField]) {
+          skippedEmpty.push(item);
+          return false;
+        }
+        
+        // 安全地转换为字符串并标准化
+        let key;
+        try {
+          key = String(item[keyField]).toLowerCase().trim();
+        } catch (e) {
+          console.log(`[Report] ⚠️  无法处理字段值:`, item[keyField]);
+          return false;
+        }
+        
+        // 检查是否为空字符串
+        if (!key) {
+          skippedEmpty.push(item);
+          return false;
+        }
+        
+        // 检查重复
+        if (seen.has(key)) {
+          duplicates.push({
+            key,
+            value: item[keyField]
+          });
+          return false;
+        }
+        
+        seen.set(key, item);
+        return true;
+      });
+      
+      // 输出统计信息
+      if (skippedEmpty.length > 0) {
+        console.log(`[Report] ⚠️  跳过 ${skippedEmpty.length} 个空${keyField}的项`);
+      }
+      
+      if (duplicates.length > 0) {
+        console.log(`[Report] 🔄 发现 ${duplicates.length} 个重复项 (字段: ${keyField}):`);
+        // 只显示前5个重复项，避免日志过多
+        duplicates.slice(0, 5).forEach(d => {
+          console.log(`[Report]   - "${d.value}" (重复key: "${d.key}")`);
+        });
+        if (duplicates.length > 5) {
+          console.log(`[Report]   ... 还有 ${duplicates.length - 5} 个重复项`);
+        }
+      }
+      
+      return result;
+    };
+
+    // 分类并去重（v5.1.1 - 添加未知类型处理）
+    const itemsByType = {
+      word: [],
+      phrase: [],
+      pattern: [],
+      grammar: [],
+      unknown: []  // 用于存储未知类型
+    };
+
+    // 先按类型分组
+    let unknownTypeCount = 0;
+    allItems.forEach(item => {
+      const type = item.type;
+      if (type === 'word' || type === 'words' || type === 'vocabulary') {
+        itemsByType.word.push(item);
+      } else if (type === 'phrase' || type === 'phrases' || type === 'idiom') {
+        itemsByType.phrase.push(item);
+      } else if (type === 'pattern' || type === 'patterns' || type === 'sentence') {
+        itemsByType.pattern.push(item);
+      } else if (type === 'grammar' || type === 'grammars' || type === 'grammarPoint') {
+        itemsByType.grammar.push(item);
+      } else {
+        // 处理未知类型
+        itemsByType.unknown.push(item);
+        unknownTypeCount++;
+        console.log(`[Report] ⚠️  未知类型: "${type}" (content: "${item.content || item.title || 'N/A'}")`);
+      }
+    });
+    
+    if (unknownTypeCount > 0) {
+      console.log(`[Report] ⚠️  警告: 发现 ${unknownTypeCount} 个未知类型的数据`);
+    }
+
+    const beforeDedupeTotal = itemsByType.word.length + itemsByType.phrase.length + 
+                            itemsByType.pattern.length + itemsByType.grammar.length + 
+                            itemsByType.unknown.length;
+    
+    console.log('[Report] 去重前统计:');
+    console.log(`[Report]   - 单词: ${itemsByType.word.length}`);
+    console.log(`[Report]   - 短语: ${itemsByType.phrase.length}`);
+    console.log(`[Report]   - 句型: ${itemsByType.pattern.length}`);
+    console.log(`[Report]   - 语法: ${itemsByType.grammar.length}`);
+    if (itemsByType.unknown.length > 0) {
+      console.log(`[Report]   - 未知类型: ${itemsByType.unknown.length}`);
+    }
+    console.log(`[Report]   - 总计: ${beforeDedupeTotal} (原始: ${allItems.length})`);
+
+    // 对每种类型分别去重
+    itemsByType.word = deduplicateItems(itemsByType.word, 'content');
+    itemsByType.phrase = deduplicateItems(itemsByType.phrase, 'content');
+    itemsByType.pattern = deduplicateItems(itemsByType.pattern, 'content');
+    itemsByType.grammar = deduplicateItems(itemsByType.grammar, 'title');
+    // 未知类型也去重（使用content或title字段）
+    if (itemsByType.unknown.length > 0) {
+      itemsByType.unknown = deduplicateItems(itemsByType.unknown, 'content') || deduplicateItems(itemsByType.unknown, 'title');
+    }
+
+    const afterDedupeTotal = itemsByType.word.length + itemsByType.phrase.length + 
+                           itemsByType.pattern.length + itemsByType.grammar.length + 
+                           itemsByType.unknown.length;
+
+    console.log('[Report] 去重后统计:');
+    console.log(`[Report]   - 单词: ${itemsByType.word.length}`);
+    console.log(`[Report]   - 短语: ${itemsByType.phrase.length}`);
+    console.log(`[Report]   - 句型: ${itemsByType.pattern.length}`);
+    console.log(`[Report]   - 语法: ${itemsByType.grammar.length}`);
+    if (itemsByType.unknown.length > 0) {
+      console.log(`[Report]   - 未知类型: ${itemsByType.unknown.length}`);
+    }
+    console.log(`[Report]   - 总计: ${afterDedupeTotal} (去重了 ${beforeDedupeTotal - afterDedupeTotal} 项)`);
+    console.log('[Report] ─────────────────────────────────────');
+
+    // 重新合并去重后的数据（包括未知类型）
+    const allItemsFinal = [
+      ...itemsByType.word,
+      ...itemsByType.phrase,
+      ...itemsByType.pattern,
+      ...itemsByType.grammar,
+      ...itemsByType.unknown  // 包含未知类型的数据
+    ];
+
+    console.log(`[Report] 📦 解析后总数（去重后）: ${allItemsFinal.length}`);
+
     // 输出几个示例看看映射后的结构
-    if (allItems.length > 0) {
+    if (allItemsFinal.length > 0) {
       console.log(`[Report] 📋 映射后的数据示例 (前3条):`);
-      allItems.slice(0, 3).forEach((item, index) => {
+      allItemsFinal.slice(0, 3).forEach((item, index) => {
         console.log(`  [${index}]`, {
           type: item.type,
           content: item.content?.substring(0, 30),
@@ -197,7 +357,7 @@ router.get('/tasks/:id/report', async (req, res) => {
     }
 
     // 专门打印语法数据示例（用于调试）
-    const grammarItems = allItems.filter(item => item.type === 'grammar');
+    const grammarItems = allItemsFinal.filter(item => item.type === 'grammar');
     if (grammarItems.length > 0) {
       console.log(`[Report] 📚 语法数据示例 (前3条):`);
       grammarItems.slice(0, 3).forEach((item, index) => {
@@ -216,7 +376,7 @@ router.get('/tasks/:id/report', async (req, res) => {
 
     // 统计类型分布
     const typeDistribution = {};
-    allItems.forEach(item => {
+    allItemsFinal.forEach(item => {
       const type = item.type || 'unknown';
       typeDistribution[type] = (typeDistribution[type] || 0) + 1;
     });
@@ -224,22 +384,22 @@ router.get('/tasks/:id/report', async (req, res) => {
     console.log(`[Report] 📊 类型分布统计:`, typeDistribution);
 
     // 按类型分类
-    const words = allItems.filter(item => {
+    const words = allItemsFinal.filter(item => {
       const type = item.type;
       return type === 'word' || type === 'words' || type === 'vocabulary';
     });
 
-    const phrases = allItems.filter(item => {
+    const phrases = allItemsFinal.filter(item => {
       const type = item.type;
       return type === 'phrase' || type === 'phrases' || type === 'idiom';
     });
 
-    const patterns = allItems.filter(item => {
+    const patterns = allItemsFinal.filter(item => {
       const type = item.type;
       return type === 'pattern' || type === 'patterns' || type === 'sentence';
     });
 
-    const grammar = allItems.filter(item => {
+    const grammar = allItemsFinal.filter(item => {
       const type = item.type;
       return type === 'grammar' || type === 'grammars' || type === 'grammarPoint';
     });
@@ -258,7 +418,7 @@ router.get('/tasks/:id/report', async (req, res) => {
       grammar,
       // 调试信息
       _debug: {
-        totalItems: allItems.length,
+        totalItems: allItemsFinal.length,
         typeDistribution,
         matchedCount: matchedItems.length,
         unmatchedCount: unmatchedItems.length,
@@ -409,8 +569,3 @@ router.get('/:id', async (req, res) => {
 
 
 module.exports = router;
-
-
-
-
-

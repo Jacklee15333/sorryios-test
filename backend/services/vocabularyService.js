@@ -1,6 +1,13 @@
 /**
- * 词库数据库服务
- * 使用 SQLite 存储单词、短语、句型
+ * 词库数据库服务 - 修复版 v1.1
+ * 
+ * 📦 v1.1 修复内容：
+ * - 修复：addWord/addPhrase/addPattern 添加 is_new 字段
+ * - 改进：唯一约束错误提示更清晰
+ * - 改进：添加详细的错误日志
+ * 
+ * 使用方法：
+ * 将此文件复制到 backend/services/vocabularyService.js
  */
 
 const Database = require('better-sqlite3');
@@ -94,17 +101,46 @@ class VocabularyService {
             CREATE INDEX IF NOT EXISTS idx_patterns_category ON patterns(category);
         `);
 
+        // v1.1: 确保 is_new 字段存在
+        this._ensureIsNewColumn();
+
         console.log('[VocabularyService] 数据库表已创建');
+    }
+
+    /**
+     * v1.1 新增：确保 is_new 字段存在
+     */
+    _ensureIsNewColumn() {
+        const tables = ['words', 'phrases', 'patterns'];
+        
+        for (const table of tables) {
+            try {
+                const columns = this.db.prepare(`PRAGMA table_info(${table})`).all();
+                const hasIsNew = columns.some(col => col.name === 'is_new');
+                
+                if (!hasIsNew) {
+                    console.log(`[VocabularyService] 为 ${table} 表添加 is_new 字段...`);
+                    this.db.exec(`ALTER TABLE ${table} ADD COLUMN is_new INTEGER DEFAULT 0`);
+                    console.log(`[VocabularyService] ${table}.is_new 字段添加成功`);
+                }
+            } catch (e) {
+                console.warn(`[VocabularyService] 检查 ${table}.is_new 字段失败:`, e.message);
+            }
+        }
     }
 
     // ============================================
     // 单词操作
     // ============================================
 
+    /**
+     * 添加单词
+     * v1.1 修复：添加 is_new 字段
+     */
     addWord(word) {
         const stmt = this.db.prepare(`
-            INSERT INTO words (word, phonetic, pos, meaning, example, irregular_forms, category, difficulty, enabled)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO words (word, phonetic, pos, meaning, example, irregular_forms, category, difficulty, enabled, is_new)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
         try {
@@ -117,17 +153,29 @@ class VocabularyService {
                 JSON.stringify(word.irregular_forms || {}),
                 word.category || '其他',
                 word.difficulty || 2,
-                word.enabled !== false ? 1 : 0
+                word.enabled !== false ? 1 : 0,
+                1  // is_new = 1，标记为新添加
             );
+            
+            console.log(`[VocabularyService] 添加单词成功: "${word.word}" (ID: ${result.lastInsertRowid})`);
             return { success: true, id: result.lastInsertRowid };
         } catch (error) {
+            console.error(`[VocabularyService] 添加单词失败: "${word.word}"`, {
+                error: error.message,
+                code: error.code
+            });
+            
             if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-                return { success: false, error: '单词已存在' };
+                return { success: false, error: `单词 "${word.word}" 已存在` };
             }
             throw error;
         }
     }
 
+    /**
+     * 更新单词
+     * v1.1 改进：添加详细错误日志
+     */
     updateWord(id, word) {
         const stmt = this.db.prepare(`
             UPDATE words SET
@@ -150,10 +198,23 @@ class VocabularyService {
                 word.enabled !== false ? 1 : 0,
                 id
             );
-            return { success: result.changes > 0 };
+            
+            if (result.changes > 0) {
+                console.log(`[VocabularyService] 更新单词成功: ID ${id}`);
+                return { success: true };
+            } else {
+                console.warn(`[VocabularyService] 更新单词失败: ID ${id} 不存在`);
+                return { success: false, error: '单词不存在' };
+            }
         } catch (error) {
+            console.error(`[VocabularyService] 更新单词失败: ID ${id}`, {
+                error: error.message,
+                code: error.code,
+                word: word.word
+            });
+            
             if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-                return { success: false, error: '单词已存在' };
+                return { success: false, error: `单词 "${word.word}" 已被其他记录使用` };
             }
             throw error;
         }
@@ -162,6 +223,10 @@ class VocabularyService {
     deleteWord(id) {
         const stmt = this.db.prepare('DELETE FROM words WHERE id = ?');
         const result = stmt.run(id);
+        
+        if (result.changes > 0) {
+            console.log(`[VocabularyService] 删除单词成功: ID ${id}`);
+        }
         return { success: result.changes > 0 };
     }
 
@@ -212,7 +277,8 @@ class VocabularyService {
             difficulty: row.difficulty,
             enabled: row.enabled === 1,
             created_at: row.created_at,
-            updated_at: row.updated_at
+            updated_at: row.updated_at,
+            is_new: row.is_new === 1  // v1.1: 添加 is_new 字段
         };
     }
 
@@ -220,10 +286,14 @@ class VocabularyService {
     // 短语操作
     // ============================================
 
+    /**
+     * 添加短语
+     * v1.1 修复：添加 is_new 字段
+     */
     addPhrase(phrase) {
         const stmt = this.db.prepare(`
-            INSERT INTO phrases (phrase, meaning, example, category, difficulty, enabled)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO phrases (phrase, meaning, example, category, difficulty, enabled, is_new)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `);
 
         try {
@@ -233,17 +303,29 @@ class VocabularyService {
                 phrase.example || '',
                 phrase.category || '其他',
                 phrase.difficulty || 2,
-                phrase.enabled !== false ? 1 : 0
+                phrase.enabled !== false ? 1 : 0,
+                1  // is_new = 1，标记为新添加
             );
+            
+            console.log(`[VocabularyService] 添加短语成功: "${phrase.phrase}" (ID: ${result.lastInsertRowid})`);
             return { success: true, id: result.lastInsertRowid };
         } catch (error) {
+            console.error(`[VocabularyService] 添加短语失败: "${phrase.phrase}"`, {
+                error: error.message,
+                code: error.code
+            });
+            
             if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-                return { success: false, error: '短语已存在' };
+                return { success: false, error: `短语 "${phrase.phrase}" 已存在` };
             }
             throw error;
         }
     }
 
+    /**
+     * 更新短语
+     * v1.1 改进：添加详细错误日志
+     */
     updatePhrase(id, phrase) {
         const stmt = this.db.prepare(`
             UPDATE phrases SET
@@ -262,10 +344,23 @@ class VocabularyService {
                 phrase.enabled !== false ? 1 : 0,
                 id
             );
-            return { success: result.changes > 0 };
+            
+            if (result.changes > 0) {
+                console.log(`[VocabularyService] 更新短语成功: ID ${id}`);
+                return { success: true };
+            } else {
+                console.warn(`[VocabularyService] 更新短语失败: ID ${id} 不存在`);
+                return { success: false, error: '短语不存在' };
+            }
         } catch (error) {
+            console.error(`[VocabularyService] 更新短语失败: ID ${id}`, {
+                error: error.message,
+                code: error.code,
+                phrase: phrase.phrase
+            });
+            
             if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-                return { success: false, error: '短语已存在' };
+                return { success: false, error: `短语 "${phrase.phrase}" 已被其他记录使用` };
             }
             throw error;
         }
@@ -274,6 +369,10 @@ class VocabularyService {
     deletePhrase(id) {
         const stmt = this.db.prepare('DELETE FROM phrases WHERE id = ?');
         const result = stmt.run(id);
+        
+        if (result.changes > 0) {
+            console.log(`[VocabularyService] 删除短语成功: ID ${id}`);
+        }
         return { success: result.changes > 0 };
     }
 
@@ -321,7 +420,8 @@ class VocabularyService {
             difficulty: row.difficulty,
             enabled: row.enabled === 1,
             created_at: row.created_at,
-            updated_at: row.updated_at
+            updated_at: row.updated_at,
+            is_new: row.is_new === 1  // v1.1: 添加 is_new 字段
         };
     }
 
@@ -329,10 +429,14 @@ class VocabularyService {
     // 句型操作
     // ============================================
 
+    /**
+     * 添加句型
+     * v1.1 修复：添加 is_new 字段
+     */
     addPattern(pattern) {
         const stmt = this.db.prepare(`
-            INSERT INTO patterns (pattern, meaning, example, category, difficulty, enabled)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO patterns (pattern, meaning, example, category, difficulty, enabled, is_new)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `);
 
         try {
@@ -342,17 +446,29 @@ class VocabularyService {
                 pattern.example || '',
                 pattern.category || '其他',
                 pattern.difficulty || 2,
-                pattern.enabled !== false ? 1 : 0
+                pattern.enabled !== false ? 1 : 0,
+                1  // is_new = 1，标记为新添加
             );
+            
+            console.log(`[VocabularyService] 添加句型成功: "${pattern.pattern}" (ID: ${result.lastInsertRowid})`);
             return { success: true, id: result.lastInsertRowid };
         } catch (error) {
+            console.error(`[VocabularyService] 添加句型失败: "${pattern.pattern}"`, {
+                error: error.message,
+                code: error.code
+            });
+            
             if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-                return { success: false, error: '句型已存在' };
+                return { success: false, error: `句型 "${pattern.pattern}" 已存在` };
             }
             throw error;
         }
     }
 
+    /**
+     * 更新句型
+     * v1.1 改进：添加详细错误日志
+     */
     updatePattern(id, pattern) {
         const stmt = this.db.prepare(`
             UPDATE patterns SET
@@ -371,10 +487,23 @@ class VocabularyService {
                 pattern.enabled !== false ? 1 : 0,
                 id
             );
-            return { success: result.changes > 0 };
+            
+            if (result.changes > 0) {
+                console.log(`[VocabularyService] 更新句型成功: ID ${id}`);
+                return { success: true };
+            } else {
+                console.warn(`[VocabularyService] 更新句型失败: ID ${id} 不存在`);
+                return { success: false, error: '句型不存在' };
+            }
         } catch (error) {
+            console.error(`[VocabularyService] 更新句型失败: ID ${id}`, {
+                error: error.message,
+                code: error.code,
+                pattern: pattern.pattern
+            });
+            
             if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-                return { success: false, error: '句型已存在' };
+                return { success: false, error: `句型 "${pattern.pattern}" 已被其他记录使用` };
             }
             throw error;
         }
@@ -383,6 +512,10 @@ class VocabularyService {
     deletePattern(id) {
         const stmt = this.db.prepare('DELETE FROM patterns WHERE id = ?');
         const result = stmt.run(id);
+        
+        if (result.changes > 0) {
+            console.log(`[VocabularyService] 删除句型成功: ID ${id}`);
+        }
         return { success: result.changes > 0 };
     }
 
@@ -430,115 +563,26 @@ class VocabularyService {
             difficulty: row.difficulty,
             enabled: row.enabled === 1,
             created_at: row.created_at,
-            updated_at: row.updated_at
+            updated_at: row.updated_at,
+            is_new: row.is_new === 1  // v1.1: 添加 is_new 字段
         };
     }
 
     // ============================================
-    // 通用操作
+    // 统计
     // ============================================
 
-    /**
-     * 获取统计信息
-     */
     getStats() {
         const words = this.db.prepare('SELECT COUNT(*) as count FROM words').get().count;
-        const wordsEnabled = this.db.prepare('SELECT COUNT(*) as count FROM words WHERE enabled = 1').get().count;
         const phrases = this.db.prepare('SELECT COUNT(*) as count FROM phrases').get().count;
-        const phrasesEnabled = this.db.prepare('SELECT COUNT(*) as count FROM phrases WHERE enabled = 1').get().count;
         const patterns = this.db.prepare('SELECT COUNT(*) as count FROM patterns').get().count;
-        const patternsEnabled = this.db.prepare('SELECT COUNT(*) as count FROM patterns WHERE enabled = 1').get().count;
         
         return {
             words,
-            wordsEnabled,
-            wordsDisabled: words - wordsEnabled,
             phrases,
-            phrasesEnabled,
-            phrasesDisabled: phrases - phrasesEnabled,
             patterns,
-            patternsEnabled,
-            patternsDisabled: patterns - patternsEnabled,
             total: words + phrases + patterns
         };
-    }
-
-    /**
-     * 切换启用状态
-     */
-    toggleWord(id) {
-        const word = this.getWordById(id);
-        if (!word) return { success: false, error: '单词不存在' };
-        word.enabled = !word.enabled;
-        return this.updateWord(id, word);
-    }
-
-    togglePhrase(id) {
-        const phrase = this.getPhraseById(id);
-        if (!phrase) return { success: false, error: '短语不存在' };
-        phrase.enabled = !phrase.enabled;
-        return this.updatePhrase(id, phrase);
-    }
-
-    togglePattern(id) {
-        const pattern = this.getPatternById(id);
-        if (!pattern) return { success: false, error: '句型不存在' };
-        pattern.enabled = !pattern.enabled;
-        return this.updatePattern(id, pattern);
-    }
-
-    /**
-     * 导出为 JSON
-     */
-    exportToJson() {
-        return {
-            _meta: {
-                version: '1.0',
-                exported_at: new Date().toISOString(),
-                stats: this.getStats()
-            },
-            words: this.getAllWords(true),
-            phrases: this.getAllPhrases(true),
-            patterns: this.getAllPatterns(true)
-        };
-    }
-
-    /**
-     * 从 JSON 导入
-     */
-    importFromJson(data) {
-        let imported = { words: 0, phrases: 0, patterns: 0 };
-        let skipped = { words: 0, phrases: 0, patterns: 0 };
-
-        // 导入单词
-        if (data.words && Array.isArray(data.words)) {
-            for (const word of data.words) {
-                const result = this.addWord(word);
-                if (result.success) imported.words++;
-                else skipped.words++;
-            }
-        }
-
-        // 导入短语
-        if (data.phrases && Array.isArray(data.phrases)) {
-            for (const phrase of data.phrases) {
-                const result = this.addPhrase(phrase);
-                if (result.success) imported.phrases++;
-                else skipped.phrases++;
-            }
-        }
-
-        // 导入句型
-        if (data.patterns && Array.isArray(data.patterns)) {
-            for (const pattern of data.patterns) {
-                const result = this.addPattern(pattern);
-                if (result.success) imported.patterns++;
-                else skipped.patterns++;
-            }
-        }
-
-        console.log(`[VocabularyService] 导入完成: 单词${imported.words}/${imported.words + skipped.words}, 短语${imported.phrases}/${imported.phrases + skipped.phrases}, 句型${imported.patterns}/${imported.patterns + skipped.patterns}`);
-        return { imported, skipped };
     }
 
     /**

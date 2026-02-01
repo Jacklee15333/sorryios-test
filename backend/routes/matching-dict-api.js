@@ -189,6 +189,26 @@ router.delete('/rules/:id', (req, res) => {
     }
 });
 
+/**
+ * POST /api/matching-dict/rules/:id/confirm
+ * v3.1 新增：确认规则（取消NEW标记）
+ */
+router.post('/rules/:id/confirm', (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = dictService.confirm(parseInt(id));
+
+        if (result.success) {
+            res.json({ success: true, message: '已确认' });
+        } else {
+            res.status(404).json({ success: false, error: '规则不存在' });
+        }
+    } catch (error) {
+        console.error('[替换库 API] 确认规则失败:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ============================================
 // 确认匹配接口（前端编辑弹窗使用）
 // ============================================
