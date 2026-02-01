@@ -1,6 +1,13 @@
 /**
- * 匹配算法服务 v4.5.3.4 (修复版 - 结构词阈值调整)
+ * 匹配算法服务 v4.5.4 (跨表查找版)
  * 文件位置: backend/services/matchingService.js
+ * 
+ * 📦 v4.5.4 更新（2025-02-01 跨表查找修复）：
+ * - 修复：_matchPatternInternal 增加跨表查找功能
+ * - 解决：当patterns表为空时，自动在phrases表中查找
+ * - 解决：AI分类错误（pattern vs phrase）导致的匹配失败问题
+ * - 优化：提高grammar库fallback的阈值到95%，避免误匹配
+ * - 效果：即使AI将短语错误识别为句型，也能正确匹配
  * 
  * 📦 v4.5.3.4 更新（2025-01-31 结构词阈值调整）：
  * - 修复：_hasEnoughStructureWords 阈值从2降低到1
@@ -72,7 +79,7 @@ class MatchingService {
         
         // v3.8: 替换库服务（已合并排除库）
         this.matchingDictService = getMatchingDictService();
-        console.log('[MatchingService] v4.5.3.4: 替换库服务已加载（已合并排除库）+ 语法库结构字段支持 + 智能占位符匹配 + 无点号占位符检测 + 结构词阈值优化');
+        console.log('[MatchingService] v4.5.4: 替换库服务已加载（已合并排除库）+ 语法库结构字段支持 + 智能占位符匹配 + 无点号占位符检测 + 结构词阈值优化 + 跨表查找功能');
         
         // v2.2: 提高匹配阈值，更严格
         this.thresholds = {
@@ -1783,39 +1790,80 @@ class MatchingService {
     
     /**
      * 内部句型匹配
+     * v4.5.4: 增加跨表查找，patterns表找不到时也在phrases表查找
+     * 解决AI分类错误导致的匹配失败问题
      */
     _matchPatternInternal(pattern) {
-        const { match, score } = this.findBestMatch(
+        // 第1步：在 patterns 表中查找
+        const { match: patternMatch, score: patternScore } = this.findBestMatch(
             pattern, 
             this.cache.patterns, 
             'pattern',
             { isPatternMatch: true }
         );
         
-        const threshold = this.thresholds.pattern;
+        const threshold = this.thresholds.pattern;  // 85%
         
-        if (score >= threshold && match) {
+        // 如果在 patterns 表中找到且分数足够高，直接返回
+        if (patternScore >= threshold && patternMatch) {
+            console.log(`[_matchPatternInternal] patterns表匹配成功: ${(patternScore*100).toFixed(1)}%`);
             return {
                 matched: true,
-                score,
+                score: patternScore,
                 source_db: 'vocabulary',
                 source_table: 'patterns',
-                source_id: match.id,
-                matched_text: match.pattern,
-                matched_data: match
+                source_id: patternMatch.id,
+                matched_text: patternMatch.pattern,
+                matched_data: patternMatch
             };
         }
         
-        // v4.5.3: 如果在 patterns 表中找不到，也尝试在 grammar 库中查找
-        // 因为有些句型可能存储在 grammar.structure 或 grammar.usage 中
-        this.verboseOutput(`  → patterns表匹配失败，尝试在grammar库查找...`, 'debug');
-        const grammarMatch = this._matchGrammarInternal(pattern);
-        if (grammarMatch && grammarMatch.matched && grammarMatch.score >= 0.85) {
-            this.verboseOutput(`  → ✅ 在grammar库找到匹配: "${pattern}" → "${grammarMatch.matched_text}" (${(grammarMatch.score * 100).toFixed(1)}%)`, 'success');
-            return grammarMatch;
+        // 第2步：如果 patterns 表找不到，尝试在 phrases 表中查找
+        // 这样可以容错AI分类错误的情况
+        console.log(`[_matchPatternInternal] patterns表未找到(${(patternScore*100).toFixed(1)}%)，尝试在phrases表查找...`);
+        
+        const { match: phraseMatch, score: phraseScore } = this.findBestMatch(
+            pattern, 
+            this.cache.phrases, 
+            'phrase',
+            { isPhraseMatch: true }
+        );
+        
+        // 如果在 phrases 表中找到且分数足够高，返回
+        if (phraseScore >= threshold && phraseMatch) {
+            console.log(`[_matchPatternInternal] ✅ phrases表匹配成功: ${(phraseScore*100).toFixed(1)}%`);
+            return {
+                matched: true,
+                score: phraseScore,
+                source_db: 'vocabulary',
+                source_table: 'phrases',
+                source_id: phraseMatch.id,
+                matched_text: phraseMatch.phrase,
+                matched_data: phraseMatch
+            };
         }
         
-        return { matched: false, score };
+        // 第3步：两个表都找不到，尝试在 grammar 库中查找
+        // v4.5.3: 因为有些句型可能存储在 grammar.structure 或 grammar.usage 中
+        this.verboseOutput(`  → patterns和phrases表都未找到，尝试在grammar库查找...`, 'debug');
+        const grammarMatch = this._matchGrammarInternal(pattern);
+        
+        if (grammarMatch && grammarMatch.matched && grammarMatch.score >= 0.85) {
+            // v4.5.4: 提高grammar库的匹配阈值到95%，避免误匹配
+            if (grammarMatch.score >= 0.95) {
+                this.verboseOutput(`  → ✅ 在grammar库找到高置信度匹配: "${pattern}" → "${grammarMatch.matched_text}" (${(grammarMatch.score * 100).toFixed(1)}%)`, 'success');
+                return grammarMatch;
+            } else {
+                this.verboseOutput(`  → ⚠️ grammar匹配分数偏低(${(grammarMatch.score*100).toFixed(1)}%)，不采用`, 'warn');
+                console.log(`[_matchPatternInternal] grammar库匹配分数偏低: ${(grammarMatch.score*100).toFixed(1)}%，阈值要求95%`);
+            }
+        }
+        
+        // 第4步：完全找不到，返回最佳分数
+        const bestScore = Math.max(patternScore, phraseScore, grammarMatch?.score || 0);
+        console.log(`[_matchPatternInternal] 未找到匹配，最佳分数: ${(bestScore*100).toFixed(1)}%`);
+        
+        return { matched: false, score: bestScore };
     }
 
     /**
