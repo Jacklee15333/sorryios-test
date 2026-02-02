@@ -1,0 +1,93 @@
+{
+  "vocabulary": {
+    "words": [],
+    "phrases": [],
+    "patterns": [
+      {
+        "pattern": "there be",
+        "meaning": "表示某处存在某人或某物的句型，强调“有”。",
+        "example": "There is a book on the desk.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "why not do sth.?",
+        "meaning": "用于提出建议，语气较为委婉。",
+        "example": "Why not have a try?",
+        "_source": "ai"
+      },
+      {
+        "pattern": "so...that...",
+        "meaning": "表示“如此……以至于……”，强调结果。",
+        "example": "He is so tired that he can't walk.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "not only...but also...",
+        "meaning": "表示“不仅……而且……”，连接并列成分。",
+        "example": "She can not only sing but also dance.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "too...to...",
+        "meaning": "表示“太……而不能……”，强调程度导致的结果。",
+        "example": "The boy is too young to go to school.",
+        "_source": "ai"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "title": "形式主语",
+      "definition": "用 it 代替真正的主语，使句子结构更平衡，真正的主语通常是不定式或从句。",
+      "structure": "It + be / take + adj. / n. + (for sb.) + to do sth.",
+      "usage": [
+        "避免句子头重脚轻",
+        "常见于 it takes… 和 it is… 句型"
+      ],
+      "examples": [
+        "It takes her one hour to read English.",
+        "It is easy for him to answer the question."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "there be sb. doing sth.",
+      "definition": "there be 句型的进行时形式，表示某处有某人正在做某事。",
+      "structure": "There be + sb. + doing sth.",
+      "usage": [
+        "强调存在状态下的动作正在进行",
+        "常与表示地点的状语连用"
+      ],
+      "examples": [
+        "There are many students playing basketball on the playground.",
+        "There is a dog running in the park."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "主语",
+      "definition": "表示某人花费多长时间做某事，it 为形式主语。",
+      "_source": "ai"
+    },
+    {
+      "title": "感叹句",
+      "definition": "用于感叹句，强调名词的性质或特征。",
+      "_source": "ai"
+    }
+  ],
+  "summary": {
+    "total_words": 0,
+    "total_phrases": 0,
+    "total_patterns": 5,
+    "total_grammar": 4
+  },
+  "metadata": {
+    "taskId": "14d55507-f4d4-4c89-826e-a65f1f6c8812",
+    "originalFile": "test_classroom_notes_20cases.txt",
+    "processedAt": "2026-02-01T13:16:03.199Z",
+    "totalSegments": 1,
+    "successCount": 1,
+    "failCount": 0,
+    "browserRestarts": 1
+  }
+}

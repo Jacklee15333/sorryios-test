@@ -1,0 +1,124 @@
+{
+  "vocabulary": {
+    "words": [
+      {
+        "word": "proper",
+        "phonetic": "/ˈprɒpər/",
+        "pos": "adj.",
+        "meaning": "合适的，恰当的",
+        "example": "It is not proper to speak loudly in public.",
+        "_source": "ai"
+      },
+      {
+        "word": "environment",
+        "phonetic": "/ɪnˈvaɪrənmənt/",
+        "pos": "n.",
+        "meaning": "环境",
+        "example": "We should protect the environment.",
+        "_source": "ai"
+      },
+      {
+        "word": "important",
+        "phonetic": "/ɪmˈpɔːrtənt/",
+        "pos": "adj.",
+        "meaning": "重要的",
+        "example": "It is important to keep healthy.",
+        "_source": "ai"
+      }
+    ],
+    "phrases": [
+      {
+        "phrase": "look at",
+        "meaning": "看，注视",
+        "example": "Look at the blackboard, please.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "give up",
+        "meaning": "放弃",
+        "example": "Never give up your dreams.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "be good at",
+        "meaning": "擅长",
+        "example": "She is good at math.",
+        "_source": "ai"
+      }
+    ],
+    "patterns": [
+      {
+        "pattern": "it is adj. to do sth.",
+        "meaning": "做某事是……的",
+        "example": "It is easy to learn English.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "it is adj. for sb. to do sth.",
+        "meaning": "对某人来说做某事是……的",
+        "example": "It is important for us to work hard.",
+        "_source": "ai"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "title": "现在完成时",
+      "definition": "表示过去发生的动作对现在产生影响或结果的时态。",
+      "structure": "have/has + 过去分词",
+      "usage": [
+        "表示已完成的动作",
+        "表示对现在有影响的结果",
+        "常与 already, yet, just 等连用"
+      ],
+      "examples": [
+        "I have finished my homework.",
+        "She has seen the movie."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "被动语态",
+      "definition": "表示主语是动作的承受者，而不是执行者。",
+      "structure": "be 动词 + 过去分词",
+      "usage": [
+        "强调动作的承受者",
+        "不知道或不必说明动作的执行者"
+      ],
+      "examples": [
+        "The window is broken.",
+        "The book was written by him."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "使役动词 make 的用法",
+      "definition": "表示让、使某人做某事。",
+      "structure": "make sb. do sth.",
+      "usage": [
+        "表示强制或要求某人做某事",
+        "do 用动词原形，不加 to"
+      ],
+      "examples": [
+        "My parents make me clean my room.",
+        "The teacher made us finish the work."
+      ],
+      "_source": "ai"
+    }
+  ],
+  "summary": {
+    "total_words": 3,
+    "total_phrases": 3,
+    "total_patterns": 2,
+    "total_grammar": 3
+  },
+  "metadata": {
+    "taskId": "b950a7d2-4e20-44aa-bf61-782044eabb71",
+    "originalFile": "测试文本-纯文本版.txt",
+    "processedAt": "2026-02-02T03:21:42.831Z",
+    "totalSegments": 1,
+    "successCount": 1,
+    "failCount": 0,
+    "browserRestarts": 1
+  }
+}

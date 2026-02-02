@@ -1,0 +1,23 @@
+{
+  "vocabulary": {
+    "words": [],
+    "phrases": [],
+    "patterns": []
+  },
+  "grammar": [],
+  "summary": {
+    "total_words": 0,
+    "total_phrases": 0,
+    "total_patterns": 0,
+    "total_grammar": 0
+  },
+  "metadata": {
+    "taskId": "c4f9dea9-f3ba-43de-8d50-7dbe638b59e7",
+    "originalFile": "1月7日课堂笔记.txt",
+    "processedAt": "2026-02-02T04:35:48.984Z",
+    "totalSegments": 7,
+    "successCount": 7,
+    "failCount": 0,
+    "browserRestarts": 1
+  }
+}

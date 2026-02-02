@@ -1,5 +1,11 @@
 /**
- * AI 处理器服务 - 英语课堂专用版 v5.0
+ * AI 处理器服务 - 英语课堂专用版 v5.1
+ * 
+ * 【v5.1 更新】 (2026-02-02)
+ * - 新增：句型验证服务（PatternValidator）
+ * - 新增：阶段5.5 - 句型验证，过滤普通疑问句
+ * - 优化：AI提示词，明确排除普通疑问句（what is, who is等）
+ * - 改进：详细的验证日志，便于调试
  * 
  * 【v5.0 更新】 (2026-01-26)
  * - 新增：文本自动清洗功能（去除加号、统一符号）
@@ -33,8 +39,8 @@
  * - 每个阶段都推送详细执行信息
  * 
  * @author Sorryios AI Team
- * @version 5.0
- * @date 2026-01-26
+ * @version 5.1
+ * @date 2026-02-02
  */
 
 const fs = require('fs');
@@ -61,6 +67,18 @@ try {
     console.log('[AIProcessor] ✓ 排除库服务已加载');
 } catch (e) {
     console.warn('[AIProcessor] ✗ 处理日志服务未加载:', e.message);
+}
+
+// ============================================
+// 句型验证服务 v1.0
+// ============================================
+let patternValidator = null;
+try {
+    const { getPatternValidator } = require('./patternValidator');
+    patternValidator = getPatternValidator();
+    console.log('[AIProcessor] ✓ 句型验证服务已加载');
+} catch (e) {
+    console.warn('[AIProcessor] ✗ 句型验证服务未加载:', e.message);
 }
 
 // ============================================
@@ -200,6 +218,82 @@ const CONFIG = {
 【短语 vs 句型的判断标准】
 - phrases: 固定搭配，整体记忆（如 look at, give up, be good at）
 - patterns: 句型框架，可替换成分（如 it is adj. to do sth.）
+
+⚠️⚠️⚠️【句型识别规则 - 极其重要】⚠️⚠️⚠️
+
+【✅ 应该识别为句型的特征】
+1. 特定语法现象（there be存在句, it形式主语/宾语）
+2. 固定的句式结构（感叹句, 强调句, 倒装句）
+3. 特殊的固定搭配（so...that..., too...to..., not only...but also...）
+4. 虽然含疑问词，但表达特殊功能：
+   - Why not...? → 表建议，是句型 ✅
+   - How about...? → 表建议，是句型 ✅
+   - What about...? → 表建议，是句型 ✅
+5. 感叹句（What a...! How adj...!）
+6. 使役动词句型（make sb. do, let sb. do, have sb. do）
+7. 感官动词句型（see sb. do/doing, hear sb. do/doing）
+8. 英语教学中的重点句型（比较级句型、祈使句等）
+
+【❌ 不应该识别为句型 - 这些是普通疑问句，不要提取！】
+
+⚠️ 以下是普通的疑问句，只是用来"提问信息"，没有特殊的语法功能，不是句型！
+
+❌ 特殊疑问句（纯粹提问，不要提取）：
+   what is sth.         ❌ → 普通疑问，不是句型
+   what are you doing   ❌ → 普通疑问，不是句型
+   what do you think    ❌ → 普通疑问，不是句型
+   who is sb.           ❌ → 普通疑问，不是句型
+   who are they         ❌ → 普通疑问，不是句型
+   where is...?         ❌ → 普通疑问，不是句型
+   where do you live    ❌ → 普通疑问，不是句型
+   when is...?          ❌ → 普通疑问，不是句型
+   when did you arrive  ❌ → 普通疑问，不是句型
+   why is...?           ❌ → 普通疑问，不是句型（注意：Why not...? 才是句型）
+   how is...?           ❌ → 普通疑问，不是句型（注意：How about...? 才是句型）
+   how old are you      ❌ → 普通疑问，不是句型
+   how long is it       ❌ → 普通疑问，不是句型
+   how many/much...     ❌ → 普通疑问，不是句型
+
+❌ 一般疑问句（是/否回答，不要提取）：
+   Do you...?           ❌ → 普通疑问，不是句型
+   Does he...?          ❌ → 普通疑问，不是句型
+   Can you...?          ❌ → 普通疑问，不是句型
+   Is this...?          ❌ → 普通疑问，不是句型
+   Are you...?          ❌ → 普通疑问，不是句型
+   Will you...?         ❌ → 普通疑问，不是句型
+   Have you...?         ❌ → 普通疑问，不是句型
+
+❌ 简单陈述句（主谓宾结构，无特殊性，不要提取）：
+   I am...              ❌ → 普通陈述，不是句型
+   He is...             ❌ → 普通陈述，不是句型
+   They like...         ❌ → 普通陈述，不是句型
+
+【核心判断原则 - 必须牢记】
+✅ 如果只是"提问某个信息"或"陈述某件事" → 不是句型，不要提取
+✅ 如果有"特殊的语法功能"或"固定的句式结构" → 才是句型，提取
+
+【对比示例 - 理解差异】
+❌ 错误示例：
+   老师讲："What is your name? 是问名字的"
+   → 提取为 patterns: ["what is sth."] ✗
+   → 原因：这只是普通的疑问句，用来提问信息，不是特殊句型
+
+✅ 正确示例1：
+   老师讲："Why not go to the park? 表示建议"
+   → 提取为 patterns: ["Why not do sth.?"] ✓
+   → 原因：虽然有疑问词，但有特殊功能（表建议），是句型
+
+✅ 正确示例2：
+   老师讲："What a beautiful day! 这是感叹句"
+   → 提取为 patterns: ["What a adj. n.!"] ✓
+   → 原因：感叹句是特殊句式，是句型
+
+✅ 正确示例3：
+   老师讲："There is a book on the desk. 这是存在句"
+   → 提取为 patterns: ["there be sth."] ✓
+   → 原因：there be是特定语法现象，是句型
+
+⚠️ 再次强调：普通的疑问句（what is, who is, where is, do you, can you等）只是用来提问信息，没有特殊的语法功能，不是句型！请不要提取！
 
 ✅ 例外：介词考点（老师特别强调的介词用法）
 
@@ -1237,6 +1331,54 @@ async function processTask(task, onProgress) {
         onProgress({ currentStep: '🔧 标准化处理...', progress: 64 });
         const extractedKeywords = keywordNormalizer.normalize(rawKeywords);
 
+        // ========== 阶段5.5: 句型验证（v1.0新增）==========
+        console.log('\n' + '─'.repeat(60)); 
+        console.log('📌 阶段5.5: 句型验证'); 
+        console.log('─'.repeat(60));
+        onProgress({ currentStep: '📌 阶段5.5: 句型验证', progress: 64.5 });
+        
+        if (patternValidator && extractedKeywords.patterns && extractedKeywords.patterns.length > 0) {
+            console.log(`[阶段5.5] 开始验证 ${extractedKeywords.patterns.length} 个句型...`);
+            onProgress({ currentStep: `🔍 验证句型: ${extractedKeywords.patterns.length} 个`, progress: 64.5 });
+            
+            const validationResult = patternValidator.validateBatch(extractedKeywords.patterns);
+            
+            // 更新extractedKeywords，只保留通过验证的句型
+            extractedKeywords.patterns = validationResult.valid;
+            
+            console.log(`[阶段5.5] ─────────────────────────────────────`);
+            console.log(`[阶段5.5] 📊 验证结果:`);
+            console.log(`[阶段5.5]   原始句型: ${validationResult.total}`);
+            console.log(`[阶段5.5]   ✅ 通过验证: ${validationResult.valid.length}`);
+            console.log(`[阶段5.5]   ❌ 被排除: ${validationResult.excluded.length}`);
+            
+            if (validationResult.excluded.length > 0) {
+                console.log(`[阶段5.5] ─────────────────────────────────────`);
+                console.log(`[阶段5.5] 🚫 被排除的句型详情:`);
+                validationResult.excluded.forEach((item, index) => {
+                    console.log(`[阶段5.5]   [${index + 1}] "${item.pattern}"`);
+                    console.log(`[阶段5.5]       原因: ${item.reason}`);
+                    if (item.matchedRule) {
+                        console.log(`[阶段5.5]       规则: ${item.matchedRule}`);
+                    }
+                });
+            }
+            
+            console.log(`[阶段5.5] ─────────────────────────────────────`);
+            
+            const validationInfo = `✅ 句型验证完成: ${validationResult.valid.length}/${validationResult.total} 通过`;
+            console.log(`[阶段5.5] ${validationInfo}`);
+            onProgress({ currentStep: validationInfo, progress: 65 });
+        } else {
+            if (!patternValidator) {
+                console.log(`[阶段5.5] ⚠️ 句型验证服务未启用`);
+                onProgress({ currentStep: '⚠️ 句型验证服务未启用', progress: 64.5 });
+            } else {
+                console.log(`[阶段5.5] ℹ️ 无句型需要验证`);
+                onProgress({ currentStep: 'ℹ️ 无句型需要验证', progress: 64.5 });
+            }
+        }
+
         // ========== 阶段6: 匹配数据库 ==========
         console.log('\n' + '─'.repeat(60)); 
         console.log('📌 阶段6: 匹配数据库'); 
@@ -1886,7 +2028,10 @@ function init() {
     if (!fs.existsSync(CONFIG.progressDir)) fs.mkdirSync(CONFIG.progressDir, { recursive: true });
     taskQueue.setProcessor(processTask);
     try { if (fs.existsSync(CONFIG.progressDir)) { const files = fs.readdirSync(CONFIG.progressDir).filter(f => f.endsWith('.json')); if (files.length > 0) console.log(`\n📋 发现 ${files.length} 个未完成任务`); } } catch (e) {}
-    console.log('\n' + '='.repeat(60)); console.log('  🎓 英语课堂智能分析系统 v4.3.4 已就绪'); console.log('  🆕 v4.3.4: AI生成内容保存到数据库'); console.log('='.repeat(60) + '\n');
+    console.log('\n' + '='.repeat(60)); 
+    console.log('  🎓 英语课堂智能分析系统 v5.1 已就绪'); 
+    console.log('  🆕 v5.1: 句型验证（过滤普通疑问句）'); 
+    console.log('='.repeat(60) + '\n');
 }
 
 module.exports = { init, processTask, CONFIG, loadProgress, clearProgress, getFinalTitle, generateDefaultTitle, JsonExtractor, ResultMerger, WordFilter, KeywordNormalizer, keywordNormalizer };
