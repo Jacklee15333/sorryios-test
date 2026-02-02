@@ -1,0 +1,715 @@
+{
+  "vocabulary": {
+    "words": [
+      {
+        "word": "importance",
+        "phonetic": "/ɪmˈpɔːtns/",
+        "pos": "n.",
+        "meaning": "重要性",
+        "example": "Everyone knows the importance of protecting the environment.",
+        "_source": "ai"
+      },
+      {
+        "word": "important",
+        "phonetic": "/ɪmˈpɔːtnt/",
+        "pos": "adj.",
+        "meaning": "重要的",
+        "example": "It is important to keep healthy.",
+        "_source": "ai"
+      },
+      {
+        "word": "environment",
+        "phonetic": "/ɪnˈvaɪrənmənt/",
+        "pos": "n.",
+        "meaning": "环境",
+        "example": "We should protect the environment.",
+        "_source": "ai"
+      },
+      {
+        "word": "protect",
+        "phonetic": "/prəˈtekt/",
+        "pos": "v.",
+        "meaning": "保护",
+        "example": "We must protect animals.",
+        "_source": "ai"
+      },
+      {
+        "word": "become",
+        "phonetic": "/bɪˈkʌm/",
+        "pos": "v.",
+        "meaning": "变得",
+        "example": "The weather becomes colder.",
+        "_source": "ai"
+      },
+      {
+        "word": "example",
+        "phonetic": "/ɪɡˈzɑːmpəl/",
+        "pos": "n.",
+        "meaning": "例子",
+        "example": "For example, you can ride a bike.",
+        "_source": "ai"
+      },
+      {
+        "word": "clean",
+        "phonetic": "/kliːn/",
+        "pos": "v./adj.",
+        "meaning": "清洁；干净的",
+        "example": "Please clean your room.",
+        "_source": "ai"
+      },
+      {
+        "word": "title",
+        "phonetic": "/ˈtaɪtl/",
+        "pos": "n.",
+        "meaning": "标题",
+        "example": "The title of the article is interesting.",
+        "_source": "ai"
+      },
+      {
+        "word": "spoke",
+        "phonetic": "/spəʊk/",
+        "pos": "v.",
+        "meaning": "speak的过去式",
+        "example": "He spoke loudly.",
+        "_source": "ai"
+      },
+      {
+        "word": "cut",
+        "phonetic": "/kʌt/",
+        "pos": "v.",
+        "meaning": "切",
+        "example": "Be careful not to cut your finger.",
+        "_source": "ai"
+      },
+      {
+        "word": "hit",
+        "phonetic": "/hɪt/",
+        "pos": "v.",
+        "meaning": "击打",
+        "example": "He hit the ball.",
+        "_source": "ai"
+      },
+      {
+        "word": "plan",
+        "phonetic": "/plæn/",
+        "pos": "v./n.",
+        "meaning": "计划",
+        "example": "We plan to travel.",
+        "_source": "ai"
+      },
+      {
+        "word": "amazing",
+        "phonetic": "/əˈmeɪzɪŋ/",
+        "pos": "adj.",
+        "meaning": "令人惊讶的",
+        "example": "It is an amazing show.",
+        "_source": "ai"
+      },
+      {
+        "word": "control",
+        "phonetic": "/kənˈtrəʊl/",
+        "pos": "v./n.",
+        "meaning": "控制",
+        "example": "The machine is controlled by a system.",
+        "_source": "ai"
+      },
+      {
+        "word": "controlled",
+        "phonetic": "/kənˈtrəʊld/",
+        "pos": "v./adj.",
+        "meaning": "被控制的",
+        "example": "The house is controlled by a computer.",
+        "_source": "ai"
+      },
+      {
+        "word": "system",
+        "phonetic": "/ˈsɪstəm/",
+        "pos": "n.",
+        "meaning": "系统",
+        "example": "This is a smart system.",
+        "_source": "ai"
+      },
+      {
+        "word": "crowd",
+        "phonetic": "/kraʊd/",
+        "pos": "n.",
+        "meaning": "人群",
+        "example": "There is a large crowd.",
+        "_source": "ai"
+      },
+      {
+        "word": "nervous",
+        "phonetic": "/ˈnɜːvəs/",
+        "pos": "adj.",
+        "meaning": "紧张的",
+        "example": "She feels nervous before speaking.",
+        "_source": "ai"
+      },
+      {
+        "word": "speech",
+        "phonetic": "/spiːtʃ/",
+        "pos": "n.",
+        "meaning": "演讲",
+        "example": "He gave a speech.",
+        "_source": "ai"
+      },
+      {
+        "word": "proper",
+        "phonetic": "/ˈprɒpə/",
+        "pos": "adj.",
+        "meaning": "合适的",
+        "example": "Wear proper clothes.",
+        "_source": "ai"
+      },
+      {
+        "word": "essential",
+        "phonetic": "/ɪˈsenʃl/",
+        "pos": "adj.",
+        "meaning": "必要的；极其重要的",
+        "example": "Water is essential for life.",
+        "_source": "ai"
+      },
+      {
+        "word": "experiment",
+        "phonetic": "/ɪkˈsperɪmənt/",
+        "pos": "n.",
+        "meaning": "实验",
+        "example": "They did a science experiment.",
+        "_source": "ai"
+      },
+      {
+        "word": "experience",
+        "phonetic": "/ɪkˈspɪəriəns/",
+        "pos": "n./v.",
+        "meaning": "经历；经验",
+        "example": "She has much experience.",
+        "_source": "ai"
+      },
+      {
+        "word": "preparation",
+        "phonetic": "/ˌprepəˈreɪʃn/",
+        "pos": "n.",
+        "meaning": "准备",
+        "example": "Good preparation is important.",
+        "_source": "ai"
+      },
+      {
+        "word": "prepare",
+        "phonetic": "/prɪˈpeə/",
+        "pos": "v.",
+        "meaning": "准备",
+        "example": "Prepare for the exam.",
+        "_source": "ai"
+      },
+      {
+        "word": "manage",
+        "phonetic": "/ˈmænɪdʒ/",
+        "pos": "v.",
+        "meaning": "管理",
+        "example": "She manages the company.",
+        "_source": "ai"
+      },
+      {
+        "word": "management",
+        "phonetic": "/ˈmænɪdʒmənt/",
+        "pos": "n.",
+        "meaning": "管理",
+        "example": "Management is important.",
+        "_source": "ai"
+      },
+      {
+        "word": "manager",
+        "phonetic": "/ˈmænɪdʒə/",
+        "pos": "n.",
+        "meaning": "经理",
+        "example": "The manager is busy.",
+        "_source": "ai"
+      },
+      {
+        "word": "foreign",
+        "phonetic": "/ˈfɒrən/",
+        "pos": "adj.",
+        "meaning": "外国的",
+        "example": "He learns a foreign language.",
+        "_source": "ai"
+      },
+      {
+        "word": "foreigner",
+        "phonetic": "/ˈfɒrənə/",
+        "pos": "n.",
+        "meaning": "外国人",
+        "example": "The foreigner is friendly.",
+        "_source": "ai"
+      },
+      {
+        "word": "language",
+        "phonetic": "/ˈlæŋɡwɪdʒ/",
+        "pos": "n.",
+        "meaning": "语言",
+        "example": "English is a useful language.",
+        "_source": "ai"
+      },
+      {
+        "word": "fluently",
+        "phonetic": "/ˈfluːəntli/",
+        "pos": "adv.",
+        "meaning": "流利地",
+        "example": "She speaks English fluently.",
+        "_source": "ai"
+      },
+      {
+        "word": "website",
+        "phonetic": "/ˈwebsaɪt/",
+        "pos": "n.",
+        "meaning": "网站",
+        "example": "I found it on a website.",
+        "_source": "ai"
+      },
+      {
+        "word": "share",
+        "phonetic": "/ʃeə/",
+        "pos": "v.",
+        "meaning": "分享",
+        "example": "Share your ideas.",
+        "_source": "ai"
+      },
+      {
+        "word": "invite",
+        "phonetic": "/ɪnˈvaɪt/",
+        "pos": "v.",
+        "meaning": "邀请",
+        "example": "They invited me to the party.",
+        "_source": "ai"
+      },
+      {
+        "word": "without",
+        "phonetic": "/wɪˈðaʊt/",
+        "pos": "prep.",
+        "meaning": "没有",
+        "example": "He left without saying goodbye.",
+        "_source": "ai"
+      },
+      {
+        "word": "oven",
+        "phonetic": "/ˈʌvn/",
+        "pos": "n.",
+        "meaning": "烤箱",
+        "example": "The oven is hot.",
+        "_source": "ai"
+      },
+      {
+        "word": "jim",
+        "phonetic": "/dʒɪm/",
+        "pos": "n.",
+        "meaning": "吉姆（人名）",
+        "example": "Jim is my friend.",
+        "_source": "ai"
+      },
+      {
+        "word": "smart",
+        "phonetic": "/smɑːt/",
+        "pos": "adj.",
+        "meaning": "聪明的；智能的",
+        "example": "This is a smart device.",
+        "_source": "ai"
+      },
+      {
+        "word": "garden",
+        "phonetic": "/ˈɡɑːdn/",
+        "pos": "n.",
+        "meaning": "花园",
+        "example": "There are flowers in the garden.",
+        "_source": "ai"
+      },
+      {
+        "word": "grow",
+        "phonetic": "/ɡrəʊ/",
+        "pos": "v.",
+        "meaning": "生长",
+        "example": "Plants grow fast.",
+        "_source": "ai"
+      },
+      {
+        "word": "top",
+        "phonetic": "/tɒp/",
+        "pos": "n./adj.",
+        "meaning": "顶部；顶端的",
+        "example": "He is at the top of the class.",
+        "_source": "ai"
+      },
+      {
+        "word": "bath",
+        "phonetic": "/bɑːθ/",
+        "pos": "n.",
+        "meaning": "洗澡",
+        "example": "Take a bath.",
+        "_source": "ai"
+      },
+      {
+        "word": "breathe",
+        "phonetic": "/briːð/",
+        "pos": "v.",
+        "meaning": "呼吸",
+        "example": "Breathe deeply.",
+        "_source": "ai"
+      },
+      {
+        "word": "volunteer",
+        "phonetic": "/ˌvɒlənˈtɪə/",
+        "pos": "n./v.",
+        "meaning": "志愿者；志愿",
+        "example": "They volunteer to help others.",
+        "_source": "ai"
+      },
+      {
+        "word": "Usa",
+        "phonetic": "/ˌjuː es ˈeɪ/",
+        "pos": "n.",
+        "meaning": "美国",
+        "example": "He lives in the USA.",
+        "_source": "ai"
+      },
+      {
+        "word": "fresh",
+        "phonetic": "/freʃ/",
+        "pos": "adj.",
+        "meaning": "新鲜的",
+        "example": "Fresh air is good.",
+        "_source": "ai"
+      },
+      {
+        "word": "rich",
+        "phonetic": "/rɪtʃ/",
+        "pos": "adj.",
+        "meaning": "富有的",
+        "example": "The rich should help others.",
+        "_source": "ai"
+      },
+      {
+        "word": "exact",
+        "phonetic": "/ɪɡˈzækt/",
+        "pos": "adj.",
+        "meaning": "准确的",
+        "example": "Give me the exact answer.",
+        "_source": "ai"
+      },
+      {
+        "word": "build",
+        "phonetic": "/bɪld/",
+        "pos": "v.",
+        "meaning": "建造",
+        "example": "They build houses.",
+        "_source": "ai"
+      },
+      {
+        "word": "double",
+        "phonetic": "/ˈdʌbl/",
+        "pos": "adj.",
+        "meaning": "双倍的",
+        "example": "He got double pay.",
+        "_source": "ai"
+      },
+      {
+        "word": "reading",
+        "phonetic": "/ˈriːdɪŋ/",
+        "pos": "n.",
+        "meaning": "阅读",
+        "example": "Reading is useful.",
+        "_source": "ai"
+      },
+      {
+        "word": "trouble",
+        "phonetic": "/ˈtrʌbl/",
+        "pos": "n.",
+        "meaning": "困难",
+        "example": "I have trouble reading.",
+        "_source": "ai"
+      },
+      {
+        "word": "progress",
+        "phonetic": "/ˈprəʊɡres/",
+        "pos": "n.",
+        "meaning": "进步",
+        "example": "She makes progress.",
+        "_source": "ai"
+      },
+      {
+        "word": "improve",
+        "phonetic": "/ɪmˈpruːv/",
+        "pos": "v.",
+        "meaning": "提高；改善",
+        "example": "Practice to improve.",
+        "_source": "ai"
+      }
+    ],
+    "phrases": [
+      {
+        "phrase": "day by day",
+        "meaning": "一天天地",
+        "example": "The weather is getting colder day by day.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "more and more",
+        "meaning": "越来越",
+        "example": "It becomes more and more important.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "for example",
+        "meaning": "例如",
+        "example": "For example, we can walk.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "turn off",
+        "meaning": "关掉",
+        "example": "Turn off the light.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "go out",
+        "meaning": "出去",
+        "example": "We go out at night.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "talk about",
+        "meaning": "谈论",
+        "example": "They talk about the plan.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "talk with",
+        "meaning": "和……交谈",
+        "example": "Talk with your teacher.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "talk to",
+        "meaning": "对……说",
+        "example": "Talk to me.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "speak up",
+        "meaning": "大声说",
+        "example": "Please speak up.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "ask sb. to do sth.",
+        "meaning": "要求某人做某事",
+        "example": "She asked me to help.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "ask sb. for sth.",
+        "meaning": "向某人要某物",
+        "example": "Ask him for help.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "be nervous",
+        "meaning": "紧张",
+        "example": "He is nervous.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "in front of",
+        "meaning": "在……前面",
+        "example": "Stand in front of me.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "invite sb. to do sth.",
+        "meaning": "邀请某人做某事",
+        "example": "They invited us to join.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "without doing sth.",
+        "meaning": "没有做某事",
+        "example": "He left without saying anything.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "write down",
+        "meaning": "写下",
+        "example": "Write down the words.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "in the classroom",
+        "meaning": "在教室里",
+        "example": "Students are in the classroom.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "on the top of",
+        "meaning": "在……顶部",
+        "example": "On the top of the hill.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "spend time doing sth.",
+        "meaning": "花时间做某事",
+        "example": "She spends time reading.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "volunteer to do sth.",
+        "meaning": "自愿做某事",
+        "example": "He volunteers to help.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "help others",
+        "meaning": "帮助他人",
+        "example": "We should help others.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "have trouble with",
+        "meaning": "在……方面有困难",
+        "example": "I have trouble with math.",
+        "_source": "ai"
+      }
+    ],
+    "patterns": [
+      {
+        "pattern": "more and more adj.",
+        "meaning": "越来越……",
+        "example": "The city is more and more beautiful.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "it is adj. for sb. to do sth.",
+        "meaning": "对某人来说做某事是……的",
+        "example": "It is important for us to study.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "tell sb. to do sth.",
+        "meaning": "告诉某人做某事",
+        "example": "Tell him to come early.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "have done sth.",
+        "meaning": "已经做过某事",
+        "example": "I have finished my work.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "be done",
+        "meaning": "被动结构",
+        "example": "The work is done.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "make sb. adj.",
+        "meaning": "使某人……",
+        "example": "This news makes me happy.",
+        "_source": "ai"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "title": "动名词作主语",
+      "definition": "动词-ing形式作句子主语",
+      "structure": "doing sth. + 谓语",
+      "usage": [
+        "表示一件事",
+        "谓语用单数"
+      ],
+      "examples": [
+        "Reading books is useful."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "第三人称单数",
+      "definition": "一般现在时中第三人称单数的变化",
+      "structure": "主语（三单）+ 动词-s/es",
+      "usage": [
+        "he/she/it",
+        "单数名词"
+      ],
+      "examples": [
+        "He likes apples."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "现在完成时",
+      "definition": "表示已经完成或对现在有影响的动作",
+      "structure": "have has + 过去分词",
+      "usage": [
+        "强调结果",
+        "常与already, ever连用"
+      ],
+      "examples": [
+        "I have done my homework."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "被动语态",
+      "definition": "表示动作的承受者",
+      "structure": "be + 过去分词",
+      "usage": [
+        "不知道或不强调动作执行者"
+      ],
+      "examples": [
+        "English is spoken here."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "不定式作宾语",
+      "definition": "to do 作动词宾语",
+      "structure": "动词 + to do sth.",
+      "usage": [
+        "ask, want, plan等"
+      ],
+      "examples": [
+        "She wants to leave."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "宾语从句",
+      "definition": "作宾语的从句",
+      "structure": "动词 + that wh- 从句",
+      "usage": [
+        "that可省略"
+      ],
+      "examples": [
+        "I know that he is right."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "分词",
+      "definition": "tell的过去式/过去分词",
+      "_source": "ai"
+    }
+  ],
+  "summary": {
+    "total_words": 55,
+    "total_phrases": 22,
+    "total_patterns": 6,
+    "total_grammar": 7
+  },
+  "metadata": {
+    "taskId": "55872174-b3a1-4a29-8a3c-4f948bbf819a",
+    "originalFile": "1月7日课堂笔记.txt",
+    "processedAt": "2026-02-02T03:48:20.836Z",
+    "totalSegments": 7,
+    "successCount": 7,
+    "failCount": 0,
+    "browserRestarts": 1
+  }
+}

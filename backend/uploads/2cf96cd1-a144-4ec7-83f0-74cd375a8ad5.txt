@@ -1,0 +1,152 @@
+英语课堂录音 - 句型验证测试文本
+===========================================
+
+【测试说明】
+本文本包含40个句型案例：
+- 前20个是普通疑问句（应该被过滤，不出现在报告中）
+- 后20个是特殊句型（应该保留，出现在报告中）
+
+===========================================
+
+老师：好的同学们，今天我们来学习一些重要的句型。首先我问大家几个问题。
+
+【第1个案例 - 普通疑问句】
+老师：what is sth. 这个怎么理解？就是问什么东西是什么的意思。比如说，what is your name? 
+
+【第2个案例 - 普通疑问句】
+老师：what is your name 大家都会问吧？这是最基础的问句。
+
+【第3个案例 - 普通疑问句】
+老师：what are you doing 也是常见的，问你在做什么。
+
+【第4个案例 - 普通疑问句】
+老师：what do you think 这个句子是问你怎么想的。
+
+【第5个案例 - 普通疑问句】
+老师：what did you see 是问你看到了什么。
+
+【第6个案例 - 普通疑问句】
+老师：who is sb. 这种问法就是在问某人是谁。
+
+【第7个案例 - 普通疑问句】
+老师：who is that 问那是谁，很简单对吧？
+
+【第8个案例 - 普通疑问句】
+老师：who are they 问他们是谁，都是基础问句。
+
+【第9个案例 - 普通疑问句】
+老师：where is it 问东西在哪里。
+
+【第10个案例 - 普通疑问句】
+老师：where do you live 问你住在哪里。
+
+【第11个案例 - 普通疑问句】
+老师：when is the meeting 问会议什么时候开。
+
+【第12个案例 - 普通疑问句】
+老师：why is this important 问为什么这个重要。
+
+【第13个案例 - 普通疑问句】
+老师：how is the weather 问天气怎么样。
+
+【第14个案例 - 普通疑问句】
+老师：how old are you 问年龄。
+
+【第15个案例 - 普通疑问句】
+老师：how long is it 问长度。
+
+【第16个案例 - 普通疑问句】
+老师：how many books 问多少本书。
+
+【第17个案例 - 普通疑问句】
+老师：do you like it 问你喜欢吗。
+
+【第18个案例 - 普通疑问句】
+老师：does he know 问他知道吗。
+
+【第19个案例 - 普通疑问句】
+老师：is this your book 问这是你的书吗。
+
+【第20个案例 - 普通疑问句】
+老师：can you help me 问你能帮我吗。
+
+===========================================
+
+老师：好，刚才那些都是简单的问句。现在我们来学习今天的重点句型，这些句型大家要记住！
+
+【第21个案例 - there be句型】
+老师：there be sth. 这是存在句，非常重要！表示某地有某物。记住这个句型！
+
+【第22个案例 - there be句型】
+老师：比如说 there is a book on the desk，桌上有一本书。there be句型是重点，要会用！
+
+【第23个案例 - there be疑问句】
+老师：Is there a book? 这是there be的疑问形式，注意be动词要提前。这也是there be句型的一种。
+
+【第24个案例 - it形式主语】
+老师：it is adj. to do sth. 这是it作形式主语的句型，真正的主语是后面的to do。这个句型考试常考！
+
+【第25个案例 - it形式主语】
+老师：it is adj. for sb. to do sth. 注意这里加了for sb.，表示对某人来说做某事怎么样。这是重点句型！
+
+【第26个案例 - it takes句型】
+老师：it takes sb. time to do sth. 表示做某事花费某人多长时间。It takes me two hours to finish homework. 这个句型要记住！
+
+【第27个案例 - so...that...】
+老师：so adj. that... 这是结果状语从句，so后面跟形容词，that后面跟结果。He is so tired that he can't move. 记住这个句型！
+
+【第28个案例 - too...to...】
+老师：too adj. to do 表示太...而不能...。He is too young to go to school. 这个句型很常用！
+
+【第29个案例 - not only...but also...】
+老师：not only...but also... 不仅...而且...，这是并列连词，记住这个句型！
+
+【第30个案例 - either...or...】
+老师：either...or... 要么...要么...，表示选择。Either you or I am wrong. 这个句型要掌握！
+
+【第31个案例 - 使役动词make】
+老师：make sb. do sth. 让某人做某事，make是使役动词。The teacher makes us study hard. 这是重点句型！
+
+【第32个案例 - 使役动词let】
+老师：let sb. do sth. 让某人做某事，let也是使役动词。Let me help you. 记住这个句型！
+
+【第33个案例 - 使役动词have】
+老师：have sb. do sth. 让某人做某事，have作使役动词。I'll have Tom clean the room. 这个句型要会用！
+
+【第34个案例 - 感官动词see】
+老师：see sb. do sth. 看见某人做某事（看见全过程）。I saw him cross the road. 这是感官动词的用法！
+
+【第35个案例 - 感官动词hear】
+老师：hear sb. doing sth. 听见某人正在做某事（强调正在进行）。I heard someone singing. 这个句型记住！
+
+【第36个案例 - Why not建议句】
+老师：Why not do sth.? 为什么不...呢？这是表示建议的句型。Why not go to the park? 这个很常用！
+
+【第37个案例 - How about建议句】
+老师：How about doing sth.? ...怎么样？也是表示建议。How about going swimming? 记住这个句型！
+
+【第38个案例 - What a感叹句】
+老师：What a adj. n.! 这是感叹句，多么...啊！What a beautiful day! 这个句型要记住！
+
+【第39个案例 - How感叹句】
+老师：How adj. ...! 这也是感叹句。How beautiful! 多么漂亮啊！记住这个句型！
+
+【第40个案例 - spend句型】
+老师：spend time doing sth. 花费时间做某事。I spend two hours doing homework. 这个句型很重要！
+
+===========================================
+
+老师：好了，今天的课就到这里。大家把这些重点句型好好记一下，especially那些特殊句型，考试会考的。下课！
+
+===========================================
+
+【预期结果】
+在生成的Word报告中：
+✅ 应该出现：第21-40个案例（20个特殊句型）
+❌ 不应该出现：第1-20个案例（20个普通疑问句）
+
+【验证方法】
+1. 上传此文件到系统处理
+2. 查看生成的Word报告中的"句型"部分
+3. 确认只包含第21-40个案例的句型
+4. 确认不包含第1-20个案例的句型
