@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>123</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 15px;
+        }
+        
+        header .meta {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        
+        header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        header .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 30px;
+            border-radius: 10px;
+        }
+        
+        header .stat-item .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        header .stat-item .label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .export-bar {
+            background: #f8f9fa;
+            padding: 15px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .export-btn.pdf { background: #e74c3c; color: white; }
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        main {
+            padding: 40px;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section-header .icon {
+            font-size: 2em;
+        }
+        
+        .section-header h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .section-header .desc {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-left: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .data-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table .index {
+            width: 50px;
+            text-align: center;
+            color: #999;
+        }
+        
+        .vocab-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.05em;
+        }
+        
+        .type-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+        
+        .type-tag.word { background: #e8f5e9; color: #2e7d32; }
+        .type-tag.phrase { background: #e3f2fd; color: #1565c0; }
+        .type-tag.pattern { background: #fff3e0; color: #ef6c00; }
+        
+        .word-forms {
+            margin-top: 5px;
+            padding-left: 10px;
+            border-left: 3px solid #ddd;
+        }
+        
+        .word-form-item {
+            color: #e67e22;
+            font-size: 0.9em;
+            margin: 2px 0;
+        }
+        
+        .word-form-label {
+            color: #999;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        .phonetic {
+            color: #9b59b6;
+            font-family: 'Lucida Sans Unicode', sans-serif;
+        }
+        
+        .pos {
+            color: #3498db;
+            font-weight: 500;
+        }
+        
+        .example {
+            color: #666;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        
+        .grammar-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .grammar-card-header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .grammar-card-body {
+            padding: 20px;
+        }
+        
+        .grammar-item {
+            margin-bottom: 15px;
+        }
+        
+        .grammar-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .grammar-item-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .grammar-item-content {
+            padding-left: 24px;
+            color: #555;
+        }
+        
+        .grammar-item-content ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .grammar-item-content li {
+            margin: 5px 0;
+        }
+        
+        .mistake-item {
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .mistake-wrong {
+            color: #e74c3c;
+            text-decoration: line-through;
+        }
+        
+        .mistake-arrow {
+            margin: 0 10px;
+            color: #999;
+        }
+        
+        .mistake-correct {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .mistake-explanation {
+            margin-top: 8px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .examples-box {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .examples-box ul {
+            margin: 0;
+        }
+        
+        .section-divider {
+            height: 40px;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .export-bar {
+                display: none;
+            }
+            .section-header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📖 123</h1>
+            <div class="meta">生成时间: 2026/2/3 13:44:34</div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="number">36</div>
+                    <div class="label">词汇</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">3</div>
+                    <div class="label">语法</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="export-bar">
+            <button class="export-btn pdf" onclick="window.print()">🖨️ 打印/导出PDF</button>
+        </div>
+        
+        <main>
+            <section>
+                <div class="section-header">
+                    <span class="icon">📚</span>
+                    <h2>词汇</h2>
+                    <span class="desc">共 36 项</span>
+                </div>
+                
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="index">#</th>
+                    <th style="width: 280px;">词汇</th>
+                    <th style="width: 80px;">音标</th>
+                    <th style="width: 200px;">含义</th>
+                    <th>例句</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td class="index">1</td>
+                    <td>
+                        <span class="vocab-name">laptop</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos">n.</span> 便携式电脑；笔记本电脑</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">2</td>
+                    <td>
+                        <span class="vocab-name">Internet</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈɪntəˌnɛt/</td>
+                    <td><span class="pos">n.</span> 互联网</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">3</td>
+                    <td>
+                        <span class="vocab-name">email</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈiːmeɪl/</td>
+                    <td><span class="pos">n.</span> 邮件</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">4</td>
+                    <td>
+                        <span class="vocab-name">website</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos">n.</span> 网站</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">5</td>
+                    <td>
+                        <span class="vocab-name">online</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos">adj.</span> 在线的 adv. 在线地</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">6</td>
+                    <td>
+                        <span class="vocab-name">emoji</span>
+                        
+                    </td>
+                    <td class="phonetic">/ɪˈməʊdʒi/</td>
+                    <td><span class="pos">n.</span> 表情符号</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">7</td>
+                    <td>
+                        <span class="vocab-name">vlog</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos">n.</span> 微视频；视频博客</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">8</td>
+                    <td>
+                        <span class="vocab-name">blog</span>
+                        
+                    </td>
+                    <td class="phonetic">/blɑɡ/</td>
+                    <td><span class="pos">n.</span> 博客；网志（=weblog）（可数）</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">9</td>
+                    <td>
+                        <span class="vocab-name">dr.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos">pr.</span> 博士；医生</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">10</td>
+                    <td>
+                        <span class="vocab-name">smartphone</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈsmɑːrtfoʊn/</td>
+                    <td><span class="pos">n.</span> 智能手机</td>
+                    <td class="example">Most students use a smartphone to study online.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">11</td>
+                    <td>
+                        <span class="vocab-name">Wifi</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈwaɪfaɪ/</td>
+                    <td><span class="pos">n.</span> 无线网络</td>
+                    <td class="example">The wifi in the classroom is very fast.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">12</td>
+                    <td>
+                        <span class="vocab-name">download</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˌdaʊnˈloʊd/</td>
+                    <td><span class="pos">v.</span> 下载</td>
+                    <td class="example">You can download the app on your phone.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">13</td>
+                    <td>
+                        <span class="vocab-name">upload</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˌʌpˈloʊd/</td>
+                    <td><span class="pos">v.</span> 上传</td>
+                    <td class="example">Please upload your homework before Friday.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">14</td>
+                    <td>
+                        <span class="vocab-name">selfie</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈselfi/</td>
+                    <td><span class="pos">n.</span> 自拍照</td>
+                    <td class="example">She took a selfie with her friends.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">15</td>
+                    <td>
+                        <span class="vocab-name">hashtag</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈhæʃtæɡ/</td>
+                    <td><span class="pos">n.</span> 话题标签</td>
+                    <td class="example">Use a hashtag to make your post popular.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">16</td>
+                    <td>
+                        <span class="vocab-name">podcast</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈpɑːdkæst/</td>
+                    <td><span class="pos">n.</span> 播客</td>
+                    <td class="example">I often listen to English podcasts.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">17</td>
+                    <td>
+                        <span class="vocab-name">talk to sb.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 和某人交谈/聊天</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">18</td>
+                    <td>
+                        <span class="vocab-name">listen to</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 听</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">19</td>
+                    <td>
+                        <span class="vocab-name">look at</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 看</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">20</td>
+                    <td>
+                        <span class="vocab-name">care about</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 关心；关爱</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">21</td>
+                    <td>
+                        <span class="vocab-name">worry about</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 为……而担心</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">22</td>
+                    <td>
+                        <span class="vocab-name">be good at</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 擅长</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">23</td>
+                    <td>
+                        <span class="vocab-name">be interested in</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 对. .. 感兴趣</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">24</td>
+                    <td>
+                        <span class="vocab-name">be afraid of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 害怕. ..</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">25</td>
+                    <td>
+                        <span class="vocab-name">be proud of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 以……为自豪</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">26</td>
+                    <td>
+                        <span class="vocab-name">be tired of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 对……感到厌倦</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">27</td>
+                    <td>
+                        <span class="vocab-name">be full of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 充满</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">28</td>
+                    <td>
+                        <span class="vocab-name">be different from</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 不同于</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">29</td>
+                    <td>
+                        <span class="vocab-name">be similar to</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 和……相似</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">30</td>
+                    <td>
+                        <span class="vocab-name">be far from</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 离. .. 远</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">31</td>
+                    <td>
+                        <span class="vocab-name">be late for</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 因……迟到</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">32</td>
+                    <td>
+                        <span class="vocab-name">be ready for</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 为……准备</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">33</td>
+                    <td>
+                        <span class="vocab-name">be famous for</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 因……而出名</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">34</td>
+                    <td>
+                        <span class="vocab-name">speak to</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 和……说话</td>
+                    <td class="example">The teacher spoke to the student after class.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">35</td>
+                    <td>
+                        <span class="vocab-name">think about</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 思考；考虑</td>
+                    <td class="example">Think about the question carefully.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">36</td>
+                    <td>
+                        <span class="vocab-name">be close to</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 靠近；接近</td>
+                    <td class="example">Our school is close to the park.</td>
+                </tr>
+                
+            </tbody>
+        </table>
+            </section>
+            
+            <div class="section-divider"></div>
+            
+            <section>
+                <div class="section-header">
+                    <span class="icon">📖</span>
+                    <h2>语法</h2>
+                    <span class="desc">共 3 项</span>
+                </div>
+                
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>1. 名词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">名词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">名词性用法判断</div>
+                </div>
+                
+                
+                
+                
+                
+                
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>2. 动词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">动词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">动词</div>
+                </div>
+                
+                
+                
+                
+                
+                
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>3. 形容词/副词比较级</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">用于两者之间的比较，表示'更...'的意思。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">形容词/副词比较级 + than / more + 形容词/副词原级 + than</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>单音节和部分双音节词：加-er（tall→taller, big→bigger）</li><li>多音节和部分双音节词：more + 原级（beautiful→more beautiful）</li><li>不规则变化：good/well→better, bad/badly→worse, many/much→more</li><li>比较级的修饰词：much, a lot, even, still, a little</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ She is more taller than me.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ She is taller than me.</span>
+                            <div class="mistake-explanation">tall是单音节词，用-er形式，不需要more</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ He runs more fast than me.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ He runs faster than me.</span>
+                            <div class="mistake-explanation">fast的比较级是faster，不是more fast</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ This book is more better.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ This book is better / much better.</span>
+                            <div class="mistake-explanation">good的比较级是better，不能用more修饰</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>My sister is two years older than me.</li><li>This question is more difficult than that one.</li><li>He works much harder than before.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+            </section>
+        </main>
+        
+        <footer>
+            由 Sorryios AI 智能生成 | 2026/2/3 13:44:34
+        </footer>
+    </div>
+</body>
+</html>
