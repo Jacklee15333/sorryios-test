@@ -1,0 +1,23 @@
+{
+  "vocabulary": {
+    "words": [],
+    "phrases": [],
+    "patterns": []
+  },
+  "grammar": [],
+  "summary": {
+    "total_words": 0,
+    "total_phrases": 0,
+    "total_patterns": 0,
+    "total_grammar": 0
+  },
+  "metadata": {
+    "taskId": "f2d8f6d8-4e1a-4d1f-a6cd-225f200166ae",
+    "originalFile": "test matching.txt",
+    "processedAt": "2026-02-03T05:40:45.658Z",
+    "totalSegments": 1,
+    "successCount": 1,
+    "failCount": 0,
+    "browserRestarts": 1
+  }
+}
