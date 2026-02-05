@@ -1,0 +1,3084 @@
+{
+  "vocabulary": {
+    "words": [
+      {
+        "id": 233,
+        "word": "amount",
+        "phonetic": "/əˈmaʊnt/",
+        "pos": "n.",
+        "meaning": "数量；总数 v. 总计；相当于",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1428,
+        "word": "invitation",
+        "phonetic": "/ɪn.vɪˈteɪ.ʃn̩/",
+        "pos": "n.",
+        "meaning": "邀请",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1215,
+        "word": "guess",
+        "phonetic": "/ɡɛs/",
+        "pos": "v.",
+        "meaning": "猜测；推测",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 414,
+        "word": "box",
+        "phonetic": "/bɒks/",
+        "pos": "n.",
+        "meaning": "箱；盒",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1686,
+        "word": "near",
+        "phonetic": "niә",
+        "pos": "prep.",
+        "meaning": "在……附近；靠近 adj. 近的；附近的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:24",
+        "updated_at": "2026-01-14 03:03:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2819,
+        "word": "sunshine",
+        "phonetic": "/ˈsʌnʃaɪn/",
+        "pos": "n.",
+        "meaning": "阳光",
+        "example": "The room is full of sunshine.",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:33",
+        "updated_at": "2026-02-05 06:40:33",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2823,
+        "word": "twelfth",
+        "phonetic": "/twelfθ/",
+        "pos": "num.",
+        "meaning": "第十二",
+        "example": "December is the twelfth month.",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:50:58",
+        "updated_at": "2026-02-05 06:50:58",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2824,
+        "word": "twentieth",
+        "phonetic": "/ˈtwentiəθ/",
+        "pos": "num.",
+        "meaning": "第二十",
+        "example": "He lives on the twentieth floor.",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:51:00",
+        "updated_at": "2026-02-05 06:51:00",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 805,
+        "word": "discuss",
+        "phonetic": "/dɪsˈkʊs/",
+        "pos": "v.",
+        "meaning": "vt. 讨论",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2700,
+        "word": "west",
+        "phonetic": "west",
+        "pos": "n.",
+        "meaning": "西；西方",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:26",
+        "updated_at": "2026-01-14 03:03:26",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1059,
+        "word": "final",
+        "phonetic": "/ˈfaɪ.nəl/",
+        "pos": "n.",
+        "meaning": "最后的；最终的 n. 决赛",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 693,
+        "word": "cross",
+        "phonetic": "/kɹɑs/",
+        "pos": "n.",
+        "meaning": "穿过；横过",
+        "example": "",
+        "irregular_forms": {},
+        "category": "服装配饰",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 837,
+        "word": "dream",
+        "phonetic": "/dɹiːm/",
+        "pos": "n.",
+        "meaning": "& v梦想；梦",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1438,
+        "word": "job",
+        "phonetic": "/d͡ʒɒb/",
+        "pos": "n.",
+        "meaning": "工作；零活",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 745,
+        "word": "dentist",
+        "phonetic": "/ˈdɛntɪst/",
+        "pos": "n.",
+        "meaning": "牙科医生",
+        "example": "",
+        "irregular_forms": {},
+        "category": "身体部位",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2818,
+        "word": "mine",
+        "phonetic": "/maɪn/",
+        "pos": "pron.",
+        "meaning": "我的（名词性物主代词）",
+        "example": "This book is mine.",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:28",
+        "updated_at": "2026-02-05 06:40:28",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1745,
+        "word": "off",
+        "phonetic": "ɒf",
+        "pos": "adv.",
+        "meaning": "离开；走开; 断掉; 完 prep.",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:24",
+        "updated_at": "2026-01-14 03:03:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 980,
+        "word": "experience",
+        "phonetic": "/ɪkˈspɪə.ɹɪəns/",
+        "pos": "n.",
+        "meaning": "经验；经历",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2815,
+        "word": "chemist",
+        "phonetic": "/ˈkemɪst/",
+        "pos": "n.",
+        "meaning": "化学家；药剂师",
+        "example": "My uncle is a chemist and works in a lab.",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:13",
+        "updated_at": "2026-02-05 06:40:13",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1940,
+        "word": "prefer",
+        "phonetic": "pri'fә:",
+        "pos": "v.",
+        "meaning": "vt. 宁可；更喜欢",
+        "example": "",
+        "irregular_forms": {},
+        "category": "情感",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:24",
+        "updated_at": "2026-01-14 03:03:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1019,
+        "word": "far",
+        "phonetic": "/fɑː/",
+        "pos": "adj.",
+        "meaning": "远的 adv. 远地",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 299,
+        "word": "away",
+        "phonetic": "ә'wei",
+        "pos": "adv.",
+        "meaning": "离开；远离",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2816,
+        "word": "athlete",
+        "phonetic": "/ˈæθliːt/",
+        "pos": "n.",
+        "meaning": "运动员（通常指专业运动员）",
+        "example": "She is a famous athlete in the Olympics.",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:20",
+        "updated_at": "2026-02-05 06:40:20",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2817,
+        "word": "sportsman",
+        "phonetic": "/ˈspɔːtsmən/",
+        "pos": "n.",
+        "meaning": "运动员（泛指，常指业余爱好者）",
+        "example": "He is a sportsman who likes running and swimming.",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:24",
+        "updated_at": "2026-02-05 06:40:24",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 46,
+        "word": "German",
+        "phonetic": "/ˈd͡ʒɜː.mən/",
+        "pos": "n.",
+        "meaning": "/adj. 德语；德国的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:20",
+        "updated_at": "2026-01-14 03:03:20",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 957,
+        "word": "example",
+        "phonetic": "/əɡˈzæmpl̩/",
+        "pos": "n.",
+        "meaning": "例子；榜样",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1788,
+        "word": "pack",
+        "phonetic": "pæk",
+        "pos": "v.",
+        "meaning": "包v. 包装",
+        "example": "",
+        "irregular_forms": {},
+        "category": "服装配饰",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:24",
+        "updated_at": "2026-01-14 03:03:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 339,
+        "word": "beautiful",
+        "phonetic": "/ˈbjuːtɪfəl/",
+        "pos": "n.",
+        "meaning": "美丽的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 189,
+        "word": "afraid",
+        "phonetic": "/əˈfɹeɪd/",
+        "pos": "adj.",
+        "meaning": "害怕的；担心的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "情感",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2169,
+        "word": "scary",
+        "phonetic": "'skєәri",
+        "pos": "adj.",
+        "meaning": "可怕的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:25",
+        "updated_at": "2026-01-14 03:03:25",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 207,
+        "word": "air",
+        "phonetic": "/ˈɛə/",
+        "pos": "n.",
+        "meaning": "空气；大气",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1875,
+        "word": "plant",
+        "phonetic": "plænt. plɑ:nt",
+        "pos": "n.",
+        "meaning": "植物 vt. 种植；播种",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:24",
+        "updated_at": "2026-01-14 03:03:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1355,
+        "word": "ice",
+        "phonetic": "[ʌɪs]",
+        "pos": "n.",
+        "meaning": "冰",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 592,
+        "word": "color",
+        "phonetic": "/ˈkʌl.ə(ɹ)/",
+        "pos": "n.",
+        "meaning": "颜色",
+        "example": "",
+        "irregular_forms": {},
+        "category": "颜色",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 160,
+        "word": "across",
+        "phonetic": "/əˈkɹɑs/",
+        "pos": "n.",
+        "meaning": "穿过；横过",
+        "example": "",
+        "irregular_forms": {},
+        "category": "服装配饰",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 308,
+        "word": "badminton",
+        "phonetic": "/ˈbæd.mɪn.tən/",
+        "pos": "n.",
+        "meaning": "羽毛球",
+        "example": "",
+        "irregular_forms": {},
+        "category": "运动",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2827,
+        "word": "thirty",
+        "phonetic": "/ˈθɜːrti/",
+        "pos": "num.",
+        "meaning": "三十",
+        "example": "There are thirty students in the class.",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:51:13",
+        "updated_at": "2026-02-05 06:51:13",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2528,
+        "word": "title",
+        "phonetic": "'taitl",
+        "pos": "n.",
+        "meaning": "标题",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:26",
+        "updated_at": "2026-01-14 03:03:26",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1720,
+        "word": "north",
+        "phonetic": "nɒ:θ",
+        "pos": "n.",
+        "meaning": "北；北方adj. 北的；北方的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:24",
+        "updated_at": "2026-01-14 03:03:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2337,
+        "word": "south",
+        "phonetic": "sauθ",
+        "pos": "n.",
+        "meaning": "南；南方adj. 南方的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:25",
+        "updated_at": "2026-01-14 03:03:25",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1117,
+        "word": "fox",
+        "phonetic": "/fɒks/",
+        "pos": "n.",
+        "meaning": "狐狸",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 492,
+        "word": "catch",
+        "phonetic": "/kæt͡ʃ/",
+        "pos": "n.",
+        "meaning": "接住；捉住；赶上; 患; 弄清",
+        "example": "",
+        "irregular_forms": {},
+        "category": "交通工具",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2746,
+        "word": "wolf",
+        "phonetic": "wulf",
+        "pos": "n.",
+        "meaning": "狼",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:26",
+        "updated_at": "2026-01-14 03:03:26",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1872,
+        "word": "plan",
+        "phonetic": "plæn",
+        "pos": "n.",
+        "meaning": "vt. & n. 计划，打算",
+        "example": "",
+        "irregular_forms": {},
+        "category": "运动",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:24",
+        "updated_at": "2026-01-14 03:03:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 480,
+        "word": "careful",
+        "phonetic": "/ˈkɛːfəl/",
+        "pos": "adj.",
+        "meaning": "小心的；仔细的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1166,
+        "word": "gently",
+        "phonetic": "/ˈdʒɛntli/",
+        "pos": "adv.",
+        "meaning": "轻柔地",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1812,
+        "word": "passage",
+        "phonetic": "'pæsidʒ",
+        "pos": "n.",
+        "meaning": "一节，一段；通道",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:24",
+        "updated_at": "2026-01-14 03:03:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1087,
+        "word": "follow",
+        "phonetic": "/ˈfɒləʊ/",
+        "pos": "n.",
+        "meaning": "听从",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1473,
+        "word": "kite",
+        "phonetic": "kait",
+        "pos": "n.",
+        "meaning": "风筝",
+        "example": "",
+        "irregular_forms": {},
+        "category": "天气",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1484,
+        "word": "lady",
+        "phonetic": "'leidi",
+        "pos": "n.",
+        "meaning": "女士",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1433,
+        "word": "item",
+        "phonetic": "[ˈaɪ̯ɾm̩]",
+        "pos": "n.",
+        "meaning": "节目；项目",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:23",
+        "updated_at": "2026-01-14 03:03:23",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "word": "zebra",
+        "phonetic": "/ˈziːbrə/",
+        "pos": "n.",
+        "meaning": "斑马",
+        "example": "A zebra has black and white stripes.",
+        "_source": "ai"
+      },
+      {
+        "word": "cream",
+        "phonetic": "/kriːm/",
+        "pos": "n.",
+        "meaning": "奶油",
+        "example": "She put some cream on the cake.",
+        "_source": "ai"
+      },
+      {
+        "word": "canteen",
+        "phonetic": "/kænˈtiːn/",
+        "pos": "n.",
+        "meaning": "食堂；小卖部",
+        "example": "Students have lunch in the school canteen.",
+        "_source": "ai"
+      },
+      {
+        "word": "scooter",
+        "phonetic": "/ˈskuːtər/",
+        "pos": "n.",
+        "meaning": "滑板车；踏板车",
+        "example": "The boy goes to school on his scooter.",
+        "_source": "ai"
+      }
+    ],
+    "phrases": [
+      {
+        "id": 99,
+        "phrase": "a lot of",
+        "meaning": "adj. 许多的",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:26",
+        "updated_at": "2026-01-14 03:03:26",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 110,
+        "phrase": "a pair of",
+        "meaning": "n. 一对；一双",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:26",
+        "updated_at": "2026-01-14 03:03:26",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2643,
+        "phrase": "zebra crossing",
+        "meaning": "斑马线",
+        "example": "You must stop at the zebra crossing.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:39",
+        "updated_at": "2026-02-05 06:40:39",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2644,
+        "phrase": "at nine o'clock",
+        "meaning": "在九点",
+        "example": "School starts at nine o'clock.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:42",
+        "updated_at": "2026-02-05 06:40:42",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2645,
+        "phrase": "come from",
+        "meaning": "来自",
+        "example": "I come from China.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:46",
+        "updated_at": "2026-02-05 06:40:46",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2646,
+        "phrase": "dream job",
+        "meaning": "理想的工作",
+        "example": "Being a teacher is my dream job.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:54",
+        "updated_at": "2026-02-05 06:40:54",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1870,
+        "phrase": "prefer a to b",
+        "meaning": "更喜欢 A而不是 B",
+        "example": "",
+        "category": "情感",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:29",
+        "updated_at": "2026-01-14 03:03:29",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 907,
+        "phrase": "far away from",
+        "meaning": "adv. 远离",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:28",
+        "updated_at": "2026-01-14 03:03:28",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 966,
+        "phrase": "for example",
+        "meaning": "例如",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:28",
+        "updated_at": "2026-01-14 03:03:28",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2199,
+        "phrase": "such as",
+        "meaning": "例如",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:30",
+        "updated_at": "2026-01-14 03:03:30",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2647,
+        "phrase": "don't have to",
+        "meaning": "不必；不需要",
+        "example": "You don't have to finish it today.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:40:57",
+        "updated_at": "2026-02-05 06:40:57",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1186,
+        "phrase": "have to",
+        "meaning": "不得不；必须",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:28",
+        "updated_at": "2026-01-14 03:03:28",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2446,
+        "phrase": "turn on",
+        "meaning": "打开（电子设备等）",
+        "example": "",
+        "category": "运动",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:31",
+        "updated_at": "2026-01-14 03:03:31",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2445,
+        "phrase": "turn off",
+        "meaning": "v. 关掉",
+        "example": "",
+        "category": "动词短语",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:31",
+        "updated_at": "2026-01-14 03:03:31",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2449,
+        "phrase": "turn up",
+        "meaning": "调大（电子设备音量等）",
+        "example": "",
+        "category": "动词短语",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:31",
+        "updated_at": "2026-01-14 03:03:31",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2443,
+        "phrase": "turn down",
+        "meaning": "调小（电子设备音量等）",
+        "example": "",
+        "category": "动词短语",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:31",
+        "updated_at": "2026-01-14 03:03:31",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2263,
+        "phrase": "take turns",
+        "meaning": "轮流",
+        "example": "",
+        "category": "动词短语",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:30",
+        "updated_at": "2026-01-14 03:03:30",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2648,
+        "phrase": "have a good time",
+        "meaning": "玩得开心；过得愉快",
+        "example": "We had a good time at the party.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:41:01",
+        "updated_at": "2026-02-05 06:41:01",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 332,
+        "phrase": "be afraid of doing sth.",
+        "meaning": "v. 害怕做某事",
+        "example": "",
+        "category": "情感",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:27",
+        "updated_at": "2026-01-14 03:03:27",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 335,
+        "phrase": "be afraid to do sth.",
+        "meaning": "v. 害怕做；不敢做",
+        "example": "",
+        "category": "情感",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:27",
+        "updated_at": "2026-01-14 03:03:27",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 841,
+        "phrase": "enjoy oneself",
+        "meaning": "过得快乐；玩得高兴",
+        "example": "",
+        "category": "情感",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:28",
+        "updated_at": "2026-01-14 03:03:28",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2659,
+        "phrase": "live without sth.",
+        "meaning": "没有某物而生活",
+        "example": "sb. cannot live without air.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:51:24",
+        "updated_at": "2026-02-05 06:51:24",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2654,
+        "phrase": "cross the road",
+        "meaning": "过马路",
+        "example": "Be careful when you cross the road.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:42:00",
+        "updated_at": "2026-02-05 06:42:00",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2661,
+        "phrase": "the blue ones",
+        "meaning": "pr. 蓝色的那些",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:51:42",
+        "updated_at": "2026-02-05 06:51:42",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 152,
+        "phrase": "according to",
+        "meaning": "根据；依据",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:26",
+        "updated_at": "2026-01-14 03:03:26",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1088,
+        "phrase": "go swimming",
+        "meaning": "v. 游泳",
+        "example": "",
+        "category": "运动",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:28",
+        "updated_at": "2026-01-14 03:03:28",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2594,
+        "phrase": "in summer",
+        "meaning": "在夏天",
+        "example": "It is hot in summer.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-16 01:08:54",
+        "updated_at": "2026-01-16 01:08:54",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 352,
+        "phrase": "be careful",
+        "meaning": "小心；当心",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:27",
+        "updated_at": "2026-01-14 03:03:27",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2662,
+        "phrase": "play chess with sb.",
+        "meaning": "和某人下棋",
+        "example": "He often plays chess with his grandfather.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:51:50",
+        "updated_at": "2026-02-05 06:51:50",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1058,
+        "phrase": "go across",
+        "meaning": "v. 穿过；横过",
+        "example": "",
+        "category": "服装配饰",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:28",
+        "updated_at": "2026-01-14 03:03:28",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2656,
+        "phrase": "one of them",
+        "meaning": "他们/它们中的一个",
+        "example": "One of them is my best friend.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:42:06",
+        "updated_at": "2026-02-05 06:42:06",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2355,
+        "phrase": "the same as",
+        "meaning": "adj. 一样的",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:30",
+        "updated_at": "2026-01-14 03:03:30",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 360,
+        "phrase": "be different from",
+        "meaning": "v. 不同于",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:27",
+        "updated_at": "2026-01-14 03:03:27",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2621,
+        "phrase": "there be",
+        "meaning": "pr. 有",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-21 10:27:24",
+        "updated_at": "2026-01-21 02:27:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "phrase": "a box of milk",
+        "meaning": "一盒牛奶",
+        "example": "I bought a box of milk for breakfast.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "make an ice cream",
+        "meaning": "做一个冰淇淋",
+        "example": "They make an ice cream at home in summer.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "best title",
+        "meaning": "最佳标题",
+        "example": "Choose the best title for the passage.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "play badminton",
+        "meaning": "打羽毛球",
+        "example": "We play badminton after school.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "different weather",
+        "meaning": "不同的天气",
+        "example": "The north and the south have different weather.",
+        "_source": "ai"
+      },
+      {
+        "phrase": "in winter",
+        "meaning": "在冬天",
+        "example": "It often snows here in winter.",
+        "_source": "ai"
+      }
+    ],
+    "patterns": [
+      {
+        "id": 148,
+        "pattern": "no doing sth.",
+        "meaning": "禁止做某事",
+        "example": "No smoking in the library.",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-05 06:51:59",
+        "updated_at": "2026-02-05 06:51:59",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 146,
+        "pattern": "what a/an adj. n.!",
+        "meaning": "用于名词前，表示强烈的感叹语气",
+        "example": "What a beautiful day!",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-01 13:27:31",
+        "updated_at": "2026-02-01 13:27:31",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 147,
+        "pattern": "how adj./adv.!",
+        "meaning": "用于形容词或副词前，表示强烈的感叹语气",
+        "example": "How fast he runs!",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-01 13:27:35",
+        "updated_at": "2026-02-01 13:27:35",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "id": 18,
+      "title": "感叹句",
+      "keywords": [
+        "感叹句",
+        "what",
+        "how",
+        "感叹",
+        "exclamatory sentence"
+      ],
+      "definition": "用来表达强烈感情的句子，句末用感叹号。常用What和How引导。",
+      "structure": "What + (a/an) + 形容词 + 名词 + 主语 + 谓语! / How + 形容词/副词 + 主语 + 谓语!",
+      "usage": [
+        "What + a/an + 形容词 + 可数名词单数：What a beautiful girl she is!",
+        "What + 形容词 + 不可数名词/复数名词：What nice weather! What beautiful flowers!",
+        "How + 形容词/副词：How beautiful the girl is! How fast he runs!",
+        "判断用What还是How：看中心词是名词还是形容词/副词"
+      ],
+      "mistakes": [
+        {
+          "wrong": "What beautiful girl she is!",
+          "correct": "What a beautiful girl she is!",
+          "explanation": "可数名词单数前要加a/an"
+        },
+        {
+          "wrong": "How a beautiful girl!",
+          "correct": "What a beautiful girl! / How beautiful the girl is!",
+          "explanation": "How后直接加形容词，不加冠词和名词"
+        },
+        {
+          "wrong": "What nice the weather is!",
+          "correct": "How nice the weather is! / What nice weather!",
+          "explanation": "What后要有名词，How后直接加形容词"
+        }
+      ],
+      "examples": [
+        "What an interesting story it is!",
+        "What delicious food!",
+        "How time flies!"
+      ],
+      "sub_topics": [
+        {
+          "title": "how adj. .!",
+          "source_type": "unmatched",
+          "source_id": 1958,
+          "definition": "",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-02-02T06:55:37.871Z",
+          "order": 0
+        }
+      ],
+      "category": "句式",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:25",
+      "updated_at": "2026-02-02 06:55:37",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 97,
+      "title": "名词",
+      "keywords": [
+        "名词"
+      ],
+      "definition": "名词",
+      "structure": "名词性用法判断",
+      "usage": [],
+      "mistakes": [],
+      "examples": [],
+      "sub_topics": [
+        {
+          "title": "名词性用法判断",
+          "source_type": "unmatched",
+          "source_id": null,
+          "definition": "主语的含义",
+          "structure": "主语缺失问题",
+          "usage": [],
+          "examples": [],
+          "mistakes": []
+        }
+      ],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-30 14:40:10",
+      "updated_at": "2026-02-02 07:08:04",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 11,
+      "title": "现在分词",
+      "keywords": [
+        "现在分词",
+        "v.-ing",
+        "doing",
+        "present participle",
+        "分词"
+      ],
+      "definition": "由动词-ing形式构成，可以作定语、状语、表语和宾语补足语，表示主动或正在进行。",
+      "structure": "动词-ing",
+      "usage": [
+        "作定语（表主动/进行）：the sleeping baby = the baby who is sleeping",
+        "作状语：Hearing the news, she jumped with joy.",
+        "作表语：The movie is exciting.",
+        "作宾语补足语：I saw him running."
+      ],
+      "mistakes": [
+        {
+          "wrong": "The news is excited.",
+          "correct": "The news is exciting.",
+          "explanation": "修饰物用-ing（令人...的），修饰人用-ed（感到...的）"
+        },
+        {
+          "wrong": "Seen from the hill, we can see the whole city.",
+          "correct": "Seeing from the hill, we can see the whole city.",
+          "explanation": "分词的逻辑主语要与句子主语一致"
+        }
+      ],
+      "examples": [
+        "Look at the running water.",
+        "The story is very interesting.",
+        "Walking along the street, I met an old friend."
+      ],
+      "sub_topics": [],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:25",
+      "updated_at": "2026-01-14 02:03:25",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 28,
+      "title": "常用介词",
+      "keywords": [
+        "介词",
+        "in",
+        "on",
+        "at",
+        "for",
+        "by",
+        "with",
+        "preposition",
+        "介词搭配"
+      ],
+      "definition": "用在名词、代词或动名词前，表示时间、地点、方式、原因等关系的词。",
+      "structure": "介词 + 名词/代词/动名词",
+      "usage": [
+        "时间：at+时刻, on+具体日期, in+年月季节长时段",
+        "地点：at+小地点, in+大地点/里面, on+表面",
+        "方式：by+交通工具/方式, with+工具/材料, in+语言/颜色",
+        "常见搭配：be good at, be interested in, look for, wait for, listen to"
+      ],
+      "mistakes": [
+        {
+          "wrong": "I arrived at Beijing.",
+          "correct": "I arrived in Beijing.",
+          "explanation": "arrive in+大地点，arrive at+小地点"
+        },
+        {
+          "wrong": "I go to school by a bus.",
+          "correct": "I go to school by bus.",
+          "explanation": "by+交通工具中间不加冠词"
+        },
+        {
+          "wrong": "I'm looking forward to see you.",
+          "correct": "I'm looking forward to seeing you.",
+          "explanation": "look forward to后面接动名词"
+        }
+      ],
+      "examples": [
+        "The meeting will be held at 3 o'clock on Monday.",
+        "She goes to work by subway.",
+        "He is good at playing basketball."
+      ],
+      "sub_topics": [
+        {
+          "title": "介词to和for的用法区别",
+          "source_type": "unmatched",
+          "source_id": 1002,
+          "definition": "to强调动作结果指向，for强调受益对象",
+          "structure": "be important to sb.; be good for sb.",
+          "usage": [
+            "to表示方向或结果",
+            "for表示受益或用途"
+          ],
+          "examples": [
+            "This book is important to me.",
+            "Exercise is good for your health."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:07:32.540Z",
+          "order": 0
+        },
+        {
+          "title": "介词后只能接名词",
+          "source_type": "unmatched",
+          "source_id": 1011,
+          "definition": "介词后不能直接接动词原形",
+          "structure": "介词 + 名词/doing",
+          "usage": [
+            "to do中的to不是介词"
+          ],
+          "examples": [
+            "without water",
+            "without eating"
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:10:24.387Z",
+          "order": 1
+        },
+        {
+          "title": "介词without的用法（后接名词或动名词）",
+          "source_type": "unmatched",
+          "source_id": 1027,
+          "definition": "pr.邀请某人做某事",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:23:52.747Z",
+          "order": 2
+        },
+        {
+          "title": "介词without的用法",
+          "source_type": "unmatched",
+          "source_id": 1124,
+          "definition": "without表示“没有”，后接名词或doing。",
+          "structure": "without + 名词/doing",
+          "usage": [
+            "表示缺少某物或行为"
+          ],
+          "examples": [
+            "He left without saying goodbye.",
+            "She passed the exam without effort."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:10:31.977Z",
+          "order": 3
+        },
+        {
+          "title": "介词to的用法",
+          "source_type": "unmatched",
+          "source_id": 1519,
+          "definition": "pr.从后到前",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-22T00:58:03.936Z",
+          "order": 4
+        }
+      ],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:25",
+      "updated_at": "2026-01-22 00:58:03",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 25,
+      "title": "冠词",
+      "keywords": [
+        "冠词",
+        "a",
+        "an",
+        "the",
+        "不定冠词",
+        "定冠词",
+        "零冠词",
+        "article"
+      ],
+      "definition": "用在名词前，说明名词所指的人或事物。分为不定冠词(a/an)、定冠词(the)和零冠词。",
+      "structure": "冠词 + (形容词) + 名词",
+      "usage": [
+        "a/an用于泛指单数可数名词：a book, an apple (元音音素前用an)",
+        "the用于特指、上文提过、独一无二的事物：the sun, the book I bought",
+        "the + 形容词表示一类人：the rich (富人), the young (年轻人)",
+        "零冠词：复数名词和不可数名词泛指、球类运动、三餐、学科等"
+      ],
+      "mistakes": [
+        {
+          "wrong": "I have a umbrella.",
+          "correct": "I have an umbrella.",
+          "explanation": "umbrella以元音音素开头，用an"
+        },
+        {
+          "wrong": "He is an university student.",
+          "correct": "He is a university student.",
+          "explanation": "university虽以u开头，但发音是辅音/ju:/，用a"
+        },
+        {
+          "wrong": "I like playing the football.",
+          "correct": "I like playing football.",
+          "explanation": "球类运动前不加冠词"
+        }
+      ],
+      "examples": [
+        "I saw a dog. The dog was very cute.",
+        "The moon goes around the earth.",
+        "We should help the poor."
+      ],
+      "sub_topics": [],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:25",
+      "updated_at": "2026-01-14 02:03:25",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 4,
+      "title": "现在进行时",
+      "keywords": [
+        "现在进行时",
+        "be doing",
+        "am/is/are",
+        "v.-ing",
+        "现在分词",
+        "进行时",
+        "present continuous",
+        "present progressive"
+      ],
+      "definition": "表示现在正在进行的动作，也可表示现阶段正在进行或即将发生的动作。",
+      "structure": "主语 + am/is/are + 动词-ing",
+      "usage": [
+        "表示说话时正在进行的动作：He is reading a book now.",
+        "表示现阶段正在进行的动作：She is learning French this year.",
+        "表示即将发生的动作（常用go, come, leave等）：I am leaving tomorrow.",
+        "与always连用表示赞扬或不满：He is always helping others."
+      ],
+      "mistakes": [
+        {
+          "wrong": "She is play the piano.",
+          "correct": "She is playing the piano.",
+          "explanation": "be动词后面要用动词的-ing形式"
+        },
+        {
+          "wrong": "I am knowing the answer.",
+          "correct": "I know the answer.",
+          "explanation": "know是状态动词，一般不用进行时"
+        }
+      ],
+      "examples": [
+        "They are watching TV at the moment.",
+        "Look! The baby is crying.",
+        "We are having an English class now."
+      ],
+      "sub_topics": [
+        {
+          "title": "现在进行时的用法",
+          "source_type": "unmatched",
+          "source_id": 1590,
+          "definition": "表示正在进行或现阶段正在发生的动作",
+          "structure": "主语 + am/is/are + doing",
+          "usage": [
+            "表示说话时正在发生的动作",
+            "表示现阶段持续的动作"
+          ],
+          "examples": [
+            "I am doing my homework.",
+            "She is studying English these days."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-22T03:34:05.250Z",
+          "order": 0
+        }
+      ],
+      "category": "时态",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:24",
+      "updated_at": "2026-01-22 03:34:05",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 43,
+      "title": "非谓语",
+      "keywords": [
+        "非谓语"
+      ],
+      "definition": "非谓语",
+      "structure": "过去分词作形容词",
+      "usage": [],
+      "mistakes": [],
+      "examples": [],
+      "sub_topics": [
+        {
+          "title": "过去分词作形容词",
+          "source_type": "unmatched",
+          "source_id": 239,
+          "definition": "过去分词表示被动或完成状态",
+          "structure": "the + done + n.",
+          "usage": [
+            "修饰名词",
+            "强调状态"
+          ],
+          "examples": [
+            "The broken window was fixed."
+          ],
+          "mistakes": []
+        },
+        {
+          "title": "不定式作宾语",
+          "source_type": "unmatched",
+          "source_id": 241,
+          "definition": "to do在句中作宾语",
+          "structure": "verb + to do",
+          "usage": [
+            "常见于ask, want, hope等动词后"
+          ],
+          "examples": [
+            "She wants to learn English."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-18T12:50:35.564Z",
+          "order": 1
+        },
+        {
+          "title": "过去分词的三种用法（完成时、被动语态、形容词）",
+          "source_type": "unmatched",
+          "source_id": 1009,
+          "definition": "",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:09:40.291Z",
+          "order": 2
+        },
+        {
+          "title": "不定式作目的状语",
+          "source_type": "unmatched",
+          "source_id": 1012,
+          "definition": "用to do表示目的",
+          "structure": "主语 + 动词 + to do",
+          "usage": [
+            "表示“为了……”"
+          ],
+          "examples": [
+            "He studies hard to pass the exam."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:10:36.099Z",
+          "order": 3
+        },
+        {
+          "title": "to do与doing的区别",
+          "source_type": "unmatched",
+          "source_id": 1115,
+          "definition": "to do常表示目的或将来，doing常表示已发生或习惯。",
+          "structure": "to do / doing",
+          "usage": [
+            "根据动词固定搭配决定"
+          ],
+          "examples": [
+            "I decided to go.",
+            "I enjoy reading."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:08:01.874Z",
+          "order": 4
+        },
+        {
+          "title": "动词原形与to do的区别",
+          "source_type": "unmatched",
+          "source_id": 1125,
+          "definition": "原形用于助动词后，to do用于不定式结构。",
+          "structure": "do / to do",
+          "usage": [
+            "区分句法功能"
+          ],
+          "examples": [
+            "You must go.",
+            "I want to go."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:10:51.793Z",
+          "order": 5
+        },
+        {
+          "title": "v-ing 作主语",
+          "source_type": "unmatched",
+          "source_id": 1145,
+          "definition": "动名词短语作主语，表示一件事。",
+          "structure": "v-ing + 谓语",
+          "usage": [
+            "描述行为或活动"
+          ],
+          "examples": [
+            "Reading books makes me happy."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:16:14.993Z",
+          "order": 6
+        }
+      ],
+      "category": "句式",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-18 12:49:37",
+      "updated_at": "2026-01-21 02:38:07",
+      "_source": "database",
+      "_matchScore": 0.9190909090909092
+    },
+    {
+      "id": 64,
+      "title": "some和any的用法",
+      "keywords": [
+        "some和any的用法"
+      ],
+      "definition": "some多用于肯定句，any多用于否定句和疑问句。",
+      "structure": "some / any + 名词",
+      "usage": [
+        "数量不确定时使用"
+      ],
+      "mistakes": [],
+      "examples": [
+        "I have some books.",
+        "I don't have any money."
+      ],
+      "sub_topics": [],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-21 02:09:26",
+      "updated_at": "2026-01-21 02:37:40",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 57,
+      "title": "动词形态",
+      "keywords": [
+        "动词形态"
+      ],
+      "definition": "动词形态",
+      "structure": "不规则动词变化（ABB型、AAA型）",
+      "usage": [],
+      "mistakes": [],
+      "examples": [],
+      "sub_topics": [
+        {
+          "title": "不规则动词变化（ABB型、AAA型）",
+          "source_type": "unmatched",
+          "source_id": 1010,
+          "definition": "部分动词变化不规则",
+          "structure": "ABB: cost-cost-cost; AAA: cut-cut-cut",
+          "usage": [
+            "需单独记忆"
+          ],
+          "examples": [
+            "The book cost me 10 yuan.",
+            "He cut the paper."
+          ],
+          "mistakes": []
+        },
+        {
+          "title": "第三人称单数用法",
+          "source_type": "unmatched",
+          "source_id": 1020,
+          "definition": "pr.邀请某人做某事",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:16:07.531Z",
+          "order": 1
+        },
+        {
+          "title": "第三人称单数",
+          "source_type": "unmatched",
+          "source_id": 1025,
+          "definition": "第三人称单数作主语的规则",
+          "structure": "he/she/it + 动词+s",
+          "usage": [
+            "一般现在时"
+          ],
+          "examples": [
+            "It looks nice."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:23:26.179Z",
+          "order": 2
+        },
+        {
+          "title": "不规则动词变化（grow-grew-grown）",
+          "source_type": "unmatched",
+          "source_id": 1026,
+          "definition": "grow的三种形式变化",
+          "structure": "grow-grew-grown",
+          "usage": [
+            "需记忆"
+          ],
+          "examples": [
+            "Plants grow fast.",
+            "They have grown taller."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:23:41.267Z",
+          "order": 3
+        },
+        {
+          "title": "不规则动词变化",
+          "source_type": "unmatched",
+          "source_id": 1112,
+          "definition": "部分动词的过去式和过去分词不按规则变化。",
+          "structure": "动词原形 → 不规则变化",
+          "usage": [
+            "需单独记忆"
+          ],
+          "examples": [
+            "go–went–gone",
+            "see–saw–seen"
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:07:17.001Z",
+          "order": 4
+        },
+        {
+          "title": "动词过去式和过去分词的区别",
+          "source_type": "unmatched",
+          "source_id": 1113,
+          "definition": "过去式用于一般过去时，过去分词用于完成时或被动语态。",
+          "structure": "过去式 / 过去分词",
+          "usage": [
+            "区分时态和语态"
+          ],
+          "examples": [
+            "I ate breakfast.",
+            "I have eaten breakfast."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:07:31.490Z",
+          "order": 5
+        },
+        {
+          "title": "动词过去式与过去分词（grow-grew-grown）",
+          "source_type": "unmatched",
+          "source_id": 1123,
+          "definition": "grow是不规则动词。",
+          "structure": "grow–grew–grown",
+          "usage": [
+            "区分时态"
+          ],
+          "examples": [
+            "He grew taller.",
+            "He has grown taller."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:09:50.241Z",
+          "order": 6
+        },
+        {
+          "title": "规则动词与不规则动词",
+          "source_type": "unmatched",
+          "source_id": 1522,
+          "definition": "pr.从后到前",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-22T00:58:50.977Z",
+          "order": 7
+        },
+        {
+          "title": "动词原形与三单形式",
+          "source_type": "unmatched",
+          "source_id": 1530,
+          "definition": "pr.从后到前",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-22T01:07:11.760Z",
+          "order": 8
+        },
+        {
+          "title": "动词原形/过去式/过去分词的区分（grow–grew–grown）",
+          "source_type": "unmatched",
+          "source_id": 1569,
+          "definition": "同一动词在不同时态和语态中的不同形式",
+          "structure": "原形 / 过去式 / 过去分词",
+          "usage": [
+            "一般时态 vs 完成/被动"
+          ],
+          "examples": [
+            "Plants grow fast.",
+            "They grew trees.",
+            "Trees have grown."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-22T03:14:44.602Z",
+          "order": 9
+        },
+        {
+          "title": "动词原形与过去式判断",
+          "source_type": "unmatched",
+          "source_id": 1665,
+          "definition": "",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-23T02:48:18.963Z",
+          "order": 10
+        },
+        {
+          "title": "规则与不规则变化",
+          "source_type": "unmatched",
+          "source_id": 2000,
+          "definition": "英语动词在变成过去式和过去分词时，有规则变化和不规则变化两种情况。",
+          "structure": "规则动词：动词原形 + ed / d\n不规则动词：形式需单独记忆",
+          "usage": [
+            "规则动词过去式和过去分词形式一致",
+            "不规则动词变化形式不统一，需要单独记忆",
+            "过去式常用于一般过去时",
+            "过去分词常用于现在完成时和被动语态"
+          ],
+          "examples": [
+            "work → worked → worked",
+            "play → played → played",
+            "go → went → gone",
+            "eat → ate → eaten",
+            "The work was finished yesterday.",
+            "I have eaten breakfast."
+          ],
+          "mistakes": [],
+          "added_at": "2026-02-03T05:55:02.102Z",
+          "order": 11
+        }
+      ],
+      "category": "时态",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-21 01:10:08",
+      "updated_at": "2026-02-03 05:55:02",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 27,
+      "title": "代词",
+      "keywords": [
+        "代词",
+        "人称代词",
+        "物主代词",
+        "反身代词",
+        "指示代词",
+        "pronoun",
+        "I",
+        "me",
+        "my",
+        "mine",
+        "myself"
+      ],
+      "definition": "用来代替名词或名词短语的词，包括人称代词、物主代词、反身代词、指示代词等。",
+      "structure": "根据在句中的成分选择相应形式",
+      "usage": [
+        "人称代词主格（作主语）：I, you, he, she, it, we, they",
+        "人称代词宾格（作宾语）：me, you, him, her, it, us, them",
+        "形容词性物主代词（后接名词）：my, your, his, her, its, our, their",
+        "名词性物主代词（独立使用）：mine, yours, his, hers, its, ours, theirs",
+        "反身代词：myself, yourself, himself, herself, itself, ourselves, themselves"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Me and Tom are friends.",
+          "correct": "Tom and I are friends.",
+          "explanation": "作主语用主格I，且把自己放后面"
+        },
+        {
+          "wrong": "This is her, not my.",
+          "correct": "This is hers, not mine.",
+          "explanation": "独立使用时用名词性物主代词"
+        },
+        {
+          "wrong": "He hurt hisself.",
+          "correct": "He hurt himself.",
+          "explanation": "反身代词是himself，不是hisself"
+        }
+      ],
+      "examples": [
+        "She gave me a book.",
+        "This is my book. That is yours.",
+        "He taught himself English."
+      ],
+      "sub_topics": [
+        {
+          "title": "pronoun",
+          "source_type": "unmatched",
+          "source_id": 1831,
+          "definition": "代词，用来代替名词或名词短语，避免重复，使句子更简洁",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-29T03:52:10.125Z",
+          "order": 0
+        }
+      ],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:25",
+      "updated_at": "2026-01-29 03:52:10",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 51,
+      "title": "动词",
+      "keywords": [
+        "动词"
+      ],
+      "definition": "动词",
+      "structure": "动词",
+      "usage": [],
+      "mistakes": [],
+      "examples": [],
+      "sub_topics": [],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-18 13:08:39",
+      "updated_at": "2026-01-21 02:37:55",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 19,
+      "title": "祈使句",
+      "keywords": [
+        "祈使句",
+        "动词原形开头",
+        "don't",
+        "let",
+        "please",
+        "imperative sentence"
+      ],
+      "definition": "用来表示请求、命令、建议、劝告等的句子，通常省略主语you。",
+      "structure": "动词原形 + 其他 / Don't + 动词原形 + 其他 / Let + 宾语 + 动词原形",
+      "usage": [
+        "肯定祈使句：Open the door, please.",
+        "否定祈使句：Don't be late. / Never give up.",
+        "Let句型：Let me help you. / Let's go.",
+        "反义疑问句：Open the door, will you? / Let's go, shall we?"
+      ],
+      "mistakes": [
+        {
+          "wrong": "Don't to be noisy.",
+          "correct": "Don't be noisy.",
+          "explanation": "Don't后直接加动词原形，不需要to"
+        },
+        {
+          "wrong": "Please you come here.",
+          "correct": "Please come here.",
+          "explanation": "祈使句通常省略主语you"
+        },
+        {
+          "wrong": "Let's go, will we?",
+          "correct": "Let's go, shall we?",
+          "explanation": "Let's的反义疑问句用shall we"
+        }
+      ],
+      "examples": [
+        "Be quiet, please.",
+        "Don't touch it!",
+        "Let him do it himself."
+      ],
+      "sub_topics": [],
+      "category": "句式",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:25",
+      "updated_at": "2026-01-14 02:03:25",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 99,
+      "title": "序数词的用法",
+      "keywords": [
+        "序数词的用法"
+      ],
+      "definition": "序数词用来表示顺序，如第几、次序先后。",
+      "structure": "the + 序数词",
+      "usage": [
+        "表示顺序或排名",
+        "表示日期中的“第几天”"
+      ],
+      "mistakes": [],
+      "examples": [
+        "He is the first student in the class.",
+        "April is the fourth month of the year."
+      ],
+      "sub_topics": [],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": true,
+      "created_at": "2026-02-05 06:42:10",
+      "updated_at": "2026-02-05 06:42:10",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 1,
+      "title": "一般现在时",
+      "keywords": [
+        "一般现在时",
+        "do/does",
+        "动词原形",
+        "第三人称单数",
+        "v.-s",
+        "v.-es",
+        "general present",
+        "simple present"
+      ],
+      "definition": "表示经常性、习惯性的动作或状态，也用于表示客观事实、真理和现在的状态。",
+      "structure": "主语 + 动词原形（第三人称单数加-s/-es）",
+      "usage": [
+        "表示经常性或习惯性动作：I get up at 6 every day.",
+        "表示客观事实或真理：The earth goes around the sun.",
+        "表示现在的状态或特征：She looks beautiful.",
+        "在时间/条件状语从句中表将来：If it rains tomorrow, I will stay at home."
+      ],
+      "mistakes": [
+        {
+          "wrong": "He go to school every day.",
+          "correct": "He goes to school every day.",
+          "explanation": "第三人称单数主语后，动词要加-s或-es"
+        },
+        {
+          "wrong": "She don't like apples.",
+          "correct": "She doesn't like apples.",
+          "explanation": "第三人称单数的否定用doesn't，不用don't"
+        }
+      ],
+      "examples": [
+        "I usually have breakfast at 7:00.",
+        "She speaks English very well.",
+        "Water boils at 100 degrees Celsius."
+      ],
+      "sub_topics": [
+        {
+          "title": "一般现在时第三人称单数",
+          "source_type": "unmatched",
+          "source_id": 1003,
+          "definition": "主语为第三人称单数时，谓语动词需变化",
+          "structure": "主语（三单）+ 动词+s/es",
+          "usage": [
+            "表示习惯或事实"
+          ],
+          "examples": [
+            "He likes English.",
+            "She goes to school by bike."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:07:55.841Z",
+          "order": 0
+        }
+      ],
+      "category": "时态",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:24",
+      "updated_at": "2026-01-21 01:07:55",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 61,
+      "title": "阅读方法",
+      "keywords": [
+        "阅读方法"
+      ],
+      "definition": "pr.邀请某人做某事",
+      "structure": "信息交叉定位法（阅读理解）",
+      "usage": [],
+      "mistakes": [],
+      "examples": [],
+      "sub_topics": [
+        {
+          "title": "信息交叉定位法（阅读理解）",
+          "source_type": "unmatched",
+          "source_id": 1030,
+          "definition": "通过关键词交叉快速定位答案",
+          "structure": "关键词1 + 关键词2",
+          "usage": [
+            "提高做题速度"
+          ],
+          "examples": [
+            "Find people + time words."
+          ],
+          "mistakes": []
+        },
+        {
+          "title": "阅读理解中的信息整合",
+          "source_type": "unmatched",
+          "source_id": 1577,
+          "definition": "通过关键词交叉定位获取答案",
+          "structure": "题干关键词 + 文中对应信息",
+          "usage": [
+            "不必全文精读",
+            "重点找交叉信息"
+          ],
+          "examples": [
+            "通过人名+时间定位答案"
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-22T03:18:31.713Z",
+          "order": 1
+        },
+        {
+          "title": "阅读理解找关键词方法",
+          "source_type": "unmatched",
+          "source_id": 1667,
+          "definition": "",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-23T02:49:32.026Z",
+          "order": 2
+        },
+        {
+          "title": "关键词定位法（阅读）",
+          "source_type": "unmatched",
+          "source_id": 1987,
+          "definition": "一种阅读理解方法，通过题干中的关键词在原文中快速定位相关信息，从而找到答案。",
+          "structure": "题干关键词 → 原文定位 → 上下文判断",
+          "usage": [
+            "常用于细节理解题",
+            "关键词包括人名、时间、地点、数字等",
+            "不需要通读全文"
+          ],
+          "examples": [
+            "题干出现 summer，可在原文中寻找 summer",
+            "题干出现 Jim，可直接定位相关段落"
+          ],
+          "mistakes": [],
+          "added_at": "2026-02-03T04:44:01.423Z",
+          "order": 3
+        }
+      ],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-21 01:24:52",
+      "updated_at": "2026-02-03 04:44:01",
+      "_source": "database",
+      "_matchScore": 0.875
+    },
+    {
+      "id": 45,
+      "title": "助动词do/does/did",
+      "keywords": [
+        "助动词do/does/did"
+      ],
+      "definition": "帮助构成疑问句和否定句",
+      "structure": "do/does/did + 动词原形",
+      "usage": [
+        "does用于第三人称单数",
+        "did用于过去时"
+      ],
+      "mistakes": [],
+      "examples": [
+        "Does she agree?",
+        "Did you finish?"
+      ],
+      "sub_topics": [
+        {
+          "title": "助动词do的用法",
+          "source_type": "unmatched",
+          "source_id": 1118,
+          "definition": "do用于构成疑问句、否定句或强调。",
+          "structure": "do/does/did",
+          "usage": [
+            "一般现在时和一般过去时"
+          ],
+          "examples": [
+            "Do you like it?",
+            "He did finish the work."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:08:39.633Z",
+          "order": 0
+        },
+        {
+          "title": "助动词",
+          "source_type": "unmatched",
+          "source_id": 1129,
+          "definition": "帮助主要动词构成时态、语态或语气。",
+          "structure": "do / be / have",
+          "usage": [
+            "构成疑问、否定、完成时、被动"
+          ],
+          "examples": [
+            "He has finished.",
+            "The work is done."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:11:59.907Z",
+          "order": 1
+        },
+        {
+          "title": "do/does/did + 主语 + 动词原形",
+          "source_type": "unmatched",
+          "source_id": 1132,
+          "definition": "使某人变得……",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:13:15.122Z",
+          "order": 2
+        },
+        {
+          "title": "助动词do/does/did的用法",
+          "source_type": "unmatched",
+          "source_id": 1532,
+          "definition": "pr.从后到前",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-22T01:07:35.656Z",
+          "order": 3
+        }
+      ],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-18 12:51:31",
+      "updated_at": "2026-01-22 01:07:35",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 9,
+      "title": "不定式",
+      "keywords": [
+        "不定式",
+        "to do",
+        "to + 动词原形",
+        "infinitive",
+        "动词不定式"
+      ],
+      "definition": "由to + 动词原形构成的非谓语动词形式，可以作主语、宾语、表语、定语、状语和宾语补足语。",
+      "structure": "to + 动词原形",
+      "usage": [
+        "作宾语：I want to go home. / I decide to study hard.",
+        "作目的状语：I came here to see you.",
+        "作主语：To learn English well is important. = It is important to learn English well.",
+        "作宾语补足语：My mother asked me to clean the room.",
+        "作定语：I have something to tell you."
+      ],
+      "mistakes": [
+        {
+          "wrong": "I want go home.",
+          "correct": "I want to go home.",
+          "explanation": "want后接不定式，必须有to"
+        },
+        {
+          "wrong": "He made me to cry.",
+          "correct": "He made me cry.",
+          "explanation": "make/let/have等使役动词后用省略to的不定式"
+        },
+        {
+          "wrong": "I saw him to run.",
+          "correct": "I saw him run/running.",
+          "explanation": "感官动词see/hear/watch后用省略to的不定式或-ing"
+        }
+      ],
+      "examples": [
+        "She decided to become a doctor.",
+        "It's kind of you to help me.",
+        "I don't know what to do."
+      ],
+      "sub_topics": [
+        {
+          "title": "不定式",
+          "source_type": "unmatched",
+          "source_id": 1034,
+          "definition": "to do形式，可作多种成分",
+          "structure": "to + 动词原形",
+          "usage": [
+            "目的、宾语、主语"
+          ],
+          "examples": [
+            "To learn English is important."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:26:06.683Z",
+          "order": 0
+        },
+        {
+          "title": "不定式作宾语补足语",
+          "source_type": "unmatched",
+          "source_id": 1114,
+          "definition": "to do形式在宾语后补充说明宾语。",
+          "structure": "动词 + sb. + to do sth.",
+          "usage": [
+            "ask, tell, want等动词后"
+          ],
+          "examples": [
+            "She told me to wait.",
+            "I want you to help me."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:07:43.665Z",
+          "order": 1
+        },
+        {
+          "title": "动词不定式作宾补",
+          "source_type": "unmatched",
+          "source_id": 1163,
+          "definition": "不定式补充说明宾语",
+          "structure": "动词 + 宾语 + to do",
+          "usage": [
+            "表示将要发生的动作"
+          ],
+          "examples": [
+            "She asked me to help her."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:30:21.289Z",
+          "order": 2
+        },
+        {
+          "title": "不定式to do的用法",
+          "source_type": "unmatched",
+          "source_id": 1529,
+          "definition": "pr.从后到前",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-22T01:06:57.697Z",
+          "order": 3
+        },
+        {
+          "title": "动词不定式作宾语补足语",
+          "source_type": "unmatched",
+          "source_id": 1596,
+          "definition": "不定式用来补充说明宾语",
+          "structure": "动词 + sb. + to do sth.",
+          "usage": [
+            "常见于tell/ask/invite等动词后"
+          ],
+          "examples": [
+            "She asked me to help her."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-22T03:37:30.906Z",
+          "order": 4
+        }
+      ],
+      "category": "其他",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:24",
+      "updated_at": "2026-01-22 03:37:30",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 21,
+      "title": "特殊疑问句",
+      "keywords": [
+        "特殊疑问句",
+        "wh-问题",
+        "what",
+        "who",
+        "where",
+        "when",
+        "why",
+        "how",
+        "疑问词",
+        "wh-question"
+      ],
+      "definition": "用特殊疑问词（what, who, where, when, why, how等）提问的句子，不能用yes或no回答。",
+      "structure": "特殊疑问词 + 一般疑问句语序（疑问词作主语时除外）",
+      "usage": [
+        "what问什么：What is your name?",
+        "who问谁：Who is that man? / Who(m) did you see?",
+        "where问地点：Where do you live?",
+        "when问时间：When did you arrive?",
+        "why问原因：Why are you late?",
+        "how问方式/程度：How do you go to school? / How old are you?"
+      ],
+      "mistakes": [
+        {
+          "wrong": "What you want?",
+          "correct": "What do you want?",
+          "explanation": "特殊疑问句需要助动词（疑问词作主语时除外）"
+        },
+        {
+          "wrong": "Who did break the window?",
+          "correct": "Who broke the window?",
+          "explanation": "who作主语时，不需要助动词did"
+        },
+        {
+          "wrong": "How many book do you have?",
+          "correct": "How many books do you have?",
+          "explanation": "how many后面要用可数名词复数"
+        }
+      ],
+      "examples": [
+        "What time does the movie start?",
+        "Who teaches you English?",
+        "How often do you exercise?"
+      ],
+      "sub_topics": [
+        {
+          "title": "对划线部分提问的方法",
+          "source_type": "unmatched",
+          "source_id": 1032,
+          "definition": "将划线部分换成疑问词",
+          "structure": "疑问词 + 一般疑问句",
+          "usage": [
+            "注意时态"
+          ],
+          "examples": [
+            "He lives in Beijing. → Where does he live?"
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:25:32.955Z",
+          "order": 0
+        },
+        {
+          "title": "特殊疑问句语序",
+          "source_type": "unmatched",
+          "source_id": 1119,
+          "definition": "特殊疑问句中疑问词置于句首。",
+          "structure": "疑问词 + 一般疑问句语序",
+          "usage": [
+            "对信息提问"
+          ],
+          "examples": [
+            "Where do you live?",
+            "What did he say?"
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:08:54.418Z",
+          "order": 1
+        },
+        {
+          "title": "特殊疑问句（宾语提问）",
+          "source_type": "unmatched",
+          "source_id": 1126,
+          "definition": "对宾语提问时用what/whom等。",
+          "structure": "疑问词 + 一般疑问句语序",
+          "usage": [
+            "提问动作对象"
+          ],
+          "examples": [
+            "What did you buy?"
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:11:02.505Z",
+          "order": 2
+        },
+        {
+          "title": "wh-疑问词 + 一般疑问句语序",
+          "source_type": "unmatched",
+          "source_id": 1139,
+          "definition": "使某人变得……",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:15:00.986Z",
+          "order": 3
+        },
+        {
+          "title": "what + 一般疑问句语序",
+          "source_type": "unmatched",
+          "source_id": 1143,
+          "definition": "使某人变得……",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:15:38.946Z",
+          "order": 4
+        },
+        {
+          "title": "特殊疑问句的构成",
+          "source_type": "unmatched",
+          "source_id": 1168,
+          "definition": "对句子成分提问",
+          "structure": "特殊疑问词 + 一般疑问句",
+          "usage": [
+            "提问时间地点原因等"
+          ],
+          "examples": [
+            "Where do you live?"
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:31:11.458Z",
+          "order": 5
+        },
+        {
+          "title": "wh-词 + 一般疑问句",
+          "source_type": "unmatched",
+          "source_id": 1186,
+          "definition": "在阅读方面有困难",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:35:59.240Z",
+          "order": 6
+        },
+        {
+          "title": "what + 助动词 + 主语 + 动词原形",
+          "source_type": "unmatched",
+          "source_id": 1188,
+          "definition": "在阅读方面有困难",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:36:13.849Z",
+          "order": 7
+        },
+        {
+          "title": "特殊疑问句结构（WH-词提问）",
+          "source_type": "unmatched",
+          "source_id": 1565,
+          "definition": "使用疑问词对句子成分提问",
+          "structure": "WH-词 + 一般疑问句",
+          "usage": [
+            "what, who, where, why 等"
+          ],
+          "examples": [
+            "Where do you live?"
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-22T03:13:20.850Z",
+          "order": 8
+        },
+        {
+          "title": "what + 名词 + 一般疑问句",
+          "source_type": "unmatched",
+          "source_id": 1581,
+          "definition": "",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-22T03:19:38.626Z",
+          "order": 9
+        },
+        {
+          "title": "who's + 名词",
+          "source_type": "unmatched",
+          "source_id": 1583,
+          "definition": "",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-22T03:20:49.898Z",
+          "order": 10
+        },
+        {
+          "title": "划线部分提问",
+          "source_type": "unmatched",
+          "source_id": 1663,
+          "definition": "",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-23T02:47:28.548Z",
+          "order": 11
+        },
+        {
+          "title": "对划线部分提问的步骤",
+          "source_type": "unmatched",
+          "source_id": 2011,
+          "definition": "将陈述句中被划线的部分转换为相应的特殊疑问句，用来询问该信息。",
+          "structure": "疑问词 + 一般疑问句语序",
+          "usage": [
+            "第一步：判断划线部分的含义（人、物、时间、地点、原因、方式等）",
+            "第二步：选择合适的疑问词（who, what, when, where, why, how 等）",
+            "第三步：将疑问词放在句首",
+            "第四步：剩余部分改为一般疑问句语序（有be/情态动词直接提前，没有则用do does did）",
+            "第五步：注意时态、人称和动词形式的变化"
+          ],
+          "examples": [
+            "He teaches people how to build houses. → What does he teach people?",
+            "They spend the summer in the mountains. → Where do they spend the summer?",
+            "Alice volunteers in summer. → When does Alice volunteer?"
+          ],
+          "mistakes": [],
+          "added_at": "2026-02-04T07:43:03.092Z",
+          "order": 12
+        }
+      ],
+      "category": "句式",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:25",
+      "updated_at": "2026-02-04 07:43:03",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "title": "基数词与序数词的区别",
+      "definition": "基数词表示数量，序数词表示顺序或次序。",
+      "structure": "基数词 + 名词；序数词 + 名词",
+      "usage": [
+        "基数词用于表示有多少，如 one apple",
+        "序数词用于表示第几个，如 the first day"
+      ],
+      "examples": [
+        "I have two books.",
+        "This is my first book."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "基数词与次数表达",
+      "definition": "基数词表示数量，次数表达表示动作发生的次数。",
+      "structure": "基数词；once / twice / 数字 + times",
+      "usage": [
+        "once 表示一次",
+        "twice 表示两次",
+        "三次及以上用数字 + times"
+      ],
+      "examples": [
+        "I go there once a week.",
+        "She has been to Beijing three times."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "序数词与基数词",
+      "definition": "基数词回答“多少”，序数词回答“第几”。",
+      "structure": "基数词直接使用；序数词常与 the 连用",
+      "usage": [
+        "基数词用于数量统计",
+        "序数词用于排序、日期、楼层等"
+      ],
+      "examples": [
+        "There are five students.",
+        "He lives on the third floor."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "阅读理解标题选择方法",
+      "definition": "选择能概括全文主旨、覆盖主要内容的标题。",
+      "structure": "标题通常为名词或名词短语",
+      "usage": [
+        "避免只概括某一细节的标题",
+        "优先选择能总结全文中心思想的标题"
+      ],
+      "examples": [
+        "The passage is about weather in China, so the best title is China’s Weather."
+      ],
+      "_source": "ai"
+    },
+    {
+      "title": "wolf 的复数",
+      "definition": "狼（wolf 的复数）",
+      "_source": "ai"
+    },
+    {
+      "title": "复数，指代前文名词",
+      "definition": "那些蓝色的（复数，指代前文名词）",
+      "_source": "database"
+    }
+  ],
+  "summary": {
+    "total_words": 55,
+    "total_phrases": 40,
+    "total_patterns": 3,
+    "total_grammar": 24
+  },
+  "metadata": {
+    "taskId": "228ca6af-83e6-44cb-9f34-3e25820c98eb",
+    "originalFile": "标准录音 36_原文.txt",
+    "processedAt": "2026-02-05T07:15:03.169Z",
+    "totalSegments": 5,
+    "successCount": 5,
+    "failCount": 0,
+    "browserRestarts": 1
+  }
+}
