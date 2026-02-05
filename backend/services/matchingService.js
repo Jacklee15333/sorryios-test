@@ -97,7 +97,7 @@ class MatchingService {
         
         // v3.8: 替换库服务（已合并排除库）
         this.matchingDictService = getMatchingDictService();
-        console.log('[MatchingService] v5.1.0: 修复匹配分数BUG + 区分精确/模糊匹配 + 详细调试日志');
+        console.log('[MatchingService] v5.2.3: 语法匹配核心术语检查');
         
         // v2.2: 提高匹配阈值，更严格
         this.thresholds = {
@@ -613,6 +613,200 @@ class MatchingService {
     }
 
     /**
+     * v5.2.0 新增：提取关键词（严格模式 - 保留重要介词）
+     * @param {string} text - 输入文本
+     * @returns {Array<string>} 关键词数组
+     */
+    /**
+     * v5.2.1 修复：提取关键词（只移除末尾占位符）
+     * 
+     * Bug修复：之前 "doing sth." 会被整体移除，导致 "keep doing sth." → [keep]
+     * 现在只移除末尾的占位符：
+     * - "keep doing sth." → "keep doing" → [keep, doing] ✅
+     * - "want to do sth." → "want to do" → [want, to, do] ✅
+     */
+    _extractKeywords(text) {
+        if (!text || typeof text !== 'string') {
+            return [];
+        }
+        
+        // 第1步：只移除末尾的占位符（保留中间有意义的词）
+        let cleaned = text
+            .replace(/\s*\bsb\.?\s*$/gi, '')           // 移除末尾的 sb.
+            .replace(/\s*\bsth\.?\s*$/gi, '')          // 移除末尾的 sth.
+            .replace(/\s*\bone's\s*$/gi, '')           // 移除末尾的 one's
+            .replace(/\s*\boneself\s*$/gi, '');        // 移除末尾的 oneself
+        
+        // 第2步：提取所有单词
+        const words = cleaned.toLowerCase().match(/\b[a-z]+\b/g) || [];
+        
+        // 第3步：只过滤真正无意义的虚词
+        const stopWords = new Set([
+            // 冠词（无实际意义）
+            'a', 'an', 'the',
+            // 系动词（纯连接作用）
+            'is', 'are', 'was', 'were', 'be', 'been', 'being',
+            // 少数连词和介词
+            'and', 'or', 'but', 'of', 'as',
+            // 防御性添加（万一没被移除）
+            'sb', 'sth'
+        ]);
+        
+        // 保留的重要介词（对短语结构很重要）：
+        // in, on, at, to, for, with, by, from, about, into, onto, 
+        // up, down, out, off, over, under, through, after, before
+        
+        return words.filter(w => !stopWords.has(w) && w.length > 1);
+    }
+    /**
+     * v5.2.3 新增：提取中文语法核心术语
+     * 用于过滤语义不相关的语法匹配（如"形容词和副词的区别"vs"非谓语"）
+     */
+    _extractChineseKeyTerms(text) {
+        if (!text || typeof text !== 'string') {
+            return new Set();
+        }
+        
+        // 中文语法核心术语库
+        const keyTerms = [
+            // 动词相关
+            '动词', '谓语', '非谓语', '不定式', '动名词', '分词', '现在分词', '过去分词',
+            
+            // 时态
+            '时态', '过去式', '现在', '将来', '完成', '进行', '一般', '过去',
+            
+            // 形容词/副词
+            '形容词', '副词', '比较级', '最高级',
+            
+            // 句型
+            '句型', '句式', '陈述句', '疑问句', '感叹句', '祈使句', '倒装', '强调',
+            
+            // 名词/代词
+            '名词', '代词', '单数', '复数', '主格', '宾格', '所有格',
+            '可数', '不可数',
+            
+            // 其他
+            '介词', '连词', '冠词', '数词', '助动词', '情态动词',
+            '被动语态', '主动语态', '直接引语', '间接引语',
+            '定语', '状语', '宾语', '主语', '表语', '补语',
+            '从句', '主句', '宾语从句', '定语从句', '状语从句', '同位语从句', '主语从句',
+            '虚拟语气', '条件句', '让步', '原因', '结果', '目的', '方式',
+            
+            // 词性变化
+            '原级', '词性', '转换', '变化', '构词法', '派生', '合成',
+            
+            // 特殊用法
+            '倒装句', '省略', '强调句', '并列', '复合', '简单句', '复杂句',
+            
+            // 比较和区别
+            '区别', '差异', '比较', '对比', '辨析', '和', '与', '或'
+        ];
+        
+        const foundTerms = new Set();
+        
+        // 提取文本中出现的核心术语
+        for (const term of keyTerms) {
+            if (text.includes(term)) {
+                foundTerms.add(term);
+            }
+        }
+        
+        return foundTerms;
+    }
+
+
+    /**
+     * v5.2.0 新增：关键词全包含匹配（严格模式）
+     * @param {string} input - 输入文本
+     * @param {string} type - 类型 (word/phrase/pattern/grammar)
+     * @param {Array} candidates - 候选列表
+     * @returns {Object|null} { match, score, matchedVia } 或 null
+     */
+    _findByKeywordMatch(input, type, candidates) {
+        if (!input || !candidates || candidates.length === 0) {
+            return null;
+        }
+        
+        const inputKeywords = this._extractKeywords(input);
+        
+        // 如果没有关键词，跳过
+        if (inputKeywords.length === 0) {
+            if (this.verboseLog) {
+                console.log(`    [关键词匹配] "${input}" 无有效关键词，跳过`);
+            }
+            return null;
+        }
+        
+        if (this.verboseLog) {
+            console.log(`    [关键词匹配] 开始匹配 "${input}"`);
+            console.log(`      原文关键词: [${inputKeywords.join(', ')}]`);
+        }
+        
+        let bestMatch = null;
+        let bestScore = 0;
+        let bestTargetText = '';
+        let bestTargetKeywords = [];
+        
+        for (const candidate of candidates) {
+            const targetText = candidate.phrase || candidate.pattern || candidate.word || candidate.title;
+            if (!targetText) continue;
+            
+            const targetKeywords = this._extractKeywords(targetText);
+            
+            // 检查1：首词必须相同（防止词序错误）
+            if (inputKeywords[0] !== targetKeywords[0]) {
+                continue;
+            }
+            
+            // 检查2：原文关键词必须全部在目标中
+            const allIncluded = inputKeywords.every(word => 
+                targetKeywords.includes(word)
+            );
+            
+            if (!allIncluded) {
+                continue;
+            }
+            
+            // 计算匹配度（原文关键词数 / 目标关键词数）
+            const coverage = inputKeywords.length / targetKeywords.length;
+            
+            // 完全相同 = 100%，子集 = 按比例计算（最低85%）
+            const score = coverage === 1.0 ? 1.0 : Math.max(0.85, coverage);
+            
+            if (score > bestScore) {
+                bestScore = score;
+                bestMatch = candidate;
+                bestTargetText = targetText;
+                bestTargetKeywords = targetKeywords;
+            }
+            
+            // 如果找到100%匹配，直接返回
+            if (score === 1.0) {
+                break;
+            }
+        }
+        
+        if (bestMatch) {
+            console.log(`      ✓ 关键词匹配成功: "${bestTargetText}"`);
+            console.log(`        目标关键词: [${bestTargetKeywords.join(', ')}]`);
+            console.log(`        首词检查: ${inputKeywords[0]} = ${bestTargetKeywords[0]} ✓`);
+            console.log(`        全包含检查: ✓`);
+            console.log(`        匹配得分: ${(bestScore * 100).toFixed(0)}%`);
+            
+            return {
+                match: bestMatch,
+                score: bestScore,
+                matchedVia: 'keyword'
+            };
+        }
+        
+        if (this.verboseLog) {
+            console.log(`      ✗ 关键词未找到匹配`);
+        }
+        return null;
+    }
+
+    /**
      * v5.0.0: 生成多种规范化变体
      * 用于增强匹配成功率
      */
@@ -972,6 +1166,24 @@ class MatchingService {
      * @returns {Object} { score, reason }
      */
     calculateChineseSimilarity(input, target) {
+
+        // v5.2.3 新增：核心术语预检查（防止语义不相关的语法错误匹配）
+        const inputTerms = this._extractChineseKeyTerms(input);
+        const targetTerms = this._extractChineseKeyTerms(target);
+        
+        // 如果两者都有核心术语，检查是否有交集
+        if (inputTerms.size > 0 && targetTerms.size > 0) {
+            const intersection = new Set([...inputTerms].filter(x => targetTerms.has(x)));
+            
+            // 没有任何共同术语，说明语义完全不相关
+            if (intersection.size === 0) {
+                this.verboseOutput(`  ✗ 语法核心术语不匹配：${[...inputTerms].join('/')} vs ${[...targetTerms].join('/')}`, 'debug');
+                return { score: 0, reason: '语法核心术语不匹配' };
+            }
+            
+            this.verboseOutput(`  ✓ 语法核心术语匹配：共同术语 [${[...intersection].join(', ')}]`, 'debug');
+        }
+        
         const s1 = input.trim();
         const s2 = target.trim();
         
@@ -1315,6 +1527,40 @@ class MatchingService {
             }
 
             // ========================================
+            // 🔥 v5.2.2 新增：核心词预检查（防止语义不同的短语被错误匹配）
+            // ========================================
+            
+            // 对短语和句型进行核心词检查
+            if (options.isPhraseMatch || options.isPatternMatch) {
+                const inputKeywords = this._extractKeywords(input);
+                const targetKeywords = this._extractKeywords(target);
+                
+                // 如果首词相同但核心词不完全包含，跳过这个候选
+                if (inputKeywords.length > 0 && targetKeywords.length > 0) {
+                    // 只有首词相同时才进行核心词检查（避免误判）
+                    if (inputKeywords[0] === targetKeywords[0]) {
+                        // 检查输入的所有核心词是否都在目标中
+                        const allIncluded = inputKeywords.every(w => targetKeywords.includes(w));
+                        
+                        if (!allIncluded) {
+                            // 核心词不匹配，跳过这个候选
+                            // 输出调试信息
+                            if (this.verboseLog) {
+                                console.log(`  ⚠️ 核心词过滤: "${input}" ≠ "${target}"`);
+                                console.log(`    输入关键词: [${inputKeywords.join(', ')}]`);
+                                console.log(`    目标关键词: [${targetKeywords.join(', ')}]`);
+                                console.log(`    首词匹配但核心词不完全包含 → 跳过`);
+                            }
+                            continue;  // 跳过这个候选项
+                        }
+                    }
+                }
+            }
+            // ========================================
+            // v5.2.2 核心词检查结束
+            // ========================================
+
+            // ========================================
             // 🔧 修复2: 词形变体匹配使用calculateSimilarity
             // ========================================
             
@@ -1515,6 +1761,25 @@ class MatchingService {
         const wordsData = this.vocabularyService.getAllWords(true).filter(w => !this.blacklist.words.map(x => x.toLowerCase()).includes((w.word || '').toLowerCase()));
         console.log(`[_matchWordInternal] 候选词数量: ${wordsData.length}`);
         
+        // v5.2.0 新增：先尝试关键词匹配（仅对复合词有效）
+        if (word.includes(' ') || word.includes('-')) {
+            const keywordMatch = this._findByKeywordMatch(word, 'word', wordsData);
+            if (keywordMatch && keywordMatch.score >= this.thresholds.word) {
+                console.log(`[_matchWordInternal] ✅ 关键词匹配: "${keywordMatch.match.word}" (${(keywordMatch.score * 100).toFixed(1)}%)`);
+                return {
+                    matched: true,
+                    score: keywordMatch.score,
+                    source_db: 'vocabulary',
+                    source_table: 'words',
+                    source_id: keywordMatch.match.id,
+                    matched_text: keywordMatch.match.word,
+                    matched_data: keywordMatch.match,
+                    matchedVia: 'keyword'
+                };
+            }
+        }
+        
+        // 原有的模糊匹配逻辑
         const { match, score } = this.findBestMatch(
             word, 
             wordsData, 
@@ -1819,9 +2084,27 @@ class MatchingService {
      * 内部短语匹配
      */
     _matchPhraseInternal(phrase) {
+        const allPhrases = this.vocabularyService.getAllPhrases(true).filter(p => !this.blacklist.phrases.map(x => x.toLowerCase()).includes((p.phrase || '').toLowerCase()));
+        
+        // v5.2.0 新增：先尝试关键词匹配
+        const keywordMatch = this._findByKeywordMatch(phrase, 'phrase', allPhrases);
+        if (keywordMatch && keywordMatch.score >= this.thresholds.phrase) {
+            return {
+                matched: true,
+                score: keywordMatch.score,
+                source_db: 'vocabulary',
+                source_table: 'phrases',
+                source_id: keywordMatch.match.id,
+                matched_text: keywordMatch.match.phrase,
+                matched_data: keywordMatch.match,
+                matchedVia: 'keyword'
+            };
+        }
+        
+        // 原有的模糊匹配逻辑
         const { match, score } = this.findBestMatch(
             phrase, 
-            this.vocabularyService.getAllPhrases(true).filter(p => !this.blacklist.phrases.map(x => x.toLowerCase()).includes((p.phrase || '').toLowerCase())), 
+            allPhrases, 
             'phrase',
             { isPhraseMatch: true }
         );
@@ -1899,10 +2182,28 @@ class MatchingService {
      * 解决AI分类错误导致的匹配失败问题
      */
     _matchPatternInternal(pattern) {
-        // 第1步：在 patterns 表中查找
+        const allPatterns = this.vocabularyService.getAllPatterns(true);
+        
+        // v5.2.0 新增：先尝试关键词匹配（patterns表）
+        const keywordMatchPatterns = this._findByKeywordMatch(pattern, 'pattern', allPatterns);
+        if (keywordMatchPatterns && keywordMatchPatterns.score >= this.thresholds.pattern) {
+            console.log(`[_matchPatternInternal] ✅ patterns表关键词匹配: ${(keywordMatchPatterns.score*100).toFixed(1)}%`);
+            return {
+                matched: true,
+                score: keywordMatchPatterns.score,
+                source_db: 'vocabulary',
+                source_table: 'patterns',
+                source_id: keywordMatchPatterns.match.id,
+                matched_text: keywordMatchPatterns.match.pattern,
+                matched_data: keywordMatchPatterns.match,
+                matchedVia: 'keyword'
+            };
+        }
+        
+        // 第1步：在 patterns 表中查找（原有模糊匹配）
         const { match: patternMatch, score: patternScore } = this.findBestMatch(
             pattern, 
-            this.vocabularyService.getAllPatterns(true), 
+            allPatterns, 
             'pattern',
             { isPatternMatch: true }
         );
@@ -1927,9 +2228,28 @@ class MatchingService {
         // 这样可以容错AI分类错误的情况
         console.log(`[_matchPatternInternal] patterns表未找到(${(patternScore*100).toFixed(1)}%)，尝试在phrases表查找...`);
         
+        const allPhrases = this.vocabularyService.getAllPhrases(true).filter(p => !this.blacklist.phrases.map(x => x.toLowerCase()).includes((p.phrase || '').toLowerCase()));
+        
+        // v5.2.0 新增：先尝试关键词匹配（phrases表）
+        const keywordMatchPhrases = this._findByKeywordMatch(pattern, 'phrase', allPhrases);
+        if (keywordMatchPhrases && keywordMatchPhrases.score >= threshold) {
+            console.log(`[_matchPatternInternal] ✅ phrases表关键词匹配: ${(keywordMatchPhrases.score*100).toFixed(1)}%`);
+            return {
+                matched: true,
+                score: keywordMatchPhrases.score,
+                source_db: 'vocabulary',
+                source_table: 'phrases',
+                source_id: keywordMatchPhrases.match.id,
+                matched_text: keywordMatchPhrases.match.phrase,
+                matched_data: keywordMatchPhrases.match,
+                matchedVia: 'keyword'
+            };
+        }
+        
+        // 原有的模糊匹配
         const { match: phraseMatch, score: phraseScore } = this.findBestMatch(
             pattern, 
-            this.vocabularyService.getAllPhrases(true).filter(p => !this.blacklist.phrases.map(x => x.toLowerCase()).includes((p.phrase || '').toLowerCase())), 
+            allPhrases, 
             'phrase',
             { isPhraseMatch: true }
         );
@@ -2055,10 +2375,28 @@ class MatchingService {
         const candidates = [];
         
         const normalizedInput = grammarText.toLowerCase().trim();
+        const allGrammar = this.grammarService.getAll(true);
         
-        this.verboseOutput(`  正在与 ${this.grammarService.getAll(true).length} 条语法规则比较...`, 'debug');
+        this.verboseOutput(`  正在与 ${allGrammar.length} 条语法规则比较...`, 'debug');
         
-        for (const item of this.grammarService.getAll(true)) {
+        // v5.2.0 新增：先尝试关键词匹配（针对英文语法术语）
+        // 语法匹配主要针对中文知识点，但也可能有英文术语如 "without + doing"
+        const keywordMatch = this._findByKeywordMatch(grammarText, 'grammar', allGrammar);
+        if (keywordMatch && keywordMatch.score >= this.thresholds.grammar) {
+            console.log(`[_matchGrammarInternal] ✅ 关键词匹配: "${keywordMatch.match.title}" (${(keywordMatch.score * 100).toFixed(1)}%)`);
+            return {
+                matched: true,
+                score: keywordMatch.score,
+                source_db: 'grammar',
+                source_table: 'grammar',
+                source_id: keywordMatch.match.id,
+                matched_text: keywordMatch.match.title,
+                matched_data: keywordMatch.match,
+                matchedVia: 'keyword'
+            };
+        }
+        
+        for (const item of allGrammar) {
             // ===== 检查title字段 =====
             if (item.title) {
                 const normalizedTarget = item.title.toLowerCase().trim();
