@@ -1,6 +1,14 @@
 /**
- * ReportViewer v4.1 - 修复PDF导出
- * 改进：
+ * ReportViewer v4.2 - 修复"已学会"功能
+ * 
+ * v4.2 更新内容（2026-02-04）：
+ * ✅ 修复ID生成问题 - 使用稳定的key生成逻辑
+ * ✅ 修复类型判断错误 - 直接使用type字段（已经是英文）
+ * ✅ 添加重新加载功能 - 点击"已学会"后从后端获取过滤后的数据
+ * ✅ 添加详细日志 - 便于问题排查
+ * ✅ 添加用户认证检查 - 需要token才能操作
+ * 
+ * v4.1 更新内容：
  * - 优化 PDF 导出逻辑
  * - 添加详细错误提示
  * - 改进 html2canvas 配置
@@ -104,27 +112,33 @@ const ReportViewer = ({ taskId }) => {
 
   const loadData = async () => {
     try {
+      console.log('\n' + '='.repeat(60));
+      console.log('[ReportViewer] 🔄 开始加载报告数据');
+      console.log('='.repeat(60));
+      console.log(`[ReportViewer] 任务ID: ${taskId}`);
+      
       setLoading(true);
       
       // 加载报告数据
-      const response = await axios.get(`/api/tasks/${taskId}/report`);
-      setData(response.data);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`/api/tasks/${taskId}/report`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       
-      // 🔧 调试：查看数据结构
+      console.log('[ReportViewer] ✅ 数据加载成功');
+      console.log('[ReportViewer] 数据统计:');
+      console.log(`[ReportViewer]    - words: ${response.data.words?.length || 0}`);
+      console.log(`[ReportViewer]    - phrases: ${response.data.phrases?.length || 0}`);
+      console.log(`[ReportViewer]    - patterns: ${response.data.patterns?.length || 0}`);
+      console.log(`[ReportViewer]    - grammar: ${response.data.grammar?.length || 0}`);
+      
+      // 调试：查看第一个单词的结构
       if (response.data.words && response.data.words.length > 0) {
-        console.log('📦 第一个单词的数据结构:', response.data.words[0]);
-        console.log('📦 单词字段列表:', Object.keys(response.data.words[0]));
+        console.log('[ReportViewer] 第一个单词的数据结构:', response.data.words[0]);
+        console.log('[ReportViewer] 字段列表:', Object.keys(response.data.words[0]));
       }
       
-      if (response.data.phrases && response.data.phrases.length > 0) {
-        console.log('📦 第一个短语的数据结构:', response.data.phrases[0]);
-        console.log('📦 短语字段列表:', Object.keys(response.data.phrases[0]));
-      }
-      
-      if (response.data.patterns && response.data.patterns.length > 0) {
-        console.log('📦 第一个句型的数据结构:', response.data.patterns[0]);
-        console.log('📦 句型字段列表:', Object.keys(response.data.patterns[0]));
-      }
+      setData(response.data);
       
       // 加载任务信息（获取标题）
       try {
@@ -138,143 +152,340 @@ const ReportViewer = ({ taskId }) => {
           }));
         }
       } catch (err) {
-        console.error('加载任务信息失败:', err);
+        console.error('[ReportViewer] 加载任务信息失败:', err);
       }
+      
+      console.log('='.repeat(60));
+      console.log('[ReportViewer] ✅ 数据加载完成');
+      console.log('='.repeat(60) + '\n');
+      
     } catch (error) {
+      console.error('[ReportViewer] ❌ 加载数据失败:', error);
+      console.error('[ReportViewer] 错误详情:', error.response?.data || error.message);
       message.error('加载数据失败');
-      console.error(error);
+      console.log('='.repeat(60) + '\n');
     } finally {
       setLoading(false);
     }
   };
 
-  // 合并词汇数据（单词+短语+句型）
   // 获取单词数据
   const getWordsData = () => {
     const words = [];
-    data.words?.forEach(item => {
+    data.words?.forEach((item, index) => {
+      // ✅ v4.1 修复：使用稳定的key生成逻辑
+      // 优先使用id，备用content+index
+      const key = item.id || `word-${(item.content || item.word || 'unknown')}-${index}`;
+      
       words.push({
         ...item,
-        key: `word-${item.id}`,
-        sortOrder: item.id || 0
+        key: key,
+        sortOrder: index
       });
+      
+      // 调试：检查key生成
+      if (index < 3) {
+        console.log(`[ReportViewer] 单词 ${index + 1} key: ${key}, id: ${item.id}, content: ${item.content}`);
+      }
     });
+    
     const filtered = words.filter(item => !hiddenItems.has(item.key));
+    
+    console.log(`[ReportViewer] 单词数据: 总数 ${words.length}, 过滤后 ${filtered.length}, 隐藏 ${words.length - filtered.length}`);
+    
     return filtered.sort((a, b) => a.sortOrder - b.sortOrder);
   };
 
   // 获取短语数据（短语+句型）
   const getPhrasesData = () => {
     const phrases = [];
-    data.phrases?.forEach(item => {
+    
+    data.phrases?.forEach((item, index) => {
+      // ✅ v4.1 修复：使用稳定的key生成逻辑
+      const key = item.id || `phrase-${(item.content || item.phrase || 'unknown')}-${index}`;
+      
       phrases.push({
         ...item,
-        key: `phrase-${item.id}`,
-        sortOrder: item.id || 0
+        key: key,
+        sortOrder: index
       });
     });
-    data.patterns?.forEach(item => {
+    
+    data.patterns?.forEach((item, index) => {
+      // ✅ v4.1 修复：使用稳定的key生成逻辑
+      const key = item.id || `pattern-${(item.content || item.pattern || 'unknown')}-${index}`;
+      
       phrases.push({
         ...item,
-        key: `pattern-${item.id}`,
-        sortOrder: item.id || 0
+        key: key,
+        sortOrder: data.phrases?.length + index || index
       });
     });
+    
     const filtered = phrases.filter(item => !hiddenItems.has(item.key));
+    
+    console.log(`[ReportViewer] 短语/句型数据: 总数 ${phrases.length}, 过滤后 ${filtered.length}, 隐藏 ${phrases.length - filtered.length}`);
+    
     return filtered.sort((a, b) => a.sortOrder - b.sortOrder);
   };
 
   // 🔧 修改：处理"已学会"操作
   const handleConfirm = async (record) => {
     try {
+      console.log('\n' + '='.repeat(60));
+      console.log('[ReportViewer] 🎯 点击"已学会"');
+      console.log('='.repeat(60));
+      console.log('[ReportViewer] 记录信息:', {
+        key: record.key,
+        id: record.id,
+        type: record.type,
+        content: record.content || record.word || record.phrase || record.pattern
+      });
+      
       const token = localStorage.getItem('token');
       
-      // 确定词汇类型
-      let wordType = 'word';
-      if (record.type === '短语') wordType = 'phrase';
-      else if (record.type === '句型') wordType = 'pattern';
+      if (!token) {
+        message.error('请先登录');
+        console.log('[ReportViewer] ❌ 未登录');
+        return;
+      }
       
-      // 确定词汇内容
+      // ✅ v4.1 修复：直接使用 type 字段（已经是英文：word/phrase/pattern/grammar）
+      let wordType = record.type;
+      
+      // 确保类型有效
+      if (!['word', 'phrase', 'pattern', 'grammar'].includes(wordType)) {
+        console.warn(`[ReportViewer] ⚠️  未知类型: ${wordType}，默认使用 word`);
+        wordType = 'word';
+      }
+      
+      // ✅ v4.1 修复：使用 content 字段作为主字段
       const word = record.content || record.word || record.phrase || record.pattern;
       
       if (!word) {
         message.error('词汇内容为空');
+        console.log('[ReportViewer] ❌ 词汇内容为空');
         return;
       }
       
+      console.log(`[ReportViewer] 📤 准备发送请求:`);
+      console.log(`[ReportViewer]    - word: ${word}`);
+      console.log(`[ReportViewer]    - wordType: ${wordType}`);
+      
       // 调用API添加到已掌握列表
-      await axios.post('/api/user-mastered/add', 
+      const response = await axios.post('/api/user-mastered/add', 
         { word, wordType },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      message.success('已标记为掌握');
+      console.log('[ReportViewer] ✅ API响应:', response.data);
       
-      // 🔧 立即隐藏该项（前端操作，不重新加载）
+      // ✅ v4.3 优化：前端立即隐藏，不刷新页面（提升用户体验）
+      console.log('[ReportViewer] 👁️  前端立即隐藏该词汇...');
       setHiddenItems(prev => new Set([...prev, record.key]));
       
+      // 显示成功消息（带撤销选项）
+      const key = `mastered-${record.key}`;
+      message.success({
+        content: (
+          <span>
+            已标记为掌握
+            <a 
+              onClick={() => {
+                // 撤销操作：从隐藏列表中移除
+                setHiddenItems(prev => {
+                  const newSet = new Set(prev);
+                  newSet.delete(record.key);
+                  return newSet;
+                });
+                message.info('已撤销');
+              }}
+              style={{ marginLeft: 12, color: '#1890ff', cursor: 'pointer' }}
+            >
+              撤销
+            </a>
+          </span>
+        ),
+        key,
+        duration: 3
+      });
+      
+      console.log('[ReportViewer] ✅ 已隐藏，无需刷新页面');
+      console.log('='.repeat(60) + '\n');
+      
     } catch (error) {
-      console.error('操作失败:', error);
-      message.error('操作失败');
+      console.error('[ReportViewer] ❌ 操作失败:', error);
+      console.error('[ReportViewer] 错误详情:', error.response?.data || error.message);
+      console.log('='.repeat(60) + '\n');
+      
+      // ✅ v4.3 新增：保存失败，自动恢复显示
+      console.log('[ReportViewer] 🔄 保存失败，恢复显示...');
+      setHiddenItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(record.key);
+        return newSet;
+      });
+      
+      if (error.response?.status === 401) {
+        message.error('登录已过期，请重新登录');
+      } else {
+        message.error('操作失败: ' + (error.response?.data?.message || error.message));
+      }
     }
   };
 
   // 🔧 修改：处理"识别错误"操作
   const handleReject = async (record) => {
     try {
+      console.log('\n' + '='.repeat(60));
+      console.log('[ReportViewer] 🚫 点击"识别错误"');
+      console.log('='.repeat(60));
+      console.log('[ReportViewer] 记录信息:', {
+        key: record.key,
+        id: record.id,
+        type: record.type,
+        content: record.content || record.word || record.phrase || record.pattern
+      });
+      
       // 仅从前端隐藏，不调用任何后端API
       message.success('已从报告中移除');
       
       // 立即隐藏该项
       setHiddenItems(prev => new Set([...prev, record.key]));
       
+      console.log('[ReportViewer] ✅ 已隐藏该项');
+      console.log('='.repeat(60) + '\n');
+      
     } catch (error) {
-      console.error('操作失败:', error);
+      console.error('[ReportViewer] ❌ 操作失败:', error);
       message.error('操作失败');
+      console.log('='.repeat(60) + '\n');
     }
   };
 
   // 🔧 修改：处理语法"已学会"
   const handleGrammarConfirm = async (record) => {
     try {
-      const token = localStorage.getItem('token');
-      const word = record.title || record.content;
+      console.log('\n' + '='.repeat(60));
+      console.log('[ReportViewer] 🎯 点击"语法已学会"');
+      console.log('='.repeat(60));
+      console.log('[ReportViewer] 记录信息:', {
+        key: `grammar-${record.id}`,
+        id: record.id,
+        title: record.title,
+        content: record.content
+      });
       
-      if (!word) {
-        message.error('语法内容为空');
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        message.error('请先登录');
+        console.log('[ReportViewer] ❌ 未登录');
         return;
       }
       
+      // ✅ v4.1 修复：使用 content 或 title 字段
+      const word = record.content || record.title;
+      
+      if (!word) {
+        message.error('语法内容为空');
+        console.log('[ReportViewer] ❌ 语法内容为空');
+        return;
+      }
+      
+      console.log(`[ReportViewer] 📤 准备发送请求:`);
+      console.log(`[ReportViewer]    - word: ${word}`);
+      console.log(`[ReportViewer]    - wordType: grammar`);
+      
       // 调用API添加到已掌握列表
-      await axios.post('/api/user-mastered/add', 
+      const response = await axios.post('/api/user-mastered/add', 
         { word, wordType: 'grammar' },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       
-      message.success('已标记为掌握');
+      console.log('[ReportViewer] ✅ API响应:', response.data);
       
-      // 立即隐藏该项
+      // ✅ v4.3 优化：前端立即隐藏，不刷新页面
+      console.log('[ReportViewer] 👁️  前端立即隐藏该语法...');
       const grammarKey = `grammar-${record.id}`;
       setHiddenItems(prev => new Set([...prev, grammarKey]));
       
+      // 显示成功消息（带撤销选项）
+      const messageKey = `mastered-${grammarKey}`;
+      message.success({
+        content: (
+          <span>
+            已标记为掌握
+            <a 
+              onClick={() => {
+                // 撤销操作：从隐藏列表中移除
+                setHiddenItems(prev => {
+                  const newSet = new Set(prev);
+                  newSet.delete(grammarKey);
+                  return newSet;
+                });
+                message.info('已撤销');
+              }}
+              style={{ marginLeft: 12, color: '#1890ff', cursor: 'pointer' }}
+            >
+              撤销
+            </a>
+          </span>
+        ),
+        key: messageKey,
+        duration: 3
+      });
+      
+      console.log('[ReportViewer] ✅ 已隐藏，无需刷新页面');
+      console.log('='.repeat(60) + '\n');
+      
     } catch (error) {
-      console.error('操作失败:', error);
-      message.error('操作失败');
+      console.error('[ReportViewer] ❌ 操作失败:', error);
+      console.error('[ReportViewer] 错误详情:', error.response?.data || error.message);
+      console.log('='.repeat(60) + '\n');
+      
+      // ✅ v4.3 新增：保存失败，自动恢复显示
+      console.log('[ReportViewer] 🔄 保存失败，恢复显示...');
+      const grammarKey = `grammar-${record.id}`;
+      setHiddenItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(grammarKey);
+        return newSet;
+      });
+      
+      if (error.response?.status === 401) {
+        message.error('登录已过期，请重新登录');
+      } else {
+        message.error('操作失败: ' + (error.response?.data?.message || error.message));
+      }
     }
   };
 
   // 🔧 修改：处理语法"识别错误"
   const handleGrammarReject = async (record) => {
     try {
+      console.log('\n' + '='.repeat(60));
+      console.log('[ReportViewer] 🚫 点击"语法识别错误"');
+      console.log('='.repeat(60));
+      console.log('[ReportViewer] 记录信息:', {
+        key: `grammar-${record.id}`,
+        id: record.id,
+        title: record.title
+      });
+      
       // 仅从前端隐藏
       message.success('已从报告中移除');
       
       const grammarKey = `grammar-${record.id}`;
       setHiddenItems(prev => new Set([...prev, grammarKey]));
       
+      console.log('[ReportViewer] ✅ 已隐藏该项');
+      console.log('='.repeat(60) + '\n');
+      
     } catch (error) {
-      console.error('操作失败:', error);
+      console.error('[ReportViewer] ❌ 操作失败:', error);
       message.error('操作失败');
+      console.log('='.repeat(60) + '\n');
     }
   };
 

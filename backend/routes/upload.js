@@ -1,9 +1,14 @@
 /**
- * 文件上传路由 v2.3
+ * 文件上传路由 v2.4 - 修复版
  * POST /api/upload
  * 
- * 【v2.2 更新】支持用户关联
- * 【v2.3 更新】修复中文文件名乱码
+ * 【v2.4 修复内容】
+ * - 添加：强制用户认证（必须登录才能上传）
+ * - 修复：确保所有任务都关联用户ID
+ * - 改进：详细的调试日志
+ * 
+ * 之前的问题：允许未登录用户上传，导致任务没有user_id
+ * 修复后：所有上传都需要登录，确保数据隔离
  */
 
 const express = require('express');
@@ -12,7 +17,7 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const taskQueue = require('../services/taskQueue');
-const { verifyToken } = require('../services/userService');
+const { authMiddleware } = require('./auth');  // ⭐ 导入认证中间件
 
 const router = express.Router();
 
@@ -89,40 +94,30 @@ function generateDefaultTitle() {
 }
 
 /**
- * 从请求中获取用户ID
- */
-function getUserIdFromRequest(req) {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return null;
-        }
-        
-        const token = authHeader.substring(7);
-        const payload = verifyToken(token);
-        
-        if (payload && payload.userId) {
-            return payload.userId;
-        }
-        return null;
-    } catch (e) {
-        console.log('[Upload] 获取用户ID失败:', e.message);
-        return null;
-    }
-}
-
-/**
  * POST /api/upload
  * 上传文件并创建处理任务
+ * 
+ * ⭐ v2.4 重要修复：添加 authMiddleware，强制要求登录
  */
-router.post('/upload', upload.single('file'), (req, res) => {
-    console.log('=== 上传请求开始 ===');
-    console.log('req.file:', req.file ? `${req.file.originalname} (${req.file.size} bytes)` : 'undefined');
-    console.log('req.body:', req.body);
+router.post('/upload', authMiddleware, upload.single('file'), (req, res) => {
+    console.log('\n' + '='.repeat(60));
+    console.log('[Upload] 📤 上传请求开始');
+    console.log('='.repeat(60));
+    
+    // ⭐ v2.4: 从认证中间件获取用户信息
+    const userId = req.user.id;
+    const username = req.user.username;
+    
+    console.log(`[Upload] 👤 当前用户: ${username} (ID: ${userId})`);
+    console.log(`[Upload] 📁 文件信息: ${req.file ? req.file.originalname : '无文件'}`);
+    console.log(`[Upload] 📦 请求体: ${JSON.stringify(req.body)}`);
     
     try {
+        // ========================================
+        // 步骤1: 验证文件
+        // ========================================
         if (!req.file) {
-            console.log('❌ 没有检测到文件');
+            console.log('[Upload] ❌ 验证失败: 没有检测到文件');
             return res.status(400).json({
                 error: '请上传文件',
                 message: '未检测到上传的文件'
@@ -131,46 +126,65 @@ router.post('/upload', upload.single('file'), (req, res) => {
 
         const file = req.file;
         
-        // 【v2.3】修复中文文件名乱码
+        // ========================================
+        // 步骤2: 处理文件名
+        // ========================================
         const originalName = decodeFileName(file.originalname);
-        console.log(`📝 原始文件名: ${file.originalname}`);
-        console.log(`📝 解码后文件名: ${originalName}`);
+        console.log(`[Upload] 📝 原始文件名: ${file.originalname}`);
+        if (originalName !== file.originalname) {
+            console.log(`[Upload] 📝 解码后文件名: ${originalName}`);
+        }
         
-        // 【v2.2】获取当前登录用户ID
-        const userId = getUserIdFromRequest(req);
-        console.log(`👤 用户ID: ${userId || '未登录'}`);
-        
-        // 获取自定义标题，如果没有则使用默认标题
+        // ========================================
+        // 步骤3: 获取自定义标题
+        // ========================================
         const customTitle = req.body.customTitle?.trim() || generateDefaultTitle();
+        console.log(`[Upload] 📝 任务标题: ${customTitle}`);
         
-        console.log(`📤 文件上传: ${originalName} (${file.size} bytes)`);
-        console.log(`📝 报告标题: ${customTitle}`);
-        console.log(`📁 保存路径: ${file.path}`);
+        // ========================================
+        // 步骤4: 记录上传信息
+        // ========================================
+        console.log(`[Upload] 📊 文件大小: ${(file.size / 1024).toFixed(2)} KB`);
+        console.log(`[Upload] 💾 保存路径: ${file.path}`);
+        console.log(`[Upload] 🔒 用户ID: ${userId} (已验证)`);
 
-        // 创建任务，【v2.2】传入用户ID，【v2.3】使用解码后的文件名
-        console.log('>>> 准备创建任务...');
+        // ========================================
+        // 步骤5: 创建任务（关联用户）
+        // ========================================
+        console.log('[Upload] 🚀 准备创建任务...');
+        console.log(`[Upload]    - 文件: ${originalName}`);
+        console.log(`[Upload]    - 标题: ${customTitle}`);
+        console.log(`[Upload]    - 用户: ${userId}`);
+        
         const task = taskQueue.createTask({
-            originalName: originalName,  // v2.3: 使用解码后的文件名
+            originalName: originalName,
             savedPath: file.path,
             size: file.size,
             mimeType: file.mimetype,
             customTitle: customTitle,
-            userId: userId  // 【v2.2 新增】关联用户
+            userId: userId  // ⭐ v2.4: 确保任务关联用户
         });
-        console.log('>>> 任务创建成功:', task.id, '用户:', userId);
+        
+        console.log(`[Upload] ✅ 任务创建成功!`);
+        console.log(`[Upload]    - 任务ID: ${task.id}`);
+        console.log(`[Upload]    - 用户ID: ${task.userId}`);
+        console.log(`[Upload]    - 状态: ${task.status}`);
 
-        res.status(201).json({
+        // ========================================
+        // 步骤6: 返回响应
+        // ========================================
+        const response = {
             success: true,
             message: '文件上传成功，任务已创建',
             task: {
                 id: task.id,
                 status: task.status,
                 file: {
-                    name: originalName,  // v2.3: 返回解码后的文件名
+                    name: originalName,
                     size: file.size
                 },
                 customTitle: customTitle,
-                userId: userId,  // 【v2.2】返回给前端
+                userId: userId,  // ⭐ 返回用户ID
                 createdAt: task.createdAt
             },
             // 告诉前端如何获取进度
@@ -178,12 +192,26 @@ router.post('/upload', upload.single('file'), (req, res) => {
                 websocket: `订阅 taskId: ${task.id}`,
                 polling: `/api/task/${task.id}`
             }
-        });
-        console.log('=== 上传请求完成 ===');
+        };
+        
+        console.log('[Upload] 📤 返回响应:');
+        console.log(JSON.stringify(response, null, 2));
+        console.log('='.repeat(60));
+        console.log('[Upload] ✅ 上传请求完成');
+        console.log('='.repeat(60) + '\n');
+        
+        res.status(201).json(response);
 
     } catch (error) {
-        console.error('❌ 上传失败:', error);
-        console.error('❌ 错误堆栈:', error.stack);
+        console.log('\n' + '='.repeat(60));
+        console.log('[Upload] ❌ 上传失败');
+        console.log('='.repeat(60));
+        console.error('[Upload] 错误类型:', error.constructor.name);
+        console.error('[Upload] 错误信息:', error.message);
+        console.error('[Upload] 错误堆栈:');
+        console.error(error.stack);
+        console.log('='.repeat(60) + '\n');
+        
         res.status(500).json({
             error: '上传失败',
             message: error.message
@@ -195,10 +223,14 @@ router.post('/upload', upload.single('file'), (req, res) => {
  * 错误处理中间件（Multer错误）
  */
 router.use((error, req, res, next) => {
-    console.error('=== Multer 错误处理 ===');
-    console.error('错误类型:', error.constructor.name);
-    console.error('错误信息:', error.message);
-    console.error('错误堆栈:', error.stack);
+    console.log('\n' + '='.repeat(60));
+    console.log('[Upload] ⚠️ Multer 错误处理');
+    console.log('='.repeat(60));
+    console.error('[Upload] 错误类型:', error.constructor.name);
+    console.error('[Upload] 错误信息:', error.message);
+    console.error('[Upload] 错误堆栈:');
+    console.error(error.stack);
+    console.log('='.repeat(60) + '\n');
     
     if (error instanceof multer.MulterError) {
         if (error.code === 'LIMIT_FILE_SIZE') {

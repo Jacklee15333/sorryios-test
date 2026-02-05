@@ -582,7 +582,7 @@ const UserMasteredDB = {
      */
     getByType(userId, wordType) {
         return db.prepare(`
-            SELECT word, created_at 
+            SELECT word, word_type, created_at 
             FROM user_mastered_words 
             WHERE user_id = ? AND word_type = ?
             ORDER BY created_at DESC
