@@ -1,13 +1,20 @@
 /**
- * Sorryios AI 智能笔记系统 - 后端服务器 - 修复版 v4.6
+ * Sorryios AI 智能笔记系统 - 后端服务器 - v4.7.1 Bug修复版
  * 
- * 📦 v4.6 修复内容：
- * - 删除：exclude-api 和 replace-api 冗余路由（已合并到 matching-dict）
- * - 删除：对应的页面路由（exclude-admin 和 replace-admin）
- * - 改进：启动日志更清晰
+ * 🐛 v4.7.1 Bug修复：
+ * ✅ 修复客户端删除时的边界情况
+ * ✅ 优化错误处理逻辑
+ * ✅ 添加更完善的日志
  * 
- * 版本: v4.6
- * 更新: 删除冗余路由
+ * 📦 v4.7 功能：
+ * ✅ 添加 WebSocket 心跳机制 (ping/pong)
+ * ✅ 添加客户端超时检测 (60秒无响应断开)
+ * ✅ 添加详细的 WebSocket 调试日志
+ * ✅ 修复切换标签页导致任务进度显示中断的问题
+ * ✅ 保留所有原有功能和逻辑
+ * 
+ * 版本: v4.7.1
+ * 更新: Bug修复版
  */
 
 const express = require('express');
@@ -24,6 +31,16 @@ const server = http.createServer(app);
 // 配置
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
+
+// ============================================
+// WebSocket 配置常量
+// ============================================
+
+const WS_CONFIG = {
+    HEARTBEAT_INTERVAL: 30000,   // 心跳检测间隔 (30秒)
+    CLIENT_TIMEOUT: 60000,       // 客户端超时时间 (60秒无响应则断开)
+    DEBUG: true,                 // 调试日志开关
+};
 
 // ============================================
 // 中间件配置
@@ -59,74 +76,208 @@ app.use((req, res, next) => {
 });
 
 // ============================================
-// WebSocket 配置
+// WebSocket 配置 - v4.7.1 Bug修复版
 // ============================================
 
 const wss = new WebSocket.Server({ server });
 
 // WebSocket 连接管理
-const wsClients = new Map();
+const wsClients = new Map(); // clientId -> { ws, taskId, lastPing, isAlive }
+
+/**
+ * WebSocket 调试日志函数
+ */
+function wsLog(message, type = 'INFO', data = null) {
+    if (!WS_CONFIG.DEBUG) return;
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const prefix = `[WebSocket ${timestamp}]`;
+    const typeEmoji = {
+        INFO: 'ℹ️',
+        SUCCESS: '✅',
+        ERROR: '❌',
+        WARN: '⚠️',
+        HEARTBEAT: '💓',
+        MESSAGE: '📨',
+        BROADCAST: '📤',
+    };
+    
+    console.log(`${prefix} [${typeEmoji[type] || '•'}] ${message}`, data || '');
+}
+
+/**
+ * 安全删除客户端
+ */
+function safeDeleteClient(clientId, reason = '未知') {
+    const clientInfo = wsClients.get(clientId);
+    if (clientInfo) {
+        wsClients.delete(clientId);
+        wsLog(`客户端已删除 [${clientId.substring(0, 8)}...]`, 'INFO', {
+            reason,
+            remainingClients: wsClients.size,
+        });
+        return true;
+    }
+    return false;
+}
 
 wss.on('connection', (ws, req) => {
     const clientId = Date.now().toString();
-    wsClients.set(clientId, ws);
+    
+    // 初始化客户端信息
+    const clientInfo = {
+        ws: ws,
+        taskId: null,
+        lastPing: Date.now(),
+        isAlive: true,
+        connectedAt: new Date().toISOString(),
+    };
+    
+    wsClients.set(clientId, clientInfo);
     
     // 获取连接来源信息
     const origin = req.headers.origin || '未知';
     const referer = req.headers.referer || '未知';
     
     // 详细日志
-    console.log('\n' + '─'.repeat(50));
-    console.log(`[WebSocket] ✅ 新连接`);
-    console.log(`   客户端ID: ${clientId}`);
-    console.log(`   来源Origin: ${origin}`);
-    console.log(`   来源页面: ${referer}`);
-    console.log(`   当前连接数: ${wsClients.size}`);
-    console.log('─'.repeat(50));
+    wsLog('新连接', 'SUCCESS', {
+        clientId: clientId.substring(0, 8) + '...',
+        origin,
+        referer,
+        totalClients: wsClients.size,
+    });
 
+    // ========== 消息处理 ==========
     ws.on('message', (message) => {
         const msgStr = message.toString();
-        console.log(`[WebSocket] 📥 收到消息 [${clientId}]: ${msgStr.substring(0, 100)}`);
         
         try {
             const data = JSON.parse(msgStr);
             
-            // 处理订阅任务进度
+            // 🆕 心跳 ping 处理
+            if (data.type === 'ping') {
+                clientInfo.lastPing = Date.now();
+                clientInfo.isAlive = true;
+                
+                // 回复 pong
+                try {
+                    ws.send(JSON.stringify({ 
+                        type: 'pong',
+                        timestamp: Date.now(),
+                        clientId: clientId,
+                    }));
+                    
+                    wsLog(`心跳响应 [${clientId.substring(0, 8)}...]`, 'HEARTBEAT');
+                } catch (error) {
+                    wsLog(`心跳响应失败 [${clientId.substring(0, 8)}...]`, 'ERROR', error.message);
+                }
+                return;
+            }
+            
+            // 订阅任务进度
             if (data.type === 'subscribe' && data.taskId) {
-                ws.taskId = data.taskId;
-                console.log(`[WebSocket] 📌 订阅任务: ${data.taskId}`);
+                clientInfo.taskId = data.taskId;
+                wsLog(`订阅任务: ${data.taskId.substring(0, 8)}... [客户端: ${clientId.substring(0, 8)}...]`, 'INFO');
             }
-            // ping/pong 心跳
-            else if (data.type === 'ping') {
-                ws.send(JSON.stringify({ type: 'pong' }));
-                console.log(`[WebSocket] 💓 心跳响应 [${clientId}]`);
-            }
+            
             // 取消订阅
             else if (data.type === 'unsubscribe') {
-                ws.taskId = null;
+                const oldTaskId = clientInfo.taskId;
+                clientInfo.taskId = null;
+                wsLog(`取消订阅任务: ${oldTaskId?.substring(0, 8) || '无'} [客户端: ${clientId.substring(0, 8)}...]`, 'INFO');
             }
+            
+            // 其他消息类型
+            else {
+                wsLog(`收到消息 [${clientId.substring(0, 8)}...]`, 'MESSAGE', {
+                    type: data.type,
+                    preview: msgStr.substring(0, 50),
+                });
+            }
+            
         } catch (e) {
-            console.log(`[WebSocket] ⚠️ 非JSON消息 [${clientId}]: "${msgStr.substring(0, 50)}..."`);
+            wsLog(`非JSON消息 [${clientId.substring(0, 8)}...]`, 'WARN', {
+                preview: msgStr.substring(0, 50),
+            });
         }
     });
 
+    // ========== 连接关闭 ==========
     ws.on('close', (code, reason) => {
-        wsClients.delete(clientId);
-        console.log(`[WebSocket] ❌ 连接断开 [${clientId}] 码:${code} 剩余:${wsClients.size}`);
+        safeDeleteClient(clientId, `关闭 (code: ${code})`);
     });
 
+    // ========== 错误处理 ==========
     ws.on('error', (error) => {
-        wsClients.delete(clientId);
-        console.log(`[WebSocket] ❌ 错误 [${clientId}]:`, error.message);
+        wsLog(`错误 [${clientId.substring(0, 8)}...]`, 'ERROR', {
+            message: error.message,
+        });
+        // 发生错误时删除客户端
+        safeDeleteClient(clientId, '错误');
     });
 
-    // 发送连接成功消息
-    ws.send(JSON.stringify({ type: 'connected', clientId }));
+    // ========== 发送连接成功消息 ==========
+    try {
+        ws.send(JSON.stringify({ 
+            type: 'connected', 
+            clientId,
+            serverTime: new Date().toISOString(),
+            heartbeatInterval: WS_CONFIG.HEARTBEAT_INTERVAL,
+        }));
+    } catch (error) {
+        wsLog(`发送欢迎消息失败 [${clientId.substring(0, 8)}...]`, 'ERROR', error.message);
+    }
 });
 
-// 广播任务进度更新
+// ============================================
+// 🆕 心跳检测定时器
+// ============================================
+
+const heartbeatInterval = setInterval(() => {
+    const now = Date.now();
+    let aliveCount = 0;
+    let timeoutCount = 0;
+    
+    // 转换为数组以避免在遍历时修改Map
+    const clientsArray = Array.from(wsClients.entries());
+    
+    clientsArray.forEach(([clientId, clientInfo]) => {
+        const timeSinceLastPing = now - clientInfo.lastPing;
+        
+        // 检查是否超时
+        if (timeSinceLastPing > WS_CONFIG.CLIENT_TIMEOUT) {
+            wsLog(`客户端超时，断开连接 [${clientId.substring(0, 8)}...]`, 'WARN', {
+                lastPingAgo: `${(timeSinceLastPing / 1000).toFixed(0)}秒前`,
+                timeout: `${WS_CONFIG.CLIENT_TIMEOUT / 1000}秒`,
+            });
+            
+            try {
+                clientInfo.ws.terminate();
+            } catch (error) {
+                wsLog(`终止连接失败 [${clientId.substring(0, 8)}...]`, 'ERROR', error.message);
+            }
+            
+            safeDeleteClient(clientId, '超时');
+            timeoutCount++;
+        } else {
+            aliveCount++;
+        }
+    });
+    
+    if (WS_CONFIG.DEBUG && (aliveCount > 0 || timeoutCount > 0)) {
+        wsLog('心跳检测完成', 'HEARTBEAT', {
+            存活: aliveCount,
+            超时: timeoutCount,
+        });
+    }
+}, WS_CONFIG.HEARTBEAT_INTERVAL);
+
+// ============================================
+// 广播任务进度更新 - v4.7.1 优化版
+// ============================================
+
 function broadcastTaskProgress(taskId, progress, status, message = '') {
-    const data = JSON.stringify({
+    const data = {
         type: 'progress',
         taskId,
         progress,
@@ -134,18 +285,40 @@ function broadcastTaskProgress(taskId, progress, status, message = '') {
         message,
         currentStep: message,
         timestamp: new Date().toISOString()
-    });
-
+    };
+    
+    const dataStr = JSON.stringify(data);
     let sentCount = 0;
-    wsClients.forEach((ws, clientId) => {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(data);
-            sentCount++;
+    let failCount = 0;
+
+    wsClients.forEach((clientInfo, clientId) => {
+        // 只发送给连接正常的客户端
+        if (clientInfo.ws.readyState === WebSocket.OPEN) {
+            try {
+                clientInfo.ws.send(dataStr);
+                sentCount++;
+            } catch (error) {
+                wsLog(`发送失败 [${clientId.substring(0, 8)}...]`, 'ERROR', {
+                    error: error.message,
+                });
+                failCount++;
+                // 发送失败，标记为需要清理
+                safeDeleteClient(clientId, '发送失败');
+            }
+        } else {
+            // WebSocket 不在 OPEN 状态，清理
+            safeDeleteClient(clientId, '连接不可用');
         }
     });
     
-    if (sentCount > 0) {
-        console.log(`[WebSocket] 📤 推送进度: ${taskId.slice(0,8)} - ${progress}% - ${message.substring(0, 30)} (${sentCount}个客户端)`);
+    if (sentCount > 0 || failCount > 0) {
+        wsLog(`推送进度: ${taskId.substring(0, 8)}...`, 'BROADCAST', {
+            进度: `${progress}%`,
+            状态: status,
+            消息: message.substring(0, 30),
+            成功: sentCount,
+            失败: failCount,
+        });
     }
 }
 
@@ -155,7 +328,11 @@ global.broadcastTaskProgress = broadcastTaskProgress;
 // 将进度回调注入到 taskQueue
 const taskQueue = require('./services/taskQueue');
 taskQueue.setProgressCallback((taskId, task) => {
-    console.log(`[WebSocket] 📤 推送进度: ${taskId.slice(0,8)} - ${task.progress}% - ${task.currentStep}`);
+    wsLog(`任务进度更新: ${taskId.substring(0, 8)}...`, 'INFO', {
+        进度: `${task.progress}%`,
+        步骤: task.currentStep?.substring(0, 30),
+    });
+    
     broadcastTaskProgress(taskId, task.progress, task.status, task.currentStep);
 });
 
@@ -169,8 +346,12 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        version: '4.6',
-        wsClients: wsClients.size
+        version: '4.7.1',
+        wsClients: wsClients.size,
+        wsConfig: {
+            heartbeatInterval: WS_CONFIG.HEARTBEAT_INTERVAL,
+            clientTimeout: WS_CONFIG.CLIENT_TIMEOUT,
+        }
     });
 });
 
@@ -190,7 +371,6 @@ function loadRoute(name, routePath, mountPath) {
 
 // ============================================
 // 路由加载顺序（具体路由在前，通配符路由在后）
-// v4.6 修复：删除冗余的 exclude-api 和 replace-api
 // ============================================
 
 loadRoute('admin', './routes/admin', '/api/admin');
@@ -202,10 +382,6 @@ loadRoute('processing-log-api', './routes/processing-log-api', '/api/processing-
 loadRoute('matching-dict-api', './routes/matching-dict-api', '/api/matching-dict');
 loadRoute('user-mastered-api', './routes/user-mastered-api', '/api/user-mastered');
 
-// v4.6 删除：以下两个路由已废弃（功能已合并到 matching-dict-api）
-// loadRoute('exclude-api', './routes/exclude-api', '/api/exclude');       // ← 已删除
-// loadRoute('replace-api', './routes/replace-api', '/api/replace');       // ← 已删除
-
 // 通配符路由放最后
 loadRoute('upload', './routes/upload', '/api');
 loadRoute('auth', './routes/auth', '/api');
@@ -214,7 +390,6 @@ loadRoute('task', './routes/task', '/api');
 
 // ============================================
 // 页面路由
-// v4.6 修复：删除 exclude-admin 和 replace-admin
 // ============================================
 
 app.get('/admin', (req, res) => {
@@ -262,10 +437,6 @@ app.get('/matching-dict-admin', (req, res) => {
     }
 });
 
-// v4.6 删除：以下两个页面路由已废弃
-// app.get('/exclude-admin', ...)  // ← 已删除
-// app.get('/replace-admin', ...)  // ← 已删除
-
 // ============================================
 // 根路径和前端应用路由
 // ============================================
@@ -278,7 +449,7 @@ app.get('/', (req, res) => {
     } else {
         res.json({
             name: 'Sorryios AI 智能笔记系统',
-            version: '4.6',
+            version: '4.7.1',
             frontend: '前端应用未部署，请访问 /admin 进入管理后台',
             endpoints: {
                 health: '/api/health',
@@ -289,7 +460,8 @@ app.get('/', (req, res) => {
                 matchingDict: '/api/matching-dict'
             },
             changelog: {
-                v46: '删除冗余路由 exclude-api 和 replace-api'
+                v471: 'Bug修复：优化客户端删除逻辑',
+                v47: '添加 WebSocket 心跳机制，修复切换标签页问题'
             }
         });
     }
@@ -371,12 +543,19 @@ server.listen(PORT, HOST, () => {
     const hasFrontend = fs.existsSync(path.join(__dirname, 'public/app/index.html'));
     
     console.log('\n' + '='.repeat(60));
-    console.log('  Sorryios AI 智能笔记系统 v4.6 (修复版)');
-    console.log('  🔧 已删除冗余路由（exclude-api, replace-api）');
+    console.log('  Sorryios AI 智能笔记系统 v4.7.1 (Bug修复版)');
+    console.log('  🐛 修复重连逻辑和客户端删除问题');
+    console.log('  🆕 WebSocket 心跳机制');
+    console.log('  🆕 修复切换标签页导致进度中断的问题');
     console.log('='.repeat(60));
     console.log(`  🚀 服务器启动成功！`);
     console.log(`  📡 地址: http://localhost:${PORT}`);
     console.log(`  🔌 WebSocket: ws://localhost:${PORT}`);
+    console.log('');
+    console.log('  ⚙️  WebSocket 配置:');
+    console.log(`     - 心跳间隔: ${WS_CONFIG.HEARTBEAT_INTERVAL / 1000} 秒`);
+    console.log(`     - 超时时间: ${WS_CONFIG.CLIENT_TIMEOUT / 1000} 秒`);
+    console.log(`     - 调试日志: ${WS_CONFIG.DEBUG ? '开启 ✅' : '关闭 ❌'}`);
     console.log('');
     console.log('  📌 可用页面:');
     if (hasFrontend) {
@@ -393,10 +572,6 @@ server.listen(PORT, HOST, () => {
     console.log(`     - 健康检查: http://localhost:${PORT}/api/health`);
     console.log(`     - 文件上传: POST http://localhost:${PORT}/api/upload`);
     console.log(`     - 任务查询: GET http://localhost:${PORT}/api/task/:id`);
-    console.log('');
-    console.log('  ⚠️ 已废弃的路由（请使用 matching-dict-api）:');
-    console.log('     - /api/exclude（已删除）');
-    console.log('     - /api/replace（已删除）');
     console.log('='.repeat(60) + '\n');
 });
 
@@ -406,7 +581,20 @@ server.listen(PORT, HOST, () => {
 
 process.on('SIGINT', () => {
     console.log('\n[Server] 正在关闭服务器...');
-    wsClients.forEach((ws) => ws.close());
+    
+    // 清理心跳定时器
+    clearInterval(heartbeatInterval);
+    
+    // 关闭所有 WebSocket 连接
+    wsClients.forEach((clientInfo, clientId) => {
+        try {
+            clientInfo.ws.close(1000, 'Server shutting down');
+        } catch (e) {
+            // 忽略错误
+        }
+    });
+    wsClients.clear();
+    
     server.close(() => {
         console.log('[Server] 服务器已关闭');
         process.exit(0);
@@ -415,6 +603,7 @@ process.on('SIGINT', () => {
 
 process.on('SIGTERM', () => {
     console.log('\n[Server] 收到终止信号，正在关闭...');
+    clearInterval(heartbeatInterval);
     server.close(() => process.exit(0));
 });
 

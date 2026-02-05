@@ -4,6 +4,7 @@ import LoginPage from './components/LoginPage';
 import FileUploader from './components/FileUploader';
 import ProgressTracker from './components/ProgressTracker';
 import ReportViewer from './components/ReportViewer';
+import MasteredWords from './components/MasteredWords';
 import useTaskProgress from './hooks/useTaskProgress';
 
 /**
@@ -202,189 +203,163 @@ function AppContent() {
                         left: -9999px !important;
                     }
                     
-                    /* 主内容区占满整个页面 */
-                    main {
-                        margin-left: 0 !important;
-                        width: 100% !important;
+                    /* 强制隐藏悬浮窗和弹窗 */
+                    .fixed,
+                    .sticky,
+                    [role="dialog"],
+                    [role="alertdialog"] {
+                        display: none !important;
+                        visibility: hidden !important;
                     }
                     
-                    /* 确保背景纯白 */
-                    html, body {
-                        background: white !important;
+                    /* 主内容区占满整个页面 */
+                    main {
+                        margin: 0 !important;
+                        padding: 20px !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
                     }
                 }
             `}</style>
 
-            {/* 左侧导航栏 */}
-            <aside className={`
-                ${sidebarCollapsed ? 'w-16' : 'w-64'}
-                bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900
-                text-white flex flex-col transition-all duration-300 shadow-2xl
-            `}>
-                {/* Logo区域 */}
-                <div className="p-6 flex items-center justify-between border-b border-gray-700">
+            {/* 侧边栏 */}
+            <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 text-white flex-shrink-0 transition-all duration-300 shadow-2xl`}>
+                <div className="p-4 flex items-center justify-between border-b border-indigo-700">
                     {!sidebarCollapsed && (
-                        <div className="flex items-center gap-3">
-                            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                 </svg>
                             </div>
                             <div>
-                                <h1 className="font-bold text-lg">Sorryios</h1>
-                                <p className="text-xs text-gray-400">AI 智能笔记助手 v4.2</p>
+                                <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-200 to-yellow-400 bg-clip-text text-transparent">Sorryios</h1>
+                                <p className="text-xs text-indigo-300">AI 智能笔记助手 v4.2</p>
                             </div>
                         </div>
                     )}
-                    <button
+                    <button 
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        className="p-2 hover:bg-gray-700 rounded-lg transition"
+                        className="p-2 hover:bg-indigo-700 rounded-lg transition-colors"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            {sidebarCollapsed ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                            ) : (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                            )}
                         </svg>
                     </button>
                 </div>
 
-                {/* 导航菜单 */}
-                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <nav className="mt-6 px-2 space-y-1">
                     <button
-                        onClick={() => setCurrentPage('upload')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                        onClick={() => {
+                            // 🔧 修复：只切换页面，不清空任务信息
+                            // 这样可以在不同页面间自由切换，再回来时任务还在
+                            setCurrentPage('upload');
+                        }}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                             currentPage === 'upload'
-                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                                : 'text-gray-300 hover:bg-gray-800'
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg transform scale-105'
+                                : 'hover:bg-indigo-700/50'
                         }`}
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                         {!sidebarCollapsed && <span className="font-medium">上传笔记</span>}
                     </button>
 
+                    {/* 🆕 如果有正在进行的任务，显示"处理中"按钮 */}
+                    {taskInfo && taskInfo.status === 'processing' && (
+                        <button
+                            onClick={() => setCurrentPage('processing')}
+                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                                currentPage === 'processing'
+                                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg transform scale-105'
+                                    : 'bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-400'
+                            } relative animate-pulse`}
+                        >
+                            <svg className="w-6 h-6 flex-shrink-0 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            {!sidebarCollapsed && (
+                                <>
+                                    <span className="font-medium text-yellow-400">处理中</span>
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-yellow-400 text-indigo-900 text-xs font-bold px-2 py-1 rounded-full">
+                                        {taskInfo.progress}%
+                                    </span>
+                                </>
+                            )}
+                        </button>
+                    )}
+
                     <button
                         onClick={() => setCurrentPage('history')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                             currentPage === 'history'
-                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                                : 'text-gray-300 hover:bg-gray-800'
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg transform scale-105'
+                                : 'hover:bg-indigo-700/50'
                         }`}
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         {!sidebarCollapsed && <span className="font-medium">历史记录</span>}
-                        {!sidebarCollapsed && taskHistory.length > 0 && (
-                            <span className="ml-auto bg-indigo-500 text-white text-xs px-2 py-0.5 rounded-full">
-                                {taskHistory.length}
-                            </span>
-                        )}
                     </button>
 
                     <button
                         onClick={() => setCurrentPage('filter')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                             currentPage === 'filter'
-                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                                : 'text-gray-300 hover:bg-gray-800'
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg transform scale-105'
+                                : 'hover:bg-indigo-700/50'
                         }`}
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        {!sidebarCollapsed && <span className="font-medium">过滤器</span>}
-                    </button>
-
-                    <button
-                        onClick={() => setCurrentPage('settings')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
-                            currentPage === 'settings'
-                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                                : 'text-gray-300 hover:bg-gray-800'
-                        }`}
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        {!sidebarCollapsed && <span className="font-medium">设置</span>}
+                        {!sidebarCollapsed && <span className="font-medium">已掌握</span>}
                     </button>
                 </nav>
 
-                {/* 底部用户信息 */}
-                <div className="p-4 border-t border-gray-700">
-                    {!sidebarCollapsed ? (
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center font-bold text-white">
-                                    {user?.nickname?.[0] || user?.username?.[0] || 'U'}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm truncate">{user?.nickname || user?.username}</p>
-                                    <p className="text-xs text-gray-400">{user?.role === 'admin' ? '管理员' : '用户'}</p>
-                                </div>
+                {/* 用户信息 */}
+                {!sidebarCollapsed && (
+                    <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-indigo-700 bg-indigo-900/50 backdrop-blur-sm">
+                        <div className="flex items-center space-x-3 mb-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                                {user?.username?.[0]?.toUpperCase() || 'U'}
                             </div>
-                            <button
-                                onClick={logout}
-                                className="p-2 hover:bg-gray-700 rounded-lg transition"
-                                title="退出登录"
-                            >
-                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                            </button>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-medium text-white truncate">{user?.username || '用户'}</p>
+                                <p className="text-xs text-indigo-300">
+                                    {stats ? `已处理 ${stats.tasksCompleted || 0} 个笔记` : '加载中...'}
+                                </p>
+                            </div>
                         </div>
-                    ) : (
                         <button
                             onClick={logout}
-                            className="w-full p-2 hover:bg-gray-700 rounded-lg transition"
-                            title="退出登录"
+                            className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded-lg transition-colors text-sm font-medium"
                         >
-                            <svg className="w-5 h-5 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
+                            <span>退出登录</span>
                         </button>
-                    )}
-                </div>
+                    </div>
+                )}
             </aside>
 
-            {/* ========== 🖨️ 打印时隐藏悬浮按钮 ========== */}
-            {/* AI智能助手悬浮按钮 */}
-            <button className="ai-chat-button fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-indigo-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center z-50">
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-            </button>
-
             {/* 主内容区 */}
-            <main className="flex-1 overflow-y-auto">
-                <div className="p-8">
+            <main className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-indigo-50">
+                <div className="max-w-7xl mx-auto p-8">
                     {/* 上传页面 */}
                     {currentPage === 'upload' && (
-                        <div className="space-y-6">
-                            {/* 头部统计 */}
-                            <div className="grid grid-cols-4 gap-4">
-                                <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
-                                    <div className="text-3xl font-bold mb-2">{stats?.totalTasks || 0}</div>
-                                    <div className="text-blue-100">总任务数</div>
-                                </div>
-                                <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
-                                    <div className="text-3xl font-bold mb-2">{stats?.totalFiles || 0}</div>
-                                    <div className="text-green-100">总文件数</div>
-                                </div>
-                                <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
-                                    <div className="text-3xl font-bold mb-2">{stats?.totalItems || 0}</div>
-                                    <div className="text-purple-100">提取词条</div>
-                                </div>
-                                <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-6 shadow-lg">
-                                    <div className="text-3xl font-bold mb-2">{masteredStats?.total || 0}</div>
-                                    <div className="text-orange-100">已掌握</div>
-                                </div>
-                            </div>
-
-                            {/* 文件上传器 */}
-                            <FileUploader onUploadSuccess={handleUploadSuccess} />
-                        </div>
+                        <FileUploader
+                            onUploadSuccess={handleUploadSuccess}
+                            stats={stats}
+                        />
                     )}
 
                     {/* 处理中页面 */}
@@ -395,222 +370,112 @@ function AppContent() {
                             logs={logs}
                             onReset={handleReset}
                             onViewReport={() => handleViewReport(currentTaskId)}
-                            lastCompletedTask={lastCompletedTask}
                         />
                     )}
 
                     {/* 报告页面 */}
                     {currentPage === 'report' && (
-                        <ReportViewer taskId={currentTaskId} />
+                        <ReportViewer
+                            taskId={currentTaskId}
+                            onBack={handleReset}
+                        />
                     )}
 
                     {/* 历史记录 */}
                     {currentPage === 'history' && (
-                        <div className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-2xl font-bold text-gray-800">📚 历史记录</h2>
-                                    <p className="text-gray-500 mt-1">查看您的处理历史</p>
-                                </div>
+                        <div className="bg-white rounded-2xl shadow-xl p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800 flex items-center space-x-3">
+                                    <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>历史记录</span>
+                                </h2>
+                                <span className="text-sm text-gray-500">
+                                    共 {taskHistory.length} 条记录
+                                </span>
                             </div>
 
-                            {taskHistory.length > 0 ? (
-                                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                                    <div className="divide-y divide-gray-100">
-                                        {taskHistory.map((task, index) => (
-                                            <div key={index} className="p-6 hover:bg-gray-50 transition">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-3 mb-2">
-                                                            <h3 className="font-bold text-gray-800 text-lg">{task.title}</h3>
-                                                            <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                                                                task.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                                task.status === 'processing' ? 'bg-blue-100 text-blue-700' :
-                                                                task.status === 'error' ? 'bg-red-100 text-red-700' :
-                                                                'bg-gray-100 text-gray-700'
-                                                            }`}>
-                                                                {task.status === 'completed' ? '✓ 已完成' :
-                                                                 task.status === 'processing' ? '⏳ 处理中' :
-                                                                 task.status === 'error' ? '✗ 失败' : '等待中'}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-6 text-sm text-gray-500">
-                                                            <span>📄 {task.fileName}</span>
-                                                            <span>🕒 {new Date(task.createdAt).toLocaleString('zh-CN')}</span>
-                                                            {task.totalItems > 0 && (
-                                                                <span>📊 提取 {task.totalItems} 项</span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    {task.status === 'completed' && (
-                                                        <button
-                                                            onClick={() => handleViewReport(task.id)}
-                                                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
-                                                        >
-                                                            查看报告
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                            {taskHistory.length === 0 ? (
+                                <div className="text-center py-16">
+                                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
                                     </div>
+                                    <p className="text-gray-500 mb-2">还没有处理过笔记</p>
+                                    <button
+                                        onClick={() => setCurrentPage('upload')}
+                                        className="text-indigo-600 hover:text-indigo-700 font-medium"
+                                    >
+                                        去上传第一个笔记 →
+                                    </button>
                                 </div>
                             ) : (
-                                <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-                                    <span className="text-6xl block mb-4">📭</span>
-                                    <p className="text-gray-500 text-lg">暂无历史记录</p>
-                                    <p className="text-gray-400 text-sm mt-2">上传笔记后将在此显示</p>
+                                <div className="space-y-3">
+                                    {taskHistory.map((task, index) => (
+                                        <div
+                                            key={task.id}
+                                            className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-5 hover:shadow-lg transition-all duration-200 cursor-pointer border border-indigo-100"
+                                            onClick={() => handleViewReport(task.id)}
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center space-x-3 mb-2">
+                                                        <span className="text-lg font-semibold text-gray-800">
+                                                            {task.customTitle || task.fileName}
+                                                        </span>
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                                            task.status === 'completed'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : task.status === 'failed'
+                                                                ? 'bg-red-100 text-red-700'
+                                                                : 'bg-yellow-100 text-yellow-700'
+                                                        }`}>
+                                                            {task.status === 'completed' ? '✓ 已完成' : task.status === 'failed' ? '✗ 失败' : '处理中'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                                        <span className="flex items-center">
+                                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            {new Date(task.createdAt).toLocaleString()}
+                                                        </span>
+                                                        {task.stats && (
+                                                            <>
+                                                                <span className="text-indigo-600 font-medium">
+                                                                    {task.stats.exactMatch || 0} 精确
+                                                                </span>
+                                                                <span className="text-purple-600 font-medium">
+                                                                    {task.stats.fuzzyMatch || 0} 模糊
+                                                                </span>
+                                                                <span className="text-orange-600 font-medium">
+                                                                    {task.stats.unmatched || 0} 未匹配
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <svg className="w-6 h-6 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
                     )}
 
-                    {/* 过滤器管理 */}
+                    {/* 已掌握词汇 */}
                     {currentPage === 'filter' && (
-                        <div className="space-y-6">
-                            {/* 统计 */}
-                            <div className="grid grid-cols-4 gap-4">
-                                <div className="bg-white rounded-xl p-4 shadow-sm">
-                                    <div className="text-3xl font-bold text-blue-600">{masteredStats?.words || 0}</div>
-                                    <div className="text-sm text-gray-500">单词</div>
-                                </div>
-                                <div className="bg-white rounded-xl p-4 shadow-sm">
-                                    <div className="text-3xl font-bold text-green-600">{masteredStats?.phrases || 0}</div>
-                                    <div className="text-sm text-gray-500">短语</div>
-                                </div>
-                                <div className="bg-white rounded-xl p-4 shadow-sm">
-                                    <div className="text-3xl font-bold text-purple-600">{masteredStats?.patterns || 0}</div>
-                                    <div className="text-sm text-gray-500">句型</div>
-                                </div>
-                                <div className="bg-white rounded-xl p-4 shadow-sm">
-                                    <div className="text-3xl font-bold text-orange-600">{masteredStats?.grammars || 0}</div>
-                                    <div className="text-sm text-gray-500">语法</div>
-                                </div>
-                            </div>
-
-                            {/* 列表 */}
-                            <div className="bg-white rounded-xl shadow-sm">
-                                <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="font-bold text-gray-800">已掌握词汇</h3>
-                                        <p className="text-sm text-gray-500">这些词汇在生成报告时可自动过滤</p>
-                                    </div>
-                                    {masteredWords.length > 0 && (
-                                        <button
-                                            onClick={handleClearAll}
-                                            className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm"
-                                        >
-                                            清空全部
-                                        </button>
-                                    )}
-                                </div>
-                                {masteredWords.length > 0 ? (
-                                    <div className="divide-y divide-gray-100 max-h-[500px] overflow-auto">
-                                        {masteredWords.map((item, index) => (
-                                            <div key={index} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                                                <div className="flex items-center gap-3">
-                                                    <span className={`text-xs px-2 py-1 rounded-full ${
-                                                        item.word_type === 'word' ? 'bg-blue-100 text-blue-600' :
-                                                        item.word_type === 'phrase' ? 'bg-green-100 text-green-600' :
-                                                        item.word_type === 'pattern' ? 'bg-purple-100 text-purple-600' :
-                                                        'bg-orange-100 text-orange-600'
-                                                    }`}>
-                                                        {item.word_type === 'word' ? '单词' :
-                                                         item.word_type === 'phrase' ? '短语' :
-                                                         item.word_type === 'pattern' ? '句型' : '语法'}
-                                                    </span>
-                                                    <span className="font-medium text-gray-800">{item.word}</span>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-sm text-gray-400">
-                                                        {new Date(item.created_at).toLocaleDateString('zh-CN')}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => handleRemoveMastered(item.word, item.word_type)}
-                                                        className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-600 rounded text-sm"
-                                                    >
-                                                        移除
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="p-12 text-center text-gray-500">
-                                        <span className="text-4xl block mb-4">📝</span>
-                                        <p>暂无已掌握词汇</p>
-                                        <p className="text-sm mt-2">在报告中点击"已掌握"按钮添加</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 设置 */}
-                    {currentPage === 'settings' && (
-                        <div className="max-w-2xl space-y-6">
-                            {/* 账户信息 */}
-                            <div className="bg-white rounded-xl shadow-sm">
-                                <div className="p-4 border-b border-gray-100">
-                                    <h3 className="font-bold text-gray-800">👤 账户信息</h3>
-                                </div>
-                                <div className="p-4 space-y-4">
-                                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                        <span className="text-gray-600">用户名</span>
-                                        <span className="font-medium text-gray-800">{user?.username}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                        <span className="text-gray-600">昵称</span>
-                                        <span className="font-medium text-gray-800">{user?.nickname || user?.username}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                        <span className="text-gray-600">角色</span>
-                                        <span className={`px-2 py-1 rounded-full text-xs ${
-                                            user?.role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
-                                        }`}>
-                                            {user?.role === 'admin' ? '管理员' : '普通用户'}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2">
-                                        <span className="text-gray-600">注册时间</span>
-                                        <span className="font-medium text-gray-800">
-                                            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('zh-CN') : '未知'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* 数据管理 */}
-                            <div className="bg-white rounded-xl shadow-sm">
-                                <div className="p-4 border-b border-gray-100">
-                                    <h3 className="font-bold text-gray-800">🗄️ 数据管理</h3>
-                                </div>
-                                <div className="p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="font-medium text-gray-800">清空已掌握词汇</p>
-                                            <p className="text-sm text-gray-500">重置所有已标记为"已掌握"的词汇</p>
-                                        </div>
-                                        <button
-                                            onClick={handleClearAll}
-                                            className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm"
-                                        >
-                                            清空
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* 关于 */}
-                            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6">
-                                <h3 className="font-bold text-gray-800 mb-4">ℹ️ 关于</h3>
-                                <div className="space-y-2 text-sm text-gray-600">
-                                    <p><span className="font-medium">应用名称：</span>Sorryios AI 智能笔记助手</p>
-                                    <p><span className="font-medium">版本：</span>v4.2.3</p>
-                                    <p><span className="font-medium">功能：</span>课堂笔记自动化处理系统</p>
-                                </div>
-                            </div>
-                        </div>
+                        <MasteredWords
+                            words={masteredWords}
+                            stats={masteredStats}
+                            onRemove={handleRemoveMastered}
+                            onClearAll={handleClearAll}
+                        />
                     )}
                 </div>
             </main>
@@ -619,7 +484,7 @@ function AppContent() {
 }
 
 /**
- * 主应用组件
+ * 主应用组件 - 包裹 AuthProvider
  */
 function App() {
     return (
