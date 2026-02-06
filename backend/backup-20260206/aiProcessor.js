@@ -55,18 +55,16 @@ const taskQueue = require('./taskQueue');
 // 处理日志服务
 let matchingService = null;
 let processingLogService = null;
-// [Bug 17 修复] 移除独立的 excludeService，统一使用 matchingDictService（matching.db）
-// 原来 excludeService(exclude.db) 和 matchingDictService(matching.db) 双系统不同步
-let matchingDictServiceRef = null;
+let excludeService = null;
 try {
     const { getMatchingService } = require('./matchingService');
     const { getProcessingLogService } = require('./processingLogService');
-    const { getMatchingDictService } = require('./matchingDictService');
+    const { getExcludeService } = require('./excludeService');
     matchingService = getMatchingService();
     processingLogService = getProcessingLogService();
-    matchingDictServiceRef = getMatchingDictService();
+    excludeService = getExcludeService();
     console.log('[AIProcessor] ✓ 处理日志服务已加载');
-    console.log('[AIProcessor] ✓ 排除检查已统一使用 matchingDictService');
+    console.log('[AIProcessor] ✓ 排除库服务已加载');
 } catch (e) {
     console.warn('[AIProcessor] ✗ 处理日志服务未加载:', e.message);
 }
@@ -455,70 +453,16 @@ class JsonExtractor {
     static extract(response) {
         if (!response || typeof response !== 'string') return null;
         const text = response.trim();
-        
-        // 策略1: 直接解析
         try { return JSON.parse(text); } catch (e) {}
-        
-        // 策略2: 提取最外层 {} 
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) { try { return JSON.parse(jsonMatch[0]); } catch (e) {} }
-        
-        // 策略3: 代码块提取
         const codeBlockMatch = text.match(/```json?\s*([\s\S]*?)```/);
         if (codeBlockMatch) { try { return JSON.parse(codeBlockMatch[1].trim()); } catch (e) {} }
-        
-        // 策略4: 基础修复
         try {
             let fixed = text.replace(/^[^{]*/, '').replace(/[^}]*$/, '').replace(/'/g, '"').replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
             return JSON.parse(fixed);
         } catch (e) {}
-        
-        // [Bug 29 修复] 策略5: 截断JSON修复
-        // 当AI返回内容过长被截断时，JSON缺少闭合括号导致解析失败
-        // 尝试补全缺失的 ] 和 } 来修复截断的JSON
-        try {
-            let truncated = text.replace(/^[^{]*/, ''); // 去掉 { 之前的内容
-            if (truncated.includes('{')) {
-                // 移除末尾不完整的字符串/值（截断可能发生在值中间）
-                // 例如: ..."meaning":"这是一个测  ← 截断在字符串中间
-                truncated = truncated.replace(/,\s*"[^"]*"?\s*:\s*"?[^"{}[\]]*$/, '');
-                // 也处理截断在key中间的情况: ..."mea
-                truncated = truncated.replace(/,\s*"[^"]*$/, '');
-                
-                // 计算未闭合的括号
-                let openBraces = 0, openBrackets = 0;
-                let inString = false, escaped = false;
-                for (const ch of truncated) {
-                    if (escaped) { escaped = false; continue; }
-                    if (ch === '\\') { escaped = true; continue; }
-                    if (ch === '"') { inString = !inString; continue; }
-                    if (inString) continue;
-                    if (ch === '{') openBraces++;
-                    else if (ch === '}') openBraces--;
-                    else if (ch === '[') openBrackets++;
-                    else if (ch === ']') openBrackets--;
-                }
-                
-                // 补全闭合符号
-                if (openBraces > 0 || openBrackets > 0) {
-                    let repair = truncated;
-                    for (let i = 0; i < openBrackets; i++) repair += ']';
-                    for (let i = 0; i < openBraces; i++) repair += '}';
-                    
-                    const parsed = JSON.parse(repair);
-                    console.warn(`[JsonExtractor] ⚠️ 截断JSON已修复 (补全 ${openBrackets}个] ${openBraces}个}), 原始长度: ${text.length}`);
-                    return parsed;
-                }
-            }
-        } catch (e) {
-            // 截断修复也失败，输出诊断信息
-        }
-        
-        // 所有策略都失败，输出诊断日志帮助调试
         console.error('[JsonExtractor] ✗ JSON解析失败');
-        console.error(`[JsonExtractor] 📋 响应长度: ${text.length} 字符`);
-        console.error(`[JsonExtractor] 📋 前200字符: ${text.substring(0, 200)}`);
-        console.error(`[JsonExtractor] 📋 后200字符: ${text.substring(Math.max(0, text.length - 200))}`);
         return null;
     }
 }
@@ -1246,10 +1190,7 @@ async function processSegmentWithRetry(automation, message, index, total, onProg
             if (onProgress) onProgress({ currentStep: logMsg });
             
             const response = await withTimeout(automation.sendMessage(message), 300000, `片段 ${index + 1} 超时`);
-            const rawText = typeof response === 'object' ? response.text : response;
-            // [Bug 29 诊断] 记录原始响应长度，帮助定位截断问题
-            console.log(`[processSegment] 📋 原始响应: ${(rawText||'').length} 字符`);
-            const parsed = JsonExtractor.extract(rawText);
+            const parsed = JsonExtractor.extract(typeof response === 'object' ? response.text : response);
             if (parsed) { 
                 const successMsg = `✅ 片段 ${index + 1}/${total} 处理成功`;
                 console.log(successMsg); 
@@ -1536,8 +1477,8 @@ async function processTask(task, onProgress) {
                 console.log('[阶段6] ─────────────────────────────────────');
 
                 for (const unmatched of matchResult.unmatched) {
-                    // [Bug 17 修复] 统一使用 matchingDictService 检查排除（原来用的 excludeService 与 matching.db 不同步）
-                    if (matchingDictServiceRef && matchingDictServiceRef.isExcluded(unmatched.original_text, unmatched.item_type)) {
+                    // v4.3.5: 检查是否在排除库中，如果在则跳过
+                    if (excludeService && excludeService.isExcluded(unmatched.original_text, unmatched.item_type)) {
                         console.log(`[阶段6] 🚫 跳过排除项: ${unmatched.original_text} (${unmatched.item_type})`);
                         continue;
                     }
@@ -1561,16 +1502,12 @@ async function processTask(task, onProgress) {
                 if (processingLogService) {
                     try {
                         // 保存匹配记录
-                        // [Bug A 修复] 添加 source_db/source_table/source_id，原来映射遗漏导致这三个字段始终为NULL
                         const matchedItems = matchResult.matched.map(m => ({
                             task_id: taskId,
                             original_text: m.original_text,
                             matched_text: m.matched_text,
                             item_type: m.item_type,
                             match_score: m.score,
-                            source_db: m.source_db || null,
-                            source_table: m.source_table || null,
-                            source_id: m.source_id || null,
                             matched_data: m.matched_data,
                             status: m.score >= 1.0 ? 'confirmed' : 'pending'
                         }));
@@ -1596,11 +1533,11 @@ async function processTask(task, onProgress) {
                             onProgress({ currentStep: `💾 保存匹配记录: ${uniqueMatchedItems.length} 条${dedupeInfo}`, progress: 69 });
                         }
                         
-                        // 保存未匹配记录（[Bug 17 修复] 使用 matchingDictService 统一过滤）
+                        // 保存未匹配记录（v4.3.5: 先过滤排除库）
                         let unmatchedToSave = matchResult.unmatched;
-                        if (matchingDictServiceRef) {
+                        if (excludeService) {
                             unmatchedToSave = matchResult.unmatched.filter(u => 
-                                !matchingDictServiceRef.isExcluded(u.original_text, u.item_type)
+                                !excludeService.isExcluded(u.original_text, u.item_type)
                             );
                             const excludedCount = matchResult.unmatched.length - unmatchedToSave.length;
                             if (excludedCount > 0) {
@@ -1694,73 +1631,11 @@ async function processTask(task, onProgress) {
                     onProgress({ currentStep: '✅ AI账号已就绪', progress: 76 });
                 }
                 
-                // [Bug 29 修复] 分批发送AI详情生成请求
-                // 原来一次性发送全部项目（如37项），AI响应过长被截断导致JSON解析失败
-                // 现在每批最多10项，确保AI能完整返回JSON
-                const BATCH_SIZE = 10;
-                const allBatches = [];
+                onProgress({ currentStep: '📤 发送详情生成请求...', progress: 77 });
+                const detailResult = await processSegmentWithRetry(automation, `${CONFIG.detailPrompt}\n${detailContent.join('\n')}\n---`, 0, 1, onProgress);
                 
-                // 构建批次：将所有类型的项目按 BATCH_SIZE 分批
-                const allItems = [];
-                for (const w of unmatchedKeywords.words) allItems.push({ type: 'word', text: w });
-                for (const p of unmatchedKeywords.phrases) allItems.push({ type: 'phrase', text: p });
-                for (const p of unmatchedKeywords.patterns) allItems.push({ type: 'pattern', text: p });
-                for (const g of unmatchedKeywords.grammar) allItems.push({ type: 'grammar', text: g });
-                
-                for (let i = 0; i < allItems.length; i += BATCH_SIZE) {
-                    const batch = allItems.slice(i, i + BATCH_SIZE);
-                    const batchContent = [];
-                    const batchWords = batch.filter(b => b.type === 'word').map(b => b.text);
-                    const batchPhrases = batch.filter(b => b.type === 'phrase').map(b => b.text);
-                    const batchPatterns = batch.filter(b => b.type === 'pattern').map(b => b.text);
-                    const batchGrammar = batch.filter(b => b.type === 'grammar').map(b => b.text);
-                    
-                    if (batchWords.length > 0) batchContent.push(`【单词】${batchWords.join(', ')}`);
-                    if (batchPhrases.length > 0) batchContent.push(`【短语】${batchPhrases.join(', ')}`);
-                    if (batchPatterns.length > 0) batchContent.push(`【句型】${batchPatterns.join(', ')}`);
-                    if (batchGrammar.length > 0) batchContent.push(`【语法】${batchGrammar.join(', ')}`);
-                    
-                    allBatches.push(batchContent);
-                }
-                
-                const totalBatches = allBatches.length;
-                console.log(`[阶段7] 📦 分批策略: ${totalUnmatched}项 → ${totalBatches}批 (每批≤${BATCH_SIZE}项)`);
-                onProgress({ currentStep: `📤 分${totalBatches}批发送详情生成请求...`, progress: 77 });
-                
-                // 合并所有批次的AI结果
-                const aiData = { vocabulary: { words: [], phrases: [], patterns: [] }, grammar: [] };
-                let batchSuccessCount = 0;
-                
-                for (let bIdx = 0; bIdx < totalBatches; bIdx++) {
-                    const batchContent = allBatches[bIdx];
-                    const batchProgress = 77 + Math.floor((bIdx / totalBatches) * 10); // 77-87%
-                    
-                    onProgress({ currentStep: `📤 批次 ${bIdx + 1}/${totalBatches} 发送中...`, progress: batchProgress });
-                    console.log(`[阶段7] 📤 发送批次 ${bIdx + 1}/${totalBatches}: ${batchContent.join(' | ')}`);
-                    
-                    const batchResult = await processSegmentWithRetry(
-                        automation, 
-                        `${CONFIG.detailPrompt}\n${batchContent.join('\n')}\n---`, 
-                        bIdx, totalBatches, onProgress
-                    );
-                    
-                    if (batchResult.success && batchResult.output) {
-                        const batchData = batchResult.output;
-                        // 合并到 aiData
-                        if (batchData.vocabulary?.words) aiData.vocabulary.words.push(...batchData.vocabulary.words);
-                        if (batchData.vocabulary?.phrases) aiData.vocabulary.phrases.push(...batchData.vocabulary.phrases);
-                        if (batchData.vocabulary?.patterns) aiData.vocabulary.patterns.push(...batchData.vocabulary.patterns);
-                        if (batchData.grammar) aiData.grammar.push(...batchData.grammar);
-                        batchSuccessCount++;
-                        console.log(`[阶段7] ✅ 批次 ${bIdx + 1}/${totalBatches} 成功 (词:${batchData.vocabulary?.words?.length||0} 短:${batchData.vocabulary?.phrases?.length||0} 句:${batchData.vocabulary?.patterns?.length||0} 法:${batchData.grammar?.length||0})`);
-                    } else {
-                        console.warn(`[阶段7] ⚠️ 批次 ${bIdx + 1}/${totalBatches} 失败，跳过`);
-                    }
-                }
-                
-                console.log(`[阶段7] 📊 批次统计: ${batchSuccessCount}/${totalBatches} 成功`);
-                
-                if (batchSuccessCount > 0) {
+                if (detailResult.success && detailResult.output) {
+                    const aiData = detailResult.output;
                     
                     console.log('[阶段7] ─────────────────────────────────────');
                     console.log('[阶段7] 开始添加AI生成内容到 mergedData');

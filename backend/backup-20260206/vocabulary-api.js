@@ -12,15 +12,12 @@
 
 const express = require('express');
 const router = express.Router();
+const Database = require('better-sqlite3');
 const path = require('path');
 const { getGrammarService } = require('../services/grammarService');
-// [Bug 11 修复] 不再独立创建数据库连接，改为从 vocabularyService 共享
-// 原来 vocabulary-api.js 第20行 new Database() 与 vocabularyService 各自持有独立连接
-// 导致 WAL 模式下可能出现读写冲突
-const { getVocabularyService } = require('../services/vocabularyService');
 
-const vocabularyService = getVocabularyService();
-const db = vocabularyService.db;  // 共享同一个数据库连接
+const dbPath = path.join(__dirname, '..', 'data', 'vocabulary.db');
+const db = new Database(dbPath);
 
 // 获取语法服务（用于转移功能）
 const grammarService = getGrammarService();
@@ -187,7 +184,7 @@ router.post('/words', (req, res) => {
         
         const stmt = db.prepare(`
             INSERT INTO words (word, meaning, phonetic, pos, example, category, enabled, is_new, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, 1, 1, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, ?, ?, ?, 1, 1, datetime('now', 'localtime'))
         `);
         const result = stmt.run(word, meaning, phonetic || '', pos || '', example || '', category || '其他');
         
@@ -343,7 +340,7 @@ router.post('/phrases', (req, res) => {
         
         const stmt = db.prepare(`
             INSERT INTO phrases (phrase, meaning, example, category, enabled, is_new, created_at)
-            VALUES (?, ?, ?, ?, 1, 1, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, ?, 1, 1, datetime('now', 'localtime'))
         `);
         const result = stmt.run(phrase, meaning, example || '', category || '其他');
         
@@ -499,7 +496,7 @@ router.post('/patterns', (req, res) => {
         
         const stmt = db.prepare(`
             INSERT INTO patterns (pattern, meaning, example, category, enabled, is_new, created_at)
-            VALUES (?, ?, ?, ?, 1, 1, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, ?, 1, 1, datetime('now', 'localtime'))
         `);
         const result = stmt.run(pattern, meaning, example || '', category || '其他');
         

@@ -208,22 +208,7 @@ class PatternValidator {
         const trimmedPattern = pattern.trim();
         const lowerPattern = trimmedPattern.toLowerCase();
         
-        // [Bug 20 修复] 白名单优先于黑名单
-        // 原来: 先查黑名单 → "How + adj. + 主语 + 谓语!" 被 /^how\b/i 误杀
-        // 修复: 先查白名单，有特殊结构的句型直接通过，不进黑名单
-        
-        // ===== 第1步：检查白名单特征 =====
-        for (const feature of this.VALID_FEATURES) {
-            if (this._hasFeature(lowerPattern, feature.keywords)) {
-                return {
-                    valid: true,
-                    reason: `包含特殊结构 - ${feature.description}`,
-                    feature: feature
-                };
-            }
-        }
-        
-        // ===== 第2步：检查黑名单 =====
+        // ===== 第1步：检查黑名单 =====
         for (let i = 0; i < this.EXCLUDED_PATTERNS.length; i++) {
             const regex = this.EXCLUDED_PATTERNS[i];
             if (regex.test(trimmedPattern)) {
@@ -232,6 +217,17 @@ class PatternValidator {
                     reason: '匹配黑名单规则 - 普通疑问句',
                     matchedRule: regex.toString(),
                     ruleIndex: i
+                };
+            }
+        }
+        
+        // ===== 第2步：检查白名单特征 =====
+        for (const feature of this.VALID_FEATURES) {
+            if (this._hasFeature(lowerPattern, feature.keywords)) {
+                return {
+                    valid: true,
+                    reason: `包含特殊结构 - ${feature.description}`,
+                    feature: feature
                 };
             }
         }

@@ -187,9 +187,7 @@ class MatchingService {
             '双宾语', '宾语补足语', '后置定语',
             '句子结构', '主语', '谓语', '宾语', '定语', '状语', '表语',
             // 动词相关
-            // [Bug 27 修复] 移除重复的 '过去分词'（已在第180行非谓语区域定义）
-            // 重复会导致 extractCoreTerms 返回重复项，虚增 commonTerms.length 影响多术语加分
-            '动词形态', '动词过去式', '不规则动词',
+            '动词形态', '动词过去式', '过去分词', '不规则动词',
             // 其他
             '词性', '构词法', '称呼', '称谓',
             // v4.3.0 新增：常见英文动词和短语（用于混合文本匹配）
@@ -772,11 +770,8 @@ class MatchingService {
             // 计算匹配度（原文关键词数 / 目标关键词数）
             const coverage = inputKeywords.length / targetKeywords.length;
             
-            // [Bug 24 修复] 移除 Math.max(0.85, coverage) 的人为下限
-            // 原来: coverage=0.4 也返回0.85，导致 "go to" 匹配 "go to school on foot" 得85%
-            // 修复: 完全相同=100%，子集=按实际覆盖率计算，不设人为下限
-            // 最终是否匹配由调用方的 threshold 判断
-            const score = coverage === 1.0 ? 1.0 : coverage;
+            // 完全相同 = 100%，子集 = 按比例计算（最低85%）
+            const score = coverage === 1.0 ? 1.0 : Math.max(0.85, coverage);
             
             if (score > bestScore) {
                 bestScore = score;
@@ -1260,21 +1255,6 @@ class MatchingService {
                 reason: '转换模式不匹配' 
             };
         }
-        
-        // [Bug 3 修复] 添加反向检查：目标是转换模式但输入不是
-        // 例如: 输入="形容词用法" 目标="形容词变副词" → 不应该高分匹配
-        if (!inputHasTransform && targetHasTransform) {
-            this.verboseOutput(`  ⚠️ 目标是转换模式，输入不是转换模式`, 'debug');
-            
-            const distance = this.levenshteinDistance(n1, n2);
-            const maxLen = Math.max(n1.length, n2.length);
-            const editScore = 1 - distance / maxLen;
-            
-            return { 
-                score: Math.min(editScore, 0.60),
-                reason: '转换模式不匹配（反向）' 
-            };
-        }
         // ===== v4.3.2 新增结束 =====
         
         // 策略1: 核心术语匹配
@@ -1291,17 +1271,13 @@ class MatchingService {
             // 找到最长的共同术语
             const longestCommon = commonTerms.reduce((a, b) => a.length >= b.length ? a : b, '');
             
-            // [Bug 1 修复] 核心术语匹配 — 原逻辑短术语加分过于激进
-            // 原来: 短术语(2-3字) +0.06 + 多术语叠加 +0.03×n → 轻易超过85%阈值
-            // 修复: 引入覆盖率权重，术语越短占比越低，加分越少
+            // v4.3.0 优化：核心术语匹配成功，给一个更高的基础分
+            // 基础分 = 0.78 + (共同术语长度占比) * 0.18
+            // 这样 5 字术语通常能达到 85%+
             const termRatio = longestCommon.length / Math.max(s1.length, s2.length);
-            
-            // 覆盖率权重：术语占总文本比例越高，匹配越可信
-            const coverageWeight = Math.min(termRatio * 2, 1.0);  // 0~1.0
-            
             let baseScore = 0.78 + termRatio * 0.18;
             
-            // 长术语加分保持不变
+            // 如果核心术语本身较长（>=4字），额外加分
             if (longestCommon.length >= 4) {
                 baseScore += 0.03;
             }
@@ -1309,52 +1285,19 @@ class MatchingService {
                 baseScore += 0.02;
             }
             
-            // [Bug 1 修复] 短术语（2-3字）加分乘以覆盖率权重
-            // 原来无条件 +0.06，"形容词"(3字) 在长文本中也能达到 87%+
-            // 修复后: "形容词"(3字) 在10字文本中 coverageWeight=0.6, 实际加 0.036
+            // v4.3.0: 短术语（2-3字）如果是独立的语法概念，也给一定加分
+            // 因为短术语占总长度的比例较低，需要补偿
             if (longestCommon.length >= 2 && longestCommon.length <= 3) {
-                baseScore += 0.06 * coverageWeight;
+                // 短术语加分：确保能达到85%左右
+                baseScore += 0.06;
             }
             
-            // [Bug 1 修复] 多术语加分也乘以覆盖率
+            // 如果有多个共同术语，额外加分
             if (commonTerms.length > 1) {
-                baseScore += 0.02 * (commonTerms.length - 1) * coverageWeight;
+                baseScore += 0.03 * (commonTerms.length - 1);
             }
             
             baseScore = Math.min(baseScore, 0.96);
-            
-            // [Bug 28 修复] 输入术语覆盖率惩罚
-            // 问题: "形容词作表语" vs "过去分词作形容词" 只匹配1个术语"形容词"就拿到89%
-            //        输入有2个关键术语 [形容词, 表语]，"表语"完全没匹配，应该大幅降分
-            // 修复: 用 _extractChineseKeyTerms 的结果检查输入术语覆盖率
-            if (inputTerms.size >= 2 && targetTerms.size > 0) {
-                // 排除连接词（和/与/或），它们不是语义内容术语
-                // 例: "形容词和副词" 的 "和" 不应算作未覆盖的内容术语
-                const coverageExcludeTerms = new Set(['和', '与', '或']);
-                const significantInputTerms = [...inputTerms].filter(t => !coverageExcludeTerms.has(t));
-                
-                if (significantInputTerms.length >= 2) {
-                    // 检查目标是否是输入的核心子串（≥50%长度占比）
-                    // 如果是，说明输入只是在目标基础上加了修饰语，不应惩罚
-                    // 例: "非谓语动词" 包含 "非谓语"(75%)  → 跳过
-                    //     "过去完成时态" 包含 "过去完成时"(83%) → 跳过
-                    //     "形容词和副词的区别" 不包含 "过去分词作形容词" → 惩罚
-                    const targetContainedInInput = n1.includes(n2) && n2.length >= n1.length * 0.5;
-                    
-                    if (!targetContainedInInput) {
-                        const coveredCount = significantInputTerms.filter(t => targetTerms.has(t)).length;
-                        const inputCoverage = coveredCount / significantInputTerms.length;  // 0~1.0
-                        if (inputCoverage < 1.0) {
-                            const oldScore = baseScore;
-                            // 惩罚公式: 覆盖50% → 乘0.75, 覆盖25% → 乘0.625, 覆盖0% → 乘0.5
-                            baseScore *= (0.5 + 0.5 * inputCoverage);
-                            this.verboseOutput(`  [Bug 28] 输入术语覆盖率惩罚: 输入术语[${significantInputTerms.join(',')}] 目标术语[${[...targetTerms].join(',')}] 覆盖${coveredCount}/${significantInputTerms.length}=${(inputCoverage*100).toFixed(0)}% | ${(oldScore*100).toFixed(1)}% → ${(baseScore*100).toFixed(1)}%`, 'debug');
-                        }
-                    } else {
-                        this.verboseOutput(`  [Bug 28] 跳过覆盖率惩罚: 目标"${s2}"是输入"${s1}"的核心子串(${(n2.length/n1.length*100).toFixed(0)}%)`, 'debug');
-                    }
-                }
-            }
             
             this.verboseOutput(`  核心术语匹配: "${longestCommon}" → 基础分 ${(baseScore * 100).toFixed(1)}%`, 'debug');
             
@@ -1972,8 +1915,6 @@ class MatchingService {
     
     /**
      * v5.0: 查找替换规则（模糊匹配）- 优化版
-     * [Bug 25 修复] 合并原来的两次遍历为单次遍历
-     * 原来对同类型规则计算两次相似度（第一轮找≥90%，第二轮找≥85%），浪费性能
      */
     _findReplaceRuleFuzzyOnly(text, type) {
         console.log(`\n${'='.repeat(80)}\n[替换库模糊匹配] 输入: "${text}" (${type})`);
@@ -1981,44 +1922,52 @@ class MatchingService {
         this.matchingDictService.checkCache();
         const rules = this.matchingDictService.cache.rules || [];
         const normalizedType = type.toLowerCase().trim();
-        const normalizedText = text.toLowerCase().trim();
-        const calcOptions = {
-            isWordMatch: type === 'word', isPhraseMatch: type === 'phrase',
-            isPatternMatch: type === 'pattern', isGrammarMatch: type === 'grammar'
-        };
         
-        // [Bug 25 修复] 单次遍历，同时找最高分和次高分
-        let bestScore = 0, bestRule = null;
+        // 高相似度优先检查
+        let highScore = 0, highRule = null;
         for (const rule of rules) {
             if (rule.original_type.toLowerCase().trim() !== normalizedType) continue;
             if (!rule.target_text || rule.target_text.trim() === '') continue;
-            // 跳过精确匹配（findRule已处理）
-            if (rule.original_text.toLowerCase().trim() === normalizedText) continue;
-            
-            const score = this.calculateSimilarity(text, rule.original_text, calcOptions);
-            if (score > bestScore) {
-                bestScore = score;
-                bestRule = rule;
-            }
-            // 提前终止：≥0.95 已经足够好
+            const score = this.calculateSimilarity(text, rule.original_text, {
+                isWordMatch: type === 'word', isPhraseMatch: type === 'phrase',
+                isPatternMatch: type === 'pattern', isGrammarMatch: type === 'grammar'
+            });
+            if (score > highScore) { highScore = score; highRule = rule; }
             if (score >= 0.95) break;
         }
         
-        // 高置信度 ≥90%：直接返回
-        if (bestScore >= 0.90 && bestRule) {
-            console.log(`[替换库模糊匹配] ✅ 高相似度规则 (${(bestScore*100).toFixed(1)}%)\n${'='.repeat(80)}`);
-            this.matchingDictService.incrementUseCount(bestRule.id);
-            return { rule: bestRule, score: bestScore };
+        if (highScore >= 0.90) {
+            console.log(`[替换库模糊匹配] ✅ 高相似度规则 (${(highScore*100).toFixed(1)}%)\n${'='.repeat(80)}`);
+            this.matchingDictService.incrementUseCount(highRule.id);
+            return { rule: highRule, score: highScore };
         }
         
-        // 模板检测：<90% 时检查是否是通用模板
+        // 模板检测
         if (this._containsTemplatePlaceholder(text)) {
             console.log(`[替换库模糊匹配] ⚠️ 跳过: 通用模板\n${'='.repeat(80)}`);
             return null;
         }
         
-        // 普通匹配 ≥85%：模板检测通过后返回
-        if (bestScore >= 0.85 && bestRule) {
+        // 模糊匹配
+        const threshold = 0.85;
+        let bestRule = null, bestScore = 0;
+        for (const rule of rules) {
+            if (rule.original_type.toLowerCase().trim() !== normalizedType) continue;
+            if (!rule.target_text || rule.target_text.trim() === '') continue;
+            if (text.toLowerCase().trim() === rule.original_text.toLowerCase().trim()) continue;
+            
+            const score = this.calculateSimilarity(text, rule.original_text, {
+                isWordMatch: type === 'word', isPhraseMatch: type === 'phrase',
+                isPatternMatch: type === 'pattern', isGrammarMatch: type === 'grammar'
+            });
+            
+            if (score >= threshold && score > bestScore) {
+                bestScore = score;
+                bestRule = rule;
+            }
+        }
+        
+        if (bestRule) {
             this.matchingDictService.incrementUseCount(bestRule.id);
             console.log(`[替换库模糊匹配] ✅ 匹配成功 (${(bestScore*100).toFixed(1)}%)\n${'='.repeat(80)}`);
             return { rule: bestRule, score: bestScore };
@@ -2560,9 +2509,7 @@ class MatchingService {
                         }
                         
                         // structure 模糊匹配
-                        // [Bug 4 修复] structure 字段68%为中文，应使用 isGrammarMatch 走中文相似度算法
-                        // 原来用 isPatternMatch 走英文算法，对中文 structure 计算结果不准确
-                        const structScore = this.calculateSimilarity(grammarText, struct, { isGrammarMatch: true });
+                        const structScore = this.calculateSimilarity(grammarText, struct, { isPatternMatch: true });
                         if (structScore >= 0.7) {
                             candidates.push({
                                 text: `${struct} (${item.title})`,
@@ -2632,8 +2579,7 @@ class MatchingService {
                         }
                         
                         // usage中的句型模糊匹配
-                        // [Bug 4 修复] usage 字段也包含大量中文，使用 isGrammarMatch
-                        const usageScore = this.calculateSimilarity(grammarText, part, { isGrammarMatch: true });
+                        const usageScore = this.calculateSimilarity(grammarText, part, { isPatternMatch: true });
                         if (usageScore >= 0.7) {
                             candidates.push({
                                 text: `${part} (${item.title})`,
