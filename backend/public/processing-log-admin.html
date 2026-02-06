@@ -2377,6 +2377,10 @@ function switchTab(tab) {
                     existingInfo.remove();
                 }
                 
+                // v7.1 修复：清理模糊匹配编辑状态，防止从匹配列表泄漏过来
+                window._editingMatchId = null;
+                window._editingMatchData = null;
+                
                 const res = await fetch(API_BASE + '/unmatched/' + id);
                 const data = await res.json();
                 if (!data.success) {
@@ -3813,8 +3817,31 @@ function switchTab(tab) {
                     return;
                 }
                 
-                // 2. 如果有 itemId，标记该未匹配记录为已忽略
-                if (itemId) {
+                // 2. 标记原记录为已处理
+                // v7.1 修复：区分模糊匹配记录和未匹配记录
+                const wasFromMatch = !!window._editingMatchId;
+                
+                if (window._editingMatchId) {
+                    // 情况A：正在编辑模糊匹配记录 → 排除匹配
+                    const matchId = window._editingMatchId;
+                    try {
+                        await fetch(API_BASE + '/matches/' + matchId + '/reject', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                reviewedBy: 'admin', 
+                                notes: '已跳过并添加到排除库' 
+                            })
+                        });
+                        console.log('[skipAndExclude] 匹配记录已标记为rejected:', matchId);
+                    } catch (e) {
+                        console.warn('[skipAndExclude] 标记匹配记录失败:', e);
+                    }
+                    // 清理编辑状态
+                    window._editingMatchId = null;
+                    window._editingMatchData = null;
+                } else if (itemId) {
+                    // 情况B：正在编辑未匹配记录 → 标记为已忽略
                     const ignoreRes = await fetch(API_BASE + `/unmatched/${itemId}/ignore`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -3838,7 +3865,12 @@ function switchTab(tab) {
             const el = document.getElementById('badgeExactMatches');
             if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
         });
-                loadPendingUnmatched();
+                // v7.1 修复：根据来源类型刷新正确的列表
+                if (wasFromMatch) {
+                    loadPendingMatches();
+                } else {
+                    loadPendingUnmatched();
+                }
                 
             } catch (e) {
                 console.error('跳过失败:', e);
@@ -4831,7 +4863,27 @@ function switchTab(tab) {
                 }
                 
                 // 2. 标记原记录为已处理
-                if (id) {
+                // v7.1 修复：区分模糊匹配记录和未匹配记录
+                const wasFromMatch = !!window._editingMatchId;  // 记录来源，用于后续刷新正确的列表
+                
+                if (window._editingMatchId) {
+                    // 情况A：正在编辑模糊匹配记录 → 确认匹配
+                    const matchId = window._editingMatchId;
+                    try {
+                        await fetch(API_BASE + '/matches/' + matchId + '/confirm', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reviewedBy: 'admin' })
+                        });
+                        console.log('[saveReplaceRuleV2] 匹配记录已确认:', matchId);
+                    } catch (e) {
+                        console.warn('[saveReplaceRuleV2] 确认匹配记录失败:', e);
+                    }
+                    // 清理编辑状态
+                    window._editingMatchId = null;
+                    window._editingMatchData = null;
+                } else if (id) {
+                    // 情况B：正在编辑未匹配记录 → 标记为已忽略
                     await fetch(API_BASE + '/unmatched/' + id + '/ignore', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -4883,7 +4935,12 @@ function switchTab(tab) {
             const el = document.getElementById('badgeExactMatches');
             if (el) { el.textContent = data.exactMatch || 0; el.style.display = ''; }
         });
-                loadPendingUnmatched();
+                // v7.1 修复：根据来源类型刷新正确的列表
+                if (wasFromMatch) {
+                    loadPendingMatches();
+                } else {
+                    loadPendingUnmatched();
+                }
                 
             } catch (e) {
                 console.error('保存替换规则失败:', e);
@@ -5537,6 +5594,18 @@ function switchTab(tab) {
                 document.querySelector('#editModal .modal-header h2').textContent = '✎ 编辑数据';
                 // 恢复排除按钮
                 // v7.0: excludeBtn 已删除
+                
+                // v7.1 修复：清理模糊匹配编辑状态，防止泄漏到后续操作
+                if (window._editingMatchId) {
+                    console.log('[closeModal] 清理 _editingMatchId:', window._editingMatchId);
+                    window._editingMatchId = null;
+                    window._editingMatchData = null;
+                    // 移除编辑提示信息
+                    const matchEditInfo = document.getElementById('matchEditInfo');
+                    if (matchEditInfo) {
+                        matchEditInfo.remove();
+                    }
+                }
                 
                 // 如果是用户手动关闭（不是程序调用），且还有待处理的单词，询问是否继续
                 if (!skipCheck && window._pendingNewWords && window._pendingNewWordsIndex < window._pendingNewWords.length) {
