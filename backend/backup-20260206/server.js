@@ -292,13 +292,6 @@ function broadcastTaskProgress(taskId, progress, status, message = '') {
     let failCount = 0;
 
     wsClients.forEach((clientInfo, clientId) => {
-        // [Bug 23 修复] 只发送给订阅了该 taskId 的客户端（或未订阅任何任务的客户端）
-        // 原来: 所有进度消息广播给所有客户端，多任务并行时前端收到混乱的进度
-        // 修复: 仅发送给 taskId 匹配的客户端，未订阅的客户端也收到（向后兼容）
-        if (clientInfo.taskId && clientInfo.taskId !== taskId) {
-            return; // 跳过订阅了其他任务的客户端
-        }
-        
         // 只发送给连接正常的客户端
         if (clientInfo.ws.readyState === WebSocket.OPEN) {
             try {

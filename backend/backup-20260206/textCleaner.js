@@ -39,8 +39,8 @@ class TextCleaner {
     // someone/somebody → sb.
     cleaned = cleaned.replace(/\bsomeone\b/gi, 'sb.');
     cleaned = cleaned.replace(/\bsomebody\b/gi, 'sb.');
-    // [Bug 18 修复] 移除 people→sb. 和 a person→sb.
-    // "people" 是合法名词（the people, many people），不应自动替换为 sb.
+    cleaned = cleaned.replace(/\bpeople\b/gi, 'sb.');
+    cleaned = cleaned.replace(/\ba person\b/gi, 'sb.');
     
     // something → sth.
     cleaned = cleaned.replace(/\bsomething\b/gi, 'sth.');
@@ -50,21 +50,28 @@ class TextCleaner {
     cleaned = cleaned.replace(/\bdoing something\b/gi, 'doing sth.');
     cleaned = cleaned.replace(/\bto do something\b/gi, 'to do sth.');
     
-    // [Bug 18 修复] 移除以下过于激进的全局替换
-    // 原来: people→sb., verb→do sth., noun→sth., adjective→adj., adverb→adv.
-    // 问题: "verb" 在 "adverb" 中出现，"noun" 在 "pronoun" 中出现
-    //        "people" 是合法单词不应替换，"adjective/adverb" 作为语法术语不应替换
-    // 已移除: /\bpeople\b/→sb., /\ba person\b/→sb., /\bverb\b/→do sth.
-    //         /\bnoun\b/→sth., /\badjective\b/→adj., /\badverb\b/→adv.
-
-    // 步骤3: 去除括号内的示例性内容
-    // [Bug 19 修复] 原来无差别删除所有括号内容，会误删重要信息
-    // 如 "spend time/money (on sth.)" → "spend time/money" 丢失关键结构
-    // 修复: 只删除以 e.g./such as/like/for example/例如 开头的括号内容
-    cleaned = cleaned.replace(/\s*\(\s*(?:e\.?g\.?|such as|like|for example|for instance|例如|比如)[^)]*\)/gi, '');
+    // verb → do sth.
+    cleaned = cleaned.replace(/\bverb\b/gi, 'do sth.');
+    cleaned = cleaned.replace(/\bto verb\b/gi, 'to do sth.');
+    cleaned = cleaned.replace(/\bhow to verb\b/gi, 'how to do sth.');
     
-    // 去除方括号内的示例性内容（同样只删示例性的）
-    cleaned = cleaned.replace(/\s*\[\s*(?:e\.?g\.?|such as|like|for example|for instance|例如|比如)[^\]]*\]/gi, '');
+    // noun → sth.
+    cleaned = cleaned.replace(/\bnoun\b/gi, 'sth.');
+    cleaned = cleaned.replace(/\ba noun\b/gi, 'sth.');
+    cleaned = cleaned.replace(/\ban noun\b/gi, 'sth.');
+    
+    // adjective → adj.
+    cleaned = cleaned.replace(/\badjective\b/gi, 'adj.');
+    
+    // adverb → adv.
+    cleaned = cleaned.replace(/\badverb\b/gi, 'adv.');
+
+    // 步骤3: 去除括号及其内容
+    // 匹配 (e.g., ...), (such as ...), (like ...) 等
+    cleaned = cleaned.replace(/\s*\([^)]*\)/g, '');
+    
+    // 去除方括号及其内容
+    cleaned = cleaned.replace(/\s*\[[^\]]*\]/g, '');
 
     // 步骤4: 清理多余空格
     cleaned = cleaned.replace(/\s{2,}/g, ' ');  // 多个空格 → 单个空格
@@ -206,9 +213,14 @@ class TextCleaner {
     if (/\bsomething\b/i.test(text)) {
       issues.push('仍包含 "something"');
     }
-    // [Bug 18 修复] 移除 verb/noun 的验证检查，因为不再替换它们
-    if (/\([^)]*(?:e\.?g\.?|such as|like|for example|例如|比如)[^)]*\)/i.test(text)) {
-      issues.push('仍包含示例性括号');
+    if (/\bverb\b/i.test(text)) {
+      issues.push('仍包含 "verb"');
+    }
+    if (/\bnoun\b/i.test(text)) {
+      issues.push('仍包含 "noun"');
+    }
+    if (/\([^)]*\)/.test(text)) {
+      issues.push('仍包含括号');
     }
 
     return {

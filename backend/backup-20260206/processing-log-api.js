@@ -255,10 +255,9 @@ router.post('/matches/:id/confirm', (req, res) => {
                     original_type: matchedItem.item_type || 'phrase',
                     action: 'replace',
                     target_text: matchedItem.matched_text,
-                    // [Bug 9 修复] 字段名修正：数据库实际字段是 source_db/source_table/source_id
-                    target_db: matchedItem.source_db,
-                    target_table: matchedItem.source_table,
-                    target_id: matchedItem.source_id,
+                    target_db: matchedItem.matched_db,
+                    target_table: matchedItem.matched_table,
+                    target_id: matchedItem.matched_id,
                     notes: `确认匹配: ${matchedItem.original_text} → ${matchedItem.matched_text}`,
                     created_by: reviewedBy || 'admin'
                 });
@@ -418,10 +417,9 @@ router.post('/confirm-all-pending', (req, res) => {
                     original_type: item.item_type || 'phrase',
                     action: 'replace',
                     target_text: item.matched_text,
-                    // [Bug 9 修复] 字段名修正：数据库实际字段是 source_db/source_table/source_id
-                    target_db: item.source_db,
-                    target_table: item.source_table,
-                    target_id: item.source_id,
+                    target_db: item.matched_db,
+                    target_table: item.matched_table,
+                    target_id: item.matched_id,
                     notes: `批量确认: ${item.original_text} → ${item.matched_text}`,
                     created_by: reviewedBy || 'admin'
                 });
