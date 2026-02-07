@@ -346,7 +346,11 @@ function useTaskProgress(taskId) {
                                 message: stepMessage.substring(0, 30),
                             });
                             
-                            setLogs(prev => [...prev, newLog]);
+                            // 🔧 F5修复：限制日志上限500条，防止长任务内存无限增长
+                            setLogs(prev => {
+                                const updated = [...prev, newLog];
+                                return updated.length > 500 ? updated.slice(-500) : updated;
+                            });
                         }
                     }
                     

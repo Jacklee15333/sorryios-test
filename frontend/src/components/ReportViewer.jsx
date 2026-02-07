@@ -14,7 +14,7 @@
  * - 改进 html2canvas 配置
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Table, Button, message, Spin, Empty, Typography, Space, Card, Modal, Checkbox, Input } from 'antd';
 import { CheckOutlined, CloseOutlined, ReloadOutlined, DownloadOutlined, FilePdfOutlined, FileWordOutlined, FileTextOutlined, SettingOutlined } from '@ant-design/icons';
 import axios from 'axios';
@@ -291,13 +291,28 @@ const ReportViewer = ({ taskId }) => {
           <span>
             已标记为掌握
             <a 
-              onClick={() => {
-                // 撤销操作：从隐藏列表中移除
+              onClick={async () => {
+                // 🔧 F2修复：撤销操作 - 前端恢复显示 + 后端移除记录
                 setHiddenItems(prev => {
                   const newSet = new Set(prev);
                   newSet.delete(record.key);
                   return newSet;
                 });
+                try {
+                  const undoToken = localStorage.getItem('token');
+                  if (undoToken) {
+                    const undoWord = record.content || record.word || record.phrase || record.pattern;
+                    const undoType = record.type || 'word';
+                    console.log(`[ReportViewer] 🔄 撤销已掌握: "${undoWord}" (${undoType})`);
+                    await axios.post('/api/user-mastered/remove',
+                      { word: undoWord, wordType: undoType },
+                      { headers: { 'Authorization': `Bearer ${undoToken}` } }
+                    );
+                    console.log('[ReportViewer] ✅ 后端撤销成功');
+                  }
+                } catch (undoErr) {
+                  console.error('[ReportViewer] ❌ 撤销后端同步失败:', undoErr.message);
+                }
                 message.info('已撤销');
               }}
               style={{ marginLeft: 12, color: '#1890ff', cursor: 'pointer' }}
@@ -417,13 +432,27 @@ const ReportViewer = ({ taskId }) => {
           <span>
             已标记为掌握
             <a 
-              onClick={() => {
-                // 撤销操作：从隐藏列表中移除
+              onClick={async () => {
+                // 🔧 F2修复：撤销操作 - 前端恢复显示 + 后端移除记录
                 setHiddenItems(prev => {
                   const newSet = new Set(prev);
                   newSet.delete(grammarKey);
                   return newSet;
                 });
+                try {
+                  const undoToken = localStorage.getItem('token');
+                  if (undoToken) {
+                    const undoWord = record.content || record.title;
+                    console.log(`[ReportViewer] 🔄 撤销语法已掌握: "${undoWord}"`);
+                    await axios.post('/api/user-mastered/remove',
+                      { word: undoWord, wordType: 'grammar' },
+                      { headers: { 'Authorization': `Bearer ${undoToken}` } }
+                    );
+                    console.log('[ReportViewer] ✅ 后端语法撤销成功');
+                  }
+                } catch (undoErr) {
+                  console.error('[ReportViewer] ❌ 语法撤销后端同步失败:', undoErr.message);
+                }
                 message.info('已撤销');
               }}
               style={{ marginLeft: 12, color: '#1890ff', cursor: 'pointer' }}
@@ -500,6 +529,7 @@ const ReportViewer = ({ taskId }) => {
     // 诊断1: 检查数据
     const wordsData = getWordsData();
     const phrasesData = getPhrasesData();
+    const vocabularyData = [...wordsData, ...phrasesData]; // 🔧 F1修复：补充缺失的vocabularyData定义（与exportToHTML/exportToWord一致）
     const grammarData = data.grammar || [];
     console.log('📊 数据统计:');
     console.log('  - 单词数:', wordsData.length);
@@ -759,13 +789,24 @@ const ReportViewer = ({ taskId }) => {
       const vocabularyData = [...wordsData, ...phrasesData]; // 为了兼容原有导出逻辑
       const grammarData = data.grammar || [];
 
+      // 🔧 F6修复：HTML实体转义，防止XSS
+      const esc = (str) => {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      };
+
       let html = `
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${exportOptions.fileName}</title>
+  <title>${esc(exportOptions.fileName)}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -896,11 +937,11 @@ const ReportViewer = ({ taskId }) => {
           html += `
         <tr>
           <td>${index + 1}</td>
-          <td>${item.type}</td>
-          <td><strong>${item.content}</strong> ${item.phonetic || ''}</td>
-          <td>${item.partOfSpeech || ''}</td>
-          <td>${item.meaning || ''}</td>
-          <td><em>${item.example || ''}</em></td>
+          <td>${esc(item.type)}</td>
+          <td><strong>${esc(item.content)}</strong> ${esc(item.phonetic)}</td>
+          <td>${esc(item.partOfSpeech)}</td>
+          <td>${esc(item.meaning)}</td>
+          <td><em>${esc(item.example)}</em></td>
         </tr>
 `;
         });
@@ -920,13 +961,13 @@ const ReportViewer = ({ taskId }) => {
           html += `
     <div class="grammar-card">
       <div class="grammar-title">
-        ${grammar.title}
-        ${grammar.category ? `<span class="badge badge-category">${grammar.category}</span>` : ''}
+        ${esc(grammar.title)}
+        ${grammar.category ? `<span class="badge badge-category">${esc(grammar.category)}</span>` : ''}
       </div>
-      ${grammar.definition ? `<div class="grammar-field"><span class="field-label">定义：</span>${grammar.definition}</div>` : ''}
-      ${grammar.structure ? `<div class="grammar-field"><span class="field-label">结构：</span>${grammar.structure}</div>` : ''}
-      ${grammar.usage ? `<div class="grammar-field"><span class="field-label">用法：</span>${Array.isArray(grammar.usage) ? grammar.usage.join('; ') : grammar.usage}</div>` : ''}
-      ${grammar.examples ? `<div class="grammar-field"><span class="field-label">例句：</span><em>${Array.isArray(grammar.examples) ? grammar.examples.join(' / ') : grammar.examples}</em></div>` : ''}
+      ${grammar.definition ? `<div class="grammar-field"><span class="field-label">定义：</span>${esc(grammar.definition)}</div>` : ''}
+      ${grammar.structure ? `<div class="grammar-field"><span class="field-label">结构：</span>${esc(grammar.structure)}</div>` : ''}
+      ${grammar.usage ? `<div class="grammar-field"><span class="field-label">用法：</span>${esc(Array.isArray(grammar.usage) ? grammar.usage.join('; ') : grammar.usage)}</div>` : ''}
+      ${grammar.examples ? `<div class="grammar-field"><span class="field-label">例句：</span><em>${esc(Array.isArray(grammar.examples) ? grammar.examples.join(' / ') : grammar.examples)}</em></div>` : ''}
 `;
           
           // 添加子话题
@@ -935,10 +976,10 @@ const ReportViewer = ({ taskId }) => {
             subTopics.forEach((subTopic, idx) => {
               html += `
       <div class="sub-topic">
-        <div class="sub-topic-title">${idx + 1}. ${subTopic.title}</div>
-        ${subTopic.definition ? `<div>${subTopic.definition}</div>` : ''}
-        ${subTopic.structure ? `<div><span class="field-label">结构：</span>${subTopic.structure}</div>` : ''}
-        ${subTopic.examples ? `<div><span class="field-label">例句：</span><em>${Array.isArray(subTopic.examples) ? subTopic.examples.join(' / ') : subTopic.examples}</em></div>` : ''}
+        <div class="sub-topic-title">${idx + 1}. ${esc(subTopic.title)}</div>
+        ${subTopic.definition ? `<div>${esc(subTopic.definition)}</div>` : ''}
+        ${subTopic.structure ? `<div><span class="field-label">结构：</span>${esc(subTopic.structure)}</div>` : ''}
+        ${subTopic.examples ? `<div><span class="field-label">例句：</span><em>${esc(Array.isArray(subTopic.examples) ? subTopic.examples.join(' / ') : subTopic.examples)}</em></div>` : ''}
       </div>
 `;
             });
@@ -1618,13 +1659,16 @@ const ReportViewer = ({ taskId }) => {
     );
   };
 
-  const wordsData = getWordsData();
-  const phrasesData = getPhrasesData();
+  // 🔧 F3修复：使用useMemo缓存计算结果，避免每次render重新计算
+  const wordsData = useMemo(() => getWordsData(), [data.words, hiddenItems]);
+  const phrasesData = useMemo(() => getPhrasesData(), [data.phrases, data.patterns, hiddenItems]);
   // 🔧 过滤掉已隐藏的语法项
-  const grammarData = (data.grammar || []).filter(item => {
-    const grammarKey = `grammar-${item.id}`;
-    return !hiddenItems.has(grammarKey);
-  });
+  const grammarData = useMemo(() => {
+    return (data.grammar || []).filter(item => {
+      const grammarKey = `grammar-${item.id}`;
+      return !hiddenItems.has(grammarKey);
+    });
+  }, [data.grammar, hiddenItems]);
 
   if (loading) {
     return (
