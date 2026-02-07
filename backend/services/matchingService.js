@@ -1,6 +1,12 @@
 /**
- * 匹配算法服务 v5.1.0 (分数修复版)
+ * 匹配算法服务 v5.3.0 (性能优化版)
  * 文件位置: backend/services/matchingService.js
+ * 
+ * 📦 v5.3.0 更新（性能优化 - 批量匹配缓存）：
+ * - 🔥 修复：batchMatch 中每匹配一个词就 SELECT * 全表查询 → 改为开头一次性缓存
+ * - 🔥 修复：黑名单过滤在 .filter() 回调中重复 .map().includes() → 改为 Set O(1) 查找
+ * - 📊 效果：数据库查询从 400+ 次降到 4 次，黑名单过滤从 O(n²) 降到 O(n)
+ * - ✅ 兼容：独立调用 matchWord/matchPhrase 等方法时自动回退到直接查询，不受影响
  * 
  * 📦 v5.1.0 更新（2026-02-03 修复匹配分数BUG）：
  * - 🔥 修复：findBestMatch方法区分精确匹配(1.0)和模糊匹配(0.98)
@@ -97,7 +103,7 @@ class MatchingService {
         
         // v3.8: 替换库服务（已合并排除库）
         this.matchingDictService = getMatchingDictService();
-        console.log('[MatchingService] v5.2.3: 语法匹配核心术语检查');
+        console.log('[MatchingService] v5.3.0: 批量匹配缓存优化 + 语法匹配核心术语检查');
         
         // v2.2: 提高匹配阈值，更严格
         this.thresholds = {
@@ -111,7 +117,8 @@ class MatchingService {
         this.debug = false;
         
         // v4.3.0: 详细日志开关
-        this.verboseLog = true;
+        // 🔧 B7修复：默认关闭，可通过环境变量 MATCHING_VERBOSE=true 开启
+        this.verboseLog = process.env.MATCHING_VERBOSE === 'true';
         
 
         
@@ -338,6 +345,75 @@ class MatchingService {
         ];
         console.log(`[MatchingService] v5.0 已加载 ${this.completeSentencePatterns.length} 个完整句型白名单`);
 
+        // v5.3.0: 批量匹配缓存（在 batchMatch 期间临时持有，方法结束自动清除）
+        this._cache = null;
+    }
+
+    // ============================================
+    // v5.3.0: 性能优化 - 批量匹配缓存
+    // ============================================
+    
+    /**
+     * v5.3.0: 初始化批量匹配缓存
+     * 在 batchMatch() 开始时调用，一次性加载所有数据，避免重复全表查询
+     */
+    _initBatchCache() {
+        const startTime = Date.now();
+        console.log('[MatchingService] 🚀 v5.3.0 初始化批量匹配缓存...');
+        
+        this._cache = {
+            words: this.vocabularyService.getAllWords(true),
+            phrases: this.vocabularyService.getAllPhrases(true),
+            patterns: this.vocabularyService.getAllPatterns(true),
+            grammar: this.grammarService.getAll(true),
+            // 预计算黑名单 Set（避免在 filter 回调中重复 .map().includes()）
+            blacklistWords: new Set(this.blacklist.words.map(x => x.toLowerCase())),
+            blacklistPhrases: new Set(this.blacklist.phrases.map(x => x.toLowerCase())),
+        };
+        
+        const elapsed = Date.now() - startTime;
+        console.log(`[MatchingService] ✅ 缓存加载完成 (${elapsed}ms): 单词${this._cache.words.length}, 短语${this._cache.phrases.length}, 句型${this._cache.patterns.length}, 语法${this._cache.grammar.length}`);
+    }
+    
+    /**
+     * v5.3.0: 清除批量匹配缓存
+     */
+    _clearBatchCache() {
+        this._cache = null;
+        console.log('[MatchingService] 🧹 批量匹配缓存已清除');
+    }
+    
+    /**
+     * v5.3.0: 获取单词数据（优先使用缓存，无缓存时回退到直接查询）
+     * 已内置黑名单过滤，使用 Set 进行 O(1) 查找
+     */
+    _getCachedWords() {
+        const all = this._cache ? this._cache.words : this.vocabularyService.getAllWords(true);
+        const blacklistSet = this._cache ? this._cache.blacklistWords : new Set(this.blacklist.words.map(x => x.toLowerCase()));
+        return all.filter(w => !blacklistSet.has((w.word || '').toLowerCase()));
+    }
+    
+    /**
+     * v5.3.0: 获取短语数据（优先使用缓存）
+     */
+    _getCachedPhrases() {
+        const all = this._cache ? this._cache.phrases : this.vocabularyService.getAllPhrases(true);
+        const blacklistSet = this._cache ? this._cache.blacklistPhrases : new Set(this.blacklist.phrases.map(x => x.toLowerCase()));
+        return all.filter(p => !blacklistSet.has((p.phrase || '').toLowerCase()));
+    }
+    
+    /**
+     * v5.3.0: 获取句型数据（优先使用缓存）
+     */
+    _getCachedPatterns() {
+        return this._cache ? this._cache.patterns : this.vocabularyService.getAllPatterns(true);
+    }
+    
+    /**
+     * v5.3.0: 获取语法数据（优先使用缓存）
+     */
+    _getCachedGrammar() {
+        return this._cache ? this._cache.grammar : this.grammarService.getAll(true);
     }
 
     // ============================================
@@ -476,6 +552,18 @@ class MatchingService {
      * @param {string} targetText - 目标文本（已小写）
      * @returns {boolean} 是否匹配
      */
+    // 🔧 语法keywords匹配修复 v2
+    // 
+    // v1修复：英文短keyword（a/of/in）不再子串匹配 → 解决 "enable" → 冠词 的问题
+    // v2修复：中文短keyword（名词/动词/介词，2字）不再子串匹配 → 解决 "形容词与名词的词性辨析" → 名词 的问题
+    //
+    // 规则：
+    //   精确匹配：任何keyword都允许
+    //   中文keyword ≥ 4字：允许子串匹配（"现在完成时" 匹配 "现在完成时的用法" ✅）
+    //   中文keyword 3字：允许子串匹配，但keyword必须出现在目标文本开头（"比较级" 匹配 "比较级的用法" ✅，但不匹配 "xxx比较级xxx"）
+    //   中文keyword ≤ 2字：不允许子串匹配（"名词"太泛，会误匹配所有提到名词的话题）
+    //   英文keyword ≥ 4字：完整单词匹配（词边界）
+    //   英文keyword < 4字：不允许子串匹配
     _matchInKeywords(keywords, targetText) {
         if (!keywords || !Array.isArray(keywords)) return false;
         
@@ -486,14 +574,49 @@ class MatchingService {
             
             const keywordLower = keyword.toLowerCase().trim();
             
-            // 精确匹配
+            // 1. 精确匹配（始终允许）
             if (keywordLower === normalized) {
                 return true;
             }
             
-            // 包含匹配（关键词包含在目标文本中，或目标文本包含在关键词中）
-            if (keywordLower.includes(normalized) || normalized.includes(keywordLower)) {
-                return true;
+            // 2. 判断keyword是否包含中文字符
+            const hasChinese = /[\u4e00-\u9fff]/.test(keywordLower);
+            
+            if (hasChinese) {
+                // 统计中文字符数量（更准确地判断keyword的"实质长度"）
+                const chineseCharCount = (keywordLower.match(/[\u4e00-\u9fff]/g) || []).length;
+                
+                if (chineseCharCount >= 4) {
+                    // 长中文keyword（≥4中文字符，如"现在完成时"、"定语从句"、"被动语态"）
+                    // 这些足够具体，允许在目标文本任意位置子串匹配
+                    if (normalized.includes(keywordLower)) {
+                        console.log(`[_matchInKeywords] 中文子串匹配: "${keywordLower}" 在 "${normalized}" 中`);
+                        return true;
+                    }
+                } else if (chineseCharCount === 3) {
+                    // 中等中文keyword（3中文字符，如"比较级"、"所有格"、"感叹句"）
+                    // 有一定特异性，但需要出现在开头才安全
+                    if (normalized.startsWith(keywordLower) || normalized.startsWith(keywordLower.replace(/\s+/g, ''))) {
+                        console.log(`[_matchInKeywords] 中文前缀匹配: "${keywordLower}" 在 "${normalized}" 开头`);
+                        return true;
+                    }
+                }
+                // chineseCharCount ≤ 2（如"名词"、"动词"、"介词"、"连词"）：
+                // 太泛，不做子串匹配。只保留精确匹配（第1步已处理）
+                // 这些输入会流转到 _matchGrammarInternal 进行模糊匹配或由AI生成
+            } else {
+                // 英文keyword：必须作为完整单词出现（词边界匹配），且长度≥4
+                if (keywordLower.length >= 4) {
+                    try {
+                        const wordBoundaryRegex = new RegExp(`\\b${keywordLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+                        if (wordBoundaryRegex.test(normalized)) {
+                            console.log(`[_matchInKeywords] 英文完整单词匹配: "${keywordLower}" 在 "${normalized}" 中`);
+                            return true;
+                        }
+                    } catch (e) {
+                        // 正则构建失败，跳过
+                    }
+                }
             }
         }
         
@@ -735,6 +858,18 @@ class MatchingService {
         if (inputKeywords.length === 0) {
             if (this.verboseLog) {
                 console.log(`    [关键词匹配] "${input}" 无有效关键词，跳过`);
+            }
+            return null;
+        }
+        
+        // 🔧 Fix: 单个短关键词不足以支撑可靠的关键词匹配
+        // 修复前: "if条件句" 提取出 ["if"] → 100%匹配 "as if" ❌
+        //         "see...as...结构的用法" 提取出 ["see"] → 100%匹配语法项 "see" ❌
+        // 修复后: 只有1个关键词且长度≤4字符时，信号太弱，跳过关键词匹配
+        //         让它们流转到模糊匹配获得更合理的分数
+        if (inputKeywords.length === 1 && inputKeywords[0].length <= 4) {
+            if (this.verboseLog) {
+                console.log(`    [关键词匹配] "${input}" 仅1个短关键词 "${inputKeywords[0]}"，信号不足，跳过`);
             }
             return null;
         }
@@ -1783,11 +1918,17 @@ class MatchingService {
             return this._processAndApplyReplaceRule(exactRule, word, 'word', false);
         }
         
-        for (const item of this.vocabularyService.getAllWords(true).filter(w => !this.blacklist.words.map(x => x.toLowerCase()).includes((w.word || '').toLowerCase()))) {
-            if (!item.word) continue;
-            const normalizedTarget = item.word.toLowerCase().trim();
-            
-            for (const variant of wordVariants) {
+        // v5.3.0: 使用缓存代替全表查询（内置黑名单过滤）
+        // 🔧 Fix: 按变体长度降序排列，优先匹配更长的词形
+        // 修复前: 外层遍历词库、内层遍历variants → "us"(在词库中排在"use"前面)先命中
+        // 修复后: 外层遍历variants(长→短)、内层遍历词库 → "use"(3字符)优先于"us"(2字符)
+        const sortedVariants = [...new Set(wordVariants)].sort((a, b) => b.length - a.length);
+        
+        for (const variant of sortedVariants) {
+            for (const item of this._getCachedWords()) {
+                if (!item.word) continue;
+                const normalizedTarget = item.word.toLowerCase().trim();
+                
                 if (variant === normalizedTarget) {
                     console.log(`[matchWord] 词库精确匹配: "${word}" → "${variant}" === "${item.word}" → 100%`);
                     return {
@@ -1815,7 +1956,8 @@ class MatchingService {
      * 内部单词匹配
      */
     _matchWordInternal(word) {
-        const wordsData = this.vocabularyService.getAllWords(true).filter(w => !this.blacklist.words.map(x => x.toLowerCase()).includes((w.word || '').toLowerCase()));
+        // v5.3.0: 使用缓存代替全表查询（内置黑名单过滤）
+        const wordsData = this._getCachedWords();
         console.log(`[_matchWordInternal] 候选词数量: ${wordsData.length}`);
         
         // v5.2.0 新增：先尝试关键词匹配（仅对复合词有效）
@@ -1886,7 +2028,8 @@ class MatchingService {
         }
         
         // 词库精确匹配（增强版）
-        for (const item of this.vocabularyService.getAllPhrases(true).filter(p => !this.blacklist.phrases.map(x => x.toLowerCase()).includes((p.phrase || '').toLowerCase()))) {
+        // v5.3.0: 使用缓存代替全表查询（内置黑名单过滤）
+        for (const item of this._getCachedPhrases()) {
             if (!item.phrase) continue;
             
             const itemNormalized = item.phrase.toLowerCase().trim();
@@ -2135,7 +2278,8 @@ class MatchingService {
      * 内部短语匹配
      */
     _matchPhraseInternal(phrase) {
-        const allPhrases = this.vocabularyService.getAllPhrases(true).filter(p => !this.blacklist.phrases.map(x => x.toLowerCase()).includes((p.phrase || '').toLowerCase()));
+        // v5.3.0: 使用缓存代替全表查询（内置黑名单过滤）
+        const allPhrases = this._getCachedPhrases();
         
         // v5.2.0 新增：先尝试关键词匹配
         const keywordMatch = this._findByKeywordMatch(phrase, 'phrase', allPhrases);
@@ -2196,7 +2340,8 @@ class MatchingService {
         }
         
         // 词库精确匹配（增强版）
-        for (const item of this.vocabularyService.getAllPatterns(true)) {
+        // v5.3.0: 使用缓存代替全表查询
+        for (const item of this._getCachedPatterns()) {
             if (!item.pattern) continue;
             
             const itemNormalized = item.pattern.toLowerCase().trim();
@@ -2233,7 +2378,8 @@ class MatchingService {
      * 解决AI分类错误导致的匹配失败问题
      */
     _matchPatternInternal(pattern) {
-        const allPatterns = this.vocabularyService.getAllPatterns(true);
+        // v5.3.0: 使用缓存代替全表查询
+        const allPatterns = this._getCachedPatterns();
         
         // v5.2.0 新增：先尝试关键词匹配（patterns表）
         const keywordMatchPatterns = this._findByKeywordMatch(pattern, 'pattern', allPatterns);
@@ -2279,20 +2425,23 @@ class MatchingService {
         // 这样可以容错AI分类错误的情况
         console.log(`[_matchPatternInternal] patterns表未找到(${(patternScore*100).toFixed(1)}%)，尝试在phrases表查找...`);
         
-        const allPhrases = this.vocabularyService.getAllPhrases(true).filter(p => !this.blacklist.phrases.map(x => x.toLowerCase()).includes((p.phrase || '').toLowerCase()));
+        // v5.3.0: 使用缓存代替全表查询（内置黑名单过滤）
+        const allPhrases = this._getCachedPhrases();
         
         // v5.2.0 新增：先尝试关键词匹配（phrases表）
         const keywordMatchPhrases = this._findByKeywordMatch(pattern, 'phrase', allPhrases);
         if (keywordMatchPhrases && keywordMatchPhrases.score >= threshold) {
             console.log(`[_matchPatternInternal] ✅ phrases表关键词匹配: ${(keywordMatchPhrases.score*100).toFixed(1)}%`);
+            // 🔧 Fix: 跨表匹配时添加 .pattern 别名，防止调用方读取 .pattern 字段时得到 undefined
+            const phraseData = keywordMatchPhrases.match;
             return {
                 matched: true,
                 score: keywordMatchPhrases.score,
                 source_db: 'vocabulary',
                 source_table: 'phrases',
-                source_id: keywordMatchPhrases.match.id,
-                matched_text: keywordMatchPhrases.match.phrase,
-                matched_data: keywordMatchPhrases.match,
+                source_id: phraseData.id,
+                matched_text: phraseData.phrase,
+                matched_data: { ...phraseData, pattern: phraseData.phrase },
                 matchedVia: 'keyword'
             };
         }
@@ -2308,6 +2457,7 @@ class MatchingService {
         // 如果在 phrases 表中找到且分数足够高，返回
         if (phraseScore >= threshold && phraseMatch) {
             console.log(`[_matchPatternInternal] ✅ phrases表匹配成功: ${(phraseScore*100).toFixed(1)}%`);
+            // 🔧 Fix: 跨表匹配时添加 .pattern 别名
             return {
                 matched: true,
                 score: phraseScore,
@@ -2315,7 +2465,7 @@ class MatchingService {
                 source_table: 'phrases',
                 source_id: phraseMatch.id,
                 matched_text: phraseMatch.phrase,
-                matched_data: phraseMatch
+                matched_data: { ...phraseMatch, pattern: phraseMatch.phrase }
             };
         }
         
@@ -2369,7 +2519,8 @@ class MatchingService {
         
         // ===== 第2步：语法库精确匹配（增强版）=====
         this.verboseOutput(`[步骤2] 检查语法库精确匹配（title + keywords）...`, 'debug');
-        for (const item of this.grammarService.getAll(true)) {
+        // v5.3.0: 使用缓存代替全表查询
+        for (const item of this._getCachedGrammar()) {
             // 2.1 检查title字段
             if (item.title && item.title.toLowerCase().trim() === normalizedGrammar) {
                 this.verboseOutput(`  → 语法库title精确匹配: "${grammarText}" === "${item.title}"`, 'success');
@@ -2426,7 +2577,8 @@ class MatchingService {
         const candidates = [];
         
         const normalizedInput = grammarText.toLowerCase().trim();
-        const allGrammar = this.grammarService.getAll(true);
+        // v5.3.0: 使用缓存代替全表查询
+        const allGrammar = this._getCachedGrammar();
         
         this.verboseOutput(`  正在与 ${allGrammar.length} 条语法规则比较...`, 'debug');
         
@@ -2708,6 +2860,9 @@ class MatchingService {
      * 批量匹配
      */
     batchMatch(extractedData) {
+        // v5.3.0: 一次性加载全部数据并缓存，避免逐词重复 SELECT * 全表查询
+        this._initBatchCache();
+        
         const result = {
             matched: [],
             unmatched: [],
@@ -2937,6 +3092,9 @@ class MatchingService {
         if (result.replaced.length > 0) {
             console.log(`[MatchingService] 已替换 ${result.replaced.length} 个项目`);
         }
+
+        // v5.3.0: 清除缓存，释放内存
+        this._clearBatchCache();
 
         return result;
     }

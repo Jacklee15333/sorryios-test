@@ -169,18 +169,38 @@ class PostProcessor {
     processSupplementData(taskId, unmatchedItems, aiSupplementData) {
         const unmatchedRecords = [];
 
+        // 🔧 B4修复：构建小写key映射，解决AI返回大小写与original_text不一致的问题
+        const buildLowerKeyMap = (obj) => {
+            if (!obj || typeof obj !== 'object') return {};
+            const map = {};
+            for (const key of Object.keys(obj)) {
+                map[key.toLowerCase().trim()] = obj[key];
+            }
+            return map;
+        };
+
+        const aiWordsLower = buildLowerKeyMap(aiSupplementData.words);
+        const aiPhrasesLower = buildLowerKeyMap(aiSupplementData.phrases);
+        const aiPatternsLower = buildLowerKeyMap(aiSupplementData.patterns);
+        const aiGrammarLower = buildLowerKeyMap(aiSupplementData.grammar);
+
         for (const item of unmatchedItems) {
             let aiGenerated = null;
+            const lookupKey = (item.original_text || '').toLowerCase().trim();
 
-            // 根据类型从 AI 返回数据中提取
-            if (item.item_type === 'word' && aiSupplementData.words) {
-                aiGenerated = aiSupplementData.words[item.original_text] || null;
-            } else if (item.item_type === 'phrase' && aiSupplementData.phrases) {
-                aiGenerated = aiSupplementData.phrases[item.original_text] || null;
-            } else if (item.item_type === 'pattern' && aiSupplementData.patterns) {
-                aiGenerated = aiSupplementData.patterns[item.original_text] || null;
-            } else if (item.item_type === 'grammar' && aiSupplementData.grammar) {
-                aiGenerated = aiSupplementData.grammar[item.original_text] || null;
+            // 🔧 B4修复：使用小写key查找
+            if (item.item_type === 'word') {
+                aiGenerated = aiWordsLower[lookupKey] || null;
+            } else if (item.item_type === 'phrase') {
+                aiGenerated = aiPhrasesLower[lookupKey] || null;
+            } else if (item.item_type === 'pattern') {
+                aiGenerated = aiPatternsLower[lookupKey] || null;
+            } else if (item.item_type === 'grammar') {
+                aiGenerated = aiGrammarLower[lookupKey] || null;
+            }
+
+            if (!aiGenerated) {
+                console.log(`[PostProcessor] ⚠️ B4: AI补充未命中 "${item.original_text}" (type=${item.item_type})`);
             }
 
             unmatchedRecords.push({
@@ -215,6 +235,7 @@ class PostProcessor {
     /**
      * 生成最终报告数据
      * 合并匹配到的数据和 AI 生成的数据
+     * 🔧 B5修复：添加防御性去重
      */
     generateFinalReport(matched, unmatchedWithAI) {
         const report = {
@@ -226,47 +247,67 @@ class PostProcessor {
             grammar: []
         };
 
+        // 🔧 B5修复：Set去重
+        const seen = { words: new Set(), phrases: new Set(), patterns: new Set(), grammar: new Set() };
+        let dupCount = 0;
+
+        const isDup = (type, text) => {
+            if (!text) return true;
+            const key = String(text).toLowerCase().trim();
+            if (seen[type].has(key)) { dupCount++; return true; }
+            seen[type].add(key);
+            return false;
+        };
+
         // 添加匹配到的数据
         for (const item of matched) {
             const data = item.matched_data;
             
             if (item.item_type === 'word') {
-                report.vocabulary.words.push({
-                    word: data.word,
-                    phonetic: data.phonetic || '',
-                    pos: data.pos || '',
-                    meaning: data.meaning,
-                    example: data.example || '',
-                    _source: 'database',
-                    _match_score: item.score
-                });
+                if (!isDup('words', data.word)) {
+                    report.vocabulary.words.push({
+                        word: data.word,
+                        phonetic: data.phonetic || '',
+                        pos: data.pos || '',
+                        meaning: data.meaning,
+                        example: data.example || '',
+                        _source: 'database',
+                        _match_score: item.score
+                    });
+                }
             } else if (item.item_type === 'phrase') {
-                report.vocabulary.phrases.push({
-                    phrase: data.phrase,
-                    meaning: data.meaning,
-                    example: data.example || '',
-                    _source: 'database',
-                    _match_score: item.score
-                });
+                if (!isDup('phrases', data.phrase)) {
+                    report.vocabulary.phrases.push({
+                        phrase: data.phrase,
+                        meaning: data.meaning,
+                        example: data.example || '',
+                        _source: 'database',
+                        _match_score: item.score
+                    });
+                }
             } else if (item.item_type === 'pattern') {
-                report.vocabulary.patterns.push({
-                    pattern: data.pattern,
-                    meaning: data.meaning,
-                    example: data.example || '',
-                    _source: 'database',
-                    _match_score: item.score
-                });
+                if (!isDup('patterns', data.pattern)) {
+                    report.vocabulary.patterns.push({
+                        pattern: data.pattern,
+                        meaning: data.meaning,
+                        example: data.example || '',
+                        _source: 'database',
+                        _match_score: item.score
+                    });
+                }
             } else if (item.item_type === 'grammar') {
-                report.grammar.push({
-                    title: data.title,
-                    definition: data.definition,
-                    structure: data.structure,
-                    usage: data.usage || [],
-                    examples: data.examples || [],
-                    mistakes: data.mistakes || [],
-                    _source: 'database',
-                    _match_score: item.score
-                });
+                if (!isDup('grammar', data.title)) {
+                    report.grammar.push({
+                        title: data.title,
+                        definition: data.definition,
+                        structure: data.structure,
+                        usage: data.usage || [],
+                        examples: data.examples || [],
+                        mistakes: data.mistakes || [],
+                        _source: 'database',
+                        _match_score: item.score
+                    });
+                }
             }
         }
 
@@ -276,41 +317,53 @@ class PostProcessor {
             if (!aiData || aiData.error) continue;
 
             if (item.item_type === 'word') {
-                report.vocabulary.words.push({
-                    word: item.original_text,
-                    phonetic: aiData.phonetic || '',
-                    pos: aiData.pos || '',
-                    meaning: aiData.meaning || '',
-                    example: aiData.example || '',
-                    _source: 'ai_generated'
-                });
+                if (!isDup('words', item.original_text)) {
+                    report.vocabulary.words.push({
+                        word: item.original_text,
+                        phonetic: aiData.phonetic || '',
+                        pos: aiData.pos || '',
+                        meaning: aiData.meaning || '',
+                        example: aiData.example || '',
+                        _source: 'ai_generated'
+                    });
+                }
             } else if (item.item_type === 'phrase') {
-                report.vocabulary.phrases.push({
-                    phrase: item.original_text,
-                    meaning: aiData.meaning || '',
-                    example: aiData.example || '',
-                    usage: aiData.usage || '',
-                    _source: 'ai_generated'
-                });
+                if (!isDup('phrases', item.original_text)) {
+                    report.vocabulary.phrases.push({
+                        phrase: item.original_text,
+                        meaning: aiData.meaning || '',
+                        example: aiData.example || '',
+                        usage: aiData.usage || '',
+                        _source: 'ai_generated'
+                    });
+                }
             } else if (item.item_type === 'pattern') {
-                report.vocabulary.patterns.push({
-                    pattern: item.original_text,
-                    meaning: aiData.meaning || '',
-                    example: aiData.example || '',
-                    structure: aiData.structure || '',
-                    _source: 'ai_generated'
-                });
+                if (!isDup('patterns', item.original_text)) {
+                    report.vocabulary.patterns.push({
+                        pattern: item.original_text,
+                        meaning: aiData.meaning || '',
+                        example: aiData.example || '',
+                        structure: aiData.structure || '',
+                        _source: 'ai_generated'
+                    });
+                }
             } else if (item.item_type === 'grammar') {
-                report.grammar.push({
-                    title: item.original_text,
-                    definition: aiData.definition || '',
-                    structure: aiData.structure || '',
-                    usage: aiData.usage || [],
-                    examples: aiData.examples || [],
-                    mistakes: aiData.mistakes || [],
-                    _source: 'ai_generated'
-                });
+                if (!isDup('grammar', item.original_text)) {
+                    report.grammar.push({
+                        title: item.original_text,
+                        definition: aiData.definition || '',
+                        structure: aiData.structure || '',
+                        usage: aiData.usage || [],
+                        examples: aiData.examples || [],
+                        mistakes: aiData.mistakes || [],
+                        _source: 'ai_generated'
+                    });
+                }
             }
+        }
+
+        if (dupCount > 0) {
+            console.log(`[PostProcessor] B5去重: 过滤 ${dupCount} 个重复项`);
         }
 
         return report;

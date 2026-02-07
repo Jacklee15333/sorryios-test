@@ -1163,17 +1163,38 @@ class ResultMerger {
 
     static mergeKeywords(results) {
         const merged = { words: [], phrases: [], patterns: [], grammar: [] };
+        // 🔧 B3修复：使用Set去重，防止多chunk边界产生重复项
+        const seen = { words: new Set(), phrases: new Set(), patterns: new Set(), grammar: new Set() };
+
+        const addUnique = (arr, seenSet, items) => {
+            for (const item of items) {
+                const key = String(item).toLowerCase().trim();
+                if (key && !seenSet.has(key)) {
+                    seenSet.add(key);
+                    arr.push(item);
+                }
+            }
+        };
+
         for (const result of results) {
             if (!result) continue;
-            if (Array.isArray(result.words)) merged.words.push(...result.words);
-            else if (result.vocabulary?.words) merged.words.push(...result.vocabulary.words.map(w => w.word || w).filter(Boolean));
-            if (Array.isArray(result.phrases)) merged.phrases.push(...result.phrases);
-            else if (result.vocabulary?.phrases) merged.phrases.push(...result.vocabulary.phrases.map(p => p.phrase || p).filter(Boolean));
-            if (Array.isArray(result.patterns)) merged.patterns.push(...result.patterns);
-            else if (result.vocabulary?.patterns) merged.patterns.push(...result.vocabulary.patterns.map(p => p.pattern || p).filter(Boolean));
-            if (Array.isArray(result.grammar)) merged.grammar.push(...result.grammar.map(g => typeof g === 'string' ? g : g?.title).filter(Boolean));
+
+            const rawWords = Array.isArray(result.words) ? result.words :
+                (result.vocabulary?.words ? result.vocabulary.words.map(w => w.word || w).filter(Boolean) : []);
+            addUnique(merged.words, seen.words, rawWords);
+
+            const rawPhrases = Array.isArray(result.phrases) ? result.phrases :
+                (result.vocabulary?.phrases ? result.vocabulary.phrases.map(p => p.phrase || p).filter(Boolean) : []);
+            addUnique(merged.phrases, seen.phrases, rawPhrases);
+
+            const rawPatterns = Array.isArray(result.patterns) ? result.patterns :
+                (result.vocabulary?.patterns ? result.vocabulary.patterns.map(p => p.pattern || p).filter(Boolean) : []);
+            addUnique(merged.patterns, seen.patterns, rawPatterns);
+
+            const rawGrammar = Array.isArray(result.grammar) ? result.grammar.map(g => typeof g === 'string' ? g : g?.title).filter(Boolean) : [];
+            addUnique(merged.grammar, seen.grammar, rawGrammar);
         }
-        console.log(`[ResultMerger] 合并: 单词${merged.words.length}, 短语${merged.phrases.length}, 句型${merged.patterns.length}, 语法${merged.grammar.length}`);
+        console.log(`[ResultMerger] B3去重合并: 单词${merged.words.length}, 短语${merged.phrases.length}, 句型${merged.patterns.length}, 语法${merged.grammar.length}`);
         return merged;
     }
 }
