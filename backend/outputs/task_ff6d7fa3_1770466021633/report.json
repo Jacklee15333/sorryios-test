@@ -1,0 +1,438 @@
+{
+  "vocabulary": {
+    "words": [
+      {
+        "id": 601,
+        "word": "common",
+        "phonetic": "/ˈkɒmən/",
+        "pos": "n.",
+        "meaning": "普通的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1642,
+        "word": "mistake",
+        "phonetic": "mis'teik",
+        "pos": "n.",
+        "meaning": "错误 vt. 弄错；误解",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:24",
+        "updated_at": "2026-01-14 03:03:24",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2279,
+        "word": "single",
+        "phonetic": "'siŋgl",
+        "pos": "adj.",
+        "meaning": "单身的；单一的",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:25",
+        "updated_at": "2026-01-14 03:03:25",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 2849,
+        "word": "stage",
+        "phonetic": "/steɪdʒ/",
+        "pos": "noun",
+        "meaning": "舞台；阶段",
+        "example": "She was nervous when she went onto the stage.",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-02-06 05:17:30",
+        "updated_at": "2026-02-06 05:17:30",
+        "is_new": true,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 288,
+        "word": "attract",
+        "phonetic": "/əˈtɹækt/",
+        "pos": "v.",
+        "meaning": "吸引",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:21",
+        "updated_at": "2026-01-14 03:03:21",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 729,
+        "word": "decision",
+        "phonetic": "/dɪˈsɪʒən/",
+        "pos": "n.",
+        "meaning": "决定",
+        "example": "",
+        "irregular_forms": {},
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:22",
+        "updated_at": "2026-01-14 03:03:22",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "word": "simple",
+        "phonetic": "/ˈsɪmpəl/",
+        "pos": "adj.",
+        "meaning": "简单的；不复杂的",
+        "example": "The question is very simple, so everyone can answer it.",
+        "_source": "ai"
+      }
+    ],
+    "phrases": [
+      {
+        "id": 1800,
+        "phrase": "pay off",
+        "meaning": "v. 还清",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:29",
+        "updated_at": "2026-01-14 03:03:29",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 577,
+        "phrase": "care about",
+        "meaning": "v. 关心；关爱",
+        "example": "",
+        "category": "情感",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:27",
+        "updated_at": "2026-01-14 03:03:27",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 396,
+        "phrase": "be interested in",
+        "meaning": "对. .. 感兴趣",
+        "example": "",
+        "category": "其他",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:27",
+        "updated_at": "2026-01-14 03:03:27",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 432,
+        "phrase": "be proud of",
+        "meaning": "v. 以……为自豪",
+        "example": "",
+        "category": "情感",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:27",
+        "updated_at": "2026-01-14 03:03:27",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "id": 1555,
+        "phrase": "make a decision",
+        "meaning": "v. 决定做某事",
+        "example": "",
+        "category": "动词短语",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:29",
+        "updated_at": "2026-01-14 03:03:29",
+        "is_new": false,
+        "_source": "database",
+        "_matchScore": 1
+      }
+    ],
+    "patterns": [
+      {
+        "id": 875,
+        "phrase": "expect to do sth.",
+        "meaning": "v. 期待做某事",
+        "example": "",
+        "category": "动词短语",
+        "difficulty": 2,
+        "enabled": true,
+        "created_at": "2026-01-14 03:03:28",
+        "updated_at": "2026-01-14 03:03:28",
+        "is_new": false,
+        "pattern": "expect to do sth.",
+        "_source": "database",
+        "_matchScore": 1
+      },
+      {
+        "pattern": "adj. enough",
+        "meaning": "足够……，表示程度达到某种结果或要求",
+        "example": "He is old enough to go to school by himself.",
+        "_source": "ai"
+      },
+      {
+        "pattern": "better not do sth.",
+        "meaning": "最好不要做某事，用于提出否定性的建议",
+        "example": "You'd better not stay up too late on weekdays.",
+        "_source": "ai"
+      }
+    ]
+  },
+  "grammar": [
+    {
+      "id": 8,
+      "title": "被动语态",
+      "keywords": [
+        "被动语态",
+        "be done",
+        "被动",
+        "by",
+        "passive voice",
+        "被动形式"
+      ],
+      "definition": "当主语是动作的承受者时，使用被动语态。强调动作的承受者或动作本身。",
+      "structure": "主语 + be + 过去分词 + (by + 动作执行者)",
+      "usage": [
+        "不知道或不必说明动作执行者：The window was broken.",
+        "强调动作承受者：The book was written by Lu Xun.",
+        "客观报道或正式场合：The meeting will be held tomorrow.",
+        "各种时态的被动：is done, was done, will be done, has been done等"
+      ],
+      "mistakes": [
+        {
+          "wrong": "The car was repair yesterday.",
+          "correct": "The car was repaired yesterday.",
+          "explanation": "be后面要用动词的过去分词"
+        },
+        {
+          "wrong": "The book is belonged to me.",
+          "correct": "The book belongs to me.",
+          "explanation": "belong是不及物动词，没有被动语态"
+        }
+      ],
+      "examples": [
+        "English is spoken all over the world.",
+        "The bridge was built in 1990.",
+        "The work must be finished on time."
+      ],
+      "sub_topics": [
+        {
+          "title": "被动语态的基本结构",
+          "source_type": "unmatched",
+          "source_id": 1014,
+          "definition": "强调动作承受者",
+          "structure": "be + 过去分词",
+          "usage": [
+            "不知道或不强调动作执行者"
+          ],
+          "examples": [
+            "The room is cleaned every day."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T01:12:08.202Z",
+          "order": 0
+        },
+        {
+          "title": "be + 过去分词",
+          "source_type": "unmatched",
+          "source_id": 1137,
+          "definition": "构成被动语态。",
+          "structure": "be + done",
+          "usage": [
+            "强调承受动作"
+          ],
+          "examples": [
+            "The door is closed."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:14:40.202Z",
+          "order": 1
+        },
+        {
+          "title": "被动语态结构",
+          "source_type": "unmatched",
+          "source_id": 1165,
+          "definition": "强调动作承受者",
+          "structure": "be + 过去分词",
+          "usage": [
+            "不知道或不强调执行者"
+          ],
+          "examples": [
+            "The house is built."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-21T02:30:44.105Z",
+          "order": 2
+        },
+        {
+          "title": "will + be + 过去分词",
+          "source_type": "unmatched",
+          "source_id": 1542,
+          "definition": "pr.从后到前",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-01-22T01:13:20.416Z",
+          "order": 3
+        },
+        {
+          "title": "被动语态结构（be + 过去分词）",
+          "source_type": "unmatched",
+          "source_id": 1557,
+          "definition": "表示主语是动作的承受者",
+          "structure": "主语 + be + 过去分词 (+ by...)",
+          "usage": [
+            "不知道或不强调动作执行者",
+            "强调结果"
+          ],
+          "examples": [
+            "The window is broken."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-22T02:20:39.345Z",
+          "order": 4
+        },
+        {
+          "title": "被动语态的用法",
+          "source_type": "unmatched",
+          "source_id": 1595,
+          "definition": "表示动作的承受者是主语",
+          "structure": "主语 + be + 过去分词",
+          "usage": [
+            "强调动作的承受者",
+            "不知道或不强调动作执行者"
+          ],
+          "examples": [
+            "The window is broken."
+          ],
+          "mistakes": [],
+          "added_at": "2026-01-22T03:37:15.931Z",
+          "order": 5
+        }
+      ],
+      "category": "语态",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:24",
+      "updated_at": "2026-01-22 03:37:15",
+      "_source": "database",
+      "_matchScore": 1
+    },
+    {
+      "id": 18,
+      "title": "感叹句",
+      "keywords": [
+        "感叹句",
+        "what",
+        "how",
+        "感叹",
+        "exclamatory sentence"
+      ],
+      "definition": "用来表达强烈感情的句子，句末用感叹号。常用What和How引导。",
+      "structure": "What + (a/an) + 形容词 + 名词 + 主语 + 谓语! / How + 形容词/副词 + 主语 + 谓语!",
+      "usage": [
+        "What + a/an + 形容词 + 可数名词单数：What a beautiful girl she is!",
+        "What + 形容词 + 不可数名词/复数名词：What nice weather! What beautiful flowers!",
+        "How + 形容词/副词：How beautiful the girl is! How fast he runs!",
+        "判断用What还是How：看中心词是名词还是形容词/副词"
+      ],
+      "mistakes": [
+        {
+          "wrong": "What beautiful girl she is!",
+          "correct": "What a beautiful girl she is!",
+          "explanation": "可数名词单数前要加a/an"
+        },
+        {
+          "wrong": "How a beautiful girl!",
+          "correct": "What a beautiful girl! / How beautiful the girl is!",
+          "explanation": "How后直接加形容词，不加冠词和名词"
+        },
+        {
+          "wrong": "What nice the weather is!",
+          "correct": "How nice the weather is! / What nice weather!",
+          "explanation": "What后要有名词，How后直接加形容词"
+        }
+      ],
+      "examples": [
+        "What an interesting story it is!",
+        "What delicious food!",
+        "How time flies!"
+      ],
+      "sub_topics": [
+        {
+          "title": "how adj. .!",
+          "source_type": "unmatched",
+          "source_id": 1958,
+          "definition": "",
+          "structure": "",
+          "usage": [],
+          "examples": [],
+          "mistakes": [],
+          "added_at": "2026-02-02T06:55:37.871Z",
+          "order": 0
+        }
+      ],
+      "category": "句式",
+      "difficulty": 2,
+      "enabled": true,
+      "is_new": false,
+      "created_at": "2026-01-14 02:03:25",
+      "updated_at": "2026-02-02 06:55:37",
+      "_source": "database",
+      "_matchScore": 1
+    }
+  ],
+  "summary": {
+    "total_words": 7,
+    "total_phrases": 5,
+    "total_patterns": 3,
+    "total_grammar": 2
+  },
+  "metadata": {
+    "taskId": "ff6d7fa3-5245-43ec-95bc-26504079b0fa",
+    "originalFile": "标准录音 33_原文.txt",
+    "processedAt": "2026-02-07T12:07:01.638Z",
+    "totalSegments": 1,
+    "successCount": 1,
+    "failCount": 0,
+    "browserRestarts": 1
+  }
+}

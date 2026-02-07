@@ -124,8 +124,21 @@ router.get('/words', (req, res) => {
         const all = req.query.all === 'true';
         const limit = parseInt(req.query.limit) || 100;
         
+        console.log(`[Vocabulary API] GET /words 请求参数: search="${search}", all=${all}, limit=${limit}`);
+        
         let words;
-        if (search) {
+        if (search && all) {
+            // [修复] 搜索+全量模式：搜索但不限制数量
+            const searchPattern = `%${search}%`;
+            words = db.prepare(`
+                SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
+                       COALESCE(is_new, 0) as is_new, created_at
+                FROM words 
+                WHERE word LIKE ? OR meaning LIKE ?
+                ORDER BY created_at DESC
+            `).all(searchPattern, searchPattern);
+            console.log(`[Vocabulary API] /words 搜索全量"${search}": ${words.length}条`);
+        } else if (search) {
             const searchPattern = `%${search}%`;
             words = db.prepare(`
                 SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
@@ -135,6 +148,7 @@ router.get('/words', (req, res) => {
                 ORDER BY created_at DESC
                 LIMIT ?
             `).all(searchPattern, searchPattern, limit);
+            console.log(`[Vocabulary API] /words 搜索"${search}": ${words.length}条 (limit=${limit})`);
         } else if (all) {
             words = db.prepare(`
                 SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
@@ -142,6 +156,7 @@ router.get('/words', (req, res) => {
                 FROM words 
                 ORDER BY created_at DESC
             `).all();
+            console.log(`[Vocabulary API] /words 全量加载: ${words.length}条`);
         } else {
             words = db.prepare(`
                 SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
@@ -151,6 +166,7 @@ router.get('/words', (req, res) => {
                 ORDER BY created_at DESC
                 LIMIT ?
             `).all(limit);
+            console.log(`[Vocabulary API] /words 默认加载: ${words.length}条 (limit=${limit})`);
         }
         
         res.json({ success: true, data: words });
@@ -280,8 +296,21 @@ router.get('/phrases', (req, res) => {
         const all = req.query.all === 'true';
         const limit = parseInt(req.query.limit) || 100;
         
+        console.log(`[Vocabulary API] GET /phrases 请求参数: search="${search}", all=${all}, limit=${limit}`);
+        
         let phrases;
-        if (search) {
+        if (search && all) {
+            // [修复] 搜索+全量模式
+            const searchPattern = `%${search}%`;
+            phrases = db.prepare(`
+                SELECT id, phrase, meaning, example, category, enabled, 
+                       COALESCE(is_new, 0) as is_new, created_at
+                FROM phrases 
+                WHERE phrase LIKE ? OR meaning LIKE ?
+                ORDER BY created_at DESC
+            `).all(searchPattern, searchPattern);
+            console.log(`[Vocabulary API] /phrases 搜索全量"${search}": ${phrases.length}条`);
+        } else if (search) {
             const searchPattern = `%${search}%`;
             phrases = db.prepare(`
                 SELECT id, phrase, meaning, example, category, enabled, 
@@ -291,6 +320,7 @@ router.get('/phrases', (req, res) => {
                 ORDER BY created_at DESC
                 LIMIT ?
             `).all(searchPattern, searchPattern, limit);
+            console.log(`[Vocabulary API] /phrases 搜索"${search}": ${phrases.length}条 (limit=${limit})`);
         } else if (all) {
             phrases = db.prepare(`
                 SELECT id, phrase, meaning, example, category, enabled, 
@@ -298,6 +328,7 @@ router.get('/phrases', (req, res) => {
                 FROM phrases 
                 ORDER BY created_at DESC
             `).all();
+            console.log(`[Vocabulary API] /phrases 全量加载: ${phrases.length}条`);
         } else {
             phrases = db.prepare(`
                 SELECT id, phrase, meaning, example, category, enabled, 
@@ -307,6 +338,7 @@ router.get('/phrases', (req, res) => {
                 ORDER BY created_at DESC
                 LIMIT ?
             `).all(limit);
+            console.log(`[Vocabulary API] /phrases 默认加载: ${phrases.length}条 (limit=${limit})`);
         }
         
         res.json({ success: true, data: phrases });
@@ -436,8 +468,21 @@ router.get('/patterns', (req, res) => {
         const all = req.query.all === 'true';
         const limit = parseInt(req.query.limit) || 100;
         
+        console.log(`[Vocabulary API] GET /patterns 请求参数: search="${search}", all=${all}, limit=${limit}`);
+        
         let patterns;
-        if (search) {
+        if (search && all) {
+            // [修复] 搜索+全量模式
+            const searchPattern = `%${search}%`;
+            patterns = db.prepare(`
+                SELECT id, pattern, meaning, example, category, enabled, 
+                       COALESCE(is_new, 0) as is_new, created_at
+                FROM patterns 
+                WHERE pattern LIKE ? OR meaning LIKE ?
+                ORDER BY created_at DESC
+            `).all(searchPattern, searchPattern);
+            console.log(`[Vocabulary API] /patterns 搜索全量"${search}": ${patterns.length}条`);
+        } else if (search) {
             const searchPattern = `%${search}%`;
             patterns = db.prepare(`
                 SELECT id, pattern, meaning, example, category, enabled, 
@@ -447,6 +492,7 @@ router.get('/patterns', (req, res) => {
                 ORDER BY created_at DESC
                 LIMIT ?
             `).all(searchPattern, searchPattern, limit);
+            console.log(`[Vocabulary API] /patterns 搜索"${search}": ${patterns.length}条 (limit=${limit})`);
         } else if (all) {
             patterns = db.prepare(`
                 SELECT id, pattern, meaning, example, category, enabled, 
@@ -454,6 +500,7 @@ router.get('/patterns', (req, res) => {
                 FROM patterns 
                 ORDER BY created_at DESC
             `).all();
+            console.log(`[Vocabulary API] /patterns 全量加载: ${patterns.length}条`);
         } else {
             patterns = db.prepare(`
                 SELECT id, pattern, meaning, example, category, enabled, 
@@ -463,6 +510,7 @@ router.get('/patterns', (req, res) => {
                 ORDER BY created_at DESC
                 LIMIT ?
             `).all(limit);
+            console.log(`[Vocabulary API] /patterns 默认加载: ${patterns.length}条 (limit=${limit})`);
         }
         
         res.json({ success: true, data: patterns });
@@ -589,11 +637,15 @@ router.post('/patterns/:id/confirm', (req, res) => {
 router.get('/all', (req, res) => {
     try {
         const search = req.query.search || '';
+        const all = req.query.all === 'true';  // [修复] 新增 all 参数支持
         const limit = parseInt(req.query.limit) || 200;
         
         let words = [], phrases = [], patterns = [];
         
+        console.log(`[Vocabulary API] GET /all 请求参数: search="${search}", all=${all}, limit=${limit}`);
+        
         if (search) {
+            // 搜索模式：不限制数量，搜索所有表
             const searchPattern = `%${search}%`;
             words = db.prepare(`
                 SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
@@ -618,7 +670,34 @@ router.get('/all', (req, res) => {
                 WHERE pattern LIKE ? OR meaning LIKE ?
                 ORDER BY created_at DESC
             `).all(searchPattern, searchPattern);
+            
+            console.log(`[Vocabulary API] /all 搜索"${search}": 单词${words.length}, 短语${phrases.length}, 句型${patterns.length}`);
+        } else if (all) {
+            // [修复] all=true 模式：获取全部数据，不加LIMIT
+            words = db.prepare(`
+                SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
+                       COALESCE(is_new, 0) as is_new, created_at, 'word' as type
+                FROM words 
+                ORDER BY created_at DESC
+            `).all();
+            
+            phrases = db.prepare(`
+                SELECT id, phrase, meaning, example, category, enabled, 
+                       COALESCE(is_new, 0) as is_new, created_at, 'phrase' as type
+                FROM phrases 
+                ORDER BY created_at DESC
+            `).all();
+            
+            patterns = db.prepare(`
+                SELECT id, pattern, meaning, example, category, enabled, 
+                       COALESCE(is_new, 0) as is_new, created_at, 'pattern' as type
+                FROM patterns 
+                ORDER BY created_at DESC
+            `).all();
+            
+            console.log(`[Vocabulary API] /all 全量加载: 单词${words.length}, 短语${phrases.length}, 句型${patterns.length}`);
         } else {
+            // 默认模式：按比例分配（保持向后兼容）
             words = db.prepare(`
                 SELECT id, word, meaning, phonetic, pos, example, category, enabled, 
                        COALESCE(is_new, 0) as is_new, created_at, 'word' as type
@@ -642,12 +721,15 @@ router.get('/all', (req, res) => {
                 ORDER BY created_at DESC
                 LIMIT ?
             `).all(Math.floor(limit * 0.2));
+            
+            console.log(`[Vocabulary API] /all 默认加载(limit=${limit}): 单词${words.length}, 短语${phrases.length}, 句型${patterns.length}`);
         }
         
         const allItems = [...words, ...phrases, ...patterns].sort((a, b) => {
             return new Date(b.created_at) - new Date(a.created_at);
         });
         
+        console.log(`[Vocabulary API] /all 返回总数: ${allItems.length}`);
         res.json({ success: true, data: allItems });
     } catch (e) {
         console.error('[Vocabulary API] 获取全部数据失败:', e);

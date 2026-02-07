@@ -49,23 +49,33 @@ router.get('/stats', (req, res) => {
  */
 router.get('/rules', (req, res) => {
     try {
-        const { type, search, limit = 100, offset = 0 } = req.query;
+        const { type, search, keyword, limit = 100, offset = 0 } = req.query;
+        const all = req.query.all === 'true';  // [修复] 新增 all 参数支持
+        
+        // [修复] 兼容前端传 keyword 或 search
+        const searchTerm = search || keyword || '';
+        
+        const actualLimit = all ? 999999 : parseInt(limit);  // [修复] all=true时不限制数量
+        
+        console.log(`[替换库 API] GET /rules 请求参数: type="${type || ''}", search="${searchTerm}", all=${all}, limit=${actualLimit}, offset=${offset}`);
         
         const rules = dictService.getAllRules({
             type,
-            search,
-            limit: parseInt(limit),
-            offset: parseInt(offset)
+            search: searchTerm,
+            limit: actualLimit,
+            offset: all ? 0 : parseInt(offset)
         });
 
         const total = dictService.getCount({ type });
+        
+        console.log(`[替换库 API] /rules 返回: ${rules.length}条 / 总数${total}`);
 
         res.json({
             success: true,
             data: rules,
             total,
-            limit: parseInt(limit),
-            offset: parseInt(offset)
+            limit: actualLimit,
+            offset: all ? 0 : parseInt(offset)
         });
     } catch (error) {
         console.error('[替换库 API] 获取规则列表失败:', error);
