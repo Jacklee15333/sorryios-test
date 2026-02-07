@@ -463,9 +463,12 @@
             const type = document.getElementById('typeFilter').value;
             const keyword = document.getElementById('searchKeyword').value.trim();
             
-            let url = API_BASE + '/rules?';
+            // [修复] 加 all=true 获取全量数据；搜索参数改为 search（与后端一致）
+            let url = API_BASE + '/rules?all=true&';
             if (type) url += 'type=' + type + '&';
-            if (keyword) url += 'keyword=' + encodeURIComponent(keyword) + '&';
+            if (keyword) url += 'search=' + encodeURIComponent(keyword) + '&';
+            
+            console.log('[替换库管理] 加载规则:', url);
             
             try {
                 document.getElementById('rulesList').innerHTML = '<tr><td colspan="7" class="loading">加载中...</td></tr>';
@@ -473,6 +476,7 @@
                 const data = await res.json();
                 if (data.success) {
                     allRules = data.data || [];
+                    console.log('[替换库管理] 加载完成:', allRules.length, '条规则, 总数:', data.total);
                     // 排序：is_new=1的在前，其他按ID降序
                     allRules.sort((a, b) => {
                         const aIsNew = a.is_new === true || a.is_new === 1;
@@ -482,8 +486,7 @@
                         return b.id - a.id;
                     });
                     pagination.data = allRules;
-                    // 修复：使用API返回的total，而不是data.length
-                    pagination.total = data.total || allRules.length;
+                    pagination.total = allRules.length;  // [修复] 使用实际返回的数据长度
                     pagination.page = 1;
                     renderPaginated();
                 }

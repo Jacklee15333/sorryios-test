@@ -811,9 +811,10 @@
         async function loadAll() {
             try {
                 document.getElementById('allList').innerHTML = '<div class="loading">加载中...</div>';
-                const res = await fetch(API_BASE + '/all');
+                const res = await fetch(API_BASE + '/all?all=true');  // [修复] 加 all=true 获取全量数据
                 const data = await res.json();
                 if (data.success) {
+                    console.log('[词库管理] /all 加载完成, 总数:', data.data.length);
                     pagination.all.data = data.data;
                     pagination.all.total = data.data.length;
                     pagination.all.page = 1;
@@ -1000,8 +1001,10 @@
             
             if (!kw) {
                 // 清空搜索，恢复完整数据
-                pagination[type].page = 1;
-                renderPaginated(type);
+                pagination[type].data = []; // 清空缓存强制重新加载
+                if (type === 'all') loadAll();
+                else if (type === 'words') loadWords();
+                else if (type === 'phrases') loadPhrases();
                 return;
             }
             
@@ -1009,14 +1012,16 @@
                 const listId = type === 'all' ? 'allList' : type === 'words' ? 'wordsList' : 'phrasesList';
                 document.getElementById(listId).innerHTML = '<div class="loading">搜索中...</div>';
                 
+                // [修复] 搜索时加 all=true，保证搜索结果不被后端LIMIT截断
                 let url = type === 'all' 
-                    ? API_BASE + '/all?search=' + encodeURIComponent(kw)
-                    : API_BASE + '/' + type + '?search=' + encodeURIComponent(kw);
+                    ? API_BASE + '/all?all=true&search=' + encodeURIComponent(kw)
+                    : API_BASE + '/' + type + '?all=true&search=' + encodeURIComponent(kw);
                     
                 const res = await fetch(url);
                 const data = await res.json();
                 
                 if (data.success) {
+                    console.log(`[词库管理] 搜索"${kw}" (${type}): ${data.data.length}条结果`);
                     // 搜索结果存入分页数据
                     pagination[type].data = data.data;
                     pagination[type].total = data.data.length;

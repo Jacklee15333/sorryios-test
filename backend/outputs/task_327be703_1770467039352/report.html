@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2月7日课堂笔记</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 15px;
+        }
+        
+        header .meta {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        
+        header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        header .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 30px;
+            border-radius: 10px;
+        }
+        
+        header .stat-item .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        header .stat-item .label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .export-bar {
+            background: #f8f9fa;
+            padding: 15px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .export-btn.pdf { background: #e74c3c; color: white; }
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        main {
+            padding: 40px;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section-header .icon {
+            font-size: 2em;
+        }
+        
+        .section-header h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .section-header .desc {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-left: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .data-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table .index {
+            width: 50px;
+            text-align: center;
+            color: #999;
+        }
+        
+        .vocab-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.05em;
+        }
+        
+        .type-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+        
+        .type-tag.word { background: #e8f5e9; color: #2e7d32; }
+        .type-tag.phrase { background: #e3f2fd; color: #1565c0; }
+        .type-tag.pattern { background: #fff3e0; color: #ef6c00; }
+        
+        .word-forms {
+            margin-top: 5px;
+            padding-left: 10px;
+            border-left: 3px solid #ddd;
+        }
+        
+        .word-form-item {
+            color: #e67e22;
+            font-size: 0.9em;
+            margin: 2px 0;
+        }
+        
+        .word-form-label {
+            color: #999;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        .phonetic {
+            color: #9b59b6;
+            font-family: 'Lucida Sans Unicode', sans-serif;
+        }
+        
+        .pos {
+            color: #3498db;
+            font-weight: 500;
+        }
+        
+        .example {
+            color: #666;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        
+        .grammar-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .grammar-card-header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .grammar-card-body {
+            padding: 20px;
+        }
+        
+        .grammar-item {
+            margin-bottom: 15px;
+        }
+        
+        .grammar-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .grammar-item-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .grammar-item-content {
+            padding-left: 24px;
+            color: #555;
+        }
+        
+        .grammar-item-content ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .grammar-item-content li {
+            margin: 5px 0;
+        }
+        
+        .mistake-item {
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .mistake-wrong {
+            color: #e74c3c;
+            text-decoration: line-through;
+        }
+        
+        .mistake-arrow {
+            margin: 0 10px;
+            color: #999;
+        }
+        
+        .mistake-correct {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .mistake-explanation {
+            margin-top: 8px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .examples-box {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .examples-box ul {
+            margin: 0;
+        }
+        
+        .section-divider {
+            height: 40px;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .export-bar {
+                display: none;
+            }
+            .section-header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📖 2月7日课堂笔记</h1>
+            <div class="meta">生成时间: 2026/2/7 20:23:59</div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="number">88</div>
+                    <div class="label">词汇</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">20</div>
+                    <div class="label">语法</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="export-bar">
+            <button class="export-btn pdf" onclick="window.print()">🖨️ 打印/导出PDF</button>
+        </div>
+        
+        <main>
+            <section>
+                <div class="section-header">
+                    <span class="icon">📚</span>
+                    <h2>词汇</h2>
+                    <span class="desc">共 88 项</span>
+                </div>
+                
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="index">#</th>
+                    <th style="width: 280px;">词汇</th>
+                    <th style="width: 80px;">音标</th>
+                    <th style="width: 200px;">含义</th>
+                    <th>例句</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td class="index">1</td>
+                    <td>
+                        <span class="vocab-name">share</span>
+                        
+                    </td>
+                    <td class="phonetic">ʃєә</td>
+                    <td><span class="pos">v.</span> 合用；分享 n. (C)一份；股票</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">2</td>
+                    <td>
+                        <span class="vocab-name">amusement</span>
+                        
+                    </td>
+                    <td class="phonetic">/əˈmjuzmənt/</td>
+                    <td><span class="pos">n.</span> (U/C)娱乐；娱乐活动</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">3</td>
+                    <td>
+                        <span class="vocab-name">sense</span>
+                        
+                    </td>
+                    <td class="phonetic">sens</td>
+                    <td><span class="pos">n.</span> (C/U)感觉；意识；道理 t. 感觉到，意识到</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">4</td>
+                    <td>
+                        <span class="vocab-name">develop</span>
+                        
+                    </td>
+                    <td class="phonetic">/dɛˈvɛ.ləp/</td>
+                    <td><span class="pos">v.</span> 发展；开发，培养</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">5</td>
+                    <td>
+                        <span class="vocab-name">spread</span>
+                        
+                    </td>
+                    <td class="phonetic">spred</td>
+                    <td><span class="pos">v.</span> & n. (C/U)展开；传开</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">6</td>
+                    <td>
+                        <span class="vocab-name">width</span>
+                        
+                    </td>
+                    <td class="phonetic">widθ</td>
+                    <td><span class="pos">n.</span> 宽度；广度</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">7</td>
+                    <td>
+                        <span class="vocab-name">protect</span>
+                        
+                    </td>
+                    <td class="phonetic">prә'tekt</td>
+                    <td><span class="pos">v.</span> vt. 保护</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">8</td>
+                    <td>
+                        <span class="vocab-name">curiosity</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˌkjʊərɪˈɒsəti/</td>
+                    <td><span class="pos">n.</span> 好奇心</td>
+                    <td class="example">Curiosity drives people to explore the unknown.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">9</td>
+                    <td>
+                        <span class="vocab-name">population</span>
+                        
+                    </td>
+                    <td class="phonetic">.pɒpju'leiʃәn</td>
+                    <td><span class="pos">n.</span> 人口；全体居民</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">10</td>
+                    <td>
+                        <span class="vocab-name">information</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˌɪnfəˈmeɪʃən/</td>
+                    <td><span class="pos">n.</span> 信息；情报；资料</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">11</td>
+                    <td>
+                        <span class="vocab-name">collect</span>
+                        
+                    </td>
+                    <td class="phonetic">/kəˈlɛkt/</td>
+                    <td><span class="pos">v.</span> 收集；采集</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">12</td>
+                    <td>
+                        <span class="vocab-name">aware</span>
+                        
+                    </td>
+                    <td class="phonetic">/əˈweə(r)/</td>
+                    <td><span class="pos">adj.</span> 意识到的，察觉到的</td>
+                    <td class="example">He is aware of the risks of using AI too much.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">13</td>
+                    <td>
+                        <span class="vocab-name">importance</span>
+                        
+                    </td>
+                    <td class="phonetic">/ɪmˈpɔːtəns/</td>
+                    <td><span class="pos">n.</span> 重要性</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">14</td>
+                    <td>
+                        <span class="vocab-name">journey</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈd͡ʒɜːni/</td>
+                    <td><span class="pos">n.</span> 旅行</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">15</td>
+                    <td>
+                        <span class="vocab-name">single</span>
+                        
+                    </td>
+                    <td class="phonetic">'siŋgl</td>
+                    <td><span class="pos">adj.</span> 单身的；单一的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">16</td>
+                    <td>
+                        <span class="vocab-name">step</span>
+                        
+                    </td>
+                    <td class="phonetic">step</td>
+                    <td><span class="pos">n.</span> (脚)步vi. 跨步，走</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">17</td>
+                    <td>
+                        <span class="vocab-name">clear</span>
+                        
+                    </td>
+                    <td class="phonetic">/klɪə(ɹ)/</td>
+                    <td><span class="pos">n.</span> 清晰的；明亮的；清楚的 v. 清除；清扫；(天气)放晴</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">18</td>
+                    <td>
+                        <span class="vocab-name">app</span>
+                        
+                    </td>
+                    <td class="phonetic">[ʔæʔp̚]</td>
+                    <td><span class="pos">n.</span> 应用程序</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">19</td>
+                    <td>
+                        <span class="vocab-name">mistake</span>
+                        
+                    </td>
+                    <td class="phonetic">mis'teik</td>
+                    <td><span class="pos">n.</span> 错误 vt. 弄错；误解</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">20</td>
+                    <td>
+                        <span class="vocab-name">invite</span>
+                        
+                    </td>
+                    <td class="phonetic">/ɪnˈvaɪt/</td>
+                    <td><span class="pos">v.</span> vt. 邀请</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">21</td>
+                    <td>
+                        <span class="vocab-name">smell</span>
+                        
+                    </td>
+                    <td class="phonetic">smel</td>
+                    <td><span class="pos">v.</span> vi. 嗅，闻n. (U/C)味，气味</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">22</td>
+                    <td>
+                        <span class="vocab-name">celebrate</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈsɛl.ə.bɹeɪt/</td>
+                    <td><span class="pos">v.</span> 庆祝</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">23</td>
+                    <td>
+                        <span class="vocab-name">complete</span>
+                        
+                    </td>
+                    <td class="phonetic">/kəmˈpliːt/</td>
+                    <td><span class="pos">n.</span> 完整的，完全的 vt. 完成，结束</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">24</td>
+                    <td>
+                        <span class="vocab-name">understand</span>
+                        
+                    </td>
+                    <td class="phonetic">.ʌndә'stænd</td>
+                    <td><span class="pos">v.</span> vt. 明白；理</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">25</td>
+                    <td>
+                        <span class="vocab-name">freezing</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈfɹiːz.ɪŋ/</td>
+                    <td><span class="pos">v.</span> 冻结的；极冷的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">26</td>
+                    <td>
+                        <span class="vocab-name">frozen</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈfɹəʊzən/</td>
+                    <td><span class="pos">v.</span> 冷冻的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">27</td>
+                    <td>
+                        <span class="vocab-name">satisfied</span>
+                        
+                    </td>
+                    <td class="phonetic">'sætisfaiәd</td>
+                    <td><span class="pos">adj.</span> 满意的，满足的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">28</td>
+                    <td>
+                        <span class="vocab-name">unbelievable</span>
+                        
+                    </td>
+                    <td class="phonetic">.ʌnbi'li:vәbl</td>
+                    <td><span class="pos">adj.</span> 不可信的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">29</td>
+                    <td>
+                        <span class="vocab-name">satisfying</span>
+                        
+                    </td>
+                    <td class="phonetic">'sætisfaiiŋ</td>
+                    <td><span class="pos">adj.</span> 令人满意的；令人满足的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">30</td>
+                    <td>
+                        <span class="vocab-name">powerful</span>
+                        
+                    </td>
+                    <td class="phonetic">'pauәful</td>
+                    <td><span class="pos">adj.</span> 强有力的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">31</td>
+                    <td>
+                        <span class="vocab-name">connection</span>
+                        
+                    </td>
+                    <td class="phonetic">/kəˈnɛkʃən/</td>
+                    <td><span class="pos">n.</span> 连接；联系</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">32</td>
+                    <td>
+                        <span class="vocab-name">opposite</span>
+                        
+                    </td>
+                    <td class="phonetic">'ɒpәzit</td>
+                    <td><span class="pos">adj.</span> &prep. 在……对面；相对的；对立的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">33</td>
+                    <td>
+                        <span class="vocab-name">talented</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos">adj.</span> 有天赋的，有才华的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">34</td>
+                    <td>
+                        <span class="vocab-name">disappointment</span>
+                        
+                    </td>
+                    <td class="phonetic">/dɪsəˈpɔɪntmənt/</td>
+                    <td><span class="pos">n.</span> (C/U)失望</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">35</td>
+                    <td>
+                        <span class="vocab-name">scientific</span>
+                        
+                    </td>
+                    <td class="phonetic">.saiәn'tifik</td>
+                    <td><span class="pos">adj.</span> 科学的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">36</td>
+                    <td>
+                        <span class="vocab-name">pleasant</span>
+                        
+                    </td>
+                    <td class="phonetic">'pleznt</td>
+                    <td><span class="pos">adj.</span> 令人愉快的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">37</td>
+                    <td>
+                        <span class="vocab-name">virus</span>
+                        
+                    </td>
+                    <td class="phonetic">'vaiәrәs</td>
+                    <td><span class="pos">n.</span> 病毒</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">38</td>
+                    <td>
+                        <span class="vocab-name">prevent</span>
+                        
+                    </td>
+                    <td class="phonetic">pri'vent</td>
+                    <td><span class="pos">v.</span> vt. 防止，预防；阻止，阻挡</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">39</td>
+                    <td>
+                        <span class="vocab-name">protection</span>
+                        
+                    </td>
+                    <td class="phonetic">prә'tekʃәn</td>
+                    <td><span class="pos">n.</span> 保护，防护</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">40</td>
+                    <td>
+                        <span class="vocab-name">save</span>
+                        
+                    </td>
+                    <td class="phonetic">seiv</td>
+                    <td><span class="pos">v.</span> 搭救；节省；储蓄</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">41</td>
+                    <td>
+                        <span class="vocab-name">escape</span>
+                        
+                    </td>
+                    <td class="phonetic">/əˈskeɪp/</td>
+                    <td><span class="pos">n.</span> 逃跑；逃亡</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">42</td>
+                    <td>
+                        <span class="vocab-name">secret</span>
+                        
+                    </td>
+                    <td class="phonetic">'si:krit</td>
+                    <td><span class="pos">n.</span> 秘密</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">43</td>
+                    <td>
+                        <span class="vocab-name">humor</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈhjuːmər/</td>
+                    <td><span class="pos">n.</span> 幽默，幽默感</td>
+                    <td class="example">He has a great sense of humor, so everyone likes talking with him.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">44</td>
+                    <td>
+                        <span class="vocab-name">dynasty</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈdaɪnəsti/</td>
+                    <td><span class="pos">n.</span> 朝代，王朝</td>
+                    <td class="example">The Tang Dynasty was one of the most powerful dynasties in Chinese history.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">45</td>
+                    <td>
+                        <span class="vocab-name">suit</span>
+                        
+                    </td>
+                    <td class="phonetic">/suːt/</td>
+                    <td><span class="pos">n./v.</span> （n. ）西装，套装；（v. ）适合</td>
+                    <td class="example">This blue suit really suits you.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">46</td>
+                    <td>
+                        <span class="vocab-name">melody</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈmelədi/</td>
+                    <td><span class="pos">n.</span> 旋律，曲调</td>
+                    <td class="example">The melody of the song is simple but very beautiful.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">47</td>
+                    <td>
+                        <span class="vocab-name">ignore</span>
+                        
+                    </td>
+                    <td class="phonetic">/ɪɡˈnɔːr/</td>
+                    <td><span class="pos">v.</span> 忽视，不理睬</td>
+                    <td class="example">He ignored my advice and made the same mistake again.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">48</td>
+                    <td>
+                        <span class="vocab-name">unwise</span>
+                        
+                    </td>
+                    <td class="phonetic">/ʌnˈwaɪz/</td>
+                    <td><span class="pos">adj.</span> 不明智的，愚蠢的</td>
+                    <td class="example">It would be unwise to drive so fast in the rain.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">49</td>
+                    <td>
+                        <span class="vocab-name">dramatically</span>
+                        
+                    </td>
+                    <td class="phonetic">/drəˈmætɪkli/</td>
+                    <td><span class="pos">adv.</span> 显著地，戏剧性地</td>
+                    <td class="example">The weather changed dramatically within an hour.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">50</td>
+                    <td>
+                        <span class="vocab-name">annoyed</span>
+                        
+                    </td>
+                    <td class="phonetic">/əˈnɔɪd/</td>
+                    <td><span class="pos">adj.</span> 感到恼怒的，生气的</td>
+                    <td class="example">She felt annoyed by the noise outside.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">51</td>
+                    <td>
+                        <span class="vocab-name">annoying</span>
+                        
+                    </td>
+                    <td class="phonetic">/əˈnɔɪɪŋ/</td>
+                    <td><span class="pos">adj.</span> 令人恼怒的，烦人的</td>
+                    <td class="example">The annoying sound kept me awake all night.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">52</td>
+                    <td>
+                        <span class="vocab-name">influential</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˌɪnfluˈenʃl/</td>
+                    <td><span class="pos">adj.</span> 有影响力的</td>
+                    <td class="example">She is one of the most influential scientists of our time.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">53</td>
+                    <td>
+                        <span class="vocab-name">secure</span>
+                        
+                    </td>
+                    <td class="phonetic">/sɪˈkjʊr/</td>
+                    <td><span class="pos">adj./v.</span> （adj. ）安全的，稳妥的；（v. ）保护，使安全</td>
+                    <td class="example">The building is secure, so you don’t need to worry about safety.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">54</td>
+                    <td>
+                        <span class="vocab-name">put out</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 扑灭</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">55</td>
+                    <td>
+                        <span class="vocab-name">be able to do sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 能够做某事</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">56</td>
+                    <td>
+                        <span class="vocab-name">set out for</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 动身前往 出发去</td>
+                    <td class="example">They set out for Beijing early in the morning.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">57</td>
+                    <td>
+                        <span class="vocab-name">set off</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 出发；动身；引起</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">58</td>
+                    <td>
+                        <span class="vocab-name">take in</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 吸收；摄入</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">59</td>
+                    <td>
+                        <span class="vocab-name">be aware of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 意识到 察觉到</td>
+                    <td class="example">You should be aware of the risks before making a decision.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">60</td>
+                    <td>
+                        <span class="vocab-name">focus on</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 集中于</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">61</td>
+                    <td>
+                        <span class="vocab-name">find out</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 找到</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">62</td>
+                    <td>
+                        <span class="vocab-name">instead of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> adv. 代替(放句中)</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">63</td>
+                    <td>
+                        <span class="vocab-name">pay attention to</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 关注；注意</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">64</td>
+                    <td>
+                        <span class="vocab-name">a lot of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> adj. 许多的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">65</td>
+                    <td>
+                        <span class="vocab-name">begin with</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 以…开始, 首先</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">66</td>
+                    <td>
+                        <span class="vocab-name">get on with</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 进展；与……相处很好</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">67</td>
+                    <td>
+                        <span class="vocab-name">be different from</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 不同于</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">68</td>
+                    <td>
+                        <span class="vocab-name">stop sb. from doing sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 阻止某人做某事</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">69</td>
+                    <td>
+                        <span class="vocab-name">prevent sb. from doing sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 阻止某人做某事</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">70</td>
+                    <td>
+                        <span class="vocab-name">protect sb. from sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> pr. 保护……免受（伤害/损害）</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">71</td>
+                    <td>
+                        <span class="vocab-name">be sure of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 对……有把握</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">72</td>
+                    <td>
+                        <span class="vocab-name">come from</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 来自</td>
+                    <td class="example">I come from China.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">73</td>
+                    <td>
+                        <span class="vocab-name">a sense of humor</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 幽默感</td>
+                    <td class="example">A sense of humor can help you get along well with others.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">74</td>
+                    <td>
+                        <span class="vocab-name">see sb. off</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 给某人送行</td>
+                    <td class="example">We went to the station to see him off.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">75</td>
+                    <td>
+                        <span class="vocab-name">the importance of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> ……的重要性</td>
+                    <td class="example">Students should understand the importance of teamwork.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">76</td>
+                    <td>
+                        <span class="vocab-name">pass sb. sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 把某物递给某人</td>
+                    <td class="example">Please pass me the book.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">77</td>
+                    <td>
+                        <span class="vocab-name">more aware of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 更加意识到</td>
+                    <td class="example">People are becoming more aware of environmental problems.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">78</td>
+                    <td>
+                        <span class="vocab-name">clear out</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 清理，清除</td>
+                    <td class="example">She cleared out her old clothes from the closet.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">79</td>
+                    <td>
+                        <span class="vocab-name">left behind</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 被留下，被遗忘</td>
+                    <td class="example">He felt left behind when all his friends moved away.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">80</td>
+                    <td>
+                        <span class="vocab-name">head down</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 低头；垂下头（也可表示匆忙离开、专心向前）</td>
+                    <td class="example">He put his head down and walked out of the room without saying a word.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">81</td>
+                    <td>
+                        <span class="vocab-name">up to now</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 直到现在，目前为止</td>
+                    <td class="example">Up to now, we haven’t received any reply from him.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">82</td>
+                    <td>
+                        <span class="vocab-name">save sb. from sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 把某人从某事中拯救出来，使某人免受某事的伤害</td>
+                    <td class="example">The firefighters saved the child from danger.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">83</td>
+                    <td>
+                        <span class="vocab-name">as soon as</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 一旦</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">84</td>
+                    <td>
+                        <span class="vocab-name">so that</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> n. 目的是；为了</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">85</td>
+                    <td>
+                        <span class="vocab-name">more important</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> adj. 更重要的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">86</td>
+                    <td>
+                        <span class="vocab-name">can't wait to do sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 迫不及待想做某事</td>
+                    <td class="example">I can’t wait to see my grandparents.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">87</td>
+                    <td>
+                        <span class="vocab-name">so adj. that...</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 如此……以至于……（结果）</td>
+                    <td class="example">He was so angry that he couldn’t say a word.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">88</td>
+                    <td>
+                        <span class="vocab-name">adj. enough to do sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 足够……可以做某事</td>
+                    <td class="example">She is old enough to go to school.</td>
+                </tr>
+                
+            </tbody>
+        </table>
+            </section>
+            
+            <div class="section-divider"></div>
+            
+            <section>
+                <div class="section-header">
+                    <span class="icon">📖</span>
+                    <h2>语法</h2>
+                    <span class="desc">共 20 项</span>
+                </div>
+                
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>1. 动词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">动词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">动词</div>
+                </div>
+                
+                
+                
+                
+                
+                
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>2. 现在完成时</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">表示过去发生的动作对现在造成的影响或结果，也表示从过去持续到现在的动作或状态。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">主语 + have/has + 过去分词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>表示过去的动作对现在的影响：I have lost my key. (现在没有钥匙)</li><li>表示经历：Have you ever been to Beijing?</li><li>表示持续到现在的状态：I have lived here for 10 years.</li><li>常与already, yet, just, ever, never, for, since连用</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I have see the movie.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I have seen the movie.</span>
+                            <div class="mistake-explanation">have/has后面要用动词的过去分词形式</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I have bought this book yesterday.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I bought this book yesterday.</span>
+                            <div class="mistake-explanation">有具体过去时间（yesterday），不能用现在完成时</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ He has gone to Beijing for 3 days.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ He has been in Beijing for 3 days.</span>
+                            <div class="mistake-explanation">have gone表示去了还没回来，不能与for连用</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>She has already finished her homework.</li><li>I have never met him before.</li><li>We have known each other since 2020.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>3. 主将从现</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">在条件状语从句和时间状语从句中 主句用一般将来时 从句用一般现在时表示将来</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">主句 will do 从句 一般现在时</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>常用于 if unless when before after 等引导的从句</li><li>从句中不能使用 will 表将来</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>If it rains tomorrow, we will stay at home.</li><li>You will miss the bus unless you hurry up.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>4. 不定式 (to 动词原形)</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">由to + 动词原形构成的非谓语动词形式，可以作主语、宾语、表语、定语、状语和宾语补足语。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">to + 动词原形</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>作宾语：I want to go home. / I decide to study hard.</li><li>作目的状语：I came here to see you.</li><li>作主语：To learn English well is important. = It is important to learn English well.</li><li>作宾语补足语：My mother asked me to clean the room.</li><li>作定语：I have something to tell you.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I want go home.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I want to go home.</span>
+                            <div class="mistake-explanation">want后接不定式，必须有to</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ He made me to cry.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ He made me cry.</span>
+                            <div class="mistake-explanation">make/let/have等使役动词后用省略to的不定式</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I saw him to run.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I saw him run/running.</span>
+                            <div class="mistake-explanation">感官动词see/hear/watch后用省略to的不定式或-ing</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>She decided to become a doctor.</li><li>It's kind of you to help me.</li><li>I don't know what to do.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>5. 状语从句</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">在复合句中作状语的从句，用来修饰主句，表示时间、条件、原因、目的、结果、让步等。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">连词 + 从句，主句（从句可前可后）</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>时间状语从句：when, while, before, after, as soon as, until等</li><li>条件状语从句：if, unless (= if not)</li><li>原因状语从句：because, since, as</li><li>让步状语从句：although/though, even if/though</li><li>结果状语从句：so...that..., such...that...</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ If it will rain tomorrow, I will stay at home.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ If it rains tomorrow, I will stay at home.</span>
+                            <div class="mistake-explanation">在条件状语从句中，用一般现在时表将来</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Although he is tired, but he keeps working.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Although he is tired, he keeps working.</span>
+                            <div class="mistake-explanation">although和but不能同时使用</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Because I was ill, so I didn't go to school.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Because I was ill, I didn't go to school.</span>
+                            <div class="mistake-explanation">because和so不能同时使用</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>I will call you as soon as I arrive.</li><li>Unless you work hard, you won't succeed.</li><li>He was so tired that he fell asleep immediately.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>6. 可数名词语不可数名词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">可数名词语不可数名词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">可数名词与不可数名词</div>
+                </div>
+                
+                
+                
+                
+                
+                
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>7. 常用介词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">用在名词、代词或动名词前，表示时间、地点、方式、原因等关系的词。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">介词 + 名词/代词/动名词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>时间：at+时刻, on+具体日期, in+年月季节长时段</li><li>地点：at+小地点, in+大地点/里面, on+表面</li><li>方式：by+交通工具/方式, with+工具/材料, in+语言/颜色</li><li>常见搭配：be good at, be interested in, look for, wait for, listen to</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I arrived at Beijing.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I arrived in Beijing.</span>
+                            <div class="mistake-explanation">arrive in+大地点，arrive at+小地点</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I go to school by a bus.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I go to school by bus.</span>
+                            <div class="mistake-explanation">by+交通工具中间不加冠词</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I'm looking forward to see you.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I'm looking forward to seeing you.</span>
+                            <div class="mistake-explanation">look forward to后面接动名词</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>The meeting will be held at 3 o'clock on Monday.</li><li>She goes to work by subway.</li><li>He is good at playing basketball.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>8. 形容词/副词比较级</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">用于两者之间的比较，表示'更...'的意思。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">形容词/副词比较级 + than / more + 形容词/副词原级 + than</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>单音节和部分双音节词：加-er（tall→taller, big→bigger）</li><li>多音节和部分双音节词：more + 原级（beautiful→more beautiful）</li><li>不规则变化：good/well→better, bad/badly→worse, many/much→more</li><li>比较级的修饰词：much, a lot, even, still, a little</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ She is more taller than me.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ She is taller than me.</span>
+                            <div class="mistake-explanation">tall是单音节词，用-er形式，不需要more</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ He runs more fast than me.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ He runs faster than me.</span>
+                            <div class="mistake-explanation">fast的比较级是faster，不是more fast</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ This book is more better.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ This book is better / much better.</span>
+                            <div class="mistake-explanation">good的比较级是better，不能用more修饰</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>My sister is two years older than me.</li><li>This question is more difficult than that one.</li><li>He works much harder than before.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>9. it的用法</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">it可以指代前面提到的事物，也可以作形式主语、形式宾语，还可用于强调句、时间、天气等表达。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">It + be + adj. + to do / It + be + adj. + for sb. + to do / It + be + adj. + that从句</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>指代：I have a dog. It is very cute.</li><li>形式主语：It is important to learn English. = To learn English is important.</li><li>形式宾语：I find it difficult to learn English.</li><li>表天气/时间/距离：It is sunny today. / It is 8 o'clock. / It is 5 km from here.</li><li>强调句：It is Tom that/who broke the window.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Is important to study hard.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ It is important to study hard.</span>
+                            <div class="mistake-explanation">不定式作主语时，常用it作形式主语</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I think it easy learn English.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I think it easy to learn English.</span>
+                            <div class="mistake-explanation">形式宾语it后面要有真正的宾语to learn English</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I found that difficult to finish.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I found it difficult to finish.</span>
+                            <div class="mistake-explanation">find it + adj. + to do结构中用it，不用that</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>It's nice to meet you.</li><li>I think it necessary to have a rest.</li><li>It was yesterday that I met her.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>10. 动名词 (v. -ing作名词)</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">由动词-ing形式构成，具有名词性质，可以作主语、宾语、表语等。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">动词-ing</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>作主语：Swimming is good for health.</li><li>作宾语：I enjoy reading books. / Thank you for helping me.</li><li>作表语：My hobby is collecting stamps.</li><li>某些动词后只能接动名词：enjoy, finish, mind, practice, avoid, consider等</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ I enjoy to swim.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ I enjoy swimming.</span>
+                            <div class="mistake-explanation">enjoy后只能接动名词，不能接不定式</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Thank you for help me.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Thank you for helping me.</span>
+                            <div class="mistake-explanation">介词后要用动名词</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Reading makes a full man.</li><li>Would you mind opening the window?</li><li>She is good at playing the piano.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>11. 现在分词 (v. -ing作形容词/副词)</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">由动词-ing形式构成，可以作定语、状语、表语和宾语补足语，表示主动或正在进行。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">动词-ing</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>作定语（表主动/进行）：the sleeping baby = the baby who is sleeping</li><li>作状语：Hearing the news, she jumped with joy.</li><li>作表语：The movie is exciting.</li><li>作宾语补足语：I saw him running.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ The news is excited.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ The news is exciting.</span>
+                            <div class="mistake-explanation">修饰物用-ing（令人...的），修饰人用-ed（感到...的）</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ Seen from the hill, we can see the whole city.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ Seeing from the hill, we can see the whole city.</span>
+                            <div class="mistake-explanation">分词的逻辑主语要与句子主语一致</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Look at the running water.</li><li>The story is very interesting.</li><li>Walking along the street, I met an old friend.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>12. 感官动词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">感官动词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">感官动词后接do / doing的区别</div>
+                </div>
+                
+                
+                
+                
+                
+                
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>13. 非谓语</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">非谓语</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">过去分词作形容词</div>
+                </div>
+                
+                
+                
+                
+                
+                
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>14. until 的用法</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">until 用来表示某个动作或状态持续到某一时间为止</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">主句 + until + 时间/句子</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>表示动作一直持续到某一时间</li><li>若主句是否定句，until 常表示“直到……才……”</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>He waited until it got dark.</li><li>I didn’t realize the truth until he told me.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>15. without 后接名词或动名词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">介词 without 后面不能接动词原形，只能接名词或动名词</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">without + 名词 / doing sth.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>表示“没有……”“不……就……”</li><li>常用于描述缺少某种条件或行为</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>He left without a word.</li><li>She passed the exam without studying hard.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>16. 介词 from 后接名词或动名词</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">介词 from 后面通常接名词或动名词，不能直接接动词原形</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">from + 名词 / doing sth.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>常用于固定搭配，如 stop sb. from doing sth.</li><li>表示来源、分离或阻止</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Nothing can stop us from achieving our dreams.</li><li>This medicine can protect you from getting sick.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>17. instead of 的用法</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">instead of 用来表示“而不是”，用于替代某事或某种做法</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">instead of + 名词 / doing sth.</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>用于对比两种选择</li><li>后面不能接动词原形</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>We went by bus instead of walking.</li><li>He stayed at home instead of going out.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>18. 否定词 never 引导的倒装结构</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当否定意义的副词 never 放在句首时，句子需要使用部分倒装，以强调“从未发生过某事”。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">never + 助动词 / 情态动词 / be 动词 + 主语 + 谓语</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>never 位于句首时必须倒装</li><li>常见助动词包括 have, do, does, did, will 等</li><li>用于强调否定时间或经历</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>Never have I seen such a beautiful view.</li><li>Never did he tell me the truth.</li><li>Never will she give up her dream.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>19. good和 well 的比较级形式</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">(good和 well 的比较级形式)较好的</div>
+                </div>
+                
+                
+                
+                
+                
+                
+                
+                
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>20. 强调系动词 be</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">足够……可以做某事（强调系动词 be）</div>
+                </div>
+                
+                
+                
+                
+                
+                
+                
+                
+            </div>
+        </div>
+        
+            </section>
+        </main>
+        
+        <footer>
+            由 Sorryios AI 智能生成 | 2026/2/7 20:23:59
+        </footer>
+    </div>
+</body>
+</html>

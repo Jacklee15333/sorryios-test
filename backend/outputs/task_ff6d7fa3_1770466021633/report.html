@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2月7日课堂笔记</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 15px;
+        }
+        
+        header .meta {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        
+        header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        header .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 30px;
+            border-radius: 10px;
+        }
+        
+        header .stat-item .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        header .stat-item .label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .export-bar {
+            background: #f8f9fa;
+            padding: 15px 40px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .export-btn.pdf { background: #e74c3c; color: white; }
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        main {
+            padding: 40px;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section-header .icon {
+            font-size: 2em;
+        }
+        
+        .section-header h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .section-header .desc {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-left: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .data-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .data-table .index {
+            width: 50px;
+            text-align: center;
+            color: #999;
+        }
+        
+        .vocab-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.05em;
+        }
+        
+        .type-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+        
+        .type-tag.word { background: #e8f5e9; color: #2e7d32; }
+        .type-tag.phrase { background: #e3f2fd; color: #1565c0; }
+        .type-tag.pattern { background: #fff3e0; color: #ef6c00; }
+        
+        .word-forms {
+            margin-top: 5px;
+            padding-left: 10px;
+            border-left: 3px solid #ddd;
+        }
+        
+        .word-form-item {
+            color: #e67e22;
+            font-size: 0.9em;
+            margin: 2px 0;
+        }
+        
+        .word-form-label {
+            color: #999;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        .phonetic {
+            color: #9b59b6;
+            font-family: 'Lucida Sans Unicode', sans-serif;
+        }
+        
+        .pos {
+            color: #3498db;
+            font-weight: 500;
+        }
+        
+        .example {
+            color: #666;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        
+        .grammar-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .grammar-card-header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .grammar-card-body {
+            padding: 20px;
+        }
+        
+        .grammar-item {
+            margin-bottom: 15px;
+        }
+        
+        .grammar-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .grammar-item-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .grammar-item-content {
+            padding-left: 24px;
+            color: #555;
+        }
+        
+        .grammar-item-content ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .grammar-item-content li {
+            margin: 5px 0;
+        }
+        
+        .mistake-item {
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .mistake-wrong {
+            color: #e74c3c;
+            text-decoration: line-through;
+        }
+        
+        .mistake-arrow {
+            margin: 0 10px;
+            color: #999;
+        }
+        
+        .mistake-correct {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .mistake-explanation {
+            margin-top: 8px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .examples-box {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .examples-box ul {
+            margin: 0;
+        }
+        
+        .section-divider {
+            height: 40px;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .export-bar {
+                display: none;
+            }
+            .section-header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📖 2月7日课堂笔记</h1>
+            <div class="meta">生成时间: 2026/2/7 20:07:01</div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="number">15</div>
+                    <div class="label">词汇</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">2</div>
+                    <div class="label">语法</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="export-bar">
+            <button class="export-btn pdf" onclick="window.print()">🖨️ 打印/导出PDF</button>
+        </div>
+        
+        <main>
+            <section>
+                <div class="section-header">
+                    <span class="icon">📚</span>
+                    <h2>词汇</h2>
+                    <span class="desc">共 15 项</span>
+                </div>
+                
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="index">#</th>
+                    <th style="width: 280px;">词汇</th>
+                    <th style="width: 80px;">音标</th>
+                    <th style="width: 200px;">含义</th>
+                    <th>例句</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td class="index">1</td>
+                    <td>
+                        <span class="vocab-name">common</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈkɒmən/</td>
+                    <td><span class="pos">n.</span> 普通的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">2</td>
+                    <td>
+                        <span class="vocab-name">mistake</span>
+                        
+                    </td>
+                    <td class="phonetic">mis'teik</td>
+                    <td><span class="pos">n.</span> 错误 vt. 弄错；误解</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">3</td>
+                    <td>
+                        <span class="vocab-name">single</span>
+                        
+                    </td>
+                    <td class="phonetic">'siŋgl</td>
+                    <td><span class="pos">adj.</span> 单身的；单一的</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">4</td>
+                    <td>
+                        <span class="vocab-name">stage</span>
+                        
+                    </td>
+                    <td class="phonetic">/steɪdʒ/</td>
+                    <td><span class="pos">noun</span> 舞台；阶段</td>
+                    <td class="example">She was nervous when she went onto the stage.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">5</td>
+                    <td>
+                        <span class="vocab-name">attract</span>
+                        
+                    </td>
+                    <td class="phonetic">/əˈtɹækt/</td>
+                    <td><span class="pos">v.</span> 吸引</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">6</td>
+                    <td>
+                        <span class="vocab-name">decision</span>
+                        
+                    </td>
+                    <td class="phonetic">/dɪˈsɪʒən/</td>
+                    <td><span class="pos">n.</span> 决定</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">7</td>
+                    <td>
+                        <span class="vocab-name">simple</span>
+                        
+                    </td>
+                    <td class="phonetic">/ˈsɪmpəl/</td>
+                    <td><span class="pos">adj.</span> 简单的；不复杂的</td>
+                    <td class="example">The question is very simple, so everyone can answer it.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">8</td>
+                    <td>
+                        <span class="vocab-name">pay off</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 还清</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">9</td>
+                    <td>
+                        <span class="vocab-name">care about</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 关心；关爱</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">10</td>
+                    <td>
+                        <span class="vocab-name">be interested in</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 对. .. 感兴趣</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">11</td>
+                    <td>
+                        <span class="vocab-name">be proud of</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 以……为自豪</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">12</td>
+                    <td>
+                        <span class="vocab-name">make a decision</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 决定做某事</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">13</td>
+                    <td>
+                        <span class="vocab-name">expect to do sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> v. 期待做某事</td>
+                    <td class="example"></td>
+                </tr>
+                
+                <tr>
+                    <td class="index">14</td>
+                    <td>
+                        <span class="vocab-name">adj. enough</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 足够……，表示程度达到某种结果或要求</td>
+                    <td class="example">He is old enough to go to school by himself.</td>
+                </tr>
+                
+                <tr>
+                    <td class="index">15</td>
+                    <td>
+                        <span class="vocab-name">better not do sth.</span>
+                        
+                    </td>
+                    <td class="phonetic"></td>
+                    <td><span class="pos"></span> 最好不要做某事，用于提出否定性的建议</td>
+                    <td class="example">You'd better not stay up too late on weekdays.</td>
+                </tr>
+                
+            </tbody>
+        </table>
+            </section>
+            
+            <div class="section-divider"></div>
+            
+            <section>
+                <div class="section-header">
+                    <span class="icon">📖</span>
+                    <h2>语法</h2>
+                    <span class="desc">共 2 项</span>
+                </div>
+                
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>1. 被动语态</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">当主语是动作的承受者时，使用被动语态。强调动作的承受者或动作本身。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">主语 + be + 过去分词 + (by + 动作执行者)</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>不知道或不必说明动作执行者：The window was broken.</li><li>强调动作承受者：The book was written by Lu Xun.</li><li>客观报道或正式场合：The meeting will be held tomorrow.</li><li>各种时态的被动：is done, was done, will be done, has been done等</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ The car was repair yesterday.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ The car was repaired yesterday.</span>
+                            <div class="mistake-explanation">be后面要用动词的过去分词</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ The book is belonged to me.</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ The book belongs to me.</span>
+                            <div class="mistake-explanation">belong是不及物动词，没有被动语态</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>English is spoken all over the world.</li><li>The bridge was built in 1990.</li><li>The work must be finished on time.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grammar-card">
+            <div class="grammar-card-header">
+                <span>🎴</span>
+                <span>2. 感叹句</span>
+            </div>
+            <div class="grammar-card-body">
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📝 定义</div>
+                    <div class="grammar-item-content">用来表达强烈感情的句子，句末用感叹号。常用What和How引导。</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📋 结构</div>
+                    <div class="grammar-item-content">What + (a/an) + 形容词 + 名词 + 主语 + 谓语! / How + 形容词/副词 + 主语 + 谓语!</div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">💡 用法</div>
+                    <div class="grammar-item-content">
+                        <ul>
+                            <li>What + a/an + 形容词 + 可数名词单数：What a beautiful girl she is!</li><li>What + 形容词 + 不可数名词/复数名词：What nice weather! What beautiful flowers!</li><li>How + 形容词/副词：How beautiful the girl is! How fast he runs!</li><li>判断用What还是How：看中心词是名词还是形容词/副词</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">⚠️ 易错点</div>
+                    <div class="grammar-item-content">
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ What beautiful girl she is!</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ What a beautiful girl she is!</span>
+                            <div class="mistake-explanation">可数名词单数前要加a/an</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ How a beautiful girl!</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ What a beautiful girl! / How beautiful the girl is!</span>
+                            <div class="mistake-explanation">How后直接加形容词，不加冠词和名词</div>
+                        </div>
+                        
+                        <div class="mistake-item">
+                            <span class="mistake-wrong">❌ What nice the weather is!</span>
+                            <span class="mistake-arrow">→</span>
+                            <span class="mistake-correct">✅ How nice the weather is! / What nice weather!</span>
+                            <div class="mistake-explanation">What后要有名词，How后直接加形容词</div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="grammar-item">
+                    <div class="grammar-item-title">📌 例句</div>
+                    <div class="grammar-item-content">
+                        <div class="examples-box">
+                            <ul>
+                                <li>What an interesting story it is!</li><li>What delicious food!</li><li>How time flies!</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+            </section>
+        </main>
+        
+        <footer>
+            由 Sorryios AI 智能生成 | 2026/2/7 20:07:01
+        </footer>
+    </div>
+</body>
+</html>
