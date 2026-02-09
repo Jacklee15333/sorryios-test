@@ -6,6 +6,9 @@ import ProgressTracker from './components/ProgressTracker';
 import ReportViewer from './components/ReportViewer';
 import MasteredWords from './components/MasteredWords';
 import useTaskProgress from './hooks/useTaskProgress';
+import ExamUploader from './components/ExamUploader';
+import WrongQuestionBook from './components/WrongQuestionBook';
+import ExamReportViewer from './components/ExamReportViewer';
 
 /**
  * 主应用内容组件 - 全屏侧边栏布局
@@ -20,6 +23,11 @@ function AppContent() {
     const [taskInfo, setTaskInfo] = useState(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [lastCompletedTask, setLastCompletedTask] = useState(null);
+
+    // 🆕 错题收集相关状态
+    const [examTaskId, setExamTaskId] = useState(null);
+    const [currentExamId, setCurrentExamId] = useState(null); // 🆕 当前查看的试卷ID（用于错题报告）
+    const [examHistory, setExamHistory] = useState([]); // 🆕 试卷历史记录
 
     // 学习数据
     const [stats, setStats] = useState(null);
@@ -39,11 +47,30 @@ function AppContent() {
             }));
             
             // 🔧 修改：任务完成后不跳转，保持在处理页面显示完成状态
-            if (progress.status === 'completed') {
-                setLastCompletedTask({
-                    id: currentTaskId,
-                    title: taskInfo?.customTitle || progress.customTitle || '课堂笔记'
-                });
+            // 🔧 兼容 'completed'（课堂笔记）和 'done'（试卷错题）两种完成状态
+            if (progress.status === 'completed' || progress.status === 'done') {
+                console.log(`[App] 任务完成, status=${progress.status}, taskId=${currentTaskId}`);
+                
+                // 判断是试卷任务还是课堂笔记任务
+                if (currentTaskId && currentTaskId.startsWith('exam_')) {
+                    // 🆕 试卷任务完成 - 提取 examId
+                    const completedExamId = parseInt(currentTaskId.replace('exam_', ''));
+                    console.log(`[App] 试卷任务完成, examId: ${completedExamId}`);
+                    setCurrentExamId(completedExamId);
+                    setLastCompletedTask({
+                        id: currentTaskId,
+                        examId: completedExamId,
+                        title: taskInfo?.customTitle || progress.customTitle || '试卷错题',
+                        type: 'exam'
+                    });
+                } else {
+                    // 课堂笔记任务完成
+                    setLastCompletedTask({
+                        id: currentTaskId,
+                        title: taskInfo?.customTitle || progress.customTitle || '课堂笔记',
+                        type: 'note'
+                    });
+                }
                 loadUserData();  // 刷新数据
                 // 🚫 移除自动跳转：setTimeout(() => setCurrentPage('upload'), 500);
                 // 现在用户需要点击"查看报告"按钮
@@ -88,6 +115,20 @@ function AppContent() {
             if (masteredListRes.ok) {
                 const data = await masteredListRes.json();
                 setMasteredWords(data.words || []);
+            }
+
+            // 🆕 加载试卷历史列表
+            try {
+                const examListRes = await fetch('/api/exam/list', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (examListRes.ok) {
+                    const data = await examListRes.json();
+                    console.log(`[App] 加载试卷历史: ${data.exams?.length || 0} 条`);
+                    setExamHistory(data.exams || []);
+                }
+            } catch (examErr) {
+                console.error('[App] 加载试卷历史失败:', examErr);
             }
         } catch (err) {
             console.error('加载数据失败:', err);
@@ -139,6 +180,29 @@ function AppContent() {
     const handleViewReport = (taskId = null) => {
         if (taskId) setCurrentTaskId(taskId);
         setCurrentPage('report');
+    };
+
+    // 🆕 错题上传成功
+    const handleExamUploadSuccess = (data) => {
+        console.log('[App] 错题上传成功:', data);
+        setExamTaskId(data.taskId);
+        setCurrentTaskId(data.taskId);
+        setCurrentExamId(data.examId); // 🆕 保存 examId
+        setTaskInfo({
+            id: data.taskId,
+            status: 'processing',
+            progress: 0,
+            currentStep: '识别任务已启动...',
+            customTitle: data.title
+        });
+        setCurrentPage('exam-progress');
+    };
+
+    // 🆕 查看试卷错题报告
+    const handleViewExamReport = (examId) => {
+        console.log(`[App] 查看试卷错题报告, examId: ${examId}`);
+        setCurrentExamId(examId);
+        setCurrentPage('exam-report');
     };
 
     // 移除已掌握词汇
@@ -253,10 +317,12 @@ function AppContent() {
                 </div>
 
                 <nav className="mt-6 px-2 space-y-1">
+                    {/* ═══ 📖 课堂笔记分组 ═══ */}
+                    {!sidebarCollapsed && (
+                        <p className="px-4 pt-3 pb-1 text-xs font-semibold text-indigo-400 uppercase tracking-wider">📖 课堂笔记</p>
+                    )}
                     <button
                         onClick={() => {
-                            // 🔧 修复：只切换页面，不清空任务信息
-                            // 这样可以在不同页面间自由切换，再回来时任务还在
                             setCurrentPage('upload');
                         }}
                         className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
@@ -271,8 +337,8 @@ function AppContent() {
                         {!sidebarCollapsed && <span className="font-medium">上传笔记</span>}
                     </button>
 
-                    {/* 🆕 如果有正在进行的任务，显示"处理中"按钮 */}
-                    {taskInfo && taskInfo.status === 'processing' && (
+                    {/* 如果有正在进行的单词任务 */}
+                    {taskInfo && taskInfo.status === 'processing' && currentPage !== 'exam-progress' && (
                         <button
                             onClick={() => setCurrentPage('processing')}
                             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
@@ -295,6 +361,62 @@ function AppContent() {
                         </button>
                     )}
 
+                    {/* ═══ 📝 错题收集分组 ═══ */}
+                    {!sidebarCollapsed && (
+                        <p className="px-4 pt-5 pb-1 text-xs font-semibold text-indigo-400 uppercase tracking-wider">📝 错题收集</p>
+                    )}
+                    <button
+                        onClick={() => setCurrentPage('exam-upload')}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                            currentPage === 'exam-upload'
+                                ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-lg transform scale-105'
+                                : 'hover:bg-indigo-700/50'
+                        }`}
+                    >
+                        <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {!sidebarCollapsed && <span className="font-medium">上传试卷</span>}
+                    </button>
+
+                    {/* 如果有正在进行的错题识别任务 */}
+                    {currentPage === 'exam-progress' && taskInfo && taskInfo.status === 'processing' && (
+                        <button
+                            onClick={() => setCurrentPage('exam-progress')}
+                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-orange-500/20 hover:bg-orange-500/30 border border-orange-400 relative animate-pulse"
+                        >
+                            <svg className="w-6 h-6 flex-shrink-0 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            {!sidebarCollapsed && (
+                                <>
+                                    <span className="font-medium text-orange-400">识别中</span>
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-orange-400 text-indigo-900 text-xs font-bold px-2 py-1 rounded-full">
+                                        {taskInfo.progress}%
+                                    </span>
+                                </>
+                            )}
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => setCurrentPage('exam-book')}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                            currentPage === 'exam-book'
+                                ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-lg transform scale-105'
+                                : 'hover:bg-indigo-700/50'
+                        }`}
+                    >
+                        <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        {!sidebarCollapsed && <span className="font-medium">错题本</span>}
+                    </button>
+
+                    {/* ═══ 📊 通用功能 ═══ */}
+                    {!sidebarCollapsed && (
+                        <p className="px-4 pt-5 pb-1 text-xs font-semibold text-indigo-400 uppercase tracking-wider">📊 通用</p>
+                    )}
                     <button
                         onClick={() => setCurrentPage('history')}
                         className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
@@ -381,7 +503,7 @@ function AppContent() {
                         />
                     )}
 
-                    {/* 历史记录 */}
+                    {/* 历史记录 - 混合显示课堂笔记 + 试卷错题 */}
                     {currentPage === 'history' && (
                         <div className="bg-white rounded-2xl shadow-xl p-8">
                             <div className="flex items-center justify-between mb-6">
@@ -392,18 +514,18 @@ function AppContent() {
                                     <span>历史记录</span>
                                 </h2>
                                 <span className="text-sm text-gray-500">
-                                    共 {taskHistory.length} 条记录
+                                    共 {taskHistory.length + examHistory.length} 条记录
                                 </span>
                             </div>
 
-                            {taskHistory.length === 0 ? (
+                            {taskHistory.length === 0 && examHistory.length === 0 ? (
                                 <div className="text-center py-16">
                                     <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
                                     </div>
-                                    <p className="text-gray-500 mb-2">还没有处理过笔记</p>
+                                    <p className="text-gray-500 mb-2">还没有任何记录</p>
                                     <button
                                         onClick={() => setCurrentPage('upload')}
                                         className="text-indigo-600 hover:text-indigo-700 font-medium"
@@ -413,26 +535,64 @@ function AppContent() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {taskHistory.map((task, index) => (
+                                    {/* 合并课堂笔记和试卷历史，按时间倒序排列 */}
+                                    {[
+                                        // 课堂笔记记录
+                                        ...taskHistory.map(task => ({
+                                            ...task,
+                                            _type: 'note',
+                                            _time: task.createdAt || task.created_at || '',
+                                            _title: task.customTitle || task.fileName || '课堂笔记',
+                                            _status: task.status,
+                                        })),
+                                        // 试卷错题记录
+                                        ...examHistory.map(exam => ({
+                                            ...exam,
+                                            _type: 'exam',
+                                            _time: exam.createdAt || exam.created_at || '',
+                                            _title: exam.title || `试卷 #${exam.id}`,
+                                            _status: exam.status === 'done' ? 'completed' : exam.status,
+                                        }))
+                                    ]
+                                    .sort((a, b) => new Date(b._time) - new Date(a._time))
+                                    .map((item, index) => (
                                         <div
-                                            key={task.id}
-                                            className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-5 hover:shadow-lg transition-all duration-200 cursor-pointer border border-indigo-100"
-                                            onClick={() => handleViewReport(task.id)}
+                                            key={`${item._type}-${item.id}-${index}`}
+                                            className={`rounded-xl p-5 hover:shadow-lg transition-all duration-200 cursor-pointer border ${
+                                                item._type === 'exam'
+                                                    ? 'bg-gradient-to-r from-orange-50 to-red-50 border-orange-100'
+                                                    : 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-100'
+                                            }`}
+                                            onClick={() => {
+                                                if (item._type === 'exam') {
+                                                    handleViewExamReport(item.id);
+                                                } else {
+                                                    handleViewReport(item.id);
+                                                }
+                                            }}
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
                                                     <div className="flex items-center space-x-3 mb-2">
+                                                        {/* 类型标注 */}
+                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                            item._type === 'exam'
+                                                                ? 'bg-orange-100 text-orange-700'
+                                                                : 'bg-indigo-100 text-indigo-700'
+                                                        }`}>
+                                                            {item._type === 'exam' ? '📝 试卷错题' : '📖 课堂笔记'}
+                                                        </span>
                                                         <span className="text-lg font-semibold text-gray-800">
-                                                            {task.customTitle || task.fileName}
+                                                            {item._title}
                                                         </span>
                                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                                            task.status === 'completed'
+                                                            item._status === 'completed'
                                                                 ? 'bg-green-100 text-green-700'
-                                                                : task.status === 'failed'
+                                                                : item._status === 'failed'
                                                                 ? 'bg-red-100 text-red-700'
                                                                 : 'bg-yellow-100 text-yellow-700'
                                                         }`}>
-                                                            {task.status === 'completed' ? '✓ 已完成' : task.status === 'failed' ? '✗ 失败' : '处理中'}
+                                                            {item._status === 'completed' ? '✓ 已完成' : item._status === 'failed' ? '✗ 失败' : '处理中'}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center space-x-4 text-sm text-gray-600">
@@ -440,24 +600,45 @@ function AppContent() {
                                                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                             </svg>
-                                                            {new Date(task.createdAt).toLocaleString()}
+                                                            {item._time ? new Date(item._time).toLocaleString() : ''}
                                                         </span>
-                                                        {task.stats && (
+                                                        {/* 课堂笔记的匹配统计 */}
+                                                        {item._type === 'note' && item.stats && (
                                                             <>
                                                                 <span className="text-indigo-600 font-medium">
-                                                                    {task.stats.exactMatch || 0} 精确
+                                                                    {item.stats.exactMatch || 0} 精确
                                                                 </span>
                                                                 <span className="text-purple-600 font-medium">
-                                                                    {task.stats.fuzzyMatch || 0} 模糊
+                                                                    {item.stats.fuzzyMatch || 0} 模糊
                                                                 </span>
                                                                 <span className="text-orange-600 font-medium">
-                                                                    {task.stats.unmatched || 0} 未匹配
+                                                                    {item.stats.unmatched || 0} 未匹配
                                                                 </span>
+                                                            </>
+                                                        )}
+                                                        {/* 试卷错题的统计 */}
+                                                        {item._type === 'exam' && (
+                                                            <>
+                                                                {item.imageCount > 0 && (
+                                                                    <span className="text-gray-500">
+                                                                        📷 {item.imageCount} 张图片
+                                                                    </span>
+                                                                )}
+                                                                {item.wrongCount > 0 && (
+                                                                    <span className="text-red-600 font-medium">
+                                                                        ✏️ {item.wrongCount} 道错题
+                                                                    </span>
+                                                                )}
+                                                                {item.totalQuestions > 0 && (
+                                                                    <span className="text-gray-500">
+                                                                        / 共 {item.totalQuestions} 题
+                                                                    </span>
+                                                                )}
                                                             </>
                                                         )}
                                                     </div>
                                                 </div>
-                                                <svg className="w-6 h-6 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-6 h-6 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                                 </svg>
                                             </div>
@@ -475,6 +656,47 @@ function AppContent() {
                             stats={masteredStats}
                             onRemove={handleRemoveMastered}
                             onClearAll={handleClearAll}
+                        />
+                    )}
+
+                    {/* 🆕 错题上传页面 */}
+                    {currentPage === 'exam-upload' && (
+                        <ExamUploader onUploadSuccess={handleExamUploadSuccess} />
+                    )}
+
+                    {/* 🆕 错题识别进度（复用 ProgressTracker） */}
+                    {currentPage === 'exam-progress' && (
+                        <ProgressTracker
+                            taskInfo={taskInfo}
+                            connected={connected}
+                            logs={logs}
+                            onReset={() => {
+                                setCurrentPage('exam-book');
+                                setExamTaskId(null);
+                            }}
+                            onViewReport={() => {
+                                // 🆕 完成后跳转到本次错题报告
+                                if (currentExamId) {
+                                    console.log(`[App] exam-progress 完成，跳转到错题报告, examId: ${currentExamId}`);
+                                    handleViewExamReport(currentExamId);
+                                } else {
+                                    console.log('[App] exam-progress 完成，无 examId，跳转到错题本');
+                                    setCurrentPage('exam-book');
+                                }
+                            }}
+                        />
+                    )}
+
+                    {/* 🆕 错题本 */}
+                    {currentPage === 'exam-book' && (
+                        <WrongQuestionBook />
+                    )}
+
+                    {/* 🆕 本次错题报告 */}
+                    {currentPage === 'exam-report' && (
+                        <ExamReportViewer
+                            examId={currentExamId}
+                            onBack={() => setCurrentPage('exam-book')}
                         />
                     )}
                 </div>

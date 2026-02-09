@@ -380,6 +380,9 @@ function loadRoute(name, routePath, mountPath) {
 // 路由加载顺序（具体路由在前，通配符路由在后）
 // ============================================
 
+// 🆕 预加载错题服务（确保建表）
+try { require('./services/wrongQuestionService'); } catch(e) { console.warn('[Server] wrongQuestionService 加载失败:', e.message); }
+
 loadRoute('admin', './routes/admin', '/api/admin');
 loadRoute('chunk-api', './routes/chunk-api', '/api/chunk');
 loadRoute('ai-api', './routes/ai-api', '/api/ai');
@@ -388,6 +391,8 @@ loadRoute('vocabulary-api', './routes/vocabulary-api', '/api/vocabulary');
 loadRoute('processing-log-api', './routes/processing-log-api', '/api/processing-log');
 loadRoute('matching-dict-api', './routes/matching-dict-api', '/api/matching-dict');
 loadRoute('user-mastered-api', './routes/user-mastered-api', '/api/user-mastered');
+loadRoute('exam-upload-api', './routes/exam-upload-api', '/api/exam');
+loadRoute('wrong-question-api', './routes/wrong-question-api', '/api/wrong-questions');
 
 // 通配符路由放最后
 loadRoute('upload', './routes/upload', '/api');
@@ -532,7 +537,8 @@ const requiredDirs = [
     path.join(__dirname, 'data/chunks'),
     path.join(__dirname, 'data/progress'),
     path.join(__dirname, 'data/results'),
-    path.join(__dirname, 'public')
+    path.join(__dirname, 'public'),
+    path.join(__dirname, 'uploads/exams')
 ];
 
 requiredDirs.forEach(dir => {
