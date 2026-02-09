@@ -35,8 +35,11 @@ function ProgressTracker({ taskInfo, logs = [], onReset, onViewReport, connected
     const { status, progress = 0, currentStep, error } = taskInfo;
 
     const isProcessing = status === 'processing' || status === 'pending';
-    const isCompleted = status === 'completed';
+    const isCompleted = status === 'completed' || status === 'done';
     const isFailed = status === 'failed';
+
+    // 调试日志：帮助定位状态问题
+    console.log('[ProgressTracker] 当前状态:', { status, isProcessing, isCompleted, isFailed, progress });
 
     // 计算已用时间和预估剩余时间
     const elapsedTime = Math.floor((Date.now() - startTime) / 1000);

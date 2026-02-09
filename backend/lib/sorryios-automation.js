@@ -229,6 +229,11 @@ class SorryiosAutomation {
         log('等待AI界面加载...');
         await this.waitForInputBox();
         
+        // 🆕 Bug修复：进入账号后立即强制新建对话
+        // 原因：点击账号后可能自动恢复上次的旧对话
+        // 必须在模型切换之前就确保在新对话中
+        await this.startNewChat();
+        
         // 🆕 选择 Instant 模型（即刻回答，速度更快）
         await this.selectInstantModel();
         
@@ -401,6 +406,19 @@ class SorryiosAutomation {
                 log(`[步骤4] ✅ 成功切换到 Instant 模型！当前: "${newButtonText.substring(0, 30)}"`);
             } else {
                 log(`[步骤4] ⚠️ 切换可能未成功，当前按钮文字: "${newButtonText.substring(0, 30)}"`, 'WARN');
+            }
+            
+            // 🐛 Bug修复：模型切换后SPA可能自动跳转到旧对话
+            await sleep(1500);
+            const postSwitchUrl = this.page.url();
+            if (postSwitchUrl.includes('/c/')) {
+                log('[Instant] ⚠️ 模型切换后跳转到旧对话，强制回到新对话...');
+                const urlObj = new URL(postSwitchUrl);
+                const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+                await this.page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 30000 });
+                await sleep(2000);
+                await this.waitForInputBox(15000);
+                log(`[Instant] ✅ 已回到新对话 - URL: ${this.page.url()}`);
             }
             
             log('========== 模型选择完成 ==========');
@@ -1289,6 +1307,607 @@ class SorryiosAutomation {
         }
         
         return results;
+    }
+
+    // ============================================
+    // 🆕 选择 Thinking 模型（错题识别专用）
+    // 镜像 selectInstantModel() 逻辑，关键字改为 Thinking
+    // ============================================
+    
+    async selectThinkingModel() {
+        log('========== 开始选择 Thinking 模型 ==========');
+        try {
+            await sleep(1500);
+            
+            // 第一步：扫描顶部按钮，找模型选择按钮
+            log('[步骤1] 扫描页面按钮...');
+            const allButtons = await this.page.$$eval('button', (buttons) => {
+                return buttons.map((btn, index) => {
+                    const rect = btn.getBoundingClientRect();
+                    const text = btn.innerText || btn.textContent || '';
+                    const isVisible = rect.width > 0 && rect.height > 0;
+                    return {
+                        index,
+                        text: text.trim().substring(0, 50),
+                        x: Math.round(rect.x),
+                        y: Math.round(rect.y),
+                        width: Math.round(rect.width),
+                        height: Math.round(rect.height),
+                        isVisible,
+                        className: btn.className.substring(0, 50),
+                    };
+                }).filter(b => b.isVisible && b.y < 100);
+            });
+            
+            log(`[调试] 顶部区域找到 ${allButtons.length} 个可见按钮:`);
+            allButtons.forEach(btn => {
+                log(`  - 按钮[${btn.index}]: "${btn.text}" 位置(${btn.x},${btn.y}) 大小(${btn.width}x${btn.height})`);
+            });
+            
+            const modelButton = allButtons.find(btn => 
+                btn.text.includes('ChatGPT') || 
+                btn.text.includes('GPT') ||
+                btn.text.includes('Thinking') || 
+                btn.text.includes('Instant') ||
+                btn.text.includes('Auto')
+            );
+            
+            if (!modelButton) {
+                log('[步骤1] ❌ 未在顶部找到模型选择按钮', 'WARN');
+                const modelElements = await this.page.$$eval('*', (elements) => {
+                    const keywords = ['ChatGPT', 'GPT-', 'Thinking', 'Instant', 'Auto'];
+                    return elements.filter(el => {
+                        const text = el.innerText || '';
+                        const rect = el.getBoundingClientRect();
+                        return rect.y < 80 && rect.width > 0 && keywords.some(k => text.includes(k));
+                    }).slice(0, 10).map(el => ({
+                        tag: el.tagName,
+                        text: (el.innerText || '').substring(0, 60),
+                        x: Math.round(el.getBoundingClientRect().x),
+                        y: Math.round(el.getBoundingClientRect().y),
+                    }));
+                });
+                log(`[调试] 扩大搜索找到 ${modelElements.length} 个相关元素:`);
+                modelElements.forEach(el => log(`  - <${el.tag}> "${el.text}" 位置(${el.x},${el.y})`));
+                log('[步骤1] 使用默认模型继续', 'WARN');
+                return;
+            }
+            
+            log(`[步骤1] ✅ 找到模型按钮: "${modelButton.text}" 位置(${modelButton.x},${modelButton.y})`);
+            
+            // 已经是 Thinking 则跳过
+            if (modelButton.text.includes('Thinking')) {
+                log('[步骤1] 当前已是 Thinking 模型，无需切换 ✅');
+                return;
+            }
+            
+            // 第二步：点击模型按钮打开下拉菜单
+            log('[步骤2] 点击模型按钮打开下拉菜单...');
+            await this.page.mouse.click(modelButton.x + modelButton.width / 2, modelButton.y + modelButton.height / 2);
+            await sleep(1000);
+            
+            // 第三步：查找菜单中的 Thinking 选项
+            log('[步骤3] 查找 Thinking 选项...');
+            await sleep(500);
+            
+            const menuMinX = modelButton.x - 50;
+            const menuMaxX = modelButton.x + modelButton.width + 100;
+            const menuMinY = modelButton.y + modelButton.height;
+            const menuMaxY = 450;
+            
+            log(`[调试] 搜索下拉菜单范围: x(${menuMinX}-${menuMaxX}), y(${menuMinY}-${menuMaxY})`);
+            
+            const allMenuElements = await this.page.$$eval('*', (elements, range) => {
+                return elements.filter(el => {
+                    const rect = el.getBoundingClientRect();
+                    const text = (el.innerText || '').trim();
+                    return rect.x >= range.minX && rect.x <= range.maxX &&
+                           rect.y >= range.minY && rect.y <= range.maxY &&
+                           rect.width > 30 && rect.width < 300 &&
+                           rect.height > 15 && rect.height < 80 &&
+                           text.length > 0 && text.length < 60;
+                }).slice(0, 25).map(el => ({
+                    tag: el.tagName,
+                    text: (el.innerText || '').trim().substring(0, 50),
+                    x: Math.round(el.getBoundingClientRect().x),
+                    y: Math.round(el.getBoundingClientRect().y),
+                    width: Math.round(el.getBoundingClientRect().width),
+                    height: Math.round(el.getBoundingClientRect().height),
+                }));
+            }, { minX: menuMinX, maxX: menuMaxX, minY: menuMinY, maxY: menuMaxY });
+            
+            log(`[调试] 下拉菜单区域找到 ${allMenuElements.length} 个元素:`);
+            allMenuElements.forEach(item => {
+                log(`  - <${item.tag}> "${item.text}" 位置(${item.x},${item.y}) 大小(${item.width}x${item.height})`);
+            });
+            
+            // 🐛 修复：'思考' 会误匹配 "Auto\n自动决定思考时长"
+            // 正确做法：要求包含英文 'Thinking' 或中文 '思考更充分'（Thinking选项独有的描述）
+            const menuItems = allMenuElements.filter(item => {
+                const t = item.text;
+                // 排除包含 Auto / Instant / Pro 的选项
+                if (t.includes('Auto') || t.includes('Instant') || t.includes('即刻') || t.startsWith('Pro')) return false;
+                // 必须包含 Thinking 英文关键词
+                return t.includes('Thinking');
+            });
+            log(`[调试] 其中属于 Thinking 的有 ${menuItems.length} 个`);
+            
+            // 优先选择以 "Thinking" 开头的、高度合适的元素（即菜单行本身，而非子SPAN）
+            const thinkingItem = menuItems.find(item => 
+                item.height > 30 && item.height < 80 && item.text.startsWith('Thinking')
+            ) || menuItems.find(item =>
+                item.height > 30 && item.text.includes('Thinking')
+            ) || menuItems[0];
+            
+            if (!thinkingItem) {
+                log('[步骤3] ❌ 未找到 Thinking 选项', 'WARN');
+                await this.page.keyboard.press('Escape');
+                return;
+            }
+            
+            log(`[步骤3] ✅ 找到 Thinking 选项: "${thinkingItem.text}" 位置(${thinkingItem.x},${thinkingItem.y})`);
+            
+            // 第四步：点击
+            log('[步骤4] 点击 Thinking 选项...');
+            await this.page.mouse.click(thinkingItem.x + thinkingItem.width / 2, thinkingItem.y + thinkingItem.height / 2);
+            await sleep(800);
+            
+            // 验证
+            const newButtonText = await this.page.$$eval('button', (buttons) => {
+                const btn = buttons.find(b => {
+                    const rect = b.getBoundingClientRect();
+                    const text = b.innerText || '';
+                    return rect.y < 80 && (text.includes('ChatGPT') || text.includes('GPT') || text.includes('Thinking'));
+                });
+                return btn ? btn.innerText : '';
+            });
+            
+            if (newButtonText.includes('Thinking')) {
+                log(`[步骤4] ✅ 成功切换到 Thinking 模型！当前: "${newButtonText.substring(0, 30)}"`);
+            } else {
+                log(`[步骤4] ⚠️ 切换可能未成功，当前按钮文字: "${newButtonText.substring(0, 30)}"`, 'WARN');
+            }
+            
+            // 🐛 Bug修复：切换Thinking模型后，SPA可能自动恢复上次Thinking的旧对话
+            // 需要等待一下让SPA完成跳转，然后检查URL
+            await sleep(2000);
+            const postSwitchUrl = this.page.url();
+            log(`[步骤5] 📊 模型切换后URL: ${postSwitchUrl}`);
+            
+            if (postSwitchUrl.includes('/c/')) {
+                log('[步骤5] ⚠️ 检测到模型切换后跳转到旧对话！强制回到新对话...');
+                const urlObj = new URL(postSwitchUrl);
+                const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+                log(`[步骤5] 🔄 导航到: ${baseUrl}`);
+                await this.page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 30000 });
+                await sleep(2000);
+                await this.waitForInputBox(15000);
+                const finalUrl = this.page.url();
+                log(`[步骤5] ✅ 已回到新对话 - URL: ${finalUrl}`);
+            } else {
+                log('[步骤5] ✅ 模型切换后仍在新对话页面');
+            }
+            
+            log('========== 模型选择完成 ==========');
+            
+        } catch (error) {
+            log(`[错误] Thinking 模型选择过程出错: ${error.message}`, 'ERROR');
+            log(`[错误] 错误堆栈: ${error.stack}`, 'ERROR');
+            try { await this.page.keyboard.press('Escape'); } catch (e) {}
+        }
+    }
+
+    // ============================================
+    // 🆕 开始新对话（点击"新聊天"按钮）
+    // 避免在旧对话中发送消息
+    // ============================================
+    
+    async startNewChat() {
+        log('========== 强制开始新对话 ==========');
+        try {
+            // 📊 调试：打印当前页面状态
+            const currentUrl = this.page.url();
+            const pageTitle = await this.page.title().catch(() => '(获取失败)');
+            log(`[新对话] 📊 调试 - 当前URL: ${currentUrl}`);
+            log(`[新对话] 📊 调试 - 页面标题: ${pageTitle}`);
+            
+            // 📊 调试：检查页面内容长度（判断是否有旧对话）
+            const pageState = await this.page.evaluate(() => {
+                const bodyLen = (document.body?.innerText || '').length;
+                const messagesExist = document.querySelectorAll('[data-message-author-role], [class*="message"], article').length;
+                const hasInputBox = !!document.querySelector('#prompt-textarea, textarea[placeholder]');
+                const hasConvoUrl = window.location.href.includes('/c/');
+                return { bodyLen, messagesExist, hasInputBox, hasConvoUrl, href: window.location.href };
+            }).catch(() => ({ bodyLen: -1, messagesExist: -1, hasInputBox: false, hasConvoUrl: false, href: 'error' }));
+            
+            log(`[新对话] 📊 调试 - 页面状态: body长度=${pageState.bodyLen}, 消息元素=${pageState.messagesExist}, 输入框=${pageState.hasInputBox}, URL含/c/=${pageState.hasConvoUrl}`);
+            log(`[新对话] 📊 调试 - evaluate中的href: ${pageState.href}`);
+            
+            // ★ 核心策略：无条件强制导航到根路径（不做任何判断）
+            // 原因：sorryios.ai 是 SPA，URL检测和DOM检测都不可靠
+            // 最可靠的方式就是直接导航到根路径
+            
+            // 提取根路径 baseUrl
+            let baseUrl;
+            if (currentUrl.includes('/c/')) {
+                baseUrl = currentUrl.split('/c/')[0];
+            } else if (currentUrl.includes('sorryios.ai')) {
+                // URL 可能是 https://sorryios.ai 或 https://sorryios.ai/ 或 https://sorryios.ai/?xxx
+                const urlObj = new URL(currentUrl);
+                baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+            } else {
+                baseUrl = 'https://sorryios.ai';
+            }
+            
+            log(`[新对话] 🔄 强制导航到: ${baseUrl}`);
+            await this.page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 30000 });
+            await sleep(2000);
+            
+            // 📊 调试：导航后的页面状态
+            const newUrl = this.page.url();
+            const newTitle = await this.page.title().catch(() => '(获取失败)');
+            log(`[新对话] 📊 导航后 - URL: ${newUrl}`);
+            log(`[新对话] 📊 导航后 - 标题: ${newTitle}`);
+            
+            // 检查导航后是否还在旧对话中（URL仍然含 /c/）
+            if (newUrl.includes('/c/')) {
+                log(`[新对话] ⚠️ 导航后URL仍含/c/，尝试用JS清理...`);
+                // 尝试用JS方式导航
+                await this.page.evaluate((url) => {
+                    window.location.href = url;
+                }, baseUrl);
+                await sleep(3000);
+                const finalUrl = this.page.url();
+                log(`[新对话] 📊 JS导航后 - URL: ${finalUrl}`);
+            }
+            
+            // 等待新对话的输入框出现
+            await this.waitForInputBox(15000);
+            
+            // 📊 最终验证
+            const finalState = await this.page.evaluate(() => {
+                const bodyLen = (document.body?.innerText || '').length;
+                return { bodyLen, href: window.location.href };
+            }).catch(() => ({ bodyLen: -1, href: 'error' }));
+            log(`[新对话] ✅ 新对话就绪 - URL: ${finalState.href}, body长度: ${finalState.bodyLen}`);
+            
+        } catch (error) {
+            log(`[新对话] ❌ 创建新对话失败: ${error.message}`, 'ERROR');
+            log(`[新对话] ❌ 堆栈: ${error.stack}`, 'ERROR');
+            // 不抛出错误，降级在当前页面继续
+        }
+    }
+
+    // ============================================
+    // 🆕 发送带图片的消息（错题识别专用）
+    // 流程：新建对话 → 点击+ → 添加照片和文件 → 上传图片 → 输入文字 → 发送 → 等待响应
+    // ============================================
+
+    async sendMessageWithImages(message, imagePaths) {
+        log(`========== sendMessageWithImages 开始 ==========`);
+        log(`消息长度: ${message.length} 字符`);
+        log(`图片数量: ${imagePaths.length}`);
+        imagePaths.forEach((p, i) => log(`  图片${i + 1}: ${p}`));
+
+        // ℹ️ 注意：不在此处调用 startNewChat()
+        // startNewChat 已在 selectIdleAccount() 中调用（模型切换之前）
+        // 如果在此处再次调用，会导航到根路径，把已选的 Thinking 模型重置掉
+        const preCheckUrl = this.page.url();
+        log(`[sendMessageWithImages] 📊 当前URL: ${preCheckUrl}`);
+
+        // 确保输入框已出现
+        await this.waitForInputBox(15000);
+        await sleep(500);
+
+        // ─── 步骤1: 上传图片（通过 filechooser 事件） ───
+        log('[图片上传] 步骤1: 查找附件/+按钮...');
+        
+        // 扫描页面下半部分的所有按钮
+        const bottomButtons = await this.page.$$eval('button', (buttons) => {
+            return buttons.map(btn => {
+                const rect = btn.getBoundingClientRect();
+                const text = (btn.innerText || '').trim();
+                const ariaLabel = btn.getAttribute('aria-label') || '';
+                const svg = btn.querySelector('svg');
+                const hasSvg = !!svg;
+                return {
+                    text: text.substring(0, 30),
+                    ariaLabel: ariaLabel.substring(0, 80),
+                    x: Math.round(rect.x),
+                    y: Math.round(rect.y),
+                    width: Math.round(rect.width),
+                    height: Math.round(rect.height),
+                    isVisible: rect.width > 0 && rect.height > 0,
+                    hasSvg,
+                };
+            }).filter(b => b.isVisible && b.y > 400);
+        });
+        
+        log(`[图片上传] 页面下半部分找到 ${bottomButtons.length} 个按钮:`);
+        bottomButtons.forEach(b => {
+            log(`  - "${b.text}" aria="${b.ariaLabel}" 位置(${b.x},${b.y}) 大小(${b.width}x${b.height}) svg=${b.hasSvg}`);
+        });
+        
+        // 查找 + 按钮（附件按钮）
+        let plusBtnInfo = bottomButtons.find(b => 
+            b.ariaLabel.toLowerCase().includes('attach') || 
+            b.ariaLabel.includes('附件') || 
+            b.ariaLabel.includes('添加')
+        ) || bottomButtons.find(b => 
+            b.text === '+' || b.text === ''
+        ) || bottomButtons.find(b => 
+            b.width < 50 && b.height < 50 && b.x < 200
+        );
+        
+        let fileUploaded = false;
+        
+        if (!plusBtnInfo) {
+            log('[图片上传] ❌ 未找到+按钮，尝试直接查找隐藏的 file input...', 'WARN');
+            
+            // 降级方案：直接找隐藏的 <input type="file">
+            const fileInput = await this.page.$('input[type="file"]');
+            if (fileInput) {
+                log('[图片上传] 找到隐藏的 file input，直接设置文件');
+                await fileInput.setInputFiles(imagePaths);
+                await sleep(3000);
+                log('[图片上传] ✅ 文件已通过 input[type=file] 设置');
+                fileUploaded = true;
+            } else {
+                throw new Error('无法找到+按钮或file input，无法上传图片');
+            }
+        } else {
+            log(`[图片上传] ✅ 找到+按钮: 位置(${plusBtnInfo.x},${plusBtnInfo.y})`);
+            
+            // 方案1: filechooser 方式
+            try {
+                log('[图片上传] 尝试 filechooser 方式...');
+                
+                const fileChooserPromise = this.page.waitForEvent('filechooser', { timeout: 8000 });
+                
+                // 点击 + 按钮
+                await this.page.mouse.click(plusBtnInfo.x + plusBtnInfo.width / 2, plusBtnInfo.y + plusBtnInfo.height / 2);
+                await sleep(800);
+                
+                // 查找并点击「添加照片和文件」菜单项
+                log('[图片上传] 查找"添加照片和文件"菜单项...');
+                const addPhotoClicked = await this.page.evaluate(() => {
+                    const keywords = ['添加照片', '添加文件', '照片和文件', 'Upload file', 'Attach file', 'Upload from computer'];
+                    const allElements = document.querySelectorAll('div, span, button, li, a, [role="menuitem"]');
+                    for (const el of allElements) {
+                        const text = (el.innerText || el.textContent || '').trim();
+                        const rect = el.getBoundingClientRect();
+                        if (rect.width > 0 && rect.height > 0 && keywords.some(k => text.includes(k))) {
+                            el.click();
+                            return { clicked: true, text: text.substring(0, 40) };
+                        }
+                    }
+                    return { clicked: false };
+                });
+                
+                if (addPhotoClicked.clicked) {
+                    log(`[图片上传] ✅ 点击了菜单项: "${addPhotoClicked.text}"`);
+                } else {
+                    log('[图片上传] ⚠️ 未找到"添加照片和文件"菜单项', 'WARN');
+                }
+                
+                const fileChooser = await fileChooserPromise;
+                log('[图片上传] ✅ 捕获到 filechooser 事件');
+                
+                await fileChooser.setFiles(imagePaths);
+                log(`[图片上传] ✅ 已设置 ${imagePaths.length} 个文件`);
+                
+                fileUploaded = true;
+                
+            } catch (fcError) {
+                log(`[图片上传] ⚠️ filechooser 方式失败: ${fcError.message}`, 'WARN');
+            }
+            
+            // 方案2: 直接 setInputFiles
+            if (!fileUploaded) {
+                log('[图片上传] 尝试方案2: 直接 setInputFiles...');
+                try {
+                    await this.page.keyboard.press('Escape');
+                    await sleep(500);
+                    
+                    const fileInput = await this.page.$('input[type="file"]');
+                    if (fileInput) {
+                        await fileInput.setInputFiles(imagePaths);
+                        log('[图片上传] ✅ 方案2成功: 文件已通过 input[type=file] 设置');
+                        fileUploaded = true;
+                    } else {
+                        log('[图片上传] ❌ 方案2失败: 找不到 input[type=file]', 'ERROR');
+                    }
+                } catch (inputError) {
+                    log(`[图片上传] ❌ 方案2异常: ${inputError.message}`, 'ERROR');
+                }
+            }
+            
+            if (!fileUploaded) {
+                throw new Error('所有图片上传方案均失败');
+            }
+        }
+        
+        // ─── 步骤2: 等待图片上传完成 ───
+        log('[图片上传] 步骤2: 等待图片上传完成...');
+        await sleep(3000);
+        
+        let uploadCheckCount = 0;
+        const maxUploadWait = 30;
+        while (uploadCheckCount < maxUploadWait) {
+            const stillUploading = await this.page.evaluate(() => {
+                const spinners = document.querySelectorAll('[class*="spinner"], [class*="loading"], [class*="progress"], [class*="uploading"]');
+                for (const s of spinners) {
+                    const rect = s.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) return true;
+                }
+                return false;
+            });
+            
+            if (!stillUploading) {
+                log(`[图片上传] ✅ 上传完成（等待了 ${3 + uploadCheckCount}秒）`);
+                break;
+            }
+            
+            uploadCheckCount++;
+            if (uploadCheckCount % 5 === 0) {
+                log(`[图片上传] ⏳ 仍在上传中... (${3 + uploadCheckCount}秒)`);
+            }
+            await sleep(1000);
+        }
+        
+        await sleep(2000);
+
+        // ─── 步骤3: 输入 prompt 文字 ───
+        log('[文字输入] 步骤3: 输入 prompt 文字...');
+        
+        const inputSelectors = [
+            '#prompt-textarea',
+            'textarea[placeholder*="询问"]',
+            'textarea[placeholder*="问题"]',
+            'textarea[placeholder*="message"]',
+            '[contenteditable="true"]',
+            'textarea',
+        ];
+        
+        let inputElement = null;
+        for (const selector of inputSelectors) {
+            try {
+                inputElement = await this.page.$(selector);
+                if (inputElement) {
+                    const isVisible = await inputElement.isVisible();
+                    if (isVisible) {
+                        log(`[文字输入] 找到输入框: ${selector}`);
+                        break;
+                    }
+                    inputElement = null;
+                }
+            } catch (e) { continue; }
+        }
+        
+        if (!inputElement) {
+            throw new Error('找不到消息输入框（图片上传后）');
+        }
+        
+        await inputElement.click();
+        await sleep(500);
+        
+        let inputSuccess = false;
+        
+        // 方式1: fill
+        try {
+            log('[文字输入] 方式1: Playwright fill...');
+            const freshInput = await this.page.$('#prompt-textarea') || 
+                               await this.page.$('textarea[placeholder]') ||
+                               await this.page.$('textarea');
+            if (freshInput) {
+                await freshInput.click();
+                await sleep(200);
+                await this.page.keyboard.press('Control+A');
+                await this.page.keyboard.press('Backspace');
+                await sleep(200);
+                await freshInput.fill(message);
+                await sleep(500);
+                
+                const verifyResult = await this.page.evaluate(() => {
+                    const input = document.querySelector('#prompt-textarea') || 
+                                  document.querySelector('textarea[placeholder]') ||
+                                  document.querySelector('textarea');
+                    if (!input) return { length: 0 };
+                    const val = input.value || input.textContent || '';
+                    return { length: val.length };
+                });
+                
+                if (verifyResult.length > 10) {
+                    inputSuccess = true;
+                    log('[文字输入] ✅ 方式1成功');
+                }
+            }
+        } catch (e) {
+            log(`[文字输入] ❌ 方式1失败: ${e.message}`);
+        }
+        
+        // 方式2: evaluate
+        if (!inputSuccess) {
+            try {
+                log('[文字输入] 方式2: evaluate 直接设置...');
+                const evalResult = await this.page.evaluate((msg) => {
+                    const input = document.querySelector('#prompt-textarea') || 
+                                  document.querySelector('textarea[placeholder]') ||
+                                  document.querySelector('textarea');
+                    if (!input) return { success: false };
+                    input.focus();
+                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                        window.HTMLTextAreaElement.prototype, 'value'
+                    ).set;
+                    nativeInputValueSetter.call(input, msg);
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    return { success: true, length: input.value.length };
+                }, message);
+                
+                if (evalResult.success && evalResult.length > 10) {
+                    inputSuccess = true;
+                    log('[文字输入] ✅ 方式2成功');
+                }
+            } catch (e) {
+                log(`[文字输入] ❌ 方式2失败: ${e.message}`);
+            }
+        }
+        
+        // 方式3: type
+        if (!inputSuccess) {
+            try {
+                log('[文字输入] 方式3: type 逐字输入...');
+                const freshInput = await this.page.$('#prompt-textarea') || 
+                                   await this.page.$('textarea[placeholder]') ||
+                                   await this.page.$('textarea');
+                if (freshInput) {
+                    await freshInput.click();
+                    await this.page.keyboard.press('Control+A');
+                    await this.page.keyboard.press('Backspace');
+                    await sleep(200);
+                    await freshInput.type(message, { delay: 5 });
+                    await sleep(300);
+                    inputSuccess = true;
+                    log('[文字输入] ✅ 方式3完成');
+                }
+            } catch (e) {
+                log(`[文字输入] ❌ 方式3失败: ${e.message}`);
+            }
+        }
+        
+        log(`[文字输入] 最终结果: ${inputSuccess ? '✅ 成功' : '❌ 失败'}`);
+        
+        if (!inputSuccess) {
+            log('[文字输入] 输入验证失败，但继续尝试发送...', 'WARN');
+        }
+
+        // ─── 步骤4: 发送消息 ───
+        log('[发送] 步骤4: 发送消息...');
+        
+        let sendClicked = await this.clickSendButton();
+        if (!sendClicked) {
+            log('[发送] 未找到发送按钮，尝试按Enter...');
+            await inputElement.press('Enter');
+        }
+        
+        await sleep(2000);
+        
+        const sendSuccess = await this.checkMessageSent(message);
+        if (!sendSuccess) {
+            log('[发送] 发送可能未成功，重试...', 'WARN');
+            await this.page.keyboard.press('Enter');
+            await sleep(2000);
+        }
+        
+        log('[发送] ✅ 消息已发送，等待AI响应...');
+
+        // ─── 步骤5: 等待 AI 响应 ───
+        log('[响应] 步骤5: 等待AI响应（Thinking模型可能需要较长时间）...');
+        const response = await this.waitForResponse();
+        
+        log('========== sendMessageWithImages 完成 ==========');
+        return response;
     }
 
     /**
