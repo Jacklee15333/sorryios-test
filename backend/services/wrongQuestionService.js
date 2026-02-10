@@ -65,6 +65,36 @@ function initWrongQuestionTables() {
         `);
         console.log('[WrongQuestionService] ✅ wrong_questions 表已就绪');
 
+        // ---- 试卷大题/段落表（v1.1 新增） ----
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS exam_sections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                exam_id INTEGER NOT NULL,
+                section_name TEXT DEFAULT '',
+                section_type TEXT DEFAULT '',
+                section_content TEXT DEFAULT '',
+                section_order INTEGER DEFAULT 0,
+                is_listening INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (exam_id) REFERENCES exams(id)
+            )
+        `);
+        console.log('[WrongQuestionService] ✅ exam_sections 表已就绪');
+
+        // ---- 给 wrong_questions 表安全添加 section_id 字段（v1.1） ----
+        try {
+            const columns = db.pragma('table_info(wrong_questions)');
+            const hasField = columns.some(c => c.name === 'section_id');
+            if (!hasField) {
+                db.exec(`ALTER TABLE wrong_questions ADD COLUMN section_id INTEGER DEFAULT NULL`);
+                console.log('[WrongQuestionService] ✅ wrong_questions 表已添加 section_id 字段');
+            } else {
+                console.log('[WrongQuestionService] ✅ wrong_questions.section_id 字段已存在');
+            }
+        } catch (alterErr) {
+            console.warn('[WrongQuestionService] ⚠️ 添加 section_id 字段时出错（可能已存在）:', alterErr.message);
+        }
+
         // ---- 试卷图片存储 ----
         db.exec(`
             CREATE TABLE IF NOT EXISTS exam_images (
@@ -88,6 +118,8 @@ function initWrongQuestionTables() {
             CREATE INDEX IF NOT EXISTS idx_wrong_questions_mastered ON wrong_questions(mastered);
             CREATE INDEX IF NOT EXISTS idx_wrong_questions_section ON wrong_questions(section);
             CREATE INDEX IF NOT EXISTS idx_exam_images_exam_id ON exam_images(exam_id);
+            CREATE INDEX IF NOT EXISTS idx_exam_sections_exam_id ON exam_sections(exam_id);
+            CREATE INDEX IF NOT EXISTS idx_wrong_questions_section_id ON wrong_questions(section_id);
         `);
         console.log('[WrongQuestionService] ✅ 索引已就绪');
 
@@ -218,6 +250,7 @@ const ExamDB = {
             // 使用事务删除
             const deleteTransaction = db.transaction(() => {
                 db.prepare('DELETE FROM wrong_questions WHERE exam_id = ?').run(id);
+                db.prepare('DELETE FROM exam_sections WHERE exam_id = ?').run(id);
                 db.prepare('DELETE FROM exam_images WHERE exam_id = ?').run(id);
                 db.prepare('DELETE FROM exams WHERE id = ?').run(id);
             });
@@ -241,14 +274,14 @@ const WrongQuestionDB = {
      * 添加单条错题
      */
     add(data) {
-        console.log('[WrongQuestionService] 📝 添加错题, exam_id:', data.exam_id, 'question_number:', data.question_number);
+        console.log(`[WrongQuestionService] 📝 添加错题, exam_id: ${data.exam_id}, question_number: ${data.question_number}, section_id: ${data.section_id || 'NULL'}`);
         try {
             const stmt = db.prepare(`
                 INSERT INTO wrong_questions (
                     exam_id, user_id, question_number, question_type, 
                     question_content, user_answer, correct_answer, 
-                    knowledge_points, error_analysis, section
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    knowledge_points, error_analysis, section, section_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
             const result = stmt.run(
                 data.exam_id,
@@ -260,12 +293,16 @@ const WrongQuestionDB = {
                 data.correct_answer || '',
                 typeof data.knowledge_points === 'string' ? data.knowledge_points : JSON.stringify(data.knowledge_points || []),
                 data.error_analysis || '',
-                data.section || ''
+                data.section || '',
+                data.section_id || null
             );
-            console.log('[WrongQuestionService] ✅ 错题添加成功, id:', result.lastInsertRowid);
+            console.log(`[WrongQuestionService] ✅ 错题添加成功, id: ${result.lastInsertRowid}, section_id: ${data.section_id || 'NULL'}`);
             return { success: true, id: result.lastInsertRowid };
         } catch (error) {
             console.error('[WrongQuestionService] ❌ 添加错题失败:', error.message);
+            console.error('[WrongQuestionService] ❌ 错题数据:', JSON.stringify({
+                exam_id: data.exam_id, question_number: data.question_number, section_id: data.section_id
+            }));
             throw error;
         }
     },
@@ -280,8 +317,8 @@ const WrongQuestionDB = {
                 INSERT INTO wrong_questions (
                     exam_id, user_id, question_number, question_type,
                     question_content, user_answer, correct_answer,
-                    knowledge_points, error_analysis, section
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    knowledge_points, error_analysis, section, section_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             const insertMany = db.transaction((items) => {
@@ -297,9 +334,11 @@ const WrongQuestionDB = {
                         item.correct_answer || '',
                         typeof item.knowledge_points === 'string' ? item.knowledge_points : JSON.stringify(item.knowledge_points || []),
                         item.error_analysis || '',
-                        item.section || ''
+                        item.section || '',
+                        item.section_id || null
                     );
                     ids.push(result.lastInsertRowid);
+                    console.log(`[WrongQuestionService]   ✅ 错题[${ids.length}] id=${result.lastInsertRowid} 题号=${item.question_number} section="${item.section}" section_id=${item.section_id || 'NULL'}`);
                 }
                 return ids;
             });
@@ -309,6 +348,7 @@ const WrongQuestionDB = {
             return { success: true, count: ids.length, ids };
         } catch (error) {
             console.error('[WrongQuestionService] ❌ 批量添加错题失败:', error.message);
+            console.error('[WrongQuestionService] ❌ 堆栈:', error.stack);
             throw error;
         }
     },
@@ -330,7 +370,13 @@ const WrongQuestionDB = {
     getList(userId, filters = {}) {
         console.log('[WrongQuestionService] 🔍 查询错题列表, userId:', userId, 'filters:', JSON.stringify(filters));
 
-        let sql = 'SELECT wq.*, e.title as exam_title FROM wrong_questions wq LEFT JOIN exams e ON wq.exam_id = e.id WHERE wq.user_id = ?';
+        let sql = `SELECT wq.*, e.title as exam_title, 
+                   es.section_name as es_section_name, es.section_type as es_section_type, 
+                   es.section_content, es.is_listening as es_is_listening, es.section_order
+                   FROM wrong_questions wq 
+                   LEFT JOIN exams e ON wq.exam_id = e.id 
+                   LEFT JOIN exam_sections es ON wq.section_id = es.id
+                   WHERE wq.user_id = ?`;
         const params = [userId];
 
         // 筛选条件
@@ -512,6 +558,112 @@ const WrongQuestionDB = {
 };
 
 // ============================================
+// 试卷大题/段落操作（ExamSectionDB）v1.1 新增
+// ============================================
+
+const ExamSectionDB = {
+    /**
+     * 添加单个 section
+     */
+    add(data) {
+        console.log(`[WrongQuestionService] 📝 添加 section, exam_id: ${data.exam_id}, name: "${data.section_name}"`);
+        try {
+            const stmt = db.prepare(`
+                INSERT INTO exam_sections (exam_id, section_name, section_type, section_content, section_order, is_listening)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `);
+            const result = stmt.run(
+                data.exam_id,
+                data.section_name || '',
+                data.section_type || '',
+                data.section_content || '',
+                data.section_order || 0,
+                data.is_listening ? 1 : 0
+            );
+            console.log(`[WrongQuestionService] ✅ section 添加成功, id: ${result.lastInsertRowid}, name: "${data.section_name}", contentLength: ${(data.section_content || '').length}`);
+            return { success: true, id: result.lastInsertRowid };
+        } catch (error) {
+            console.error('[WrongQuestionService] ❌ 添加 section 失败:', error.message);
+            console.error('[WrongQuestionService] ❌ section 数据:', JSON.stringify({
+                exam_id: data.exam_id,
+                section_name: data.section_name,
+                section_type: data.section_type,
+                content_length: (data.section_content || '').length,
+                is_listening: data.is_listening
+            }));
+            throw error;
+        }
+    },
+
+    /**
+     * 批量添加 sections（事务）
+     */
+    addBatch(items) {
+        console.log(`[WrongQuestionService] 📝 批量添加 sections, 数量: ${items.length}`);
+        try {
+            const insert = db.prepare(`
+                INSERT INTO exam_sections (exam_id, section_name, section_type, section_content, section_order, is_listening)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `);
+            const insertMany = db.transaction((items) => {
+                const ids = [];
+                for (const item of items) {
+                    const result = insert.run(
+                        item.exam_id,
+                        item.section_name || '',
+                        item.section_type || '',
+                        item.section_content || '',
+                        item.section_order || 0,
+                        item.is_listening ? 1 : 0
+                    );
+                    ids.push(result.lastInsertRowid);
+                    console.log(`[WrongQuestionService]   ✅ section[${ids.length}] id=${result.lastInsertRowid} name="${item.section_name}" contentLen=${(item.section_content || '').length} listening=${item.is_listening ? 'YES' : 'NO'}`);
+                }
+                return ids;
+            });
+            const ids = insertMany(items);
+            console.log(`[WrongQuestionService] ✅ 批量添加 sections 成功, 共 ${ids.length} 条, ids: [${ids.join(',')}]`);
+            return { success: true, count: ids.length, ids };
+        } catch (error) {
+            console.error('[WrongQuestionService] ❌ 批量添加 sections 失败:', error.message);
+            throw error;
+        }
+    },
+
+    /**
+     * 根据 exam_id 获取所有 sections
+     */
+    getByExamId(examId) {
+        console.log(`[WrongQuestionService] 🔍 查询 exam_sections, exam_id: ${examId}`);
+        const rows = db.prepare(
+            'SELECT * FROM exam_sections WHERE exam_id = ? ORDER BY section_order ASC'
+        ).all(examId);
+        console.log(`[WrongQuestionService] ✅ 找到 ${rows.length} 个 sections`);
+        rows.forEach((r, i) => {
+            console.log(`[WrongQuestionService]   section[${i}] id=${r.id} name="${r.section_name}" type="${r.section_type}" contentLen=${(r.section_content || '').length} listening=${r.is_listening}`);
+        });
+        return rows;
+    },
+
+    /**
+     * 根据 id 获取单个 section
+     */
+    getById(id) {
+        return db.prepare('SELECT * FROM exam_sections WHERE id = ?').get(id) || null;
+    },
+
+    /**
+     * 删除某试卷的所有 sections
+     */
+    deleteByExamId(examId) {
+        console.log(`[WrongQuestionService] 🗑️ 删除 exam_sections, exam_id: ${examId}`);
+        const result = db.prepare('DELETE FROM exam_sections WHERE exam_id = ?').run(examId);
+        console.log(`[WrongQuestionService] ✅ 删除 ${result.changes} 个 sections`);
+        return result.changes;
+    }
+};
+
+// ============================================
 // 试卷图片操作（ExamImageDB）
 // ============================================
 
@@ -574,6 +726,7 @@ initWrongQuestionTables();
 module.exports = {
     ExamDB,
     WrongQuestionDB,
+    ExamSectionDB,
     ExamImageDB,
     initWrongQuestionTables
 };

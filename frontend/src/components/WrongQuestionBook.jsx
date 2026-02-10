@@ -278,6 +278,24 @@ export default function WrongQuestionBook() {
                                 {/* 展开详情 */}
                                 {expandedId === q.id && (
                                     <div className="border-t border-gray-100 p-4 space-y-3 bg-gray-50/50">
+                                        {/* v1.1: 完整原题内容（来自 exam_sections JOIN） */}
+                                        {q.section_content && (
+                                            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                                <p className="text-xs text-gray-500 font-medium mb-2">📄 原题内容（{q.section || q.es_section_name || ''}）</p>
+                                                <div className="max-h-[300px] overflow-y-auto">
+                                                    <pre className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap font-sans">{q.section_content}</pre>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 题目内容 */}
+                                        {q.question_content && q.question_content !== 'unclear' && (
+                                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                <p className="text-xs text-gray-400 font-medium mb-1">📝 本题内容</p>
+                                                <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{q.question_content}</p>
+                                            </div>
+                                        )}
+
                                         {/* 答案对比 */}
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="p-3 bg-red-50 rounded-lg border border-red-200">

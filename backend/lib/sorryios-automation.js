@@ -936,7 +936,7 @@ class SorryiosAutomation {
                         return text.trim()
                             .replace(/[^\S\n\r]+/g, ' ')  // 【修复】只替换非换行的空白字符
                             .replace(/\n{3,}/g, '\n\n')   // 多个换行变两个
-                            .substring(0, 50000);  // 限制长度
+                            .substring(0, 100000);  // v1.1: 扩大限制，错题分析JSON可能较长
                     };
                     
                     // 🆕 方法0：优先从代码块中提取JSON（最可靠）
