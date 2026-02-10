@@ -27,7 +27,7 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { authMiddleware } = require('./auth');
-const { ExamDB, WrongQuestionDB, ExamImageDB } = require('../services/wrongQuestionService');
+const { ExamDB, WrongQuestionDB, ExamSectionDB, ExamImageDB } = require('../services/wrongQuestionService');
 
 const router = express.Router();
 
@@ -309,6 +309,15 @@ router.get('/:examId/result', authMiddleware, (req, res) => {
         // 获取该试卷的所有错题
         const wrongQuestions = WrongQuestionDB.getList(userId, { examId: examId });
 
+        // 获取该试卷的所有 sections（v1.1 新增）
+        let sections = [];
+        try {
+            sections = ExamSectionDB.getByExamId(examId);
+            console.log(`[ExamUpload] 📊 查到 ${sections.length} 个 sections`);
+        } catch (secErr) {
+            console.warn(`[ExamUpload] ⚠️ 查询 sections 失败（可能是旧数据）:`, secErr.message);
+        }
+
         // 获取图片列表
         const images = ExamImageDB.getByExamId(examId);
 
@@ -326,6 +335,14 @@ router.get('/:examId/result', authMiddleware, (req, res) => {
                 completedAt: exam.completed_at
             },
             wrongQuestions: wrongQuestions,
+            sections: sections.map(sec => ({
+                id: sec.id,
+                sectionName: sec.section_name,
+                sectionType: sec.section_type,
+                sectionContent: sec.section_content,
+                sectionOrder: sec.section_order,
+                isListening: sec.is_listening === 1
+            })),
             images: images.map(img => ({
                 id: img.id,
                 originalName: img.original_name,

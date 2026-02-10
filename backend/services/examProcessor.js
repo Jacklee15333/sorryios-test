@@ -26,7 +26,7 @@
 const path = require('path');
 const fs = require('fs');
 const { SorryiosAutomation } = require('../lib/sorryios-automation');
-const { ExamDB, WrongQuestionDB, ExamImageDB } = require('./wrongQuestionService');
+const { ExamDB, WrongQuestionDB, ExamSectionDB, ExamImageDB } = require('./wrongQuestionService');
 
 // 复用 aiProcessor.js 的 JsonExtractor
 let JsonExtractor = null;
@@ -106,36 +106,52 @@ if (!JsonExtractor) {
 }
 
 // ============================================
-// 错题识别 Prompt
+// 错题识别 Prompt v1.1（分段结构化 + 完整原题 + 排除听力/未作答）
 // ============================================
 
-const EXAM_PROMPT = `请仔细分析这张英语试卷照片。这是一份已批改的试卷，请找出所有被标记为错误的题目（有红色×号、圈、划线等批改痕迹的题目）。
+const EXAM_PROMPT = `请仔细分析这份已批改的英语试卷照片，完成以下任务：
+
+【任务1】按大题（section）还原试卷的完整内容，包括文章原文和所有题目。
+【任务2】找出被标记为错误的题目（有红色×号、圈、划线等批改痕迹）。
+【任务3】对错题进行分析，给出正确答案和错误原因。
 
 请以严格的 JSON 格式返回结果，不要包含任何其他文字说明，只返回 JSON：
 
 {
-  "subject": "English",
-  "examTitle": "试卷标题（如果能识别的话）",
+  "examTitle": "试卷标题（如能识别）",
   "totalQuestions": 识别到的总题数,
-  "wrongQuestions": [
+  "sections": [
     {
-      "questionNumber": "题号，如 '21' 或 'A-1'",
-      "section": "大题类型，如 '完形填空'、'阅读理解'、'选词填空'",
-      "questionType": "choice/fill_blank/short_answer/dialogue",
-      "questionContent": "完整的题目内容（尽可能完整抄写）",
-      "userAnswer": "学生写的错误答案",
-      "correctAnswer": "正确答案（如果试卷上有标注）",
-      "knowledgePoints": ["涉及的知识点1", "知识点2"],
-      "errorAnalysis": "错误原因分析（为什么这个答案是错的，正确的思路是什么）"
+      "sectionName": "大题名称，如 '一、听力理解'、'二、完形填空'、'三、阅读理解A篇'",
+      "sectionType": "listening / cloze / reading / grammar / writing / vocabulary / dialogue / other",
+      "isListening": true或false,
+      "sectionContent": "该大题的完整原文内容，包括：\\n1. 如果有文章/段落，完整抄写整篇文章\\n2. 完形填空等嵌入式题号：在文章中题号位置用下划线标注，格式为 ____题号____，例如：'celebrated ____17____ each year'，让用户一眼能看出哪里是填空\\n3. 列出该大题下的所有题目（包括正确的和错误的），每题一行，带选项\\n4. 用 ✗ 标记用户做错的题目\\n5. 格式示例（阅读理解）：\\n   Read the passage and answer questions 26-30.\\n   \\n   Tom went to the park yesterday...（完整文章）\\n   \\n   26. What did Tom do? \\n   A. went to school  B. went to park  C. stayed home  D. went shopping\\n   \\n   ✗ 27. Where did he meet Lucy?\\n   A. park  B. school  C. home  D. store\\n   用户答案: C  正确答案: A\\n6. 格式示例（完形填空）：\\n   Have you ever heard about World Braille Day? It is celebrated ____17____ January 4th each year...\\n   Braille became blind ____18____ he was a child.\\n   \\n   17. A. at  B. in  C. on\\n   ✗ 18. A. when  B. unless  C. because\\n   用户答案: B  正确答案: A",
+      "wrongQuestions": [
+        {
+          "questionNumber": "题号",
+          "questionType": "choice / fill_blank / short_answer / dialogue",
+          "questionContent": "这道题的完整题目（含选项）",
+          "isUnanswered": false,
+          "userAnswer": "学生写的错误答案",
+          "correctAnswer": "正确答案（如果试卷上有标注或可以推断）",
+          "knowledgePoints": ["涉及的知识点"],
+          "errorAnalysis": "错误原因详细分析：为什么学生的答案是错的，正确答案的推理过程是什么"
+        }
+      ]
     }
   ]
 }
 
-注意事项：
-1. 只提取被标记为错误的题目，正确的题目不需要
-2. 如果看不清某个内容，在对应字段填写 "unclear"
-3. questionContent 要尽量完整，包括题干和选项
-4. 如果有多道错题，按题号从小到大排序`;
+【重要规则】
+1. sectionContent 要尽量完整还原原题内容，包括文章、题干、选项，让用户看到完整的试卷原貌
+2. 完形填空/语法填空等题型：文章中嵌入的题号位置必须用 ____题号____ 格式标注（如 ____17____），让填空位置一目了然
+3. 在 sectionContent 中，对做错的题目行前加 ✗ 标记
+4. 听力题（isListening: true）：只还原题目内容，wrongQuestions 留空数组 []，因为没有音频无法分析
+5. 未作答的题目（空白、没写答案的）：设置 isUnanswered: true，不要放入 wrongQuestions
+6. 只有确实做了但做错的题目才放入 wrongQuestions
+7. wrongQuestions 按题号从小到大排序
+8. 如果看不清某个内容，在对应字段填写 "unclear"
+9. 每个大题作为一个 section，如果阅读理解有A/B/C多篇，每篇算一个 section`;
 
 // ============================================
 // 进度广播辅助函数
@@ -275,52 +291,243 @@ async function processExam(examId, userId) {
         const parsed = JsonExtractor.extract(responseText);
 
         if (!parsed) {
+            console.error('[ExamProcessor] ❌ JSON 解析全部失败');
+            console.error('[ExamProcessor] 📋 响应前500字符:', responseText.substring(0, 500));
             throw new Error('无法从AI响应中解析JSON');
         }
 
         console.log('[ExamProcessor] ✅ JSON解析成功');
         console.log(`[ExamProcessor] 📊 试卷标题: ${parsed.examTitle || '(无)'}`);
         console.log(`[ExamProcessor] 📊 总题数: ${parsed.totalQuestions || 0}`);
-        console.log(`[ExamProcessor] 📊 错题数: ${(parsed.wrongQuestions || []).length}`);
 
-        // 验证 JSON 结构
-        const wrongQuestions = parsed.wrongQuestions || [];
-        if (!Array.isArray(wrongQuestions)) {
-            throw new Error('wrongQuestions 不是数组');
-        }
+        // === v1.1: 支持新的 sections 结构，同时兼容旧的 wrongQuestions 扁平结构 ===
+        const sections = parsed.sections || [];
+        const isNewFormat = sections.length > 0;
 
-        broadcastProgress(examId, 85, 'processing', `✅ 解析成功，发现 ${wrongQuestions.length} 道错题`);
+        console.log(`[ExamProcessor] 📊 返回格式: ${isNewFormat ? 'v1.1 sections结构' : 'v1.0 扁平结构(兼容)'}`);
+        console.log(`[ExamProcessor] 📊 sections 数量: ${sections.length}`);
+
+        broadcastProgress(examId, 85, 'processing', `✅ 解析成功，发现 ${sections.length} 个大题段落`);
 
         // ========== Stage 6: 存入数据库 ==========
         console.log('\n[ExamProcessor] ─── Stage 6: 存入数据库 ───');
-        broadcastProgress(examId, 90, 'processing', '💾 Stage 6: 保存错题到数据库...');
+        broadcastProgress(examId, 90, 'processing', '💾 Stage 6: 保存到数据库...');
 
-        // 批量构建错题数据
-        const items = wrongQuestions.map((q, index) => {
-            console.log(`[ExamProcessor] 📝 错题${index + 1}: 题号=${q.questionNumber}, 类型=${q.section}`);
-            return {
-                exam_id: examId,
-                user_id: userId,
-                question_number: q.questionNumber || '',
-                question_type: q.questionType || '',
-                question_content: q.questionContent || '',
-                user_answer: q.userAnswer || '',
-                correct_answer: q.correctAnswer || '',
-                knowledge_points: q.knowledgePoints || [],
-                error_analysis: q.errorAnalysis || '',
-                section: q.section || ''
-            };
-        });
+        let totalWrongCount = 0;
+        let totalSkippedListening = 0;
+        let totalSkippedUnanswered = 0;
 
-        if (items.length > 0) {
-            const result = WrongQuestionDB.addBatch(items);
-            console.log(`[ExamProcessor] ✅ 批量插入成功, 共 ${result.count} 条`);
+        if (isNewFormat) {
+            // ═══ v1.1: 按 section 分段存储 ═══
+            console.log('[ExamProcessor] ═══ v1.1 分段存储模式 ═══');
+
+            for (let sIdx = 0; sIdx < sections.length; sIdx++) {
+                const sec = sections[sIdx];
+                const secName = sec.sectionName || `Section ${sIdx + 1}`;
+                const isListening = sec.isListening === true;
+
+                const secType = (sec.sectionType || '').toLowerCase();
+
+                console.log(`\n[ExamProcessor] ── section[${sIdx}]: "${secName}" (type: ${secType || 'unknown'}, listening: ${isListening}) ──`);
+                console.log(`[ExamProcessor]   sectionContent 长度: ${(sec.sectionContent || '').length} 字符`);
+                console.log(`[ExamProcessor]   wrongQuestions 数量: ${(sec.wrongQuestions || []).length}`);
+
+                // ═══ v1.1 后处理：对文章中嵌入式裸题号添加下划线 ═══
+                // 除了纯阅读理解和写作，其他有嵌入式题号的类型都处理
+                let processedContent = sec.sectionContent || '';
+                const skipTypes = ['listening', 'reading', 'writing'];
+                const needsUnderline = !skipTypes.includes(secType) || 
+                    secName.includes('完形') || secName.includes('填空') || secName.includes('语法') || secName.includes('选词');
+
+                if (processedContent && needsUnderline) {
+                    console.log(`[ExamProcessor]   📝 后处理：类型="${secType}"，开始处理嵌入式题号下划线`);
+
+                    // 1. 收集该 section 下的所有题号
+                    const allQuestionNumbers = new Set();
+                    (sec.wrongQuestions || []).forEach(q => {
+                        if (q.questionNumber) allQuestionNumbers.add(String(q.questionNumber).trim());
+                    });
+                    // 从选项行中提取题号（如 "17. A. at  B. in" 或 "25.（学生作答：B）" 或 "✗ 27.（学生..."）
+                    const optionLineRegex = /^[✗×]?\s*(\d{1,3})\.\s*(?:[A-D]\.|（|用户)/gm;
+                    let optMatch;
+                    while ((optMatch = optionLineRegex.exec(processedContent)) !== null) {
+                        allQuestionNumbers.add(optMatch[1]);
+                    }
+
+                    console.log(`[ExamProcessor]   📝 后处理：题号集合: [${[...allQuestionNumbers].join(', ')}]`);
+
+                    if (allQuestionNumbers.size > 0) {
+                        // 从大到小处理，避免 "1" 误匹配 "17" 的问题
+                        const sortedNums = [...allQuestionNumbers].sort((a, b) => parseInt(b) - parseInt(a));
+                        const lines = processedContent.split('\n');
+
+                        const processedLines = lines.map(line => {
+                            const trimmed = line.trim();
+                            // 跳过选项行（如 "17. A. at" 或 "25.（学生作答" 或 "✗ 27.（"）
+                            if (/^[✗×]?\s*\d{1,3}\.\s*(?:[A-D]\.|（|用户|正确)/.test(trimmed)) return line;
+                            // 跳过 "用户答案:" 行
+                            if (/用户答案|正确答案|userAnswer|correctAnswer/i.test(trimmed)) return line;
+
+                            let result = line;
+                            for (const num of sortedNums) {
+                                // 跳过已经有下划线包裹的
+                                if (result.includes(`____${num}____`)) continue;
+                                // 模式1: 空格+数字+空格 "celebrated 17 January"
+                                result = result.replace(
+                                    new RegExp(`(\\s)${num}(\\s)`, 'g'),
+                                    `$1____${num}____$2`
+                                );
+                                // 模式2: 空格+数字+标点 "true 25." 或 "you 28." 或 "idea 19,"
+                                // 注意：不能匹配 "17. A."（选项行已被跳过，这里是正文行）
+                                result = result.replace(
+                                    new RegExp(`(\\s)${num}([.,;!?，。；！？])`, 'g'),
+                                    `$1____${num}____$2`
+                                );
+                                // 模式3: 空格+数字+行尾 "how you 28"（行尾无标点）
+                                result = result.replace(
+                                    new RegExp(`(\\s)${num}$`, 'g'),
+                                    `$1____${num}____`
+                                );
+                                // 模式4: 行首裸题号 "17 January"
+                                result = result.replace(
+                                    new RegExp(`^${num}(\\s)`, ''),
+                                    `____${num}____$1`
+                                );
+                            }
+                            return result;
+                        });
+                        processedContent = processedLines.join('\n');
+                    }
+
+                    if (processedContent !== (sec.sectionContent || '')) {
+                        console.log(`[ExamProcessor]   ✅ 后处理完成：添加了下划线标记`);
+                        console.log(`[ExamProcessor]   📋 后处理后前300字符: ${processedContent.substring(0, 300).replace(/\n/g, '\\n')}`);
+                    } else {
+                        console.log(`[ExamProcessor]   ℹ️ 后处理：内容未变化（AI可能已按要求加了下划线，或正文中无裸题号）`);
+                    }
+                } else if (processedContent) {
+                    console.log(`[ExamProcessor]   ℹ️ 跳过后处理：类型="${secType}" 不需要嵌入式题号下划线`);
+                }
+
+                // Step 1: 存 exam_sections（使用后处理后的 processedContent）
+                let sectionId = null;
+                try {
+                    const secResult = ExamSectionDB.add({
+                        exam_id: examId,
+                        section_name: secName,
+                        section_type: sec.sectionType || '',
+                        section_content: processedContent,
+                        section_order: sIdx,
+                        is_listening: isListening
+                    });
+                    sectionId = secResult.id;
+                    console.log(`[ExamProcessor]   ✅ section 已存入 DB, section_id: ${sectionId}`);
+                } catch (secErr) {
+                    console.error(`[ExamProcessor]   ❌ section 存储失败:`, secErr.message);
+                    console.error(`[ExamProcessor]   ❌ 堆栈:`, secErr.stack);
+                    // section 存储失败不阻断流程，继续处理错题（section_id 为 null）
+                }
+
+                // Step 2: 处理该 section 下的错题
+                if (isListening) {
+                    const skipCount = (sec.wrongQuestions || []).length;
+                    totalSkippedListening += skipCount;
+                    console.log(`[ExamProcessor]   ⏭️ 听力题，跳过 ${skipCount} 道错题分析`);
+                    continue;
+                }
+
+                const wrongQs = sec.wrongQuestions || [];
+                if (wrongQs.length === 0) {
+                    console.log(`[ExamProcessor]   ℹ️ 该 section 没有错题`);
+                    continue;
+                }
+
+                // 过滤掉未作答的题
+                const validWrongQs = wrongQs.filter((q, i) => {
+                    if (q.isUnanswered === true) {
+                        totalSkippedUnanswered++;
+                        console.log(`[ExamProcessor]   ⏭️ 跳过未作答题: 第${q.questionNumber || '?'}题`);
+                        return false;
+                    }
+                    return true;
+                });
+
+                console.log(`[ExamProcessor]   📝 有效错题: ${validWrongQs.length} 道 (过滤掉 ${wrongQs.length - validWrongQs.length} 道未作答)`);
+
+                // Step 3: 批量存入 wrong_questions
+                if (validWrongQs.length > 0) {
+                    const items = validWrongQs.map((q, index) => {
+                        console.log(`[ExamProcessor]     错题${index + 1}: 题号=${q.questionNumber}, 类型=${q.questionType}, 用户答案="${q.userAnswer}", 正确答案="${q.correctAnswer}"`);
+                        return {
+                            exam_id: examId,
+                            user_id: userId,
+                            question_number: q.questionNumber || '',
+                            question_type: q.questionType || '',
+                            question_content: q.questionContent || '',
+                            user_answer: q.userAnswer || '',
+                            correct_answer: q.correctAnswer || '',
+                            knowledge_points: q.knowledgePoints || [],
+                            error_analysis: q.errorAnalysis || '',
+                            section: secName,
+                            section_id: sectionId
+                        };
+                    });
+
+                    try {
+                        const result = WrongQuestionDB.addBatch(items);
+                        totalWrongCount += result.count;
+                        console.log(`[ExamProcessor]   ✅ 该 section 存入 ${result.count} 道错题`);
+                    } catch (batchErr) {
+                        console.error(`[ExamProcessor]   ❌ 批量存入错题失败:`, batchErr.message);
+                        console.error(`[ExamProcessor]   ❌ 堆栈:`, batchErr.stack);
+                    }
+                }
+            }
+
         } else {
-            console.log('[ExamProcessor] ⚠️ 没有错题需要插入');
+            // ═══ v1.0 兼容模式: 旧的扁平 wrongQuestions 结构 ═══
+            console.log('[ExamProcessor] ═══ v1.0 兼容模式（扁平结构） ═══');
+
+            const wrongQuestions = parsed.wrongQuestions || [];
+            if (!Array.isArray(wrongQuestions)) {
+                throw new Error('wrongQuestions 不是数组');
+            }
+
+            console.log(`[ExamProcessor] 📊 错题数: ${wrongQuestions.length}`);
+
+            const items = wrongQuestions.map((q, index) => {
+                console.log(`[ExamProcessor] 📝 错题${index + 1}: 题号=${q.questionNumber}, section=${q.section}`);
+                return {
+                    exam_id: examId,
+                    user_id: userId,
+                    question_number: q.questionNumber || '',
+                    question_type: q.questionType || '',
+                    question_content: q.questionContent || '',
+                    user_answer: q.userAnswer || '',
+                    correct_answer: q.correctAnswer || '',
+                    knowledge_points: q.knowledgePoints || [],
+                    error_analysis: q.errorAnalysis || '',
+                    section: q.section || '',
+                    section_id: null
+                };
+            });
+
+            if (items.length > 0) {
+                const result = WrongQuestionDB.addBatch(items);
+                totalWrongCount = result.count;
+                console.log(`[ExamProcessor] ✅ 批量插入成功, 共 ${result.count} 条`);
+            }
         }
 
+        // 汇总日志
+        console.log(`\n[ExamProcessor] ═══ Stage 6 汇总 ═══`);
+        console.log(`[ExamProcessor]   sections 总数: ${sections.length}`);
+        console.log(`[ExamProcessor]   有效错题入库: ${totalWrongCount}`);
+        console.log(`[ExamProcessor]   跳过(听力): ${totalSkippedListening}`);
+        console.log(`[ExamProcessor]   跳过(未作答): ${totalSkippedUnanswered}`);
+
         // 更新试卷统计
-        ExamDB.updateStats(examId, parsed.totalQuestions || 0, wrongQuestions.length);
+        ExamDB.updateStats(examId, parsed.totalQuestions || 0, totalWrongCount);
 
         // 更新试卷标题（如果AI识别出来了且原来为空）
         if (parsed.examTitle && !exam.title) {
@@ -333,7 +540,7 @@ async function processExam(examId, userId) {
             }
         }
 
-        broadcastProgress(examId, 95, 'processing', `✅ ${wrongQuestions.length} 道错题已保存`);
+        broadcastProgress(examId, 95, 'processing', `✅ ${totalWrongCount} 道错题已保存 (跳过听力${totalSkippedListening}道, 未作答${totalSkippedUnanswered}道)`);
 
         // ========== Stage 7: 完成 ==========
         console.log('\n[ExamProcessor] ─── Stage 7: 完成 ───');
@@ -344,15 +551,19 @@ async function processExam(examId, userId) {
         console.log(`[ExamProcessor] 🎉 试卷处理完成！`);
         console.log(`[ExamProcessor]   试卷ID: ${examId}`);
         console.log(`[ExamProcessor]   总题数: ${parsed.totalQuestions || 0}`);
-        console.log(`[ExamProcessor]   错题数: ${wrongQuestions.length}`);
+        console.log(`[ExamProcessor]   sections: ${sections.length}`);
+        console.log(`[ExamProcessor]   有效错题: ${totalWrongCount}`);
+        console.log(`[ExamProcessor]   跳过(听力): ${totalSkippedListening}`);
+        console.log(`[ExamProcessor]   跳过(未作答): ${totalSkippedUnanswered}`);
         console.log('═'.repeat(60) + '\n');
 
-        broadcastProgress(examId, 100, 'done', `🎉 识别完成！发现 ${wrongQuestions.length} 道错题`);
+        broadcastProgress(examId, 100, 'done', `🎉 识别完成！发现 ${totalWrongCount} 道错题`);
 
         return {
             examId,
             totalQuestions: parsed.totalQuestions || 0,
-            wrongCount: wrongQuestions.length,
+            wrongCount: totalWrongCount,
+            sectionCount: sections.length,
             examTitle: parsed.examTitle || ''
         };
 
