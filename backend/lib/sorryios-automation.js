@@ -1579,12 +1579,73 @@ class SorryiosAutomation {
     }
 
     // ============================================
-    // 🆕 发送带图片的消息（错题识别专用）
-    // 流程：新建对话 → 点击+ → 添加照片和文件 → 上传图片 → 输入文字 → 发送 → 等待响应
+    // 🛡️ 关闭 layui 弹窗（防止遮挡交互元素）
+    // sorryios.ai 可能随时弹出 layui-layer 弹窗（如"常见问题"），
+    // 这些弹窗会 intercept pointer events 导致 Playwright 超时
+    // ============================================
+
+    async closeLayuiPopups() {
+        try {
+            const result = await this.page.evaluate(() => {
+                const closed = [];
+                
+                // 方式1: 找到所有 layui-layer 弹窗并关闭
+                const layers = document.querySelectorAll('.layui-layer');
+                for (const layer of layers) {
+                    const rect = layer.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        // 尝试点击弹窗的关闭按钮
+                        const closeBtn = layer.querySelector('.layui-layer-close, .layui-layer-close1, .layui-layer-close2');
+                        if (closeBtn) {
+                            closeBtn.click();
+                            closed.push(`关闭按钮(${layer.id || 'unknown'})`);
+                        } else {
+                            // 没有关闭按钮，直接移除
+                            layer.style.display = 'none';
+                            closed.push(`隐藏(${layer.id || 'unknown'})`);
+                        }
+                    }
+                }
+                
+                // 方式2: 移除 layui 遮罩层
+                const shades = document.querySelectorAll('.layui-layer-shade');
+                for (const shade of shades) {
+                    shade.style.display = 'none';
+                    closed.push('遮罩层');
+                }
+                
+                // 方式3: 检查是否有 iframe 遮挡（如截图中的 layui-layer-iframe）
+                const iframeOverlays = document.querySelectorAll('[id^="layui-layer"]');
+                for (const overlay of iframeOverlays) {
+                    const rect = overlay.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0 && !closed.some(c => c.includes(overlay.id))) {
+                        overlay.style.display = 'none';
+                        closed.push(`iframe弹窗(${overlay.id})`);
+                    }
+                }
+                
+                return { count: closed.length, details: closed };
+            });
+            
+            if (result.count > 0) {
+                log(`[弹窗处理] ✅ 关闭了 ${result.count} 个弹窗: ${result.details.join(', ')}`);
+                await sleep(500);
+            }
+            
+            return result.count;
+        } catch (e) {
+            log(`[弹窗处理] ⚠️ 弹窗检测异常（可忽略）: ${e.message}`, 'WARN');
+            return 0;
+        }
+    }
+
+    // ============================================
+    // 🆕 发送带图片的消息（错题识别专用）v1.2
+    // 流程：关闭弹窗 → 直接 setInputFiles 上传图片 → 输入文字 → 发送 → 等待响应
     // ============================================
 
     async sendMessageWithImages(message, imagePaths) {
-        log(`========== sendMessageWithImages 开始 ==========`);
+        log(`========== sendMessageWithImages v1.2 开始 ==========`);
         log(`消息长度: ${message.length} 字符`);
         log(`图片数量: ${imagePaths.length}`);
         imagePaths.forEach((p, i) => log(`  图片${i + 1}: ${p}`));
@@ -1595,136 +1656,179 @@ class SorryiosAutomation {
         const preCheckUrl = this.page.url();
         log(`[sendMessageWithImages] 📊 当前URL: ${preCheckUrl}`);
 
+        // 🛡️ 预防性关闭弹窗（防止 layui 弹窗遮挡后续操作）
+        await this.closeLayuiPopups();
+
         // 确保输入框已出现
         await this.waitForInputBox(15000);
         await sleep(500);
 
-        // ─── 步骤1: 上传图片（通过 filechooser 事件） ───
-        log('[图片上传] 步骤1: 查找附件/+按钮...');
+        // ─── 步骤1: 上传图片（v1.2 优化：setInputFiles 优先） ───
+        log('[图片上传] 步骤1: 上传图片...');
         
-        // 扫描页面下半部分的所有按钮
-        const bottomButtons = await this.page.$$eval('button', (buttons) => {
-            return buttons.map(btn => {
-                const rect = btn.getBoundingClientRect();
-                const text = (btn.innerText || '').trim();
-                const ariaLabel = btn.getAttribute('aria-label') || '';
-                const svg = btn.querySelector('svg');
-                const hasSvg = !!svg;
-                return {
-                    text: text.substring(0, 30),
-                    ariaLabel: ariaLabel.substring(0, 80),
-                    x: Math.round(rect.x),
-                    y: Math.round(rect.y),
-                    width: Math.round(rect.width),
-                    height: Math.round(rect.height),
-                    isVisible: rect.width > 0 && rect.height > 0,
-                    hasSvg,
-                };
-            }).filter(b => b.isVisible && b.y > 400);
-        });
-        
-        log(`[图片上传] 页面下半部分找到 ${bottomButtons.length} 个按钮:`);
-        bottomButtons.forEach(b => {
-            log(`  - "${b.text}" aria="${b.ariaLabel}" 位置(${b.x},${b.y}) 大小(${b.width}x${b.height}) svg=${b.hasSvg}`);
-        });
-        
-        // 查找 + 按钮（附件按钮）
-        let plusBtnInfo = bottomButtons.find(b => 
-            b.ariaLabel.toLowerCase().includes('attach') || 
-            b.ariaLabel.includes('附件') || 
-            b.ariaLabel.includes('添加')
-        ) || bottomButtons.find(b => 
-            b.text === '+' || b.text === ''
-        ) || bottomButtons.find(b => 
-            b.width < 50 && b.height < 50 && b.x < 200
-        );
+        // 🛡️ 再次检查弹窗（等待输入框期间可能弹出）
+        await this.closeLayuiPopups();
         
         let fileUploaded = false;
         
-        if (!plusBtnInfo) {
-            log('[图片上传] ❌ 未找到+按钮，尝试直接查找隐藏的 file input...', 'WARN');
-            
-            // 降级方案：直接找隐藏的 <input type="file">
+        // 方案1（首选）: 直接 setInputFiles —— 最快最稳定
+        try {
+            log('[图片上传] 方案1: 直接 setInputFiles（首选）...');
             const fileInput = await this.page.$('input[type="file"]');
             if (fileInput) {
-                log('[图片上传] 找到隐藏的 file input，直接设置文件');
                 await fileInput.setInputFiles(imagePaths);
-                await sleep(3000);
-                log('[图片上传] ✅ 文件已通过 input[type=file] 设置');
+                log(`[图片上传] ✅ 方案1成功: ${imagePaths.length} 个文件已通过 input[type=file] 设置`);
                 fileUploaded = true;
             } else {
-                throw new Error('无法找到+按钮或file input，无法上传图片');
+                log('[图片上传] ⚠️ 方案1: 未找到 input[type=file]，尝试方案2...', 'WARN');
             }
-        } else {
-            log(`[图片上传] ✅ 找到+按钮: 位置(${plusBtnInfo.x},${plusBtnInfo.y})`);
-            
-            // 方案1: filechooser 方式
+        } catch (inputError) {
+            log(`[图片上传] ⚠️ 方案1异常: ${inputError.message}，尝试方案2...`, 'WARN');
+        }
+        
+        // 方案2（备选）: 点击"+"按钮 → filechooser
+        if (!fileUploaded) {
             try {
-                log('[图片上传] 尝试 filechooser 方式...');
+                log('[图片上传] 方案2: 点击+按钮 → filechooser...');
                 
-                const fileChooserPromise = this.page.waitForEvent('filechooser', { timeout: 8000 });
-                
-                // 点击 + 按钮
-                await this.page.mouse.click(plusBtnInfo.x + plusBtnInfo.width / 2, plusBtnInfo.y + plusBtnInfo.height / 2);
-                await sleep(800);
-                
-                // 查找并点击「添加照片和文件」菜单项
-                log('[图片上传] 查找"添加照片和文件"菜单项...');
-                const addPhotoClicked = await this.page.evaluate(() => {
-                    const keywords = ['添加照片', '添加文件', '照片和文件', 'Upload file', 'Attach file', 'Upload from computer'];
-                    const allElements = document.querySelectorAll('div, span, button, li, a, [role="menuitem"]');
-                    for (const el of allElements) {
-                        const text = (el.innerText || el.textContent || '').trim();
-                        const rect = el.getBoundingClientRect();
-                        if (rect.width > 0 && rect.height > 0 && keywords.some(k => text.includes(k))) {
-                            el.click();
-                            return { clicked: true, text: text.substring(0, 40) };
-                        }
-                    }
-                    return { clicked: false };
+                // 扫描页面下半部分的所有按钮
+                const bottomButtons = await this.page.$$eval('button', (buttons) => {
+                    return buttons.map(btn => {
+                        const rect = btn.getBoundingClientRect();
+                        const text = (btn.innerText || '').trim();
+                        const ariaLabel = btn.getAttribute('aria-label') || '';
+                        return {
+                            text: text.substring(0, 30),
+                            ariaLabel: ariaLabel.substring(0, 80),
+                            x: Math.round(rect.x),
+                            y: Math.round(rect.y),
+                            width: Math.round(rect.width),
+                            height: Math.round(rect.height),
+                            isVisible: rect.width > 0 && rect.height > 0,
+                            hasSvg: !!btn.querySelector('svg'),
+                        };
+                    }).filter(b => b.isVisible && b.y > 400);
                 });
                 
-                if (addPhotoClicked.clicked) {
-                    log(`[图片上传] ✅ 点击了菜单项: "${addPhotoClicked.text}"`);
+                log(`[图片上传] 页面下半部分找到 ${bottomButtons.length} 个按钮`);
+                
+                // 查找 + 按钮（附件按钮）
+                const plusBtnInfo = bottomButtons.find(b => 
+                    b.ariaLabel.toLowerCase().includes('attach') || 
+                    b.ariaLabel.includes('附件') || 
+                    b.ariaLabel.includes('添加')
+                ) || bottomButtons.find(b => 
+                    b.text === '+' || b.text === ''
+                ) || bottomButtons.find(b => 
+                    b.width < 50 && b.height < 50 && b.x < 200
+                );
+                
+                if (plusBtnInfo) {
+                    log(`[图片上传] ✅ 找到+按钮: 位置(${plusBtnInfo.x},${plusBtnInfo.y})`);
+                    
+                    const fileChooserPromise = this.page.waitForEvent('filechooser', { timeout: 8000 });
+                    
+                    // 点击 + 按钮
+                    await this.page.mouse.click(plusBtnInfo.x + plusBtnInfo.width / 2, plusBtnInfo.y + plusBtnInfo.height / 2);
+                    await sleep(800);
+                    
+                    // 查找并点击「添加照片和文件」菜单项
+                    log('[图片上传] 查找"添加照片和文件"菜单项...');
+                    const addPhotoClicked = await this.page.evaluate(() => {
+                        const keywords = ['添加照片', '添加文件', '照片和文件', 'Upload file', 'Attach file', 'Upload from computer'];
+                        const allElements = document.querySelectorAll('div, span, button, li, a, [role="menuitem"]');
+                        for (const el of allElements) {
+                            const text = (el.innerText || el.textContent || '').trim();
+                            const rect = el.getBoundingClientRect();
+                            if (rect.width > 0 && rect.height > 0 && keywords.some(k => text.includes(k))) {
+                                el.click();
+                                return { clicked: true, text: text.substring(0, 40) };
+                            }
+                        }
+                        return { clicked: false };
+                    });
+                    
+                    if (addPhotoClicked.clicked) {
+                        log(`[图片上传] ✅ 点击了菜单项: "${addPhotoClicked.text}"`);
+                    } else {
+                        log('[图片上传] ⚠️ 未找到"添加照片和文件"菜单项', 'WARN');
+                    }
+                    
+                    const fileChooser = await fileChooserPromise;
+                    log('[图片上传] ✅ 捕获到 filechooser 事件');
+                    
+                    await fileChooser.setFiles(imagePaths);
+                    log(`[图片上传] ✅ 方案2成功: 已设置 ${imagePaths.length} 个文件`);
+                    fileUploaded = true;
                 } else {
-                    log('[图片上传] ⚠️ 未找到"添加照片和文件"菜单项', 'WARN');
+                    log('[图片上传] ❌ 方案2: 未找到+按钮', 'WARN');
                 }
-                
-                const fileChooser = await fileChooserPromise;
-                log('[图片上传] ✅ 捕获到 filechooser 事件');
-                
-                await fileChooser.setFiles(imagePaths);
-                log(`[图片上传] ✅ 已设置 ${imagePaths.length} 个文件`);
-                
-                fileUploaded = true;
-                
             } catch (fcError) {
-                log(`[图片上传] ⚠️ filechooser 方式失败: ${fcError.message}`, 'WARN');
-            }
-            
-            // 方案2: 直接 setInputFiles
-            if (!fileUploaded) {
-                log('[图片上传] 尝试方案2: 直接 setInputFiles...');
+                log(`[图片上传] ⚠️ 方案2失败: ${fcError.message}`, 'WARN');
+                // 关闭可能打开的菜单
                 try {
                     await this.page.keyboard.press('Escape');
-                    await sleep(500);
+                    await sleep(300);
+                } catch (e) { /* 忽略 */ }
+            }
+        }
+        
+        // 方案3（最终兜底）: 用 JS 模拟拖放文件到输入框
+        if (!fileUploaded) {
+            try {
+                log('[图片上传] 方案3: JS 模拟文件拖放...');
+                const fs = require('fs');
+                
+                // 读取所有图片为 base64
+                const fileBuffers = imagePaths.map(p => ({
+                    name: require('path').basename(p),
+                    buffer: fs.readFileSync(p).toString('base64'),
+                    type: p.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg',
+                }));
+                
+                await this.page.evaluate((files) => {
+                    // 找到拖放目标（输入框区域）
+                    const target = document.querySelector('#prompt-textarea') || 
+                                   document.querySelector('textarea') ||
+                                   document.querySelector('[contenteditable="true"]') ||
+                                   document.body;
                     
-                    const fileInput = await this.page.$('input[type="file"]');
-                    if (fileInput) {
-                        await fileInput.setInputFiles(imagePaths);
-                        log('[图片上传] ✅ 方案2成功: 文件已通过 input[type=file] 设置');
-                        fileUploaded = true;
-                    } else {
-                        log('[图片上传] ❌ 方案2失败: 找不到 input[type=file]', 'ERROR');
+                    // 构造 DataTransfer 对象
+                    const dataTransfer = new DataTransfer();
+                    for (const f of files) {
+                        const byteChars = atob(f.buffer);
+                        const byteArray = new Uint8Array(byteChars.length);
+                        for (let i = 0; i < byteChars.length; i++) {
+                            byteArray[i] = byteChars.charCodeAt(i);
+                        }
+                        const file = new File([byteArray], f.name, { type: f.type });
+                        dataTransfer.items.add(file);
                     }
-                } catch (inputError) {
-                    log(`[图片上传] ❌ 方案2异常: ${inputError.message}`, 'ERROR');
-                }
+                    
+                    // 依次触发拖放事件
+                    const events = ['dragenter', 'dragover', 'drop'];
+                    for (const eventName of events) {
+                        const event = new DragEvent(eventName, {
+                            bubbles: true,
+                            cancelable: true,
+                            dataTransfer: dataTransfer,
+                        });
+                        target.dispatchEvent(event);
+                    }
+                    
+                    return { success: true };
+                }, fileBuffers);
+                
+                log('[图片上传] ✅ 方案3: 拖放事件已触发');
+                fileUploaded = true;
+                
+            } catch (dropError) {
+                log(`[图片上传] ❌ 方案3失败: ${dropError.message}`, 'ERROR');
             }
-            
-            if (!fileUploaded) {
-                throw new Error('所有图片上传方案均失败');
-            }
+        }
+        
+        if (!fileUploaded) {
+            throw new Error('所有图片上传方案均失败（setInputFiles / filechooser / 拖放）');
         }
         
         // ─── 步骤2: 等待图片上传完成 ───
@@ -1760,6 +1864,9 @@ class SorryiosAutomation {
         // ─── 步骤3: 输入 prompt 文字 ───
         log('[文字输入] 步骤3: 输入 prompt 文字...');
         
+        // 🛡️ 输入前再次关闭弹窗（这是最常出问题的地方！）
+        await this.closeLayuiPopups();
+        
         const inputSelectors = [
             '#prompt-textarea',
             'textarea[placeholder*="询问"]',
@@ -1788,7 +1895,28 @@ class SorryiosAutomation {
             throw new Error('找不到消息输入框（图片上传后）');
         }
         
-        await inputElement.click();
+        // 🛡️ 使用 JS click 代替 Playwright click，避免被弹窗拦截
+        // Playwright 的 click() 会检测元素是否被遮挡，如果有弹窗就会一直重试直到超时
+        // 而 JS 的 click() / focus() 可以穿透遮挡层直接操作
+        try {
+            await inputElement.click({ timeout: 5000 });
+        } catch (clickErr) {
+            log(`[文字输入] ⚠️ 普通click失败(${clickErr.message.substring(0, 50)})，尝试JS focus...`, 'WARN');
+            // 再次关闭弹窗
+            await this.closeLayuiPopups();
+            await sleep(300);
+            // 使用 JS focus 绕过遮挡检测
+            await this.page.evaluate(() => {
+                const input = document.querySelector('#prompt-textarea') || 
+                              document.querySelector('textarea[placeholder]') ||
+                              document.querySelector('textarea') ||
+                              document.querySelector('[contenteditable="true"]');
+                if (input) {
+                    input.focus();
+                    input.click();
+                }
+            });
+        }
         await sleep(500);
         
         let inputSuccess = false;
@@ -1800,7 +1928,13 @@ class SorryiosAutomation {
                                await this.page.$('textarea[placeholder]') ||
                                await this.page.$('textarea');
             if (freshInput) {
-                await freshInput.click();
+                // 使用 JS focus 代替 click，避免弹窗拦截
+                await this.page.evaluate(() => {
+                    const input = document.querySelector('#prompt-textarea') || 
+                                  document.querySelector('textarea[placeholder]') ||
+                                  document.querySelector('textarea');
+                    if (input) input.focus();
+                });
                 await sleep(200);
                 await this.page.keyboard.press('Control+A');
                 await this.page.keyboard.press('Backspace');
@@ -1862,7 +1996,12 @@ class SorryiosAutomation {
                                    await this.page.$('textarea[placeholder]') ||
                                    await this.page.$('textarea');
                 if (freshInput) {
-                    await freshInput.click();
+                    await this.page.evaluate(() => {
+                        const input = document.querySelector('#prompt-textarea') || 
+                                      document.querySelector('textarea[placeholder]') ||
+                                      document.querySelector('textarea');
+                        if (input) input.focus();
+                    });
                     await this.page.keyboard.press('Control+A');
                     await this.page.keyboard.press('Backspace');
                     await sleep(200);
@@ -1885,10 +2024,13 @@ class SorryiosAutomation {
         // ─── 步骤4: 发送消息 ───
         log('[发送] 步骤4: 发送消息...');
         
+        // 🛡️ 发送前再次关闭弹窗
+        await this.closeLayuiPopups();
+        
         let sendClicked = await this.clickSendButton();
         if (!sendClicked) {
             log('[发送] 未找到发送按钮，尝试按Enter...');
-            await inputElement.press('Enter');
+            await this.page.keyboard.press('Enter');
         }
         
         await sleep(2000);
@@ -1906,7 +2048,7 @@ class SorryiosAutomation {
         log('[响应] 步骤5: 等待AI响应（Thinking模型可能需要较长时间）...');
         const response = await this.waitForResponse();
         
-        log('========== sendMessageWithImages 完成 ==========');
+        log('========== sendMessageWithImages v1.2 完成 ==========');
         return response;
     }
 
