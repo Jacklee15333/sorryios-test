@@ -225,9 +225,208 @@ class SorryiosAutomation {
         // 通过坐标点击
         await this.page.mouse.click(target.x, target.y);
         
-        // 等待进入AI界面并检测输入框
+        // ═══ v1.2: 等待AI界面 + 处理"已在其他地方登录"提示 ═══
         log('等待AI界面加载...');
-        await this.waitForInputBox();
+        
+        const maxRetries = 3;
+        let inputBoxReady = false;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                // 先等10秒看输入框是否出现
+                await this.waitForInputBox(10000);
+                inputBoxReady = true;
+                break;  // 成功
+                
+            } catch (waitErr) {
+                log(`[selectIdleAccount] ⚠️ 输入框未出现 (尝试${attempt}/${maxRetries})，检查异常状态...`, 'WARN');
+                
+                // 检测页面异常：是否有"已在其他地方登录"、弹窗、错误提示等
+                const pageState = await this.page.evaluate(() => {
+                    const body = document.body.innerText || '';
+                    const result = {
+                        hasOtherLogin: false,
+                        hasLoginDialog: false,
+                        hasError: false,
+                        hasLayuiPopup: false,
+                        errorText: '',
+                        url: window.location.href,
+                    };
+                    
+                    // 检测 "已在其他地方登录" / "其他设备登录" / "session expired" 等
+                    const otherLoginKeywords = ['其他地方登录', '其他设备', '已在别处登录', '会话已过期', 
+                                                 'session expired', 'logged in elsewhere', '被踢出',
+                                                 '异地登录', '重新登录', '登录已失效'];
+                    for (const kw of otherLoginKeywords) {
+                        if (body.includes(kw)) {
+                            result.hasOtherLogin = true;
+                            result.errorText = kw;
+                            break;
+                        }
+                    }
+                    
+                    // 检测是否有登录对话框（用户名/密码输入框）
+                    const loginInput = document.querySelector('input[placeholder*="用户名"], input[placeholder*="邮箱"], input[type="password"]');
+                    if (loginInput) {
+                        result.hasLoginDialog = true;
+                    }
+                    
+                    // 检测 layui 弹窗
+                    const layuiLayers = document.querySelectorAll('.layui-layer');
+                    for (const layer of layuiLayers) {
+                        const rect = layer.getBoundingClientRect();
+                        if (rect.width > 0 && rect.height > 0) {
+                            result.hasLayuiPopup = true;
+                            break;
+                        }
+                    }
+                    
+                    // 检测其他错误提示
+                    const errorKeywords = ['出错了', 'error', '失败', '网络异常', '服务繁忙'];
+                    for (const kw of errorKeywords) {
+                        if (body.toLowerCase().includes(kw.toLowerCase())) {
+                            result.hasError = true;
+                            if (!result.errorText) result.errorText = kw;
+                            break;
+                        }
+                    }
+                    
+                    return result;
+                });
+                
+                log(`[selectIdleAccount] 📊 页面状态: URL=${pageState.url}`);
+                log(`[selectIdleAccount]   异地登录提示: ${pageState.hasOtherLogin ? '✅ 检测到 → "' + pageState.errorText + '"' : '❌ 无'}`);
+                log(`[selectIdleAccount]   登录对话框: ${pageState.hasLoginDialog ? '✅' : '❌'}`);
+                log(`[selectIdleAccount]   layui弹窗: ${pageState.hasLayuiPopup ? '✅' : '❌'}`);
+                log(`[selectIdleAccount]   其他错误: ${pageState.hasError ? '✅ "' + pageState.errorText + '"' : '❌'}`);
+                
+                // ─── 情况1: 检测到登录对话框 → 直接填写登录 ───
+                if (pageState.hasLoginDialog) {
+                    log('[selectIdleAccount] 🔑 检测到登录对话框，自动填写...');
+                    try {
+                        await this._fillLoginForm();
+                        log('[selectIdleAccount] ✅ 登录表单已提交，等待页面加载...');
+                        await sleep(3000);
+                        continue;  // 重新检查输入框
+                    } catch (loginErr) {
+                        log(`[selectIdleAccount] ❌ 自动登录失败: ${loginErr.message}`, 'ERROR');
+                    }
+                }
+                
+                // ─── 情况2: "已在其他地方登录"提示 → 关闭弹窗 + 重新点击账号 ───
+                if (pageState.hasOtherLogin || pageState.hasLayuiPopup) {
+                    log('[selectIdleAccount] 🔄 检测到异地登录提示/弹窗，尝试关闭并重试...');
+                    
+                    // 关闭所有弹窗
+                    await this.closeLayuiPopups();
+                    
+                    // 尝试点击页面上的确认/关闭按钮
+                    await this.page.evaluate(() => {
+                        // 查找确认/关闭/重新登录按钮
+                        const keywords = ['确定', '确认', '关闭', '重新登录', '知道了', 'OK', 'Close', '登录'];
+                        const allElements = document.querySelectorAll('button, a, div[role="button"], span');
+                        for (const el of allElements) {
+                            const text = (el.innerText || el.textContent || '').trim();
+                            const rect = el.getBoundingClientRect();
+                            if (rect.width > 0 && rect.height > 0 && keywords.some(k => text === k || text.includes(k))) {
+                                el.click();
+                                return text;
+                            }
+                        }
+                        return null;
+                    });
+                    
+                    await sleep(2000);
+                    
+                    // 重新点击同一个账号卡片
+                    log(`[selectIdleAccount] 🔄 重新点击账号: ${target.name}`);
+                    
+                    // 先回到carlist页面（如果被导航走了）
+                    if (!this.page.url().includes('carlist')) {
+                        log('[selectIdleAccount] 🔄 页面已离开carlist，重新导航...');
+                        await this.page.goto(CONFIG.carlistUrl, { waitUntil: 'networkidle' });
+                        await sleep(2000);
+                    }
+                    
+                    // 重新查找账号位置（页面可能重新渲染）
+                    const refreshedAccounts = await this.page.$$eval('*', (elements) => {
+                        const names = [];
+                        for (const el of elements) {
+                            const text = (el.textContent || '').trim();
+                            if (/^TMJ\d+-\d+$/.test(text)) {
+                                const rect = el.getBoundingClientRect();
+                                if (rect.width > 0 && rect.height > 0 && rect.y > 200 && rect.y < 800) {
+                                    names.push({
+                                        name: text,
+                                        x: rect.x + rect.width / 2,
+                                        y: rect.y + rect.height / 2,
+                                    });
+                                }
+                            }
+                        }
+                        return names;
+                    });
+                    
+                    // 多次点击账号卡片（用户建议的方案）
+                    const clickTarget = refreshedAccounts.find(a => a.name === target.name) || refreshedAccounts[0];
+                    if (clickTarget) {
+                        for (let clickAttempt = 0; clickAttempt < 3; clickAttempt++) {
+                            log(`[selectIdleAccount] 🖱️ 点击账号 ${clickTarget.name} (第${clickAttempt + 1}次)`);
+                            await this.page.mouse.click(clickTarget.x, clickTarget.y);
+                            await sleep(1500);
+                        }
+                        // 额外等待10秒让登录对话框出现
+                        log('[selectIdleAccount] ⏳ 等待10秒让登录对话框出现...');
+                        await sleep(10000);
+                    }
+                    
+                    // 再检查是否出现了登录对话框
+                    const hasLoginNow = await this.page.$('input[placeholder*="用户名"], input[placeholder*="邮箱"], input[type="password"]');
+                    if (hasLoginNow) {
+                        log('[selectIdleAccount] 🔑 登录对话框已出现，自动填写...');
+                        try {
+                            await this._fillLoginForm();
+                            await sleep(3000);
+                            continue;
+                        } catch (loginErr2) {
+                            log(`[selectIdleAccount] ❌ 自动登录失败: ${loginErr2.message}`, 'ERROR');
+                        }
+                    }
+                    
+                    continue;  // 继续下一轮重试
+                }
+                
+                // ─── 情况3: 可能只是加载慢 → 再等20秒 ───
+                if (attempt < maxRetries) {
+                    log(`[selectIdleAccount] ⏳ 可能只是加载慢，再等20秒...`);
+                    try {
+                        await this.waitForInputBox(20000);
+                        inputBoxReady = true;
+                        break;
+                    } catch (e) {
+                        log(`[selectIdleAccount] ⚠️ 仍然没有输入框`, 'WARN');
+                    }
+                }
+            }
+        }
+        
+        if (!inputBoxReady) {
+            // 最后的兜底：尝试刷新页面
+            log('[selectIdleAccount] 🔄 所有重试失败，最后尝试刷新页面...');
+            await this.page.reload({ waitUntil: 'networkidle' });
+            await sleep(3000);
+            
+            // 检查是否需要重新登录
+            const needLogin = await this.page.$('button:has-text("立即登录"), a:has-text("立即登录")');
+            if (needLogin) {
+                log('[selectIdleAccount] 🔑 需要重新登录...');
+                await this.login();
+                // 重新选择账号（递归调用，但只允许一次）
+                return this.selectIdleAccount();
+            }
+            
+            await this.waitForInputBox(15000);  // 最后一次尝试
+        }
         
         // 🆕 Bug修复：进入账号后立即强制新建对话
         // 原因：点击账号后可能自动恢复上次的旧对话
@@ -238,6 +437,58 @@ class SorryiosAutomation {
         await this.selectInstantModel();
         
         log('AI界面已就绪');
+    }
+
+    /**
+     * 🆕 v1.2: 自动填写登录表单
+     * 用于处理"已在其他地方登录"后弹出的登录对话框
+     */
+    async _fillLoginForm() {
+        // 填写用户名
+        const usernameInput = await this.page.$('input[placeholder*="用户名"], input[placeholder*="邮箱"]');
+        if (usernameInput) {
+            await usernameInput.fill(CONFIG.username);
+            log('[_fillLoginForm] ✅ 已填写用户名');
+        }
+        
+        // 填写密码
+        const passwordInput = await this.page.$('input[placeholder*="密码"], input[type="password"]');
+        if (passwordInput) {
+            await passwordInput.fill(CONFIG.password);
+            log('[_fillLoginForm] ✅ 已填写密码');
+        }
+        
+        // 点击登录按钮
+        const loginClicked = await this.page.evaluate(() => {
+            const keywords = ['用户登录', '登录', '登 录', 'Login', 'Sign in'];
+            const buttons = document.querySelectorAll('button, input[type="submit"], a');
+            for (const btn of buttons) {
+                const text = (btn.innerText || btn.value || '').trim();
+                const rect = btn.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0 && keywords.some(k => text.includes(k))) {
+                    btn.click();
+                    return text;
+                }
+            }
+            return null;
+        });
+        
+        if (loginClicked) {
+            log(`[_fillLoginForm] ✅ 已点击登录按钮: "${loginClicked}"`);
+        } else {
+            log('[_fillLoginForm] ⚠️ 未找到登录按钮，尝试回车提交', 'WARN');
+            await this.page.keyboard.press('Enter');
+        }
+        
+        await sleep(2000);
+        
+        // 保存登录状态
+        try {
+            await this.context.storageState({ path: CONFIG.storageStatePath });
+            log('[_fillLoginForm] ✅ 登录状态已保存');
+        } catch (e) {
+            log(`[_fillLoginForm] ⚠️ 保存登录状态失败: ${e.message}`, 'WARN');
+        }
     }
     
     /**

@@ -154,6 +154,64 @@ const EXAM_PROMPT = `请仔细分析这份已批改的英语试卷照片，完�
 9. 每个大题作为一个 section，如果阅读理解有A/B/C多篇，每篇算一个 section`;
 
 // ============================================
+// 全局 automation 实例跟踪（确保浏览器可被外部取消/清理）
+// ============================================
+
+let currentAutomation = null;   // 当前正在运行的 automation 实例
+let currentExamId = null;       // 当前正在处理的 examId
+let isCancelled = false;        // 取消标志
+
+/**
+ * 取消当前正在进行的识别任务
+ * @returns {boolean} 是否成功取消
+ */
+async function cancelCurrentExam() {
+    console.log('[ExamProcessor] 🛑 收到取消请求');
+    isCancelled = true;
+    
+    if (currentAutomation) {
+        try {
+            console.log('[ExamProcessor] 🔒 正在关闭浏览器...');
+            await currentAutomation.close();
+            console.log('[ExamProcessor] ✅ 浏览器已关闭');
+        } catch (e) {
+            console.error('[ExamProcessor] ⚠️ 关闭浏览器失败:', e.message);
+        }
+        currentAutomation = null;
+    }
+    
+    if (currentExamId) {
+        try {
+            ExamDB.updateStatus(currentExamId, 'failed', '用户取消');
+            broadcastProgress(currentExamId, 0, 'cancelled', '🛑 识别已取消');
+        } catch (e) {
+            console.error('[ExamProcessor] ⚠️ 更新取消状态失败:', e.message);
+        }
+        currentExamId = null;
+    }
+    
+    return true;
+}
+
+/**
+ * 强制清理残留浏览器进程（Windows）
+ * 在启动新浏览器前调用，确保没有僵尸进程
+ */
+async function cleanupStaleBrowsers() {
+    try {
+        if (currentAutomation) {
+            console.log('[ExamProcessor] 🧹 发现残留 automation 实例，正在清理...');
+            try {
+                await currentAutomation.close();
+            } catch (e) { /* 忽略 */ }
+            currentAutomation = null;
+        }
+    } catch (e) {
+        console.error('[ExamProcessor] ⚠️ 清理残留浏览器失败:', e.message);
+    }
+}
+
+// ============================================
 // 进度广播辅助函数
 // ============================================
 
@@ -180,8 +238,13 @@ async function processExam(examId, userId) {
     console.log('═'.repeat(60));
 
     let automation = null;
+    isCancelled = false;  // 重置取消标志
+    currentExamId = examId;
 
     try {
+        // ========== 预清理：确保没有残留浏览器 ==========
+        await cleanupStaleBrowsers();
+
         // ========== Stage 1: 初始化 ==========
         console.log('\n[ExamProcessor] ─── Stage 1: 初始化 ───');
         broadcastProgress(examId, 5, 'processing', '📌 Stage 1: 初始化...');
@@ -218,9 +281,42 @@ async function processExam(examId, userId) {
         console.log('\n[ExamProcessor] ─── Stage 2: 启动浏览器 ───');
         broadcastProgress(examId, 15, 'processing', '🌐 Stage 2: 启动浏览器...');
 
-        automation = new SorryiosAutomation();
-        await automation.init();
-        console.log('[ExamProcessor] ✅ 浏览器已启动');
+        // 检查是否已取消
+        if (isCancelled) throw new Error('任务已取消');
+
+        // 浏览器启动（带重试）
+        const maxLaunchRetries = 3;
+        for (let attempt = 1; attempt <= maxLaunchRetries; attempt++) {
+            try {
+                if (attempt > 1) {
+                    console.log(`[ExamProcessor] 🔄 浏览器启动重试 (${attempt}/${maxLaunchRetries})...`);
+                    broadcastProgress(examId, 15, 'processing', `🔄 浏览器启动重试 (${attempt}/${maxLaunchRetries})...`);
+                    // 等待一段时间再重试
+                    await new Promise(r => setTimeout(r, 3000));
+                }
+                
+                automation = new SorryiosAutomation();
+                await automation.init();
+                currentAutomation = automation;  // 全局跟踪
+                console.log('[ExamProcessor] ✅ 浏览器已启动');
+                break;  // 成功，跳出重试循环
+                
+            } catch (launchErr) {
+                console.error(`[ExamProcessor] ❌ 浏览器启动失败 (${attempt}/${maxLaunchRetries}):`, launchErr.message);
+                
+                // 清理失败的实例
+                if (automation) {
+                    try { await automation.close(); } catch (e) { /* 忽略 */ }
+                    automation = null;
+                    currentAutomation = null;
+                }
+                
+                if (attempt >= maxLaunchRetries) {
+                    throw new Error(`浏览器启动失败（已重试${maxLaunchRetries}次）: ${launchErr.message}`);
+                }
+            }
+        }
+
         broadcastProgress(examId, 18, 'processing', '🌐 浏览器已启动，正在登录...');
 
         await automation.login();
@@ -693,7 +789,7 @@ async function processExam(examId, userId) {
         throw error;
 
     } finally {
-        // ========== 确保浏览器关闭 ==========
+        // ========== 确保浏览器关闭 + 清理全局引用 ==========
         if (automation) {
             try {
                 console.log('[ExamProcessor] 🔒 关闭浏览器...');
@@ -703,6 +799,9 @@ async function processExam(examId, userId) {
                 console.error('[ExamProcessor] ⚠️ 关闭浏览器失败:', e.message);
             }
         }
+        currentAutomation = null;
+        currentExamId = null;
+        isCancelled = false;
     }
 }
 
@@ -712,5 +811,6 @@ async function processExam(examId, userId) {
 
 module.exports = {
     processExam,
+    cancelCurrentExam,
     EXAM_PROMPT
 };
