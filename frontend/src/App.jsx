@@ -670,7 +670,20 @@ function AppContent() {
                             taskInfo={taskInfo}
                             connected={connected}
                             logs={logs}
-                            onReset={() => {
+                            onReset={async () => {
+                                // 🛡️ 调用后端取消API，关闭浏览器进程
+                                if (currentExamId) {
+                                    try {
+                                        const token = localStorage.getItem('token');
+                                        await fetch(`/api/exam/${currentExamId}/cancel`, {
+                                            method: 'POST',
+                                            headers: { 'Authorization': `Bearer ${token}` }
+                                        });
+                                        console.log('[App] ✅ 已发送取消请求');
+                                    } catch (e) {
+                                        console.warn('[App] ⚠️ 取消请求失败:', e.message);
+                                    }
+                                }
                                 setCurrentPage('exam-book');
                                 setExamTaskId(null);
                             }}

@@ -249,6 +249,52 @@ router.post('/:examId/process', authMiddleware, (req, res) => {
 });
 
 // ============================================
+// POST /api/exam/:examId/cancel - 取消识别任务
+// ============================================
+
+router.post('/:examId/cancel', authMiddleware, async (req, res) => {
+    const examId = parseInt(req.params.examId);
+    const userId = req.user.id;
+
+    console.log(`[ExamUpload] 🛑 取消识别请求, examId: ${examId}`);
+
+    try {
+        const exam = ExamDB.getById(examId);
+        if (!exam) {
+            return res.status(404).json({ error: '试卷不存在' });
+        }
+        if (exam.user_id !== userId) {
+            return res.status(403).json({ error: '无权操作此试卷' });
+        }
+
+        // 延迟加载 examProcessor
+        let examProcessor;
+        try {
+            examProcessor = require('../services/examProcessor');
+        } catch (e) {
+            return res.status(500).json({ error: 'AI识别引擎加载失败' });
+        }
+
+        // 调用取消
+        await examProcessor.cancelCurrentExam();
+
+        // 确保数据库状态更新
+        ExamDB.updateStatus(examId, 'failed', '用户取消');
+
+        console.log(`[ExamUpload] ✅ 识别任务已取消, examId: ${examId}`);
+
+        res.json({
+            success: true,
+            message: '识别任务已取消'
+        });
+
+    } catch (error) {
+        console.error('[ExamUpload] ❌ 取消失败:', error.message);
+        res.status(500).json({ error: '取消失败', message: error.message });
+    }
+});
+
+// ============================================
 // GET /api/exam/:examId/status - 查询识别状态
 // ============================================
 
