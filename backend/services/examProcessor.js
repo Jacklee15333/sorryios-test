@@ -488,6 +488,32 @@ async function processExam(examId, userId) {
                     console.log(`[ExamProcessor]   ℹ️ 跳过后处理：类型="${secType}" 不需要嵌入式题号下划线`);
                 }
 
+                // ═══ v1.2 后处理：选项行间距格式化 ═══
+                // 把 "17. A. at B. in C. on" 格式化为 "17. A. at    B. in    C. on"
+                // 让各选项之间有足够的视觉间距
+                if (processedContent) {
+                    const formatLines = processedContent.split('\n');
+                    let optionFormatCount = 0;
+                    const formattedLines = formatLines.map(line => {
+                        const trimmed = line.trim();
+                        // 检测选项行：以 "数字. A." 或 "✗ 数字. A." 开头
+                        if (/^[✗×]?\s*\d{1,3}\.\s*A[.\s]/.test(trimmed)) {
+                            // 在 B. C. D. E. 前面加宽间距（4个空格）
+                            // 匹配模式: "单词/标点 + 1-2个空格 + [B-E]." → 替换为宽间距
+                            const formatted = line.replace(/(\S)\s{1,2}([B-E])\.\s/g, '$1    $2. ');
+                            if (formatted !== line) {
+                                optionFormatCount++;
+                            }
+                            return formatted;
+                        }
+                        return line;
+                    });
+                    if (optionFormatCount > 0) {
+                        processedContent = formattedLines.join('\n');
+                        console.log(`[ExamProcessor]   📝 选项间距格式化：处理了 ${optionFormatCount} 行选项`);
+                    }
+                }
+
                 // Step 1: 存 exam_sections（使用后处理后的 processedContent）
                 let sectionId = null;
                 try {

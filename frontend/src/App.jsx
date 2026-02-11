@@ -287,7 +287,7 @@ function AppContent() {
             `}</style>
 
             {/* 侧边栏 */}
-            <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 text-white flex-shrink-0 transition-all duration-300 shadow-2xl`}>
+            <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} relative bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 text-white flex-shrink-0 transition-all duration-300 shadow-2xl overflow-hidden`}>
                 <div className="p-4 flex items-center justify-between border-b border-indigo-700">
                     {!sidebarCollapsed && (
                         <div className="flex items-center space-x-3">
@@ -316,7 +316,7 @@ function AppContent() {
                     </button>
                 </div>
 
-                <nav className="mt-6 px-2 space-y-1">
+                <nav className="mt-6 px-2 space-y-1 pb-32">
                     {/* ═══ 📖 课堂笔记分组 ═══ */}
                     {!sidebarCollapsed && (
                         <p className="px-4 pt-3 pb-1 text-xs font-semibold text-indigo-400 uppercase tracking-wider">📖 课堂笔记</p>
