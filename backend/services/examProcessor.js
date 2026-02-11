@@ -342,36 +342,105 @@ async function processExam(examId, userId) {
                 if (processedContent && needsUnderline) {
                     console.log(`[ExamProcessor]   📝 后处理：类型="${secType}"，开始处理嵌入式题号下划线`);
 
-                    // 1. 收集该 section 下的所有题号
+                    // 1. 收集该 section 下的所有题号（v1.2 增强版）
                     const allQuestionNumbers = new Set();
+
+                    // 来源A: 错题列表中的题号
                     (sec.wrongQuestions || []).forEach(q => {
                         if (q.questionNumber) allQuestionNumbers.add(String(q.questionNumber).trim());
                     });
-                    // 从选项行中提取题号（如 "17. A. at  B. in" 或 "25.（学生作答：B）" 或 "✗ 27.（学生..."）
-                    const optionLineRegex = /^[✗×]?\s*(\d{1,3})\.\s*(?:[A-D]\.|（|用户)/gm;
+                    console.log(`[ExamProcessor]   📝 题号收集-来源A(错题): [${[...allQuestionNumbers].join(', ')}] (${allQuestionNumbers.size}个)`);
+
+                    // 来源B: 从选项行/答案行中提取题号（v1.2 放宽正则，支持多种AI输出格式）
+                    // 支持格式: "17. A. at" / "25.（学生" / "25: B" / "25. B" / "✗ 27." / "27) A"
+                    const optionLineRegex = /^[✗×]?\s*(\d{1,3})\s*[.):：]\s*(?:[A-E][\s.,)]|（|用户|正确|学生)/gm;
                     let optMatch;
                     while ((optMatch = optionLineRegex.exec(processedContent)) !== null) {
                         allQuestionNumbers.add(optMatch[1]);
                     }
+                    console.log(`[ExamProcessor]   📝 题号收集-来源B(选项行正则): [${[...allQuestionNumbers].join(', ')}] (${allQuestionNumbers.size}个)`);
 
-                    console.log(`[ExamProcessor]   📝 后处理：题号集合: [${[...allQuestionNumbers].join(', ')}]`);
+                    // 来源C: 扫描正文中的裸题号（v1.2 新增）
+                    // 在文章正文中查找 "单词/标点 + 数字 + 单词/标点" 模式的裸数字
+                    // 然后判断这些数字是否构成连续或接近连续的题号序列
+                    const bareNumRegex = /(?:^|[\s,;.!?，。；！？"'(（])(\d{1,3})(?=[\s,;.!?，。；！？"'）)"]|$)/gm;
+                    const candidateNums = new Set();
+                    const contentLines = processedContent.split('\n');
+                    for (const cLine of contentLines) {
+                        const cTrimmed = cLine.trim();
+                        // 跳过选项行和答案行，只扫描正文
+                        if (/^[✗×]?\s*\d{1,3}\s*[.):：]\s*(?:[A-E][\s.,)]|（|用户|正确|学生)/.test(cTrimmed)) continue;
+                        if (/用户答案|正确答案|userAnswer|correctAnswer|Word\s*box/i.test(cTrimmed)) continue;
+                        let bm;
+                        while ((bm = bareNumRegex.exec(cLine)) !== null) {
+                            const n = parseInt(bm[1]);
+                            // 排除明显不是题号的数字（年份、大数、0等）
+                            if (n >= 1 && n <= 200 && n !== 12 && !/\b\d{4}\b/.test(cLine.substring(Math.max(0, bm.index - 5), bm.index + bm[0].length + 5))) {
+                                candidateNums.add(String(n));
+                            }
+                        }
+                        bareNumRegex.lastIndex = 0; // 重置正则状态
+                    }
+                    console.log(`[ExamProcessor]   📝 题号收集-来源C(正文裸数字候选): [${[...candidateNums].join(', ')}]`);
+
+                    // 来源C 验证：如果候选数字与已知题号有交集或构成连续序列，则加入
+                    if (candidateNums.size > 0) {
+                        const knownNums = [...allQuestionNumbers].map(Number).filter(n => !isNaN(n));
+                        const candidates = [...candidateNums].map(Number).filter(n => !isNaN(n));
+
+                        if (knownNums.length > 0) {
+                            // 有已知题号：候选数字与已知题号范围差值<=3的，视为同一组题号
+                            const minKnown = Math.min(...knownNums);
+                            const maxKnown = Math.max(...knownNums);
+                            for (const c of candidates) {
+                                if (c >= minKnown - 3 && c <= maxKnown + 3) {
+                                    allQuestionNumbers.add(String(c));
+                                }
+                            }
+                        } else {
+                            // 无已知题号：检查候选数字是否构成连续序列（至少3个，间隔<=2）
+                            const sorted = candidates.sort((a, b) => a - b);
+                            if (sorted.length >= 3) {
+                                const maxGap = Math.max(...sorted.slice(1).map((v, i) => v - sorted[i]));
+                                if (maxGap <= 2) {
+                                    console.log(`[ExamProcessor]   📝 来源C验证：${sorted.length}个候选构成连续序列(最大间隔${maxGap})，全部加入`);
+                                    sorted.forEach(n => allQuestionNumbers.add(String(n)));
+                                }
+                            } else if (sorted.length >= 2) {
+                                // 2个候选且连续，也加入
+                                if (sorted[1] - sorted[0] <= 2) {
+                                    sorted.forEach(n => allQuestionNumbers.add(String(n)));
+                                }
+                            }
+                        }
+                    }
+
+                    console.log(`[ExamProcessor]   📝 题号收集-最终结果: [${[...allQuestionNumbers].sort((a,b) => parseInt(a) - parseInt(b)).join(', ')}] (共${allQuestionNumbers.size}个)`);
 
                     if (allQuestionNumbers.size > 0) {
                         // 从大到小处理，避免 "1" 误匹配 "17" 的问题
                         const sortedNums = [...allQuestionNumbers].sort((a, b) => parseInt(b) - parseInt(a));
                         const lines = processedContent.split('\n');
 
-                        const processedLines = lines.map(line => {
+                        const processedLines = lines.map((line, lineIdx) => {
                             const trimmed = line.trim();
-                            // 跳过选项行（如 "17. A. at" 或 "25.（学生作答" 或 "✗ 27.（"）
-                            if (/^[✗×]?\s*\d{1,3}\.\s*(?:[A-D]\.|（|用户|正确)/.test(trimmed)) return line;
-                            // 跳过 "用户答案:" 行
-                            if (/用户答案|正确答案|userAnswer|correctAnswer/i.test(trimmed)) return line;
+                            // 跳过选项行（v1.2 放宽：支持 "17. A." / "25:B" / "25. B" / "25)A" / "✗ 27.（" 等）
+                            if (/^[✗×]?\s*\d{1,3}\s*[.):：]\s*(?:[A-E][\s.,)]|（|用户|正确|学生)/.test(trimmed)) {
+                                console.log(`[ExamProcessor]     行${lineIdx + 1}: [跳过-选项行] "${trimmed.substring(0, 50)}"`);
+                                return line;
+                            }
+                            // 跳过 "用户答案:" 行 和 Word box 行
+                            if (/用户答案|正确答案|userAnswer|correctAnswer|Word\s*box/i.test(trimmed)) {
+                                console.log(`[ExamProcessor]     行${lineIdx + 1}: [跳过-答案/WordBox行] "${trimmed.substring(0, 50)}"`);
+                                return line;
+                            }
 
                             let result = line;
+                            let lineChanged = false;
                             for (const num of sortedNums) {
                                 // 跳过已经有下划线包裹的
                                 if (result.includes(`____${num}____`)) continue;
+                                const before = result;
                                 // 模式1: 空格+数字+空格 "celebrated 17 January"
                                 result = result.replace(
                                     new RegExp(`(\\s)${num}(\\s)`, 'g'),
@@ -393,6 +462,16 @@ async function processExam(examId, userId) {
                                     new RegExp(`^${num}(\\s)`, ''),
                                     `____${num}____$1`
                                 );
+                                if (result !== before) {
+                                    lineChanged = true;
+                                    console.log(`[ExamProcessor]     行${lineIdx + 1}: [替换题号${num}] "${before.trim().substring(0, 60)}" → "${result.trim().substring(0, 60)}"`);
+                                }
+                            }
+                            if (!lineChanged && trimmed.length > 0) {
+                                // 仅对含数字的正文行输出"未替换"日志（减少噪音）
+                                if (/\d/.test(trimmed) && trimmed.length > 5) {
+                                    console.log(`[ExamProcessor]     行${lineIdx + 1}: [未替换] "${trimmed.substring(0, 60)}"`);
+                                }
                             }
                             return result;
                         });
