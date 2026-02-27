@@ -520,262 +520,421 @@ const ReportViewer = ({ taskId }) => {
 
   // ==================== 导出功能 ====================
 
-  // PDF 导出 - 改进版
-  // PDF导出 - 使用浏览器打印（带诊断）
-  const exportToPDF = () => {
-    console.log('========== 🖨️ PDF导出开始 ==========');
-    console.log('当前时间:', new Date().toLocaleString());
+  // PDF 导出 - 使用隐藏iframe + 原生打印，生成高质量可搜索PDF
+  const exportToPDF = async () => {
+    console.log('========== 📄 PDF导出开始 ==========');
     
-    // 诊断1: 检查数据
     const wordsData = getWordsData();
     const phrasesData = getPhrasesData();
-    const vocabularyData = [...wordsData, ...phrasesData]; // 🔧 F1修复：补充缺失的vocabularyData定义（与exportToHTML/exportToWord一致）
     const grammarData = data.grammar || [];
-    console.log('📊 数据统计:');
-    console.log('  - 单词数:', wordsData.length);
-    console.log('  - 短语和句型数:', phrasesData.length);
-    console.log('  - 语法总数:', grammarData.length);
+    const fileName = exportOptions.fileName || taskInfo?.customTitle || taskInfo?.title || '学习报告';
     
-    // 诊断2: 检查表格
-    const tableElement = document.querySelector('.ant-table');
-    if (tableElement) {
-      const rows = tableElement.querySelectorAll('tbody tr');
-      const headers = tableElement.querySelectorAll('thead th');
-      console.log('📋 表格信息:');
-      console.log('  - 表头列数:', headers.length);
-      console.log('  - 数据行数:', rows.length);
-      console.log('  - 表格宽度:', tableElement.offsetWidth + 'px');
-      console.log('  - 表格高度:', tableElement.offsetHeight + 'px');
+    if (wordsData.length === 0 && phrasesData.length === 0 && grammarData.length === 0) {
+      message.warning('没有可导出的数据');
+      return;
+    }
+    
+    setExporting(true);
+    message.loading({ content: '正在准备 PDF，请在打印对话框中选择"另存为PDF"...', key: 'pdfExport', duration: 0 });
+    
+    try {
+      // HTML转义
+      const esc = (str) => {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      };
       
-      // 检查每列的显示状态
-      console.log('  - 列显示状态:');
-      headers.forEach((th, index) => {
-        const isVisible = window.getComputedStyle(th).display !== 'none';
-        const width = th.offsetWidth;
-        console.log(`    列${index + 1} (${th.textContent.trim()}): ${isVisible ? '✅显示' : '❌隐藏'}, 宽度: ${width}px`);
-      });
-    } else {
-      console.warn('⚠️ 未找到表格元素！');
-    }
-    
-    // 诊断3: 检查浏览器插件/扩展
-    console.log('🔌 浏览器环境检测:');
-    console.log('  - User Agent:', navigator.userAgent);
-    console.log('  - 是否无痕模式:', (function() {
-      try {
-        return window.indexedDB === null;
-      } catch(e) {
-        return true;
-      }
-    })() ? '是' : '否');
-    
-    // 检测可能的插件元素
-    const pluginElements = document.querySelectorAll('iframe, [class*="extension"], [class*="plugin"]');
-    console.log('  - 检测到的插件元素数:', pluginElements.length);
-    if (pluginElements.length > 0) {
-      console.warn('  ⚠️ 检测到浏览器插件元素，可能影响打印！');
-      console.log('  建议：使用无痕模式（Ctrl+Shift+N）');
-    }
-    
-    // 诊断4: 检查页面尺寸
-    const reportContent = document.querySelector('.report-content');
-    if (reportContent) {
-      console.log('📐 页面尺寸:');
-      console.log('  - 内容宽度:', reportContent.offsetWidth + 'px');
-      console.log('  - 内容高度:', reportContent.offsetHeight + 'px');
-      console.log('  - 滚动高度:', reportContent.scrollHeight + 'px');
-      console.log('  - 窗口宽度:', window.innerWidth + 'px');
-      console.log('  - 窗口高度:', window.innerHeight + 'px');
-    }
-    
-    // 诊断5: 检查打印样式
-    console.log('🎨 样式检测:');
-    const styleSheets = document.styleSheets;
-    let printStyleFound = false;
-    for (let i = 0; i < styleSheets.length; i++) {
-      try {
-        const rules = styleSheets[i].cssRules || styleSheets[i].rules;
-        for (let j = 0; j < rules.length; j++) {
-          if (rules[j].media && rules[j].media.mediaText === 'print') {
-            printStyleFound = true;
-            console.log('  ✅ 找到打印样式');
-            break;
-          }
-        }
-      } catch (e) {
-        // 跨域样式表无法访问
-      }
-    }
-    if (!printStyleFound) {
-      console.warn('  ⚠️ 未检测到打印样式，可能导致打印问题！');
-    }
-    
-    // 诊断6: 生成诊断报告
-    const diagnosticReport = {
-      timestamp: new Date().toISOString(),
-      data: {
-        vocabulary: vocabularyData.length,
-        grammar: grammarData.length,
-        words: data.words?.length || 0,
-        phrases: data.phrases?.length || 0,
-        patterns: data.patterns?.length || 0
-      },
-      table: tableElement ? {
-        columns: tableElement.querySelectorAll('thead th').length,
-        rows: tableElement.querySelectorAll('tbody tr').length,
-        width: tableElement.offsetWidth,
-        height: tableElement.offsetHeight
-      } : null,
-      browser: {
-        userAgent: navigator.userAgent,
-        incognito: (function() {
-          try {
-            return window.indexedDB === null;
-          } catch(e) {
-            return true;
-          }
-        })(),
-        plugins: pluginElements.length
-      },
-      page: reportContent ? {
-        width: reportContent.offsetWidth,
-        height: reportContent.offsetHeight,
-        scrollHeight: reportContent.scrollHeight
-      } : null,
-      printStyleFound
-    };
-    
-    console.log('📋 完整诊断报告:', diagnosticReport);
-    console.log('========================================');
-    
-    // 将诊断报告保存到sessionStorage，方便查看
-    sessionStorage.setItem('pdf_export_diagnostic', JSON.stringify(diagnosticReport, null, 2));
-    console.log('💾 诊断报告已保存到 sessionStorage.getItem("pdf_export_diagnostic")');
-    
-    const fileName = exportOptions.fileName || taskInfo?.title || taskInfo?.customTitle || '学习报告';
-    
-    // 显示诊断结果和操作提示
-    Modal.info({
-      title: '📄 导出 PDF - 诊断模式',
-      width: 700,
-      content: (
-        <div>
-          <div style={{ 
-            background: '#f0f9ff', 
-            border: '1px solid #bae6fd',
-            padding: '16px', 
-            borderRadius: '8px',
-            marginBottom: '16px'
-          }}>
-            <p style={{ margin: 0, fontWeight: 'bold', marginBottom: '12px', color: '#0369a1' }}>
-              ℹ️ 诊断信息（已输出到控制台）
-            </p>
-            <div style={{ fontSize: '13px', lineHeight: 1.8 }}>
-              <p>✅ 词汇数据：{vocabularyData.length} 项</p>
-              <p>✅ 语法数据：{grammarData.length} 项</p>
-              {tableElement && (
-                <>
-                  <p>✅ 表格列数：{tableElement.querySelectorAll('thead th').length} 列</p>
-                  <p>✅ 表格行数：{tableElement.querySelectorAll('tbody tr').length} 行</p>
-                </>
-              )}
-              {pluginElements.length > 0 && (
-                <p style={{ color: '#dc2626' }}>⚠️ 检测到 {pluginElements.length} 个插件元素</p>
-              )}
-              <p style={{ marginTop: '12px', color: '#6b7280', fontSize: '12px' }}>
-                按 F12 打开控制台查看详细诊断信息
-              </p>
-            </div>
-          </div>
-
-          {pluginElements.length > 0 && (
-            <div style={{ 
-              background: '#fef2f2', 
-              border: '1px solid #fecaca',
-              padding: '16px', 
-              borderRadius: '8px',
-              marginBottom: '16px'
-            }}>
-              <p style={{ margin: 0, fontWeight: 'bold', marginBottom: '12px', color: '#dc2626' }}>
-                🚫 检测到浏览器插件！
-              </p>
-              <div style={{ color: '#991b1b', lineHeight: 1.8, fontSize: '14px' }}>
-                <p style={{ margin: '0 0 8px 0' }}>
-                  <strong>强烈建议：使用无痕模式打开</strong>
-                </p>
-                <ol style={{ margin: 0, paddingLeft: '24px' }}>
-                  <li>按 <code style={{ background: '#fee2e2', padding: '2px 6px', borderRadius: '3px' }}>Ctrl+Shift+N</code></li>
-                  <li>在无痕窗口中打开本页面</li>
-                  <li>重新导出PDF</li>
-                </ol>
-              </div>
-            </div>
-          )}
-
-          <div style={{ 
-            background: '#fff7ed', 
-            border: '1px solid #fed7aa',
-            padding: '16px', 
-            borderRadius: '8px',
-            marginBottom: '16px'
-          }}>
-            <p style={{ margin: 0, fontWeight: 'bold', marginBottom: '12px', color: '#ea580c' }}>
-              📋 打印设置（根据诊断结果）
-            </p>
-            <div style={{ fontSize: '14px', lineHeight: 2 }}>
-              <p><strong>关键设置：</strong></p>
-              <ol style={{ margin: 0, paddingLeft: '24px' }}>
-                <li><strong>缩放</strong>：设为 <strong style={{color: '#dc2626'}}>75-80%</strong>（重要！解决只打印1页的问题）</li>
-                <li><strong>背景图形</strong>：✅ 勾选</li>
-                <li><strong>页眉和页脚</strong>：❌ 取消勾选</li>
-                <li><strong>边距</strong>：无或最小</li>
-                <li><strong>文件名</strong>：{fileName}</li>
-              </ol>
-              <p style={{ marginTop: '12px', color: '#9a3412', fontSize: '13px' }}>
-                💡 诊断显示内容高度很高（{reportContent ? Math.round(reportContent.scrollHeight / 1000) : '?'}米），
-                需要使用<strong>较小的缩放（75-80%）</strong>才能正常分页
-              </p>
-            </div>
-          </div>
-
-          <div style={{ 
-            background: '#f0fdf4', 
-            padding: '12px', 
-            borderRadius: '6px',
-            fontSize: '13px',
-            color: '#15803d'
-          }}>
-            💡 如果还是只打印一半，请：
-            <ul style={{ margin: '8px 0 0 0', paddingLeft: '24px' }}>
-              <li>检查控制台的诊断信息</li>
-              <li>尝试 80% 或 75% 缩放</li>
-              <li>边距设为"无"</li>
-            </ul>
-          </div>
-        </div>
-      ),
-      okText: '✓ 打开打印对话框',
-      onOk: () => {
-        console.log('🖨️ 准备打印...');
-        
-        // 设置文档标题
-        const originalTitle = document.title;
-        document.title = fileName;
-        
-        // 触发打印
-        setTimeout(() => {
-          console.log('🖨️ 调用 window.print()');
-          window.print();
+      // 构建完整的HTML页面
+      let wordsHTML = '';
+      let phrasesHTML = '';
+      let grammarHTML = '';
+      
+      // === 单词部分 ===
+      if (exportOptions.includeVocabulary && wordsData.length > 0) {
+        let rows = '';
+        wordsData.forEach((item, i) => {
+          const word = esc(item.word || item.content || item.text || '');
+          const phonetic = item.phonetic ? formatPhonetic(item.phonetic) : '';
+          const pos = item.pos || '';
+          const meaning = esc(item.meaning || '-');
+          const example = esc(item.example || '-');
           
-          // 恢复标题
-          setTimeout(() => {
-            document.title = originalTitle;
-            console.log('✅ 打印对话框已打开');
-            console.log('========================================');
-          }, 500);
-        }, 100);
+          rows += `
+            <tr class="${i % 2 === 0 ? 'row-even' : 'row-odd'}">
+              <td class="col-no">${i + 1}</td>
+              <td class="col-word">
+                <span class="word-text">${word}</span>
+                ${phonetic ? `<span class="phonetic">${esc(phonetic)}</span>` : ''}
+              </td>
+              <td class="col-meaning">
+                ${pos ? `<span class="pos-tag">${esc(pos)}</span>` : ''}
+                <span class="meaning-text">${meaning}</span>
+              </td>
+              <td class="col-example">${example}</td>
+            </tr>`;
+        });
+        
+        wordsHTML = `
+          <div class="section-header">
+            <span>📚 单词部分</span>
+            <span>共 ${wordsData.length} 项</span>
+          </div>
+          <table class="data-table">
+            <thead><tr>
+              <th class="col-no">序号</th>
+              <th class="col-word">单词</th>
+              <th class="col-meaning">含义</th>
+              <th class="col-example">例句</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
       }
-    });
+      
+      // === 短语部分 ===
+      if (exportOptions.includeVocabulary && phrasesData.length > 0) {
+        let rows = '';
+        phrasesData.forEach((item, i) => {
+          const phrase = esc(item.phrase || item.pattern || item.content || '');
+          const meaning = esc(item.meaning || '-');
+          const example = esc(item.example || '-');
+          
+          rows += `
+            <tr class="${i % 2 === 0 ? 'row-even' : 'row-odd'}">
+              <td class="col-no">${i + 1}</td>
+              <td class="col-word"><span class="word-text">${phrase}</span></td>
+              <td class="col-meaning"><span class="meaning-text">${meaning}</span></td>
+              <td class="col-example">${example}</td>
+            </tr>`;
+        });
+        
+        phrasesHTML = `
+          <div class="section-header">
+            <span>📝 短语和句型部分</span>
+            <span>共 ${phrasesData.length} 项</span>
+          </div>
+          <table class="data-table">
+            <thead><tr>
+              <th class="col-no">序号</th>
+              <th class="col-word">短语/句型</th>
+              <th class="col-meaning">含义</th>
+              <th class="col-example">例句</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      }
+      
+      // === 语法部分 ===
+      if (exportOptions.includeGrammar && grammarData.length > 0) {
+        let cards = '';
+        grammarData.forEach((item, i) => {
+          const usageText = item.usage ? (Array.isArray(item.usage) ? item.usage.join('; ') : item.usage) : '';
+          const examplesText = item.examples ? (Array.isArray(item.examples) ? item.examples.join(' / ') : item.examples) : '';
+          
+          cards += `
+            <div class="grammar-card">
+              <div class="grammar-title">${i + 1}. ${esc(item.title || '')}</div>
+              ${item.definition ? `<div class="grammar-row"><span class="g-label">📝 定义：</span><span class="g-content">${esc(item.definition)}</span></div>` : ''}
+              ${item.structure ? `<div class="grammar-row"><span class="g-label">🏗️ 结构：</span><span class="g-content">${esc(item.structure)}</span></div>` : ''}
+              ${usageText ? `<div class="grammar-row"><span class="g-label">💡 用法：</span><span class="g-content">${esc(usageText)}</span></div>` : ''}
+              ${examplesText ? `<div class="grammar-row"><span class="g-label">📌 例句：</span><span class="g-content">${esc(examplesText)}</span></div>` : ''}
+            </div>`;
+        });
+        
+        grammarHTML = `
+          <div class="section-header">
+            <span>📖 语法部分</span>
+            <span>共 ${grammarData.length} 项</span>
+          </div>
+          ${cards}`;
+      }
+      
+      const fullHTML = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>${esc(fileName)}</title>
+<style>
+  /* ========== 基础重置 ========== */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #1f2937;
+    background: #fff;
+    line-height: 1.65;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page-container {
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* ========== 顶部标题区 ========== */
+  .report-header {
+    text-align: center;
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+    border-bottom: 3px solid #6366f1;
+  }
+  .report-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .report-header .sub {
+    font-size: 13px;
+    color: #9ca3af;
+  }
+
+  /* ========== 章节标题 ========== */
+  .section-header {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 6px;
+    margin: 32px 0 14px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    page-break-after: avoid;
+  }
+
+  /* ========== 数据表格 ========== */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    font-size: 12.5px;
+  }
+  .data-table thead tr {
+    background: #f1f5f9;
+  }
+  .data-table th {
+    padding: 9px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    color: #475569;
+    border-bottom: 2px solid #cbd5e1;
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  .row-even { background: #fff; }
+  .row-odd  { background: #f8fafc; }
+
+  /* 列宽控制 */
+  .col-no      { width: 40px; text-align: center; color: #94a3b8; font-size: 12px; }
+  .col-word    { width: 28%; }
+  .col-meaning { width: 30%; }
+  .col-example { width: auto; color: #64748b; font-style: italic; font-size: 12px; }
+
+  /* 单词文字 */
+  .word-text {
+    font-weight: 600;
+    font-size: 13.5px;
+    color: #1e293b;
+    margin-right: 6px;
+  }
+  /* 音标 */
+  .phonetic {
+    display: inline-block;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    color: #6366f1;
+    background: #eef2ff;
+    padding: 1px 7px;
+    border-radius: 3px;
+    border: 1px solid #c7d2fe;
+    vertical-align: middle;
+    margin-top: -1px;
+  }
+  /* 词性标签 */
+  .pos-tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #059669;
+    background: #d1fae5;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid #a7f3d0;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  .meaning-text {
+    font-size: 12.5px;
+    color: #1f2937;
+  }
+
+  /* ========== 语法卡片 ========== */
+  .grammar-card {
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #8b5cf6;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background: #fefefe;
+    page-break-inside: avoid;
+  }
+  .grammar-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #e5e7eb;
+  }
+  .grammar-row {
+    margin: 5px 0;
+    font-size: 12.5px;
+    line-height: 1.65;
+  }
+  .g-label {
+    color: #6b7280;
+    font-weight: 500;
+  }
+  .g-content {
+    color: #1f2937;
+  }
+
+  /* ========== 页脚 ========== */
+  .page-footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 11px;
+    color: #9ca3af;
+  }
+
+  /* ========== 打印工具栏 ========== */
+  .print-toolbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 9999;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .print-toolbar .tips {
+    font-size: 13px;
+    opacity: 0.9;
+  }
+  .print-toolbar button {
+    background: #fff;
+    color: #6366f1;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .print-toolbar button:hover {
+    background: #eef2ff;
+    transform: scale(1.02);
+  }
+
+  /* ========== 打印样式 ========== */
+  @media print {
+    .print-toolbar { display: none !important; }
+    body { padding: 0; margin: 0; }
+    .page-container { max-width: none; padding: 0; margin: 0; }
+    
+    @page {
+      size: A4;
+      margin: 15mm 12mm;
+    }
+
+    .data-table tr {
+      page-break-inside: avoid;
+    }
+    .section-header {
+      page-break-after: avoid;
+    }
+    .grammar-card {
+      page-break-inside: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="print-toolbar">
+  <div>
+    <div style="font-weight:700;font-size:15px;">📄 PDF 导出预览</div>
+    <div class="tips">请在打印对话框中：目标选择「另存为PDF」，勾选「背景图形」，边距选「默认」</div>
+  </div>
+  <button onclick="window.print()">🖨️ 保存为 PDF</button>
+</div>
+
+<div class="page-container" style="margin-top: 64px;">
+
+  <div class="report-header">
+    <h1>${esc(fileName)}</h1>
+    <div class="sub">生成时间：${new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+  </div>
+
+  ${wordsHTML}
+  ${phrasesHTML}
+  ${grammarHTML}
+
+  <div class="page-footer">
+    — 报告结束 —
+  </div>
+
+</div>
+
+</body>
+</html>`;
+
+      // 在新窗口中打开
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        message.error({ content: '弹窗被拦截，请允许弹窗后重试', key: 'pdfExport' });
+        setExporting(false);
+        return;
+      }
+      
+      printWindow.document.write(fullHTML);
+      printWindow.document.close();
+      
+      message.success({ content: 'PDF预览已打开，点击右上角「保存为PDF」按钮即可导出', key: 'pdfExport', duration: 5 });
+      
+    } catch (error) {
+      console.error('❌ PDF导出失败:', error);
+      message.error({ content: `PDF 导出失败: ${error.message}`, key: 'pdfExport' });
+    } finally {
+      setExporting(false);
+    }
+  };
+  
+  // HTML转义辅助函数
+  const escapeHtml = (str) => {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   };
 
   // HTML 导出
@@ -1192,29 +1351,23 @@ const ReportViewer = ({ taskId }) => {
 
   // 打开导出设置对话框
   const showExportModal = (type) => {
-    // PDF直接触发打印，不显示设置对话框
-    if (type === 'pdf') {
-      exportToPDF();
-      return;
-    }
-    
     setExportType(type);
     setExportModalVisible(true);
   };
 
   // 执行导出
-  const handleExport = () => {
+  const handleExport = async () => {
     setExportModalVisible(false);
     
     switch (exportType) {
       case 'pdf':
-        exportToPDF();
+        await exportToPDF();
         break;
       case 'html':
         exportToHTML();
         break;
       case 'word':
-        exportToWord();
+        await exportToWord();
         break;
       default:
         break;
@@ -1742,103 +1895,8 @@ const ReportViewer = ({ taskId }) => {
               </Button>
               <Button
                 icon={<FilePdfOutlined />}
-                onClick={() => {
-                  const pdfUrl = `/pdf-preview/${taskId}`;
-                  const fullUrl = `${window.location.origin}${pdfUrl}`;
-                  
-                  // 使用Modal.confirm，内容可以复制
-                  Modal.confirm({
-                    title: '📄 选择PDF导出方式',
-                    width: 600,
-                    content: (
-                      <div style={{ lineHeight: '1.8' }}>
-                        <div style={{ 
-                          padding: '12px', 
-                          background: '#fff7e6', 
-                          borderRadius: '6px',
-                          marginBottom: '16px',
-                          borderLeft: '4px solid #faad14'
-                        }}>
-                          <strong>⚠️ 提示</strong>：网页无法自动以无痕模式打开窗口（浏览器安全限制）
-                        </div>
-                        
-                        <div style={{ marginBottom: '20px' }}>
-                          <div style={{ 
-                            fontSize: '15px', 
-                            fontWeight: 600, 
-                            color: '#52c41a',
-                            marginBottom: '8px'
-                          }}>
-                            💡 方法1：无痕模式（推荐 - 完全无插件）
-                          </div>
-                          <ol style={{ paddingLeft: '20px', margin: '8px 0' }}>
-                            <li>点击下方"取消"按钮</li>
-                            <li>按 <code>Ctrl+Shift+N</code> 打开无痕窗口</li>
-                            <li>在无痕窗口地址栏粘贴以下链接：</li>
-                          </ol>
-                          <div style={{ 
-                            padding: '10px',
-                            background: '#f5f5f5',
-                            borderRadius: '4px',
-                            wordBreak: 'break-all',
-                            fontSize: '12px',
-                            fontFamily: 'monospace',
-                            border: '1px dashed #d9d9d9',
-                            userSelect: 'all',
-                            cursor: 'text',
-                            marginTop: '8px'
-                          }}>
-                            {fullUrl}
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#999', marginTop: '6px' }}>
-                            👆 点击上方链接可以选中复制
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div style={{ 
-                            fontSize: '15px', 
-                            fontWeight: 600, 
-                            color: '#1890ff',
-                            marginBottom: '8px'
-                          }}>
-                            ⚡ 方法2：快速打开（可能有插件图标）
-                          </div>
-                          <div style={{ paddingLeft: '20px' }}>
-                            点击下方"确定"按钮直接打开
-                          </div>
-                        </div>
-                      </div>
-                    ),
-                    okText: '确定 - 快速打开',
-                    cancelText: '取消 - 使用无痕模式',
-                    onOk: () => {
-                      // 用户选择快速打开
-                      window.open(pdfUrl, '_blank');
-                      message.info('PDF页面已打开，点击右上角"导出PDF"按钮');
-                    },
-                    onCancel: () => {
-                      // 用户选择无痕模式，自动复制链接
-                      navigator.clipboard.writeText(fullUrl).then(() => {
-                        message.success({
-                          content: (
-                            <div>
-                              <div style={{ fontSize: '14px', marginBottom: '6px' }}>
-                                ✅ 链接已自动复制到剪贴板！
-                              </div>
-                              <div style={{ fontSize: '12px', color: '#666' }}>
-                                现在按 Ctrl+Shift+N 打开无痕窗口，然后按 Ctrl+V 粘贴链接
-                              </div>
-                            </div>
-                          ),
-                          duration: 10
-                        });
-                      }).catch(() => {
-                        message.warning('自动复制失败，请手动从对话框复制链接');
-                      });
-                    }
-                  });
-                }}
+                onClick={() => showExportModal('pdf')}
+                loading={exporting}
                 className="export-btn export-btn-pdf"
               >
                 导出 PDF
