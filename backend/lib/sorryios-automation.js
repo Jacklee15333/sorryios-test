@@ -37,9 +37,9 @@ const CONFIG = {
     // 请求间隔（避免触发限制）- AI回复完成后额外等待时间
     requestInterval: 15000,  // 15秒
     
-    // 浏览器设置 - Docker环境无头模式，本地显示浏览器
-    // 通过检测 /.dockerenv 文件判断是否在 Docker 中
+    // Browser: Docker=headless, Desktop=hidden off-screen, Dev=visible
     headless: require('fs').existsSync('/.dockerenv'),
+    desktopMode: !!process.env.SORRYIOS_DESKTOP,
     
     // 登录状态保存路径
     storageStatePath: './sorryios-auth.json',
@@ -101,6 +101,10 @@ class SorryiosAutomation {
         log('启动浏览器...');
         this.browser = await chromium.launch({
             headless: CONFIG.headless,
+            args: CONFIG.desktopMode ? [
+                '--window-position=-32000,-32000',
+                '--window-size=1,1',
+            ] : [],
         });
 
         // 尝试加载已保存的登录状态
