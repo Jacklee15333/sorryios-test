@@ -103,7 +103,6 @@ class SorryiosAutomation {
             headless: CONFIG.headless,
             args: CONFIG.desktopMode ? [
                 '--window-position=-32000,-32000',
-                '--window-size=1,1',
             ] : [],
         });
 

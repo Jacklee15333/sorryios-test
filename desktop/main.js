@@ -267,6 +267,63 @@ ipcMain.on('get-logs', function(event) {
 // ============================================================
 // Main Window
 // ============================================================
+
+// Chrome visibility toggle (module-level so tray can access it)
+var chromeVisible = false;
+
+function toggleChrome() {
+  if (process.platform !== 'win32') return;
+  var tmpDir = require('os').tmpdir();
+  var scriptPath = path.join(tmpDir, 'sorryios-chrome-toggle.ps1');
+  try {
+    if (!chromeVisible) {
+      fs.writeFileSync(scriptPath,
+        'Add-Type @"\n'
+        + 'using System;\n'
+        + 'using System.Runtime.InteropServices;\n'
+        + 'public class Win32Show {\n'
+        + '  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);\n'
+        + '  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);\n'
+        + '  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr h, int x, int y, int w, int ht, bool r);\n'
+        + '  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr a, int x, int y, int w, int ht, uint f);\n'
+        + '}\n'
+        + '"@\n'
+        + 'Get-Process chromium -EA SilentlyContinue | Where-Object {$_.MainWindowHandle -ne 0} | ForEach-Object {\n'
+        + '  $h = $_.MainWindowHandle\n'
+        + '  [Win32Show]::ShowWindow($h, 9)\n'
+        + '  Start-Sleep -Milliseconds 100\n'
+        + '  [Win32Show]::SetWindowPos($h, [IntPtr]::Zero, 100, 100, 1300, 850, 0x0040)\n'
+        + '  [Win32Show]::ShowWindow($h, 5)\n'
+        + '  [Win32Show]::SetForegroundWindow($h)\n'
+        + '}\n'
+      );
+      execSync('powershell -ExecutionPolicy Bypass -File "' + scriptPath + '"', { timeout: 8000, windowsHide: true });
+      chromeVisible = true;
+      log('Chrome window: shown');
+    } else {
+      fs.writeFileSync(scriptPath,
+        'Add-Type @"\n'
+        + 'using System;\n'
+        + 'using System.Runtime.InteropServices;\n'
+        + 'public class Win32Hide {\n'
+        + '  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);\n'
+        + '  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr h, int x, int y, int w, int ht, bool r);\n'
+        + '}\n'
+        + '"@\n'
+        + 'Get-Process chromium -EA SilentlyContinue | Where-Object {$_.MainWindowHandle -ne 0} | ForEach-Object {\n'
+        + '  [Win32Hide]::MoveWindow($_.MainWindowHandle, -32000, -32000, 1, 1, $true)\n'
+        + '  [Win32Hide]::ShowWindow($_.MainWindowHandle, 6)\n'
+        + '}\n'
+      );
+      execSync('powershell -ExecutionPolicy Bypass -File "' + scriptPath + '"', { timeout: 8000, windowsHide: true });
+      chromeVisible = false;
+      log('Chrome window: hidden');
+    }
+  } catch(e) {
+    log('Chrome toggle failed: ' + e.message);
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: CONFIG.WINDOW_WIDTH,
@@ -285,19 +342,22 @@ function createWindow() {
     }
   });
 
-  var contextMenu = Menu.buildFromTemplate([
-    { label: 'Back', click: function() { mainWindow.webContents.goBack(); } },
-    { label: 'Reload', click: function() { mainWindow.webContents.reload(); } },
-    { type: 'separator' },
-    { label: 'Copy', role: 'copy' },
-    { label: 'Paste', role: 'paste' },
-    { label: 'Select All', role: 'selectAll' },
-    { type: 'separator' },
-    { label: 'Console (Ctrl+L)', click: function() { createLogWindow(); } },
-    { label: 'DevTools (F12)', click: function() { mainWindow.webContents.openDevTools(); } },
-  ]);
-
-  mainWindow.webContents.on('context-menu', function() { contextMenu.popup(); });
+  // Dynamic context menu (rebuilds each time to update Chrome label)
+  mainWindow.webContents.on('context-menu', function() {
+    var menu = Menu.buildFromTemplate([
+      { label: 'Back', click: function() { mainWindow.webContents.goBack(); } },
+      { label: 'Reload', click: function() { mainWindow.webContents.reload(); } },
+      { type: 'separator' },
+      { label: 'Copy', role: 'copy' },
+      { label: 'Paste', role: 'paste' },
+      { label: 'Select All', role: 'selectAll' },
+      { type: 'separator' },
+      { label: chromeVisible ? 'Hide Chrome' : 'Show Chrome', click: function() { toggleChrome(); } },
+      { label: 'Console (Ctrl+L)', click: function() { createLogWindow(); } },
+      { label: 'DevTools (F12)', click: function() { mainWindow.webContents.openDevTools(); } },
+    ]);
+    menu.popup();
+  });
 
   mainWindow.webContents.setWindowOpenHandler(function(details) {
     var url = details.url;
@@ -332,6 +392,7 @@ function createTray() {
     var trayMenu = Menu.buildFromTemplate([
       { label: 'Open App', click: function() { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
       { label: 'Console', click: function() { createLogWindow(); } },
+      { label: 'Show/Hide Chrome', click: function() { if (mainWindow) toggleChrome(); } },
       { type: 'separator' },
       { label: 'Reload', click: function() { if (mainWindow) mainWindow.webContents.reload(); } },
       { label: 'Open in Browser', click: function() { shell.openExternal(CONFIG.APP_URL); } },
