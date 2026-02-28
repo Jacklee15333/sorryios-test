@@ -513,7 +513,7 @@ function UserDashboard({ onClose, onViewReport }) {
                                     <span>ℹ️</span> 关于
                                 </h3>
                                 <div className="space-y-2 text-sm text-gray-600">
-                                    <p><span className="font-medium">应用名称：</span>Sorryios AI 智能笔记助手</p>
+                                    <p><span className="font-medium">应用名称：</span>智学笔记</p>
                                     <p><span className="font-medium">版本：</span>v4.1.0</p>
                                     <p><span className="font-medium">功能：</span>课堂笔记自动化处理系统</p>
                                 </div>

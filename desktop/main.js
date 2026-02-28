@@ -1,5 +1,5 @@
 /**
- * Sorryios AI Desktop App - Electron Main Process (Final)
+ * 智学笔记 - Electron 桌面应用
  * 
  * Features:
  *   - Zero terminal windows (fully hidden backend)
@@ -85,7 +85,7 @@ function killPort(port) {
 // ============================================================
 function startBackend() {
   return new Promise(function(resolve, reject) {
-    log('Starting backend server...');
+    log('正在启动后端服务...');
 
     if (!fs.existsSync(path.join(BACKEND_DIR, 'server.js'))) {
       reject(new Error('Cannot find backend/server.js'));
@@ -141,7 +141,7 @@ function startBackend() {
       log('Backend exited: ' + code);
       backendProcess = null;
       if (!isQuitting) {
-        dialog.showErrorBox('Backend Error', 'Backend stopped unexpectedly.\nApp will close.');
+        dialog.showErrorBox('后端错误', '后端服务意外停止.\n应用即将关闭。');
         app.quit();
       }
     });
@@ -154,7 +154,7 @@ function startBackend() {
       }
       var req = http.get(CONFIG.APP_URL, { timeout: 2000 }, function(res) {
         if (res.statusCode === 200 || res.statusCode === 304) {
-          log('Backend is ready.');
+          log('后端服务已就绪');
           resolve();
         } else {
           setTimeout(poll, CONFIG.POLL_INTERVAL);
@@ -216,7 +216,7 @@ function createLogWindow() {
   logWindow = new BrowserWindow({
     width: 850,
     height: 520,
-    title: 'Sorryios AI - Console',
+    title: '智学笔记 - 控制台',
     icon: ICON_PATH,
     backgroundColor: '#1e1e2e',
     autoHideMenuBar: true,
@@ -239,9 +239,9 @@ function createLogWindow() {
     + '.l{padding:1px 0}.l:hover{background:#313244}\n'
     + '.e{color:#f38ba8}.g{color:#a6e3a1}.b{color:#89b4fa}\n'
     + '</style></head><body>\n'
-    + '<div id="bar"><span class="t">Console Output</span><span class="n" id="cnt"></span>'
-    + '<button id="abtn" onclick="asc=!asc;this.textContent=asc?\'Auto-scroll: ON\':\'Auto-scroll: OFF\'">Auto-scroll: ON</button>'
-    + '<button onclick="document.getElementById(\'log\').innerHTML=\'\';lc=0;document.getElementById(\'cnt\').textContent=\'\'">Clear</button></div>\n'
+    + '<div id="bar"><span class="t">控制台输出</span><span class="n" id="cnt"></span>'
+    + '<button id="abtn" onclick="asc=!asc;this.textContent=asc?\'自动滚动: 开\':\'自动滚动: 关\'">自动滚动: 开</button>'
+    + '<button onclick="document.getElementById(\'log\').innerHTML=\'\';lc=0;document.getElementById(\'cnt\').textContent=\'\'">清空</button></div>\n'
     + '<div id="log"></div>\n'
     + '<script>\n'
     + 'var ipc=require("electron").ipcRenderer,el=document.getElementById("log"),ce=document.getElementById("cnt"),asc=true,lc=0;\n'
@@ -331,7 +331,7 @@ function createWindow() {
     height: CONFIG.WINDOW_HEIGHT,
     minWidth: CONFIG.MIN_WIDTH,
     minHeight: CONFIG.MIN_HEIGHT,
-    title: 'Sorryios AI',
+    title: '智学笔记',
     icon: ICON_PATH,
     backgroundColor: '#f5f3ff',
     show: false,
@@ -346,16 +346,16 @@ function createWindow() {
   // Dynamic context menu (rebuilds each time to update Chrome label)
   mainWindow.webContents.on('context-menu', function() {
     var menu = Menu.buildFromTemplate([
-      { label: 'Back', click: function() { mainWindow.webContents.goBack(); } },
-      { label: 'Reload', click: function() { mainWindow.webContents.reload(); } },
+      { label: '返回', click: function() { mainWindow.webContents.goBack(); } },
+      { label: '刷新', click: function() { mainWindow.webContents.reload(); } },
       { type: 'separator' },
-      { label: 'Copy', role: 'copy' },
-      { label: 'Paste', role: 'paste' },
-      { label: 'Select All', role: 'selectAll' },
+      { label: '复制', role: 'copy' },
+      { label: '粘贴', role: 'paste' },
+      { label: '全选', role: 'selectAll' },
       { type: 'separator' },
-      { label: chromeVisible ? 'Hide Chrome' : 'Show Chrome', click: function() { toggleChrome(); } },
-      { label: 'Console (Ctrl+L)', click: function() { createLogWindow(); } },
-      { label: 'DevTools (F12)', click: function() { mainWindow.webContents.openDevTools(); } },
+      { label: chromeVisible ? '隐藏 Chrome' : '显示 Chrome', click: function() { toggleChrome(); } },
+      { label: '控制台 (Ctrl+L)', click: function() { createLogWindow(); } },
+      { label: '开发者工具 (F12)', click: function() { mainWindow.webContents.openDevTools(); } },
     ]);
     menu.popup();
   });
@@ -368,7 +368,7 @@ function createWindow() {
         overrideBrowserWindowOptions: {
           width: 950, height: 750,
           autoHideMenuBar: true,
-          title: 'Sorryios AI',
+          title: '智学笔记',
           icon: ICON_PATH,
           backgroundColor: '#ffffff',
         }
@@ -389,16 +389,16 @@ function createTray() {
   if (!fs.existsSync(ICON_PATH)) return;
   try {
     tray = new Tray(ICON_PATH);
-    tray.setToolTip('Sorryios AI');
+    tray.setToolTip('智学笔记');
     var trayMenu = Menu.buildFromTemplate([
-      { label: 'Open App', click: function() { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
-      { label: 'Console', click: function() { createLogWindow(); } },
-      { label: 'Show/Hide Chrome', click: function() { if (mainWindow) toggleChrome(); } },
+      { label: '打开应用', click: function() { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
+      { label: '控制台', click: function() { createLogWindow(); } },
+      { label: '显示/隐藏 Chrome', click: function() { if (mainWindow) toggleChrome(); } },
       { type: 'separator' },
-      { label: 'Reload', click: function() { if (mainWindow) mainWindow.webContents.reload(); } },
-      { label: 'Open in Browser', click: function() { shell.openExternal(CONFIG.APP_URL); } },
+      { label: '刷新', click: function() { if (mainWindow) mainWindow.webContents.reload(); } },
+      { label: '在浏览器中打开', click: function() { shell.openExternal(CONFIG.APP_URL); } },
       { type: 'separator' },
-      { label: 'Quit', click: function() { isQuitting = true; app.quit(); } },
+      { label: '退出', click: function() { isQuitting = true; app.quit(); } },
     ]);
     tray.setContextMenu(trayMenu);
     tray.on('click', function() { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } });
@@ -421,8 +421,8 @@ function getSplashHTML(statusText) {
     + '@keyframes s{to{transform:rotate(360deg)}}'
     + '.st{font-size:14px;opacity:.8}'
     + '</style></head><body><div class="c">'
-    + '<div class="logo">Sorryios AI</div>'
-    + '<div class="sub">Smart Note System</div>'
+    + '<div class="logo">智学笔记</div>'
+    + '<div class="sub">智能学习报告系统</div>'
     + '<div class="sp"></div>'
     + '<div class="st">' + statusText + '</div>'
     + '</div></body></html>';
@@ -434,11 +434,11 @@ function getSplashHTML(statusText) {
 // ============================================================
 app.whenReady().then(async function() {
   log('====================================');
-  log('  Sorryios AI Desktop - Starting');
+  log('  智学笔记 - 启动中');
   log('====================================');
 
   var win = createWindow();
-  win.loadURL(getSplashHTML('Starting server...'));
+  win.loadURL(getSplashHTML('正在启动服务器...'));
   win.show();
 
   createTray();
@@ -447,23 +447,23 @@ app.whenReady().then(async function() {
   try {
     if (!isFrontendBuilt()) {
       log('Frontend not built, building...');
-      win.loadURL(getSplashHTML('First run: building frontend (1-2 min)...'));
+      win.loadURL(getSplashHTML('首次运行：正在构建前端（1-2分钟）...'));
       try { buildFrontend(); } catch(e) {
         log('Frontend build failed: ' + e.message);
-        dialog.showErrorBox('Build Failed', 'Cannot build frontend.\n\n' + e.message);
+        dialog.showErrorBox('构建失败', '无法构建前端.\n\n' + e.message);
         app.quit(); return;
       }
     }
 
-    win.loadURL(getSplashHTML('Starting backend server...'));
+    win.loadURL(getSplashHTML('正在启动后端服务...'));
     await startBackend();
 
-    log('Loading app...');
+    log('正在加载应用...');
     win.loadURL(CONFIG.APP_URL);
 
     win.webContents.on('did-finish-load', function() {
-      log('App loaded OK.');
-      win.setTitle('Sorryios AI');
+      log('应用加载完成');
+      win.setTitle('智学笔记');
     });
 
     win.webContents.on('did-fail-load', function(ev, code, desc) {
@@ -473,7 +473,7 @@ app.whenReady().then(async function() {
 
   } catch(error) {
     log('Startup failed: ' + error.message);
-    dialog.showErrorBox('Startup Failed', error.message);
+    dialog.showErrorBox('启动失败', error.message);
     app.quit();
   }
 });

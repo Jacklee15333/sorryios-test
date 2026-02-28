@@ -153,7 +153,7 @@ function LoginPage() {
 
                 {/* 底部提示 */}
                 <p className="text-center text-gray-500 text-sm mt-6">
-                    Sorryios AI 智能笔记系统 v1.0
+                    智学笔记 v1.0
                 </p>
             </div>
         </div>

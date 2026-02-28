@@ -345,7 +345,7 @@ export default function ExamReportViewer({ examId, onBack }) {
         }
 
         html += `
-    <div class="footer">Sorryios AI 智能笔记助手 · 生成于 ${new Date().toLocaleString()}</div>
+    <div class="footer">智学笔记 · 生成于 ${new Date().toLocaleString()}</div>
 </div>
 </body>
 </html>`;

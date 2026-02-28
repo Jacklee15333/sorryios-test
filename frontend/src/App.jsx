@@ -340,8 +340,8 @@ function AppContent() {
                                 </svg>
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-200 to-yellow-400 bg-clip-text text-transparent">Sorryios</h1>
-                                <p className="text-xs text-indigo-300">AI 智能笔记助手 v4.2</p>
+                                <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-200 to-yellow-400 bg-clip-text text-transparent">智学笔记</h1>
+                                <p className="text-xs text-indigo-300">智能学习报告系统</p>
                             </div>
                         </div>
                     )}
@@ -487,13 +487,8 @@ function AppContent() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                         </svg>
                         {!sidebarCollapsed && (
-                            <span className="font-medium flex items-center">
-                                已保存
-                                {savedReports.length > 0 && (
-                                    <span className="ml-2 bg-emerald-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                                        {savedReports.length}
-                                    </span>
-                                )}
+                            <span className="font-medium">
+                                已保存{savedReports.length > 0 ? ` (${savedReports.length})` : ''}
                             </span>
                         )}
                     </button>
