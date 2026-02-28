@@ -393,6 +393,7 @@ loadRoute('matching-dict-api', './routes/matching-dict-api', '/api/matching-dict
 loadRoute('user-mastered-api', './routes/user-mastered-api', '/api/user-mastered');
 loadRoute('exam-upload-api', './routes/exam-upload-api', '/api/exam');
 loadRoute('wrong-question-api', './routes/wrong-question-api', '/api/wrong-questions');
+loadRoute('saved-report-api', './routes/saved-report-api', '/api/saved-report');
 
 // 通配符路由放最后
 loadRoute('upload', './routes/upload', '/api');

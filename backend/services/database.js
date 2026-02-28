@@ -212,6 +212,27 @@ function initDatabase() {
     `);
 
     // ============================================
+    // v5.1 新增：已保存报告表（用户修改后的报告）
+    // ============================================
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS saved_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            task_id TEXT NOT NULL,
+            title TEXT,
+            hidden_items TEXT DEFAULT '[]',
+            word_count INTEGER DEFAULT 0,
+            phrase_count INTEGER DEFAULT 0,
+            grammar_count INTEGER DEFAULT 0,
+            notes TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+        )
+    `);
+
+    // ============================================
     // 创建索引
     // ============================================
     db.exec(`
@@ -240,6 +261,10 @@ function initDatabase() {
         -- unmatched_items 索引
         CREATE INDEX IF NOT EXISTS idx_unmatched_task_id ON unmatched_items(task_id);
         CREATE INDEX IF NOT EXISTS idx_unmatched_status ON unmatched_items(status);
+        
+        -- saved_reports 索引
+        CREATE INDEX IF NOT EXISTS idx_saved_reports_user_id ON saved_reports(user_id);
+        CREATE INDEX IF NOT EXISTS idx_saved_reports_task_id ON saved_reports(task_id);
     `);
 
     // 创建默认管理员账号（如果不存在）
@@ -1007,6 +1032,73 @@ function getProcessingStats() {
 // 初始化数据库
 initDatabase();
 
+// ============================================
+// v5.1 新增：已保存报告操作
+// ============================================
+
+const SavedReportDB = {
+    // 保存/更新报告
+    save(userId, taskId, data) {
+        const existing = db.prepare(`
+            SELECT id FROM saved_reports WHERE user_id = ? AND task_id = ?
+        `).get(userId, taskId);
+
+        if (existing) {
+            // 更新
+            const stmt = db.prepare(`
+                UPDATE saved_reports 
+                SET title = ?, hidden_items = ?, word_count = ?, phrase_count = ?, grammar_count = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `);
+            stmt.run(data.title || '', JSON.stringify(data.hiddenItems || []), data.wordCount || 0, data.phraseCount || 0, data.grammarCount || 0, data.notes || '', existing.id);
+            return { id: existing.id, updated: true };
+        } else {
+            // 新建
+            const stmt = db.prepare(`
+                INSERT INTO saved_reports (user_id, task_id, title, hidden_items, word_count, phrase_count, grammar_count, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+            const result = stmt.run(userId, taskId, data.title || '', JSON.stringify(data.hiddenItems || []), data.wordCount || 0, data.phraseCount || 0, data.grammarCount || 0, data.notes || '');
+            return { id: result.lastInsertRowid, updated: false };
+        }
+    },
+
+    // 获取用户的已保存报告列表
+    list(userId) {
+        return db.prepare(`
+            SELECT sr.*, t.file_name, t.title as task_title
+            FROM saved_reports sr
+            LEFT JOIN tasks t ON sr.task_id = t.id
+            WHERE sr.user_id = ?
+            ORDER BY sr.updated_at DESC
+        `).all(userId);
+    },
+
+    // 获取单个已保存报告
+    get(id, userId) {
+        return db.prepare(`
+            SELECT sr.*, t.file_name, t.title as task_title
+            FROM saved_reports sr
+            LEFT JOIN tasks t ON sr.task_id = t.id
+            WHERE sr.id = ? AND sr.user_id = ?
+        `).get(id, userId);
+    },
+
+    // 根据task_id获取已保存报告
+    getByTaskId(taskId, userId) {
+        return db.prepare(`
+            SELECT * FROM saved_reports WHERE task_id = ? AND user_id = ?
+        `).get(taskId, userId);
+    },
+
+    // 删除已保存报告
+    delete(id, userId) {
+        return db.prepare(`
+            DELETE FROM saved_reports WHERE id = ? AND user_id = ?
+        `).run(id, userId);
+    }
+};
+
 module.exports = {
     db,
     UserDB,
@@ -1015,6 +1107,7 @@ module.exports = {
     UserMasteredDB,      // v5.0 新增
     MatchedItemDB,       // v5.0 新增
     UnmatchedItemDB,     // v5.0 新增
+    SavedReportDB,       // v5.1 新增
     getDashboardStats,
     getProcessingStats,  // v5.0 新增
     initDatabase

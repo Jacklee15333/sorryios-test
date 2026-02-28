@@ -16,15 +16,16 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Table, Button, message, Spin, Empty, Typography, Space, Card, Modal, Checkbox, Input } from 'antd';
-import { CheckOutlined, CloseOutlined, ReloadOutlined, DownloadOutlined, FilePdfOutlined, FileWordOutlined, FileTextOutlined, SettingOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, ReloadOutlined, DownloadOutlined, FilePdfOutlined, FileWordOutlined, FileTextOutlined, SettingOutlined, SaveOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, HeadingLevel, AlignmentType, WidthType } from 'docx';
 import { saveAs } from 'file-saver';
 
 const { Title, Text, Paragraph: AntParagraph } = Typography;
 
-const ReportViewer = ({ taskId }) => {
+const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [exportType, setExportType] = useState('pdf');
@@ -40,9 +41,54 @@ const ReportViewer = ({ taskId }) => {
     grammar: []
   });
   const [taskInfo, setTaskInfo] = useState(null); // 新增：存储任务信息
-  const [hiddenItems, setHiddenItems] = useState(new Set()); // 🔧 新增：隐藏的词汇ID集合
+  const [hiddenItems, setHiddenItems] = useState(new Set(initialHiddenItems || [])); // 🔧 新增：隐藏的词汇ID集合
   
   const reportContentRef = useRef(null);
+
+  // 🔧 v5.1：当 initialHiddenItems 变化时更新（用于加载已保存报告）
+  useEffect(() => {
+    if (initialHiddenItems && initialHiddenItems.length > 0) {
+      console.log(`[ReportViewer] 📂 加载已保存的隐藏项: ${initialHiddenItems.length} 项`);
+      setHiddenItems(new Set(initialHiddenItems));
+    }
+  }, []);
+
+  // 🔧 v5.1：保存报告到后端
+  const handleSaveReport = async () => {
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.error('请先登录');
+        return;
+      }
+
+      const wordsCount = getWordsData().length;
+      const phrasesCount = getPhrasesData().length;
+      const grammarCount = (data.grammar || []).filter(item => !hiddenItems.has(`grammar-${item.id}`)).length;
+
+      const response = await axios.post('/api/saved-report/save', {
+        taskId,
+        title: taskInfo?.customTitle || taskInfo?.title || exportOptions.fileName || '学习报告',
+        hiddenItems: Array.from(hiddenItems),
+        wordCount: wordsCount,
+        phraseCount: phrasesCount,
+        grammarCount: grammarCount
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        message.success(response.data.updated ? '报告已更新保存' : '报告已保存');
+        if (onSaved) onSaved();
+      }
+    } catch (error) {
+      console.error('[ReportViewer] ❌ 保存失败:', error);
+      message.error('保存失败: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // 🔧 音标格式化函数
   const formatPhonetic = (phonetic) => {
@@ -158,6 +204,25 @@ const ReportViewer = ({ taskId }) => {
       console.log('='.repeat(60));
       console.log('[ReportViewer] ✅ 数据加载完成');
       console.log('='.repeat(60) + '\n');
+      
+      // 🔧 v5.1：自动加载已保存的隐藏项（如果没有通过 props 传入）
+      if (!initialHiddenItems || initialHiddenItems.length === 0) {
+        try {
+          const savedRes = await axios.get(`/api/saved-report/by-task/${taskId}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          });
+          if (savedRes.data.success && savedRes.data.report) {
+            const savedHidden = savedRes.data.report.hiddenItems || [];
+            if (savedHidden.length > 0) {
+              console.log(`[ReportViewer] 📂 自动加载已保存的隐藏项: ${savedHidden.length} 项`);
+              setHiddenItems(new Set(savedHidden));
+            }
+          }
+        } catch (savedErr) {
+          // 忽略，可能是还没有保存过
+          console.log('[ReportViewer] ℹ️ 未找到已保存的报告状态');
+        }
+      }
       
     } catch (error) {
       console.error('[ReportViewer] ❌ 加载数据失败:', error);
@@ -1916,6 +1981,19 @@ const ReportViewer = ({ taskId }) => {
                 className="export-btn export-btn-word"
               >
                 导出 Word
+              </Button>
+              <Button
+                icon={<SaveOutlined />}
+                onClick={handleSaveReport}
+                loading={saving}
+                className="export-btn"
+                style={{ 
+                  background: hiddenItems.size > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.15)',
+                  borderColor: hiddenItems.size > 0 ? '#10b981' : undefined,
+                  color: hiddenItems.size > 0 ? '#065f46' : undefined
+                }}
+              >
+                保存报告{hiddenItems.size > 0 ? ` (已修改${hiddenItems.size}项)` : ''}
               </Button>
               <Button
                 icon={<ReloadOutlined />}

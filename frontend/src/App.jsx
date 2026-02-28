@@ -34,6 +34,8 @@ function AppContent() {
     const [masteredWords, setMasteredWords] = useState([]);
     const [masteredStats, setMasteredStats] = useState(null);
     const [taskHistory, setTaskHistory] = useState([]);
+    const [savedReports, setSavedReports] = useState([]); // 🆕 已保存报告列表
+    const [savedReportHiddenItems, setSavedReportHiddenItems] = useState(null); // 🆕 当前查看的已保存报告的隐藏项
 
     // 🔧 修改：添加 logs
     const { progress, connected, logs } = useTaskProgress(currentTaskId);
@@ -130,6 +132,20 @@ function AppContent() {
             } catch (examErr) {
                 console.error('[App] 加载试卷历史失败:', examErr);
             }
+
+            // 🆕 加载已保存报告列表
+            try {
+                const savedRes = await fetch('/api/saved-report/list', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (savedRes.ok) {
+                    const data = await savedRes.json();
+                    console.log(`[App] 加载已保存报告: ${data.reports?.length || 0} 条`);
+                    setSavedReports(data.reports || []);
+                }
+            } catch (savedErr) {
+                console.error('[App] 加载已保存报告失败:', savedErr);
+            }
         } catch (err) {
             console.error('加载数据失败:', err);
         }
@@ -179,7 +195,34 @@ function AppContent() {
     // 查看报告
     const handleViewReport = (taskId = null) => {
         if (taskId) setCurrentTaskId(taskId);
+        setSavedReportHiddenItems(null); // 清除已保存的隐藏项
         setCurrentPage('report');
+    };
+
+    // 🆕 查看已保存报告
+    const handleViewSavedReport = (report) => {
+        console.log(`[App] 查看已保存报告: id=${report.id}, task=${report.task_id}`);
+        setCurrentTaskId(report.task_id);
+        setSavedReportHiddenItems(report.hiddenItems || []);
+        setCurrentPage('report');
+    };
+
+    // 🆕 删除已保存报告
+    const handleDeleteSavedReport = async (reportId, e) => {
+        e.stopPropagation();
+        if (!confirm('确定要删除这个已保存的报告吗？')) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/saved-report/${reportId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                loadUserData();
+            }
+        } catch (err) {
+            console.error('删除失败:', err);
+        }
     };
 
     // 🆕 错题上传成功
@@ -431,6 +474,30 @@ function AppContent() {
                         {!sidebarCollapsed && <span className="font-medium">历史记录</span>}
                     </button>
 
+                    {/* 🆕 已保存报告 */}
+                    <button
+                        onClick={() => setCurrentPage('saved')}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                            currentPage === 'saved'
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg transform scale-105'
+                                : 'hover:bg-indigo-700/50'
+                        }`}
+                    >
+                        <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        {!sidebarCollapsed && (
+                            <span className="font-medium flex items-center">
+                                已保存
+                                {savedReports.length > 0 && (
+                                    <span className="ml-2 bg-emerald-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                        {savedReports.length}
+                                    </span>
+                                )}
+                            </span>
+                        )}
+                    </button>
+
                     <button
                         onClick={() => setCurrentPage('filter')}
                         className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
@@ -500,7 +567,109 @@ function AppContent() {
                         <ReportViewer
                             taskId={currentTaskId}
                             onBack={handleReset}
+                            initialHiddenItems={savedReportHiddenItems}
+                            onSaved={() => loadUserData()}
                         />
+                    )}
+
+                    {/* 🆕 已保存报告列表 */}
+                    {currentPage === 'saved' && (
+                        <div className="bg-white rounded-2xl shadow-xl p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800 flex items-center space-x-3">
+                                    <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                    </svg>
+                                    <span>已保存报告</span>
+                                </h2>
+                                <span className="text-sm text-gray-500">
+                                    共 {savedReports.length} 份报告
+                                </span>
+                            </div>
+
+                            {savedReports.length === 0 ? (
+                                <div className="text-center py-16">
+                                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-gray-500 mb-2">还没有保存过报告</p>
+                                    <p className="text-gray-400 text-sm mb-4">在学习报告中修改内容后，点击"保存报告"按钮即可保存</p>
+                                    <button
+                                        onClick={() => setCurrentPage('history')}
+                                        className="text-indigo-600 hover:text-indigo-700 font-medium"
+                                    >
+                                        去历史记录查看报告 →
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {savedReports.map((report) => (
+                                        <div
+                                            key={`saved-${report.id}`}
+                                            className="rounded-xl p-5 hover:shadow-lg transition-all duration-200 cursor-pointer border bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-100"
+                                            onClick={() => handleViewSavedReport(report)}
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center space-x-3 mb-2">
+                                                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                                                            📑 已保存
+                                                        </span>
+                                                        <span className="text-lg font-semibold text-gray-800">
+                                                            {report.title || report.task_title || '学习报告'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                                        <span className="flex items-center">
+                                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            {report.updated_at ? new Date(report.updated_at).toLocaleString() : ''}
+                                                        </span>
+                                                        {report.word_count > 0 && (
+                                                            <span className="text-indigo-600 font-medium">
+                                                                📚 {report.word_count} 单词
+                                                            </span>
+                                                        )}
+                                                        {report.phrase_count > 0 && (
+                                                            <span className="text-purple-600 font-medium">
+                                                                📝 {report.phrase_count} 短语
+                                                            </span>
+                                                        )}
+                                                        {report.grammar_count > 0 && (
+                                                            <span className="text-orange-600 font-medium">
+                                                                📖 {report.grammar_count} 语法
+                                                            </span>
+                                                        )}
+                                                        {(report.hiddenItems?.length || 0) > 0 && (
+                                                            <span className="text-gray-400">
+                                                                已筛除 {report.hiddenItems.length} 项
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <button
+                                                        onClick={(e) => handleDeleteSavedReport(report.id, e)}
+                                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="删除"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                    <svg className="w-6 h-6 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     {/* 历史记录 - 混合显示课堂笔记 + 试卷错题 */}
