@@ -1,0 +1,8 @@
+﻿# Node / Electron
+node_modules/
+desktop/node_modules/
+desktop/**/dist/
+dist/
+out/
+release/
+*.exe
