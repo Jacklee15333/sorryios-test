@@ -83,6 +83,7 @@ export function AuthProvider({ children }) {
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('rememberedAccount'); // 清除记住的密码，防止自动重新登录
         setUser(null);
     };
 

@@ -90,17 +90,37 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     }
   };
 
-  // 🔧 音标格式化函数
+  // 🔧 音标格式化 + 清洗函数
   const formatPhonetic = (phonetic) => {
     if (!phonetic) return '';
-    const trimmed = phonetic.trim();
+    let trimmed = phonetic.trim();
+    
+    // 清洗：如果音标中混入了词性信息（如括号中的 n./adj./v.），提取纯音标
+    // 例如: /'kompaund/ (n./adj.), /kəm'paund/ (v.)/ → /'kompaund/
+    const phoneticMatches = trimmed.match(/\/[^\/]+\//g);
+    if (phoneticMatches && phoneticMatches.length > 0) {
+      // 找到第一个看起来像真正音标的（不是纯词性标记）
+      for (const p of phoneticMatches) {
+        const inner = p.replace(/\//g, '').trim();
+        // 跳过纯词性标记
+        if (/^[nvadjmodliru.\s,()]+$/i.test(inner) || inner.length <= 1) continue;
+        return p; // 返回第一个有效音标
+      }
+    }
+    
+    // 如果没有匹配到 /.../ 格式，去除括号中的词性标注
+    trimmed = trimmed.replace(/\s*\([^)]*\)\s*/g, '').replace(/,\s*\/[^\/]*\//g, '').trim();
+    
     if (trimmed.startsWith('/') && trimmed.endsWith('/')) {
       return trimmed;
     }
     if (trimmed.startsWith('/') || trimmed.endsWith('/')) {
       return trimmed.startsWith('/') ? trimmed + '/' : '/' + trimmed;
     }
-    return `/${trimmed}/`;
+    if (trimmed) {
+      return `/${trimmed}/`;
+    }
+    return '';
   };
 
   // 加载数据
@@ -1515,43 +1535,45 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
   const wordColumns = [
     {
       title: '序号',
-      width: 55,
+      width: 50,
       align: 'center',
       render: (_, __, index) => (
-        <Text style={{ fontSize: '14px', color: '#6b7280' }}>
+        <Text style={{ fontSize: '12px', color: '#9ca3af' }}>
           {index + 1}
         </Text>
       )
     },
     {
       title: '单词',
-      width: '22%',
+      width: '18%',
       render: (_, record) => {
         return (
           <div style={{ 
             display: 'flex', 
-            alignItems: 'center',
-            gap: '10px'
+            flexDirection: 'column',
+            gap: '3px'
           }}>
             <Text style={{ 
-              fontSize: '15px', 
+              fontSize: '13px', 
               fontWeight: 600, 
               color: '#1a1a1a',
-              letterSpacing: '0.3px',
+              wordBreak: 'break-word',
             }}>
               {record.word || record.content || ''}
             </Text>
             {record.phonetic && (
               <span style={{ 
                 color: '#4f46e5',
-                fontSize: '12px',
+                fontSize: '11px',
                 fontFamily: 'Consolas, "Courier New", monospace',
                 backgroundColor: '#eef2ff',
-                padding: '2px 8px',
-                borderRadius: '4px',
+                padding: '1px 5px',
+                borderRadius: '3px',
                 border: '1px solid #c7d2fe',
-                whiteSpace: 'nowrap',
-                fontWeight: 500
+                fontWeight: 500,
+                display: 'inline-block',
+                wordBreak: 'break-all',
+                lineHeight: '1.4',
               }}>
                 {formatPhonetic(record.phonetic)}
               </span>
@@ -1567,24 +1589,24 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
         <div style={{ 
           display: 'flex', 
           alignItems: 'center',
-          gap: '8px',
+          gap: '5px',
           flexWrap: 'wrap'
         }}>
           {record.pos && (
             <span style={{ 
               color: '#059669',
-              fontSize: '12px',
+              fontSize: '11px',
               fontWeight: 600,
               backgroundColor: '#d1fae5',
-              padding: '2px 8px',
-              borderRadius: '4px',
+              padding: '1px 5px',
+              borderRadius: '3px',
               border: '1px solid #a7f3d0',
               flexShrink: 0
             }}>
               {record.pos}
             </span>
           )}
-          <Text style={{ fontSize: '14px', color: '#1a1a1a' }}>
+          <Text style={{ fontSize: '12px', color: '#1a1a1a' }}>
             {record.meaning}
           </Text>
         </div>
@@ -1594,9 +1616,10 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
       title: '例句',
       render: (_, record) => record.example && (
         <Text style={{ 
-          fontSize: '13px', 
+          fontSize: '12px', 
           color: '#6b7280',
-          fontStyle: 'italic'
+          fontStyle: 'italic',
+          wordBreak: 'break-word',
         }}>
           {record.example}
         </Text>
@@ -1604,7 +1627,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     },
     {
       title: '操作',
-      width: 160,
+      width: 150,
       align: 'center',
       className: 'action-col no-print',
       render: (_, record) => (
@@ -1636,25 +1659,25 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
   const phraseColumns = [
     {
       title: '序号',
-      width: 55,
+      width: 50,
       align: 'center',
       render: (_, __, index) => (
-        <Text style={{ fontSize: '14px', color: '#6b7280' }}>
+        <Text style={{ fontSize: '12px', color: '#9ca3af' }}>
           {index + 1}
         </Text>
       )
     },
     {
       title: '短语/句型',
-      width: '28%',
+      width: '18%',
       render: (_, record) => {
         const content = record.content || record.phrase || record.pattern || '';
         return (
           <Text style={{ 
-            fontSize: '15px', 
+            fontSize: '13px', 
             fontWeight: 600, 
             color: '#1a1a1a',
-            letterSpacing: '0.3px',
+            wordBreak: 'break-word',
           }}>
             {content}
           </Text>
@@ -1665,7 +1688,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
       title: '含义',
       width: '28%',
       render: (_, record) => (
-        <Text style={{ fontSize: '14px', color: '#1a1a1a' }}>
+        <Text style={{ fontSize: '12px', color: '#1a1a1a' }}>
           {record.meaning}
         </Text>
       )
@@ -1674,9 +1697,10 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
       title: '例句',
       render: (_, record) => record.example && (
         <Text style={{ 
-          fontSize: '13px', 
+          fontSize: '12px', 
           color: '#6b7280',
-          fontStyle: 'italic'
+          fontStyle: 'italic',
+          wordBreak: 'break-word',
         }}>
           {record.example}
         </Text>
@@ -1684,7 +1708,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     },
     {
       title: '操作',
-      width: 160,
+      width: 150,
       align: 'center',
       className: 'action-col no-print',
       render: (_, record) => (
@@ -2113,15 +2137,15 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
       {/* 样式 */}
       <style jsx>{`
         .report-viewer-container {
-          background: #eeeee8;
+          background: #f5f5f0;
           min-height: 100vh;
           padding: 24px;
-          padding-right: 200px;
+          padding-right: 24px;
         }
 
-        /* ===== 核心：白色纸面用 ::before 绘制，内容可溢出 ===== */
+        /* ===== 核心：宽屏浏览布局，不再模拟A4纸面 ===== */
         .report-content {
-          max-width: 960px;
+          max-width: 1400px;
           margin: 0 auto;
           position: relative;
           overflow: visible;
@@ -2244,21 +2268,56 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
           font-weight: 500;
         }
 
-        /* ===== 所有表格容器层：透明 + 允许溢出 ===== */
+        /* ===== 所有表格容器层：透明 ===== */
         .vocabulary-table :global(.ant-table-wrapper),
         .vocabulary-table :global(.ant-table),
         .vocabulary-table :global(.ant-table-container),
         .vocabulary-table :global(.ant-table-content) {
           background: transparent !important;
           background-color: transparent !important;
-          overflow: visible !important;
         }
 
-        /* 表格比纸面宽，操作列溢出到右侧灰色区域 */
+        /* 表格：auto布局 */
         .vocabulary-table :global(table) {
-          min-width: calc(100% + 180px) !important;
+          width: 100% !important;
           table-layout: auto !important;
           background: transparent !important;
+        }
+
+        /* 所有内容列设置最小宽度，防止挤压变形 */
+        .vocabulary-table :global(.ant-table-cell) {
+          word-break: break-word !important;
+          overflow-wrap: break-word !important;
+          white-space: normal !important;
+        }
+
+        /* 序号列：固定窄宽 */
+        .vocabulary-table :global(.ant-table-thead > tr > th:first-child),
+        .vocabulary-table :global(.ant-table-tbody > tr > td:first-child) {
+          width: 50px !important;
+          min-width: 50px !important;
+          max-width: 50px !important;
+          text-align: center;
+        }
+
+        /* 单词列：保证最小宽度 */
+        .vocabulary-table :global(.ant-table-thead > tr > th:nth-child(2)),
+        .vocabulary-table :global(.ant-table-tbody > tr > td:nth-child(2)) {
+          min-width: 160px !important;
+          width: 18%;
+        }
+
+        /* 含义列：保证最小宽度 */
+        .vocabulary-table :global(.ant-table-thead > tr > th:nth-child(3)),
+        .vocabulary-table :global(.ant-table-tbody > tr > td:nth-child(3)) {
+          min-width: 200px !important;
+          width: 28%;
+        }
+
+        /* 例句列：保证最小宽度 */
+        .vocabulary-table :global(.ant-table-thead > tr > th:nth-child(4)),
+        .vocabulary-table :global(.ant-table-tbody > tr > td:nth-child(4)) {
+          min-width: 220px !important;
         }
 
         /* 所有行背景透明 */
@@ -2275,15 +2334,16 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
           background-color: #f8fafc !important;
           color: #374151 !important;
           font-weight: 600;
-          font-size: 13px;
+          font-size: 12px;
           border-bottom: 2px solid #e5e7eb;
-          padding: 12px 14px;
+          padding: 8px 10px;
         }
 
         .vocabulary-table :global(.ant-table-tbody > tr > td:not(.action-col)) {
           background-color: white !important;
           border-bottom: 1px solid #f0f0f0;
-          padding: 12px 14px;
+          padding: 8px 10px;
+          vertical-align: top;
         }
 
         .vocabulary-table :global(.ant-table-tbody > tr:nth-child(even) > td:not(.action-col)) {
@@ -2294,22 +2354,28 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
           background-color: #f0f9ff !important;
         }
 
-        /* === 操作列：透明背景，看到灰色底色 === */
+        /* === 操作列 === */
         .vocabulary-table :global(th.action-col),
         .vocabulary-table :global(td.action-col),
         .vocabulary-table :global(.ant-table-cell.action-col) {
-          background: transparent !important;
-          background-color: transparent !important;
-          border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+          background-color: white !important;
+          border-bottom: 1px solid #f0f0f0 !important;
           border-left: none !important;
-          padding-left: 24px !important;
+          padding-left: 16px !important;
           white-space: nowrap;
         }
         .vocabulary-table :global(th.action-col) {
+          background-color: #f8fafc !important;
           color: #9ca3af !important;
           font-size: 12px !important;
           font-weight: 500 !important;
-          border-bottom-color: rgba(0,0,0,0.08) !important;
+          border-bottom: 2px solid #e5e7eb !important;
+        }
+        .vocabulary-table :global(.ant-table-tbody > tr:nth-child(even) > td.action-col) {
+          background-color: #fafafa !important;
+        }
+        .vocabulary-table :global(.ant-table-tbody > tr:hover > td.action-col) {
+          background-color: #f0f9ff !important;
         }
 
         /* ===== 语法卡片 ===== */

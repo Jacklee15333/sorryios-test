@@ -113,7 +113,63 @@ router.get('/tasks/:id/report', authMiddleware, async (req, res) => {
     }
 
     // ============================================
-    // 步骤4: 字段映射函数（统一数据格式）
+    // 步骤4: 数据清洗辅助函数
+    // ============================================
+    
+    // 清洗音标：去除混入的词性信息，只保留纯音标
+    const cleanPhonetic = (phonetic) => {
+      if (!phonetic || typeof phonetic !== 'string') return '';
+      let cleaned = phonetic.trim();
+      
+      // 情况1: 音标中混入了词性标记，如 /'kompaund/ (n./adj.), /kəm'paund/ (v.)/
+      // 只提取第一个 /.../ 之间的内容
+      const phoneticMatches = cleaned.match(/\/[^\/]+\//g);
+      if (phoneticMatches && phoneticMatches.length > 0) {
+        // 过滤掉看起来像词性的内容 (如 只包含 n. v. adj. 等)
+        const validPhonetics = phoneticMatches.filter(p => {
+          const inner = p.replace(/\//g, '').trim();
+          // 如果内容全是词性标记（n. v. adj. adv. 等），则不是有效音标
+          return !/^[nvadjmodliru.\s\/,()]+$/i.test(inner) && inner.length > 1;
+        });
+        if (validPhonetics.length > 0) {
+          return validPhonetics[0]; // 只返回第一个有效音标
+        }
+      }
+      
+      // 情况2: 没有 /.../ 格式，直接返回清理后的内容
+      // 去除常见的词性标记
+      cleaned = cleaned.replace(/\s*\([^)]*\)\s*/g, '').trim();
+      return cleaned;
+    };
+    
+    // 清洗单词：去除混入的音标、词性、含义
+    const cleanWord = (word) => {
+      if (!word || typeof word !== 'string') return '';
+      let cleaned = word.trim();
+      // 如果单词中包含 / 或中文字符，可能是数据混乱
+      // 提取第一个空格或 / 之前的英文单词部分
+      const wordMatch = cleaned.match(/^([a-zA-Z][a-zA-Z\s-]*)/);
+      if (wordMatch) {
+        return wordMatch[1].trim();
+      }
+      return cleaned;
+    };
+    
+    // 从音标中提取混入的词性信息
+    const extractPosFromPhonetic = (phonetic, existingPos) => {
+      if (existingPos && existingPos.trim()) return existingPos;
+      if (!phonetic || typeof phonetic !== 'string') return '';
+      
+      // 匹配括号中的词性信息，如 (n./adj.) 或 (v.)
+      const posMatch = phonetic.match(/\(([^)]*(?:n\.|v\.|adj\.|adv\.|prep\.|conj\.|pron\.|modal)[^)]*)\)/i);
+      if (posMatch) {
+        return posMatch[1].trim();
+      }
+      return '';
+    };
+
+    // ============================================
+    // 步骤5: 字段映射函数（统一数据格式）
     // ============================================
     const normalizeItem = (data, itemType, sourceId, source) => {
       const normalized = {
@@ -126,10 +182,17 @@ router.get('/tasks/:id/report', authMiddleware, async (req, res) => {
 
       // 根据类型映射字段
       if (itemType === 'word') {
-        normalized.content = data.word || data.content || '';
-        normalized.word = data.word || data.content || '';  // 兼容字段
-        normalized.phonetic = data.phonetic || '';
-        normalized.pos = data.pos || data.wordClass || '';
+        const rawWord = data.word || data.content || '';
+        const rawPhonetic = data.phonetic || '';
+        const rawPos = data.pos || data.wordClass || '';
+        
+        // ✅ v4.1 数据清洗：修复音标混入词性、单词混入其他信息
+        const extractedPos = extractPosFromPhonetic(rawPhonetic, rawPos);
+        
+        normalized.content = cleanWord(rawWord);
+        normalized.word = cleanWord(rawWord);
+        normalized.phonetic = cleanPhonetic(rawPhonetic);
+        normalized.pos = extractedPos || rawPos;
         normalized.meaning = data.meaning || data.translation || '';
         normalized.example = data.example || '';
       } else if (itemType === 'phrase') {

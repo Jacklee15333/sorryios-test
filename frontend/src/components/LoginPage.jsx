@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -9,10 +9,42 @@ function LoginPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [nickname, setNickname] = useState('');
+    const [rememberPassword, setRememberPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [autoLogging, setAutoLogging] = useState(false);
 
     const { login, register } = useAuth();
+
+    // 初始化时检查是否有记住的账号密码
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('rememberedAccount');
+            if (saved) {
+                const { username: savedUser, password: savedPass } = JSON.parse(saved);
+                if (savedUser && savedPass) {
+                    const decodedPass = atob(savedPass);
+                    setUsername(savedUser);
+                    setPassword(decodedPass);
+                    setRememberPassword(true);
+                    // 自动登录
+                    setAutoLogging(true);
+                    setLoading(true);
+                    login(savedUser, decodedPass)
+                        .catch((err) => {
+                            setError('自动登录失败：' + err.message);
+                            setAutoLogging(false);
+                        })
+                        .finally(() => {
+                            setLoading(false);
+                            setAutoLogging(false);
+                        });
+                }
+            }
+        } catch (e) {
+            // 忽略解析错误
+        }
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -22,6 +54,15 @@ function LoginPage() {
         try {
             if (isLogin) {
                 await login(username, password);
+                // 登录成功后处理记住密码
+                if (rememberPassword) {
+                    localStorage.setItem('rememberedAccount', JSON.stringify({
+                        username,
+                        password: btoa(password) // base64 编码存储
+                    }));
+                } else {
+                    localStorage.removeItem('rememberedAccount');
+                }
             } else {
                 await register(username, password, nickname || username);
             }
@@ -38,8 +79,8 @@ function LoginPage() {
                 {/* Logo 区域 */}
                 <div className="text-center mb-8">
                     <div className="text-5xl mb-3">🤖</div>
-                    <h1 className="text-2xl font-bold text-gray-800">AI 智能笔记助手</h1>
-                    <p className="text-gray-500 text-sm mt-1">课堂笔记自动化处理系统</p>
+                    <h1 className="text-2xl font-bold text-gray-800">智学笔记</h1>
+                    <p className="text-gray-500 text-sm mt-1">AI 课堂笔记自动化处理系统</p>
                 </div>
 
                 {/* 登录/注册表单 */}
@@ -111,7 +152,7 @@ function LoginPage() {
                         )}
 
                         {/* 密码 */}
-                        <div className="mb-6">
+                        <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 密码
                             </label>
@@ -125,6 +166,27 @@ function LoginPage() {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                             />
                         </div>
+
+                        {/* 记住密码（仅登录模式显示） */}
+                        {isLogin && (
+                            <div className="mb-6 flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="rememberPassword"
+                                    checked={rememberPassword}
+                                    onChange={(e) => {
+                                        setRememberPassword(e.target.checked);
+                                        if (!e.target.checked) {
+                                            localStorage.removeItem('rememberedAccount');
+                                        }
+                                    }}
+                                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                                />
+                                <label htmlFor="rememberPassword" className="ml-2 text-sm text-gray-600 cursor-pointer select-none">
+                                    记住密码
+                                </label>
+                            </div>
+                        )}
 
                         {/* 提交按钮 */}
                         <button
