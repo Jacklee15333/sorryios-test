@@ -16,7 +16,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Table, Button, message, Spin, Empty, Typography, Space, Card, Modal, Checkbox, Input } from 'antd';
-import { CheckOutlined, CloseOutlined, ReloadOutlined, DownloadOutlined, FilePdfOutlined, FileWordOutlined, FileTextOutlined, SettingOutlined, SaveOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, ReloadOutlined, FilePdfOutlined, FileWordOutlined, SaveOutlined, SettingOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { Document, Packer, Paragraph, Table as DocxTable, TableCell, TableRow, TextRun, HeadingLevel, AlignmentType, WidthType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -591,7 +591,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     
     const wordsData = getWordsData();
     const phrasesData = getPhrasesData();
-    const grammarData = data.grammar || [];
+    const grammarData = (data.grammar || []).filter(item => !hiddenItems.has(`grammar-${item.id}`));
     const fileName = exportOptions.fileName || taskInfo?.customTitle || taskInfo?.title || '学习报告';
     
     if (wordsData.length === 0 && phrasesData.length === 0 && grammarData.length === 0) {
@@ -726,33 +726,33 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: #1f2937;
     background: #fff;
-    line-height: 1.65;
+    line-height: 1.6;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .page-container {
-    max-width: 750px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 32px 24px;
+    padding: 20px 16px;
   }
 
   /* ========== 顶部标题区 ========== */
   .report-header {
     text-align: center;
-    padding-bottom: 20px;
-    margin-bottom: 28px;
-    border-bottom: 3px solid #6366f1;
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #6366f1;
   }
   .report-header h1 {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 700;
     color: #111827;
     letter-spacing: 1px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
   .report-header .sub {
-    font-size: 13px;
+    font-size: 12px;
     color: #9ca3af;
   }
 
@@ -760,11 +760,11 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
   .section-header {
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     color: #fff;
-    padding: 10px 18px;
-    font-size: 15px;
+    padding: 8px 14px;
+    font-size: 13px;
     font-weight: 700;
-    border-radius: 6px;
-    margin: 32px 0 14px 0;
+    border-radius: 4px;
+    margin: 24px 0 10px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -775,71 +775,73 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
   .data-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 24px;
-    font-size: 12.5px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    table-layout: fixed;
   }
   .data-table thead tr {
     background: #f1f5f9;
   }
   .data-table th {
-    padding: 9px 10px;
+    padding: 7px 8px;
     text-align: left;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 11px;
     color: #475569;
     border-bottom: 2px solid #cbd5e1;
     white-space: nowrap;
   }
   .data-table td {
-    padding: 8px 10px;
+    padding: 6px 8px;
     border-bottom: 1px solid #e5e7eb;
     vertical-align: top;
-    line-height: 1.55;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   .row-even { background: #fff; }
   .row-odd  { background: #f8fafc; }
 
-  /* 列宽控制 */
-  .col-no      { width: 40px; text-align: center; color: #94a3b8; font-size: 12px; }
-  .col-word    { width: 28%; }
-  .col-meaning { width: 30%; }
-  .col-example { width: auto; color: #64748b; font-style: italic; font-size: 12px; }
+  /* 列宽控制 - 序号和单词紧凑，含义和例句宽敞 */
+  .col-no      { width: 30px; text-align: center; color: #94a3b8; font-size: 10px; }
+  .col-word    { width: 22%; }
+  .col-meaning { width: 32%; }
+  .col-example { width: auto; color: #64748b; font-style: italic; font-size: 11.5px; }
 
-  /* 单词文字 */
+  /* 单词文字 - 不加粗，紧凑 */
   .word-text {
-    font-weight: 600;
-    font-size: 13.5px;
+    font-weight: 500;
+    font-size: 12.5px;
     color: #1e293b;
-    margin-right: 6px;
+    margin-right: 4px;
   }
-  /* 音标 */
+  /* 音标 - 紧贴单词 */
   .phonetic {
     display: inline-block;
     font-family: Consolas, "Courier New", monospace;
-    font-size: 11px;
+    font-size: 10px;
     color: #6366f1;
     background: #eef2ff;
-    padding: 1px 7px;
-    border-radius: 3px;
+    padding: 0px 5px;
+    border-radius: 2px;
     border: 1px solid #c7d2fe;
     vertical-align: middle;
-    margin-top: -1px;
   }
   /* 词性标签 */
   .pos-tag {
     display: inline-block;
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 600;
     color: #059669;
     background: #d1fae5;
-    padding: 1px 6px;
-    border-radius: 3px;
+    padding: 0px 5px;
+    border-radius: 2px;
     border: 1px solid #a7f3d0;
-    margin-right: 5px;
+    margin-right: 4px;
     vertical-align: middle;
   }
   .meaning-text {
-    font-size: 12.5px;
+    font-size: 12px;
     color: #1f2937;
   }
 
@@ -847,24 +849,24 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
   .grammar-card {
     border: 1px solid #e2e8f0;
     border-left: 4px solid #8b5cf6;
-    border-radius: 6px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
+    border-radius: 5px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
     background: #fefefe;
     page-break-inside: avoid;
   }
   .grammar-title {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
     color: #1e293b;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
     border-bottom: 1px dashed #e5e7eb;
   }
   .grammar-row {
-    margin: 5px 0;
-    font-size: 12.5px;
-    line-height: 1.65;
+    margin: 4px 0;
+    font-size: 12px;
+    line-height: 1.55;
   }
   .g-label {
     color: #6b7280;
@@ -877,10 +879,10 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
   /* ========== 页脚 ========== */
   .page-footer {
     text-align: center;
-    margin-top: 40px;
-    padding-top: 16px;
+    margin-top: 30px;
+    padding-top: 12px;
     border-top: 1px solid #e5e7eb;
-    font-size: 11px;
+    font-size: 10px;
     color: #9ca3af;
   }
 
@@ -890,7 +892,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     top: 0; left: 0; right: 0;
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     color: #fff;
-    padding: 12px 24px;
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -898,23 +900,22 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     box-shadow: 0 2px 12px rgba(0,0,0,0.15);
   }
   .print-toolbar .tips {
-    font-size: 13px;
+    font-size: 12px;
     opacity: 0.9;
   }
   .print-toolbar button {
     background: #fff;
     color: #6366f1;
     border: none;
-    padding: 8px 24px;
-    border-radius: 6px;
-    font-size: 14px;
+    padding: 7px 20px;
+    border-radius: 5px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
   }
   .print-toolbar button:hover {
     background: #eef2ff;
-    transform: scale(1.02);
   }
 
   /* ========== 打印样式 ========== */
@@ -925,7 +926,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     
     @page {
       size: A4;
-      margin: 15mm 12mm;
+      margin: 10mm 8mm;
     }
 
     .data-table tr {
@@ -950,7 +951,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
   <button onclick="window.print()">🖨️ 保存为 PDF</button>
 </div>
 
-<div class="page-container" style="margin-top: 64px;">
+<div class="page-container" style="margin-top: 52px;">
 
   <div class="report-header">
     <h1>${esc(fileName)}</h1>
@@ -1241,63 +1242,134 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
 
       const wordsData = getWordsData();
       const phrasesData = getPhrasesData();
-      const vocabularyData = [...wordsData, ...phrasesData]; // 为了兼容原有导出逻辑
-      const grammarData = data.grammar || [];
+      const grammarData = (data.grammar || []).filter(item => !hiddenItems.has(`grammar-${item.id}`));
       const sections = [];
 
       // 标题
       sections.push(
         new Paragraph({
-          text: exportOptions.fileName,
+          children: [
+            new TextRun({
+              text: exportOptions.fileName,
+              bold: true,
+              size: 36,
+              color: '1a1a1a',
+              font: 'Microsoft YaHei'
+            })
+          ],
           heading: HeadingLevel.HEADING_1,
-          spacing: { after: 400 }
+          spacing: { after: 200 },
+          alignment: AlignmentType.CENTER
         })
       );
 
-      // 词汇部分
-      if (exportOptions.includeVocabulary && vocabularyData.length > 0) {
+      // 日期
+      sections.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `生成时间：${new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+              size: 20,
+              color: '9ca3af',
+              font: 'Microsoft YaHei'
+            })
+          ],
+          spacing: { after: 400 },
+          alignment: AlignmentType.CENTER
+        })
+      );
+
+      // ===== 单词部分 =====
+      if (exportOptions.includeVocabulary && wordsData.length > 0) {
         sections.push(
           new Paragraph({
-            text: `📚 词汇部分 (共 ${vocabularyData.length} 项)`,
+            children: [
+              new TextRun({ text: `📚 单词部分`, bold: true, size: 28, color: '1e40af', font: 'Microsoft YaHei' }),
+              new TextRun({ text: `  (共 ${wordsData.length} 项)`, size: 20, color: '6b7280', font: 'Microsoft YaHei' })
+            ],
             heading: HeadingLevel.HEADING_2,
-            spacing: { before: 400, after: 200 }
+            spacing: { before: 400, after: 200 },
+            border: { bottom: { color: '3b82f6', size: 6, style: 'single' } }
           })
         );
 
-        // 创建词汇表格
-        const tableRows = [
+        const wordRows = [
           new TableRow({
+            tableHeader: true,
             children: [
-              new TableCell({ children: [new Paragraph({ text: '#', bold: true })] }),
-              new TableCell({ children: [new Paragraph({ text: '类型', bold: true })] }),
-              new TableCell({ children: [new Paragraph({ text: '内容', bold: true })] }),
-              new TableCell({ children: [new Paragraph({ text: '词性', bold: true })] }),
-              new TableCell({ children: [new Paragraph({ text: '含义', bold: true })] }),
-              new TableCell({ children: [new Paragraph({ text: '例句', bold: true })] })
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '#', bold: true, size: 18, color: 'ffffff' })], alignment: AlignmentType.CENTER })], width: { size: 6, type: WidthType.PERCENTAGE }, shading: { fill: '4f46e5' } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '单词', bold: true, size: 18, color: 'ffffff' })] })], width: { size: 18, type: WidthType.PERCENTAGE }, shading: { fill: '4f46e5' } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '音标', bold: true, size: 18, color: 'ffffff' })] })], width: { size: 14, type: WidthType.PERCENTAGE }, shading: { fill: '4f46e5' } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '词性', bold: true, size: 18, color: 'ffffff' })], alignment: AlignmentType.CENTER })], width: { size: 10, type: WidthType.PERCENTAGE }, shading: { fill: '4f46e5' } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '含义', bold: true, size: 18, color: 'ffffff' })] })], width: { size: 24, type: WidthType.PERCENTAGE }, shading: { fill: '4f46e5' } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '例句', bold: true, size: 18, color: 'ffffff' })] })], width: { size: 28, type: WidthType.PERCENTAGE }, shading: { fill: '4f46e5' } }),
             ]
           })
         ];
 
-        vocabularyData.forEach((item, index) => {
-          tableRows.push(
+        wordsData.forEach((item, index) => {
+          const bgFill = index % 2 === 0 ? 'ffffff' : 'f8fafc';
+          wordRows.push(
             new TableRow({
               children: [
-                new TableCell({ children: [new Paragraph((index + 1).toString())] }),
-                new TableCell({ children: [new Paragraph(item.type)] }),
-                new TableCell({ children: [new Paragraph(`${item.content} ${item.phonetic || ''}`)] }),
-                new TableCell({ children: [new Paragraph(item.partOfSpeech || '')] }),
-                new TableCell({ children: [new Paragraph(item.meaning || '')] }),
-                new TableCell({ children: [new Paragraph(item.example || '')] })
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${index + 1}`, size: 18, color: '6b7280' })], alignment: AlignmentType.CENTER })], shading: { fill: bgFill } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.word || item.content || '', bold: true, size: 20, font: 'Microsoft YaHei' })] })], shading: { fill: bgFill } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.phonetic ? formatPhonetic(item.phonetic) : '', size: 18, color: '4f46e5', font: 'Consolas' })] })], shading: { fill: bgFill } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.pos || '', size: 18, color: '059669' })], alignment: AlignmentType.CENTER })], shading: { fill: bgFill } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.meaning || '', size: 18, font: 'Microsoft YaHei' })] })], shading: { fill: bgFill } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.example || '', size: 16, italics: true, color: '6b7280' })] })], shading: { fill: bgFill } }),
               ]
             })
           );
         });
 
         sections.push(
-          new DocxTable({
-            rows: tableRows,
-            width: { size: 100, type: WidthType.PERCENTAGE }
+          new DocxTable({ rows: wordRows, width: { size: 100, type: WidthType.PERCENTAGE } })
+        );
+      }
+
+      // ===== 短语部分 =====
+      if (exportOptions.includeVocabulary && phrasesData.length > 0) {
+        sections.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `📝 短语和句型部分`, bold: true, size: 28, color: '7c3aed', font: 'Microsoft YaHei' }),
+              new TextRun({ text: `  (共 ${phrasesData.length} 项)`, size: 20, color: '6b7280', font: 'Microsoft YaHei' })
+            ],
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 500, after: 200 },
+            border: { bottom: { color: '8b5cf6', size: 6, style: 'single' } }
           })
+        );
+
+        const phraseRows = [
+          new TableRow({
+            tableHeader: true,
+            children: [
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '#', bold: true, size: 18, color: 'ffffff' })], alignment: AlignmentType.CENTER })], width: { size: 6, type: WidthType.PERCENTAGE }, shading: { fill: '7c3aed' } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '短语/句型', bold: true, size: 18, color: 'ffffff' })] })], width: { size: 30, type: WidthType.PERCENTAGE }, shading: { fill: '7c3aed' } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '含义', bold: true, size: 18, color: 'ffffff' })] })], width: { size: 30, type: WidthType.PERCENTAGE }, shading: { fill: '7c3aed' } }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '例句', bold: true, size: 18, color: 'ffffff' })] })], width: { size: 34, type: WidthType.PERCENTAGE }, shading: { fill: '7c3aed' } }),
+            ]
+          })
+        ];
+
+        phrasesData.forEach((item, index) => {
+          const bgFill = index % 2 === 0 ? 'ffffff' : 'f8fafc';
+          phraseRows.push(
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${index + 1}`, size: 18, color: '6b7280' })], alignment: AlignmentType.CENTER })], shading: { fill: bgFill } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.content || item.phrase || item.pattern || '', bold: true, size: 20, font: 'Microsoft YaHei' })] })], shading: { fill: bgFill } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.meaning || '', size: 18, font: 'Microsoft YaHei' })] })], shading: { fill: bgFill } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: item.example || '', size: 16, italics: true, color: '6b7280' })] })], shading: { fill: bgFill } }),
+              ]
+            })
+          );
+        });
+
+        sections.push(
+          new DocxTable({ rows: phraseRows, width: { size: 100, type: WidthType.PERCENTAGE } })
         );
       }
 
@@ -1439,12 +1511,11 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     }
   };
 
-  // 词汇表格列定义
   // 单词表格列定义
   const wordColumns = [
     {
       title: '序号',
-      width: 60,
+      width: 55,
       align: 'center',
       render: (_, __, index) => (
         <Text style={{ fontSize: '14px', color: '#6b7280' }}>
@@ -1454,46 +1525,31 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     },
     {
       title: '单词',
-      width: 240,
+      width: '22%',
       render: (_, record) => {
-        // 🔧 调试：查看record结构
-        if (!record.word) {
-          console.log('⚠️ 单词字段为空，record内容:', record);
-        }
-        
         return (
           <div style={{ 
             display: 'flex', 
             alignItems: 'center',
-            gap: '12px'
+            gap: '10px'
           }}>
-            {/* 单词（固定宽度，确保对齐） */}
-            <div style={{
-              minWidth: '120px',
-              maxWidth: '120px'
+            <Text style={{ 
+              fontSize: '15px', 
+              fontWeight: 600, 
+              color: '#1a1a1a',
+              letterSpacing: '0.3px',
             }}>
-              <Text style={{ 
-                fontSize: '16px', 
-                fontWeight: 600, 
-                color: '#1a1a1a',
-                letterSpacing: '0.3px',
-                wordBreak: 'break-word'
-              }}>
-                {record.word || record.content || ''}
-              </Text>
-            </div>
-            
-            {/* 音标标签（和词性标签风格一致） */}
+              {record.word || record.content || ''}
+            </Text>
             {record.phonetic && (
               <span style={{ 
                 color: '#4f46e5',
                 fontSize: '12px',
                 fontFamily: 'Consolas, "Courier New", monospace',
                 backgroundColor: '#eef2ff',
-                padding: '3px 10px',
+                padding: '2px 8px',
                 borderRadius: '4px',
                 border: '1px solid #c7d2fe',
-                display: 'inline-block',
                 whiteSpace: 'nowrap',
                 fontWeight: 500
               }}>
@@ -1506,16 +1562,14 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     },
     {
       title: '含义',
-      dataIndex: 'meaning',
-      width: 300,
-      render: (meaning, record) => (
+      width: '28%',
+      render: (_, record) => (
         <div style={{ 
           display: 'flex', 
           alignItems: 'center',
-          gap: '10px',
+          gap: '8px',
           flexWrap: 'wrap'
         }}>
-          {/* 词性标签（横向在前） */}
           {record.pos && (
             <span style={{ 
               color: '#059669',
@@ -1525,52 +1579,42 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
               padding: '2px 8px',
               borderRadius: '4px',
               border: '1px solid #a7f3d0',
-              display: 'inline-block',
               flexShrink: 0
             }}>
               {record.pos}
             </span>
           )}
-          
-          {/* 含义（横向紧跟） */}
-          <Text style={{ 
-            fontSize: '14px', 
-            color: '#1a1a1a',
-            flex: 1
-          }}>
-            {meaning}
+          <Text style={{ fontSize: '14px', color: '#1a1a1a' }}>
+            {record.meaning}
           </Text>
         </div>
       )
     },
     {
       title: '例句',
-      dataIndex: 'example',
-      width: 300,
-      render: (example) => example && (
+      render: (_, record) => record.example && (
         <Text style={{ 
           fontSize: '13px', 
           color: '#6b7280',
           fontStyle: 'italic'
         }}>
-          {example}
+          {record.example}
         </Text>
       )
     },
     {
       title: '操作',
-      width: 180,
+      width: 160,
       align: 'center',
-      fixed: 'right',
-      className: 'action-buttons',
+      className: 'action-col no-print',
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="small">
           <Button
             type="text"
             size="small"
             icon={<CheckOutlined />}
             onClick={() => handleConfirm(record)}
-            style={{ color: '#10b981', minWidth: '75px' }}
+            style={{ color: '#10b981' }}
           >
             已学会
           </Button>
@@ -1580,7 +1624,6 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
             danger
             icon={<CloseOutlined />}
             onClick={() => handleReject(record)}
-            style={{ minWidth: '85px' }}
           >
             识别错误
           </Button>
@@ -1593,7 +1636,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
   const phraseColumns = [
     {
       title: '序号',
-      width: 60,
+      width: 55,
       align: 'center',
       render: (_, __, index) => (
         <Text style={{ fontSize: '14px', color: '#6b7280' }}>
@@ -1603,23 +1646,15 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     },
     {
       title: '短语/句型',
-      width: 300,
+      width: '28%',
       render: (_, record) => {
-        // 🔧 修复：使用 content 字段
         const content = record.content || record.phrase || record.pattern || '';
-        
-        // 调试空白内容
-        if (!content) {
-          console.log('⚠️ 短语/句型字段为空，record内容:', record);
-        }
-        
         return (
           <Text style={{ 
-            fontSize: '16px', 
+            fontSize: '15px', 
             fontWeight: 600, 
             color: '#1a1a1a',
             letterSpacing: '0.3px',
-            wordBreak: 'break-word'
           }}>
             {content}
           </Text>
@@ -1628,45 +1663,38 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
     },
     {
       title: '含义',
-      dataIndex: 'meaning',
-      width: 350,
-      render: (meaning) => (
-        <Text style={{ 
-          fontSize: '14px', 
-          color: '#1a1a1a'
-        }}>
-          {meaning}
+      width: '28%',
+      render: (_, record) => (
+        <Text style={{ fontSize: '14px', color: '#1a1a1a' }}>
+          {record.meaning}
         </Text>
       )
     },
     {
       title: '例句',
-      dataIndex: 'example',
-      width: 400,
-      render: (example) => example && (
+      render: (_, record) => record.example && (
         <Text style={{ 
           fontSize: '13px', 
           color: '#6b7280',
           fontStyle: 'italic'
         }}>
-          {example}
+          {record.example}
         </Text>
       )
     },
     {
       title: '操作',
-      width: 180,
+      width: 160,
       align: 'center',
-      fixed: 'right',
-      className: 'action-buttons',
+      className: 'action-col no-print',
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="small">
           <Button
             type="text"
             size="small"
             icon={<CheckOutlined />}
             onClick={() => handleConfirm(record)}
-            style={{ color: '#10b981', minWidth: '75px' }}
+            style={{ color: '#10b981' }}
           >
             已学会
           </Button>
@@ -1676,7 +1704,6 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
             danger
             icon={<CloseOutlined />}
             onClick={() => handleReject(record)}
-            style={{ minWidth: '85px' }}
           >
             识别错误
           </Button>
@@ -1800,13 +1827,13 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
           </div>
           
           {/* 操作按钮 */}
-          <Space direction="vertical" size="small" className="action-buttons" style={{ marginLeft: '16px' }}>
+          <Space direction="vertical" size="small" className="no-print" style={{ marginLeft: '16px', paddingLeft: '16px', borderLeft: '2px solid #e5e7eb' }}>
             <Button
               type="text"
               size="small"
               icon={<CheckOutlined />}
               onClick={() => handleGrammarConfirm(grammar)}
-              style={{ color: '#10b981', padding: '4px 8px', minWidth: '80px' }}
+              style={{ color: '#10b981', padding: '4px 8px' }}
             >
               已学会
             </Button>
@@ -1816,7 +1843,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
               danger
               icon={<CloseOutlined />}
               onClick={() => handleGrammarReject(grammar)}
-              style={{ padding: '4px 8px', minWidth: '80px' }}
+              style={{ padding: '4px 8px' }}
             >
               识别错误
             </Button>
@@ -1915,70 +1942,18 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
           <div className="toolbar-right no-print">
             <Space size="middle">
               <Button
-                icon={<SettingOutlined />}
-                onClick={() => {
-                  console.clear();
-                  console.log('========== 🔍 手动诊断报告 ==========');
-                  const words = getWordsData();
-                  const phrases = getPhrasesData();
-                  const table = document.querySelector('.ant-table');
-                  const plugins = document.querySelectorAll('iframe, [class*="extension"], [class*="plugin"]');
-                  
-                  console.log('📊 数据:', {
-                    单词: words.length,
-                    短语和句型: phrases.length,
-                    语法: data.grammar?.length || 0
-                  });
-                  
-                  if (table) {
-                    const headers = table.querySelectorAll('thead th');
-                    const rows = table.querySelectorAll('tbody tr');
-                    console.log('📋 表格:', {
-                      列数: headers.length,
-                      行数: rows.length,
-                      宽度: table.offsetWidth + 'px'
-                    });
-                    
-                    console.log('📐 各列宽度:');
-                    headers.forEach((th, i) => {
-                      console.log(`  列${i+1} (${th.textContent.trim()}): ${th.offsetWidth}px`);
-                    });
-                  }
-                  
-                  console.log('🔌 插件检测:', plugins.length + '个');
-                  if (plugins.length > 0) {
-                    console.warn('⚠️ 建议使用无痕模式（Ctrl+Shift+N）');
-                  }
-                  
-                  console.log('========================================');
-                  message.success('诊断信息已输出到控制台（按F12查看）');
-                }}
-                className="export-btn"
-                style={{ background: 'rgba(255, 255, 255, 0.15)' }}
-              >
-                诊断
-              </Button>
-              <Button
                 icon={<FilePdfOutlined />}
                 onClick={() => showExportModal('pdf')}
                 loading={exporting}
-                className="export-btn export-btn-pdf"
+                className="export-btn"
               >
                 导出 PDF
-              </Button>
-              <Button
-                icon={<FileTextOutlined />}
-                onClick={() => showExportModal('html')}
-                loading={exporting}
-                className="export-btn export-btn-html"
-              >
-                导出 HTML
               </Button>
               <Button
                 icon={<FileWordOutlined />}
                 onClick={() => showExportModal('word')}
                 loading={exporting}
-                className="export-btn export-btn-word"
+                className="export-btn"
               >
                 导出 Word
               </Button>
@@ -1986,14 +1961,9 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
                 icon={<SaveOutlined />}
                 onClick={handleSaveReport}
                 loading={saving}
-                className="export-btn"
-                style={{ 
-                  background: hiddenItems.size > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.15)',
-                  borderColor: hiddenItems.size > 0 ? '#10b981' : undefined,
-                  color: hiddenItems.size > 0 ? '#065f46' : undefined
-                }}
+                className="save-report-btn"
               >
-                保存报告{hiddenItems.size > 0 ? ` (已修改${hiddenItems.size}项)` : ''}
+                {hiddenItems.size > 0 ? `保存报告 (${hiddenItems.size}项已修改)` : '保存报告'}
               </Button>
               <Button
                 icon={<ReloadOutlined />}
@@ -2022,7 +1992,6 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
               columns={wordColumns}
               dataSource={wordsData}
               pagination={false}
-              scroll={{ x: 1200 }}
               className="vocabulary-table"
             />
           ) : (
@@ -2049,7 +2018,6 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
               columns={phraseColumns}
               dataSource={phrasesData}
               pagination={false}
-              scroll={{ x: 1200 }}
               className="vocabulary-table"
             />
           ) : (
@@ -2145,27 +2113,47 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
       {/* 样式 */}
       <style jsx>{`
         .report-viewer-container {
-          background: #fafaf9;
+          background: #eeeee8;
           min-height: 100vh;
           padding: 24px;
+          padding-right: 200px;
         }
 
+        /* ===== 核心：白色纸面用 ::before 绘制，内容可溢出 ===== */
         .report-content {
-          max-width: 1400px;
+          max-width: 960px;
           margin: 0 auto;
+          position: relative;
+          overflow: visible;
+          background: none;
+        }
+
+        .report-content::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
           background: white;
           border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-          overflow: hidden;
+          box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        .report-content > * {
+          position: relative;
+          z-index: 1;
         }
 
         .toolbar {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 24px 32px;
+          padding: 20px 28px;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-bottom: 1px solid #e5e7eb;
+          border-radius: 12px 12px 0 0;
         }
 
         .toolbar-left h2 {
@@ -2175,7 +2163,7 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
 
         .toolbar-right {
           display: flex;
-          gap: 12px;
+          gap: 10px;
         }
 
         .export-btn {
@@ -2185,36 +2173,49 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
           backdrop-filter: blur(10px);
           transition: all 0.3s ease;
         }
-
         .export-btn:hover {
-          background: rgba(255, 255, 255, 0.25);
+          background: rgba(255, 255, 255, 0.3);
           border-color: white;
           color: white;
-          transform: translateY(-2px);
+          transform: translateY(-1px);
+        }
+
+        .save-report-btn {
+          background: white !important;
+          color: #059669 !important;
+          border: 2px solid #10b981 !important;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+        .save-report-btn:hover {
+          background: #ecfdf5 !important;
+          color: #047857 !important;
+          border-color: #059669 !important;
+          transform: translateY(-1px);
         }
 
         .refresh-btn {
-          background: white;
+          background: rgba(255, 255, 255, 0.9);
           color: #667eea;
           border: none;
           transition: all 0.3s ease;
         }
-
         .refresh-btn:hover {
-          background: #f0f9ff;
+          background: white;
           color: #667eea;
-          transform: translateY(-2px);
+          transform: translateY(-1px);
         }
 
         .section {
-          padding: 32px;
+          padding: 28px 28px;
+          overflow: visible;
         }
 
         .section-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 24px;
+          margin-bottom: 20px;
         }
 
         .section-title {
@@ -2222,7 +2223,6 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
           font-size: 20px !important;
           font-weight: 600 !important;
           padding-left: 12px;
-          position: relative;
         }
 
         .vocabulary-title {
@@ -2244,93 +2244,92 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
           font-weight: 500;
         }
 
-        /* 词汇表格样式 */
-        .vocabulary-table :global(.ant-table) {
-          background: transparent;
+        /* ===== 所有表格容器层：透明 + 允许溢出 ===== */
+        .vocabulary-table :global(.ant-table-wrapper),
+        .vocabulary-table :global(.ant-table),
+        .vocabulary-table :global(.ant-table-container),
+        .vocabulary-table :global(.ant-table-content) {
+          background: transparent !important;
+          background-color: transparent !important;
+          overflow: visible !important;
         }
 
-        .vocabulary-table :global(.ant-table-thead > tr > th) {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white !important;
+        /* 表格比纸面宽，操作列溢出到右侧灰色区域 */
+        .vocabulary-table :global(table) {
+          min-width: calc(100% + 180px) !important;
+          table-layout: auto !important;
+          background: transparent !important;
+        }
+
+        /* 所有行背景透明 */
+        .vocabulary-table :global(.ant-table-thead > tr),
+        .vocabulary-table :global(.ant-table-tbody > tr) {
+          background: transparent !important;
+        }
+        .vocabulary-table :global(.ant-table-tbody > tr:hover > td) {
+          background: transparent !important;
+        }
+
+        /* === 内容列（非操作列）：白色背景 === */
+        .vocabulary-table :global(.ant-table-thead > tr > th:not(.action-col)) {
+          background-color: #f8fafc !important;
+          color: #374151 !important;
           font-weight: 600;
           font-size: 13px;
-          border: none;
-          padding: 14px 16px;
+          border-bottom: 2px solid #e5e7eb;
+          padding: 12px 14px;
         }
 
-        .vocabulary-table :global(.ant-table-tbody > tr) {
-          transition: all 0.2s ease;
+        .vocabulary-table :global(.ant-table-tbody > tr > td:not(.action-col)) {
+          background-color: white !important;
+          border-bottom: 1px solid #f0f0f0;
+          padding: 12px 14px;
         }
 
-        .vocabulary-table :global(.ant-table-tbody > tr:nth-child(even)) {
-          background: #fafafa;
+        .vocabulary-table :global(.ant-table-tbody > tr:nth-child(even) > td:not(.action-col)) {
+          background-color: #fafafa !important;
         }
 
-        .vocabulary-table :global(.ant-table-tbody > tr:hover) {
-          background: #f0f9ff !important;
-          transform: translateX(4px);
+        .vocabulary-table :global(.ant-table-tbody > tr:hover > td:not(.action-col)) {
+          background-color: #f0f9ff !important;
         }
 
-        .vocabulary-table :global(.ant-table-tbody > tr > td) {
-          border-bottom: 1px solid #f3f4f6;
-          padding: 14px 16px;
+        /* === 操作列：透明背景，看到灰色底色 === */
+        .vocabulary-table :global(th.action-col),
+        .vocabulary-table :global(td.action-col),
+        .vocabulary-table :global(.ant-table-cell.action-col) {
+          background: transparent !important;
+          background-color: transparent !important;
+          border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+          border-left: none !important;
+          padding-left: 24px !important;
+          white-space: nowrap;
+        }
+        .vocabulary-table :global(th.action-col) {
+          color: #9ca3af !important;
+          font-size: 12px !important;
+          font-weight: 500 !important;
+          border-bottom-color: rgba(0,0,0,0.08) !important;
         }
 
-        .row-number {
-          width: 28px;
-          height: 28px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .type-badge {
-          display: inline-block;
-          padding: 4px 10px;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .type-单词 {
-          background: #dbeafe;
-          color: #1e40af;
-        }
-
-        .type-短语 {
-          background: #fce7f3;
-          color: #be185d;
-        }
-
-        .type-句型 {
-          background: #d1fae5;
-          color: #065f46;
-        }
-
-        /* 语法卡片样式 */
+        /* ===== 语法卡片 ===== */
         .grammar-cards {
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 16px;
         }
 
         .grammar-card {
           border: 1px solid #e5e7eb;
           border-left: 5px solid #8b5cf6;
           border-radius: 10px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-          transition: all 0.3s ease;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+          transition: all 0.2s ease;
           background: white;
         }
 
         .grammar-card:hover {
-          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
-          transform: translateY(-2px);
+          box-shadow: 0 3px 10px rgba(139, 92, 246, 0.12);
         }
 
         .grammar-number {
@@ -2364,89 +2363,24 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
           border-radius: 4px;
         }
 
-        .grammar-field {
-          margin: 10px 0;
-          font-size: 14px;
-          line-height: 1.6;
-        }
+        .grammar-field { margin: 10px 0; font-size: 14px; line-height: 1.6; }
+        .field-label { color: #6b7280; font-weight: 500; margin-right: 6px; }
+        .field-content { color: #1a1a1a; }
+        .highlight-structure { background: #fef3c7; padding: 2px 6px; border-radius: 3px; font-family: 'Courier New', monospace; font-weight: 500; }
+        .example-text { color: #6b7280; font-style: italic; }
+        .mistake-wrong { color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 3px; }
+        .mistake-correct { color: #059669; background: #d1fae5; padding: 2px 6px; border-radius: 3px; }
+        .subtopics-container { margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+        .subtopic-item { padding: 16px 0; border-bottom: 1px solid #f3f4f6; }
+        .subtopic-item:last-child { border-bottom: none; }
+        .subtopic-title { font-weight: 600; color: #374151; margin-bottom: 10px; font-size: 15px; display: flex; align-items: flex-start; gap: 8px; }
+        .subtopic-field { font-size: 13px; color: #4b5563; margin: 8px 0; margin-left: 24px; line-height: 1.6; }
 
-        .field-label {
-          color: #6b7280;
-          font-weight: 500;
-          margin-right: 6px;
-        }
-
-        .field-content {
-          color: #1a1a1a;
-        }
-
-        .highlight-structure {
-          background: #fef3c7;
-          padding: 2px 6px;
-          border-radius: 3px;
-          font-family: 'Courier New', monospace;
-          font-weight: 500;
-        }
-
-        .example-text {
-          color: #6b7280;
-          font-style: italic;
-        }
-
-        .mistake-wrong {
-          color: #dc2626;
-          background: #fee2e2;
-          padding: 2px 6px;
-          border-radius: 3px;
-        }
-
-        .mistake-correct {
-          color: #059669;
-          background: #d1fae5;
-          padding: 2px 6px;
-          border-radius: 3px;
-        }
-
-        .subtopics-container {
-          margin-top: 20px;
-          padding-top: 20px;
-          border-top: 1px solid #e5e7eb;
-        }
-
-        .subtopic-item {
-          padding: 16px 0;
-          border-bottom: 1px solid #f3f4f6;
-        }
-
-        .subtopic-item:last-child {
-          border-bottom: none;
-        }
-
-        .subtopic-title {
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 10px;
-          font-size: 15px;
-          display: flex;
-          align-items: flex-start;
-          gap: 8px;
-        }
-
-        .subtopic-field {
-          font-size: 13px;
-          color: #4b5563;
-          margin: 8px 0;
-          margin-left: 24px;
-          line-height: 1.6;
-        }
-
-        /* 🖨️ 打印样式优化 - 强制分页版 */
+        /* ===== 打印/导出 ===== */
         @media print {
-          /* ========== 基础设置 ========== */
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            color-adjust: exact !important;
             box-sizing: border-box !important;
           }
 
@@ -2455,238 +2389,67 @@ const ReportViewer = ({ taskId, initialHiddenItems, onSaved }) => {
             margin: 0 !important;
             padding: 0 !important;
             width: 210mm !important;
-            height: auto !important;
           }
 
-          @page {
-            margin: 8mm;
-            size: A4 portrait;
-          }
+          @page { margin: 10mm; size: A4 portrait; }
 
-          /* ========== 隐藏不需要的元素 ========== */
-          aside,
-          .toolbar-right,
-          .no-print,
-          .action-buttons,
-          button,
-          .ant-btn,
-          iframe,
-          embed,
-          object,
-          [class*="extension"],
-          [class*="plugin"] {
+          .no-print, .toolbar-right, .action-col, aside, iframe, embed, [class*="extension"], [class*="plugin"] {
             display: none !important;
           }
 
-          /* ========== 容器优化 ========== */
-          .no-print-bg,
-          .report-viewer-container,
-          .report-content {
+          .report-viewer-container {
             background: white !important;
+            padding: 0 !important;
+          }
+
+          .report-content {
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            height: auto !important;
-            overflow: visible !important;
+          }
+
+          .report-content::before {
+            display: none !important;
           }
 
           .toolbar {
             background: white !important;
-            background-image: none !important;
             border-bottom: 1px solid #e5e7eb !important;
             padding: 6px 8px !important;
+            border-radius: 0 !important;
           }
+          .toolbar-left h2 { color: #1a1a1a !important; font-size: 14px !important; }
+          .section { padding: 8px 4px !important; overflow: visible !important; }
+          .section-header { break-after: avoid !important; }
 
-          .toolbar-left h2 {
-            color: #1a1a1a !important;
-            font-size: 14px !important;
-          }
-
-          .section {
-            padding: 6px 4px !important;
-            break-inside: auto !important;
-            page-break-inside: auto !important;
-          }
-
-          .section-header {
-            break-after: avoid !important;
-            page-break-after: avoid !important;
-          }
-
-          /* ========== 表格优化 - 关键！ ========== */
-          
-          /* 移除Ant Design的虚拟滚动 */
-          .ant-table-body {
-            overflow: visible !important;
-            max-height: none !important;
-            height: auto !important;
-          }
-
-          .vocabulary-table,
-          .ant-table-wrapper {
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow: visible !important;
-            height: auto !important;
-          }
-
-          .ant-table,
-          .ant-table-container,
-          .ant-table-content {
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow: visible !important;
-            height: auto !important;
-          }
-
-          /* 表格布局 */
-          .ant-table table {
+          .vocabulary-table :global(table) {
+            min-width: 100% !important;
             width: 100% !important;
             table-layout: fixed !important;
-            border-collapse: collapse !important;
           }
 
-          /* 确保thead和tbody正常显示 */
-          .ant-table-thead,
-          .ant-table-tbody {
-            display: table-row-group !important;
-          }
-
-          .ant-table-thead > tr,
-          .ant-table-tbody > tr {
-            display: table-row !important;
-            break-inside: avoid !important;
-            page-break-inside: avoid !important;
-          }
-
-          /* 强制所有单元格显示 */
-          .ant-table-thead > tr > th,
-          .ant-table-tbody > tr > td {
-            display: table-cell !important;
-            visibility: visible !important;
-            padding: 3px 2px !important;
-            font-size: 8px !important;
-            line-height: 1.2 !important;
+          .vocabulary-table :global(.ant-table-thead > tr > th:not(.action-col)),
+          .vocabulary-table :global(.ant-table-tbody > tr > td:not(.action-col)) {
+            padding: 4px 6px !important;
+            font-size: 10px !important;
+            line-height: 1.3 !important;
             border: 1px solid #e5e7eb !important;
-            word-break: break-word !important;
-            overflow: visible !important;
           }
 
-          /* 列宽分配 */
-          .ant-table-thead > tr > th:nth-child(1),
-          .ant-table-tbody > tr > td:nth-child(1) {
-            width: 4% !important;
-          }
+          .ant-table-tbody > tr { break-inside: avoid !important; }
+          .ant-table-cell-fix-left, .ant-table-cell-fix-right { position: static !important; }
 
-          .ant-table-thead > tr > th:nth-child(2),
-          .ant-table-tbody > tr > td:nth-child(2) {
-            width: 7% !important;
-          }
-
-          .ant-table-thead > tr > th:nth-child(3),
-          .ant-table-tbody > tr > td:nth-child(3) {
-            width: 18% !important;
-          }
-
-          .ant-table-thead > tr > th:nth-child(4),
-          .ant-table-tbody > tr > td:nth-child(4) {
-            width: 7% !important;
-          }
-
-          .ant-table-thead > tr > th:nth-child(5),
-          .ant-table-tbody > tr > td:nth-child(5) {
-            width: 20% !important;
-          }
-
-          .ant-table-thead > tr > th:nth-child(6),
-          .ant-table-tbody > tr > td:nth-child(6) {
-            width: 44% !important;
-          }
-
-          /* 隐藏操作列 */
-          .ant-table-thead > tr > th:nth-child(7),
-          .ant-table-tbody > tr > td:nth-child(7) {
-            display: none !important;
-          }
-
-          /* 取消固定列 */
-          .ant-table-cell-fix-left,
-          .ant-table-cell-fix-right {
-            position: static !important;
-          }
-
-          /* 表头样式 */
-          .vocabulary-table .ant-table-thead > tr > th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-            font-weight: 600 !important;
-          }
-
-          /* 斑马纹 */
-          .ant-table-tbody > tr:nth-child(even) {
-            background: #fafafa !important;
-          }
-
-          /* ========== 强制分页控制 ========== */
-          table {
-            break-inside: auto !important;
-            page-break-inside: auto !important;
-          }
-
-          thead {
-            display: table-header-group !important;
-          }
-
-          tbody {
-            display: table-row-group !important;
-          }
-
-          tr {
-            break-inside: avoid !important;
-            page-break-inside: avoid !important;
-            break-after: auto !important;
-            page-break-after: auto !important;
-          }
-
-          /* 每50行强制分页 */
-          .ant-table-tbody > tr:nth-child(50n) {
-            break-after: page !important;
-            page-break-after: always !important;
-          }
-
-          /* ========== 语法卡片 ========== */
           .grammar-card {
             break-inside: avoid !important;
-            page-break-inside: avoid !important;
             box-shadow: none !important;
             border: 1px solid #e5e7eb !important;
             margin-bottom: 6px !important;
             padding: 8px !important;
-            font-size: 9px !important;
           }
 
-          /* ========== 其他优化 ========== */
-          .section-title {
-            font-size: 12px !important;
-          }
-
-          .section-count {
-            font-size: 9px !important;
-          }
-
-          .row-number {
-            width: 18px !important;
-            height: 18px !important;
-            font-size: 9px !important;
-          }
-
-          .type-badge {
-            font-size: 8px !important;
-            padding: 1px 3px !important;
-          }
+          .section-title { font-size: 13px !important; }
+          .section-count { font-size: 10px !important; }
         }
       `}</style>
     </div>
