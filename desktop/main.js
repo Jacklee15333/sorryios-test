@@ -111,7 +111,7 @@ function startBackend() {
     env.NODE_ENV = 'production';
     env.SORRYIOS_DESKTOP = '1';
 
-    backendProcess = spawn('node', ['server.js'], {
+    backendProcess = spawn('cmd', ['/c', 'chcp 65001 >nul && node server.js'], {
       cwd: BACKEND_DIR,
       env: env,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -284,16 +284,16 @@ function toggleChrome() {
         + 'public class Win32Show {\n'
         + '  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);\n'
         + '  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);\n'
-        + '  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr h, int x, int y, int w, int ht, bool r);\n'
         + '  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr a, int x, int y, int w, int ht, uint f);\n'
         + '}\n'
         + '"@\n'
-        + 'Get-Process chromium -EA SilentlyContinue | Where-Object {$_.MainWindowHandle -ne 0} | ForEach-Object {\n'
+        + 'Get-Process chrome -EA SilentlyContinue | Where-Object {$_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -like "*Chrome for Testing*"} | ForEach-Object {\n'
         + '  $h = $_.MainWindowHandle\n'
         + '  [Win32Show]::ShowWindow($h, 9)\n'
-        + '  Start-Sleep -Milliseconds 100\n'
+        + '  Start-Sleep -Milliseconds 200\n'
         + '  [Win32Show]::SetWindowPos($h, [IntPtr]::Zero, 100, 100, 1300, 850, 0x0040)\n'
         + '  [Win32Show]::ShowWindow($h, 5)\n'
+        + '  Start-Sleep -Milliseconds 100\n'
         + '  [Win32Show]::SetForegroundWindow($h)\n'
         + '}\n'
       );
@@ -307,12 +307,13 @@ function toggleChrome() {
         + 'using System.Runtime.InteropServices;\n'
         + 'public class Win32Hide {\n'
         + '  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);\n'
-        + '  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr h, int x, int y, int w, int ht, bool r);\n'
+        + '  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr a, int x, int y, int w, int ht, uint f);\n'
         + '}\n'
         + '"@\n'
-        + 'Get-Process chromium -EA SilentlyContinue | Where-Object {$_.MainWindowHandle -ne 0} | ForEach-Object {\n'
-        + '  [Win32Hide]::MoveWindow($_.MainWindowHandle, -32000, -32000, 1, 1, $true)\n'
-        + '  [Win32Hide]::ShowWindow($_.MainWindowHandle, 6)\n'
+        + 'Get-Process chrome -EA SilentlyContinue | Where-Object {$_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -like "*Chrome for Testing*"} | ForEach-Object {\n'
+        + '  $h = $_.MainWindowHandle\n'
+        + '  [Win32Hide]::SetWindowPos($h, [IntPtr]::Zero, -32000, -32000, 800, 600, 0x0040)\n'
+        + '  [Win32Hide]::ShowWindow($h, 6)\n'
         + '}\n'
       );
       execSync('powershell -ExecutionPolicy Bypass -File "' + scriptPath + '"', { timeout: 8000, windowsHide: true });
