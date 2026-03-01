@@ -1,10 +1,12 @@
 {
-  "name": "sorryios-ai",
+  "name": "ai-smart-notes",
   "version": "1.0.0",
-  "description": "Sorryios AI - Smart Learning System",
+  "description": "AI智能课堂笔记 - 智能学习系统",
   "main": "main.js",
+  "author": "Sorryios",
   "scripts": {
     "start": "electron .",
+    "prebuild": "cd ../frontend && npm install && npx vite build",
     "pack": "electron-builder --dir",
     "build": "electron-builder",
     "build:win": "electron-builder --win"
@@ -14,8 +16,8 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
-    "appId": "com.sorryios.ai",
-    "productName": "Sorryios AI",
+    "appId": "com.sorryios.ai-notes",
+    "productName": "AI智能课堂笔记",
     "copyright": "Copyright 2026",
     "directories": {
       "output": "../release"
@@ -25,7 +27,20 @@
       "config.json",
       "app.ico"
     ],
-    "extraResources": [],
+    "extraResources": [
+      {
+        "from": "../backend",
+        "to": "backend",
+        "filter": [
+          "**/*",
+          "!uploads/**",
+          "!outputs/**",
+          "!*.log"
+        ]
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [],
     "win": {
       "icon": "app.ico",
       "target": [
@@ -43,7 +58,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Sorryios AI",
+      "shortcutName": "AI智能课堂笔记",
       "installerIcon": "app.ico",
       "uninstallerIcon": "app.ico",
       "installerHeaderIcon": "app.ico",
