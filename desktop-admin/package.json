@@ -1,0 +1,13 @@
+{
+  "name": "sorryios-admin",
+  "version": "1.0.0",
+  "description": "Sorryios AI - 管理后台桌面版",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^33.4.11"
+  },
+  "productName": "Sorryios AI 管理后台"
+}

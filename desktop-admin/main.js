@@ -1,11 +1,12 @@
 /**
- * 智学笔记 - Electron 桌面应用
+ * Sorryios AI - 管理后台桌面版
  * 
  * Features:
- *   - Zero terminal windows (fully hidden backend)
- *   - Built-in log viewer (Ctrl+L or right-click > Console)
- *   - System tray icon
- *   - Auto cleanup on exit
+ *   - 自动启动后端服务
+ *   - 加载管理后台界面
+ *   - 系统托盘图标
+ *   - 控制台日志查看 (Ctrl+L)
+ *   - 自动清理退出
  */
 
 const { app, BrowserWindow, Menu, Tray, shell, dialog, globalShortcut, ipcMain } = require('electron');
@@ -19,12 +20,12 @@ const fs = require('fs');
 // ============================================================
 const CONFIG = {
   BACKEND_PORT: 3000,
-  APP_URL: 'http://localhost:3000',
+  APP_URL: 'http://localhost:3000/admin',
   STARTUP_TIMEOUT: 30000,
   POLL_INTERVAL: 500,
-  WINDOW_WIDTH: 1360,
-  WINDOW_HEIGHT: 860,
-  MIN_WIDTH: 1024,
+  WINDOW_WIDTH: 1440,
+  WINDOW_HEIGHT: 900,
+  MIN_WIDTH: 1100,
   MIN_HEIGHT: 700,
   MAX_LOG_LINES: 2000,
 };
@@ -78,6 +79,19 @@ function killPort(port) {
       }
     }
   } catch(e) {}
+}
+
+// ============================================================
+// Check if backend is already running
+// ============================================================
+function checkBackendRunning() {
+  return new Promise(function(resolve) {
+    var req = http.get('http://localhost:' + CONFIG.BACKEND_PORT, { timeout: 2000 }, function(res) {
+      resolve(res.statusCode === 200 || res.statusCode === 304);
+    });
+    req.on('error', function() { resolve(false); });
+    req.on('timeout', function() { req.destroy(); resolve(false); });
+  });
 }
 
 // ============================================================
@@ -152,7 +166,7 @@ function startBackend() {
         reject(new Error('Backend timeout'));
         return;
       }
-      var req = http.get(CONFIG.APP_URL, { timeout: 2000 }, function(res) {
+      var req = http.get('http://localhost:' + CONFIG.BACKEND_PORT, { timeout: 2000 }, function(res) {
         if (res.statusCode === 200 || res.statusCode === 304) {
           log('后端服务已就绪');
           resolve();
@@ -184,27 +198,6 @@ function stopBackend() {
 }
 
 // ============================================================
-// Frontend check/build
-// ============================================================
-function isFrontendBuilt() {
-  return fs.existsSync(path.join(BACKEND_DIR, 'public', 'app', 'index.html'));
-}
-
-function buildFrontend() {
-  var FRONTEND_DIR = path.join(PROJECT_ROOT, 'frontend');
-  var outputDir = path.join(BACKEND_DIR, 'public', 'app');
-  log('Building frontend...');
-  if (!fs.existsSync(path.join(FRONTEND_DIR, 'node_modules'))) {
-    execSync('npm install', { cwd: FRONTEND_DIR, timeout: 120000 });
-  }
-  execSync('npx vite build --outDir "' + outputDir + '"', {
-    cwd: FRONTEND_DIR, timeout: 120000,
-    env: (function() { var e = {}; Object.keys(process.env).forEach(function(k){e[k]=process.env[k];}); e.NODE_ENV='production'; return e; })()
-  });
-  log('Frontend built.');
-}
-
-// ============================================================
 // Log Viewer Window
 // ============================================================
 function createLogWindow() {
@@ -216,7 +209,7 @@ function createLogWindow() {
   logWindow = new BrowserWindow({
     width: 850,
     height: 520,
-    title: '智学笔记 - 控制台',
+    title: '管理后台 - 控制台',
     icon: ICON_PATH,
     backgroundColor: '#1e1e2e',
     autoHideMenuBar: true,
@@ -226,114 +219,57 @@ function createLogWindow() {
     }
   });
 
-  var logHTML = '<!DOCTYPE html>\n<html><head><meta charset="UTF-8"><title>Console</title>\n'
-    + '<style>\n'
-    + '*{margin:0;padding:0;box-sizing:border-box}\n'
-    + 'body{background:#1e1e2e;color:#cdd6f4;font-family:Consolas,"Courier New",monospace;font-size:12px}\n'
-    + '#bar{position:fixed;top:0;left:0;right:0;height:36px;background:#313244;display:flex;align-items:center;padding:0 12px;gap:8px;z-index:10;border-bottom:1px solid #45475a}\n'
-    + '#bar button{background:#45475a;color:#cdd6f4;border:none;padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer}\n'
-    + '#bar button:hover{background:#585b70}\n'
-    + '.t{font-weight:700;font-size:13px;color:#cba6f7;flex:1}\n'
-    + '.n{color:#6c7086;font-size:11px}\n'
-    + '#log{padding:44px 12px 12px;white-space:pre-wrap;word-break:break-all;line-height:1.6}\n'
-    + '.l{padding:1px 0}.l:hover{background:#313244}\n'
-    + '.e{color:#f38ba8}.g{color:#a6e3a1}.b{color:#89b4fa}\n'
-    + '</style></head><body>\n'
-    + '<div id="bar"><span class="t">控制台输出</span><span class="n" id="cnt"></span>'
-    + '<button id="abtn" onclick="asc=!asc;this.textContent=asc?\'自动滚动: 开\':\'自动滚动: 关\'">自动滚动: 开</button>'
-    + '<button onclick="document.getElementById(\'log\').innerHTML=\'\';lc=0;document.getElementById(\'cnt\').textContent=\'\'">清空</button></div>\n'
-    + '<div id="log"></div>\n'
-    + '<script>\n'
-    + 'var ipc=require("electron").ipcRenderer,el=document.getElementById("log"),ce=document.getElementById("cnt"),asc=true,lc=0;\n'
-    + 'function add(t){var d=document.createElement("div");d.className="l";\n'
-    + 'if(t.indexOf("err")>-1||t.indexOf("ERR")>-1||t.indexOf("fail")>-1)d.className+=" e";\n'
-    + 'else if(t.indexOf("ready")>-1||t.indexOf("OK")>-1||t.indexOf("success")>-1||t.indexOf("loaded")>-1||t.indexOf("built")>-1)d.className+=" g";\n'
-    + 'else if(t.indexOf("Backend]")>-1)d.className+=" b";\n'
-    + 'd.textContent=t;el.appendChild(d);lc++;ce.textContent=lc+" lines";\n'
-    + 'if(asc)window.scrollTo(0,document.body.scrollHeight);}\n'
-    + 'ipc.send("get-logs");\n'
-    + 'ipc.on("all-logs",function(e,a){a.forEach(add);});\n'
-    + 'ipc.on("log-line",function(e,t){add(t);});\n'
-    + '</script></body></html>';
+  var logHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+    + 'body{margin:0;padding:0;background:#1e1e2e;color:#cdd6f4;font:13px/1.6 "JetBrains Mono","Consolas",monospace;}'
+    + '.toolbar{position:sticky;top:0;background:#181825;padding:8px 16px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #313244;z-index:1;}'
+    + '.toolbar button{background:#45475a;color:#cdd6f4;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font:12px inherit;}'
+    + '.toolbar button:hover{background:#585b70;}'
+    + '#log{padding:12px 16px;white-space:pre-wrap;word-break:break-all;max-height:calc(100vh - 44px);overflow-y:auto;}'
+    + '.info{color:#89b4fa;} .err{color:#f38ba8;} .backend{color:#a6e3a1;}'
+    + '</style></head><body>'
+    + '<div class="toolbar">'
+    + '<button onclick="document.getElementById(\'log\').innerHTML=\'\'">清空</button>'
+    + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'log\').textContent)">复制</button>'
+    + '<span style="flex:1"></span>'
+    + '<span style="opacity:0.5;font-size:11px;">管理后台控制台</span>'
+    + '</div>'
+    + '<div id="log"></div>'
+    + '<script>'
+    + 'const {ipcRenderer}=require("electron");'
+    + 'const el=document.getElementById("log");'
+    + 'function addLine(t){'
+    + '  const d=document.createElement("div");'
+    + '  if(t.includes("[Backend:err]"))d.className="err";'
+    + '  else if(t.includes("[Backend]"))d.className="backend";'
+    + '  else d.className="info";'
+    + '  d.textContent=t;el.appendChild(d);'
+    + '  el.scrollTop=el.scrollHeight;'
+    + '}'
+    + 'ipcRenderer.on("log-line",(_,t)=>addLine(t));'
+    + 'ipcRenderer.on("log-history",(_,lines)=>lines.forEach(addLine));'
+    + '<\/script></body></html>';
 
   logWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(logHTML));
+
+  logWindow.webContents.on('did-finish-load', function() {
+    logWindow.webContents.send('log-history', logBuffer);
+  });
+
   logWindow.on('closed', function() { logWindow = null; });
 }
-
-ipcMain.on('get-logs', function(event) {
-  event.reply('all-logs', logBuffer);
-});
 
 // ============================================================
 // Main Window
 // ============================================================
-
-// Chrome visibility toggle (module-level so tray can access it)
-var chromeVisible = false;
-
-function toggleChrome() {
-  if (process.platform !== 'win32') return;
-  var tmpDir = require('os').tmpdir();
-  var scriptPath = path.join(tmpDir, 'sorryios-chrome-toggle.ps1');
-  try {
-    if (!chromeVisible) {
-      fs.writeFileSync(scriptPath,
-        'Add-Type @"\n'
-        + 'using System;\n'
-        + 'using System.Runtime.InteropServices;\n'
-        + 'public class Win32Show {\n'
-        + '  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);\n'
-        + '  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);\n'
-        + '  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr a, int x, int y, int w, int ht, uint f);\n'
-        + '}\n'
-        + '"@\n'
-        + 'Get-Process chrome -EA SilentlyContinue | Where-Object {$_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -like "*Chrome for Testing*"} | ForEach-Object {\n'
-        + '  $h = $_.MainWindowHandle\n'
-        + '  [Win32Show]::ShowWindow($h, 9)\n'
-        + '  Start-Sleep -Milliseconds 200\n'
-        + '  [Win32Show]::SetWindowPos($h, [IntPtr]::Zero, 100, 100, 1300, 850, 0x0040)\n'
-        + '  [Win32Show]::ShowWindow($h, 5)\n'
-        + '  Start-Sleep -Milliseconds 100\n'
-        + '  [Win32Show]::SetForegroundWindow($h)\n'
-        + '}\n'
-      );
-      execSync('powershell -ExecutionPolicy Bypass -File "' + scriptPath + '"', { timeout: 8000, windowsHide: true });
-      chromeVisible = true;
-      log('Chrome window: shown');
-    } else {
-      fs.writeFileSync(scriptPath,
-        'Add-Type @"\n'
-        + 'using System;\n'
-        + 'using System.Runtime.InteropServices;\n'
-        + 'public class Win32Hide {\n'
-        + '  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);\n'
-        + '  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr a, int x, int y, int w, int ht, uint f);\n'
-        + '}\n'
-        + '"@\n'
-        + 'Get-Process chrome -EA SilentlyContinue | Where-Object {$_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -like "*Chrome for Testing*"} | ForEach-Object {\n'
-        + '  $h = $_.MainWindowHandle\n'
-        + '  [Win32Hide]::SetWindowPos($h, [IntPtr]::Zero, -32000, -32000, 800, 600, 0x0040)\n'
-        + '  [Win32Hide]::ShowWindow($h, 6)\n'
-        + '}\n'
-      );
-      execSync('powershell -ExecutionPolicy Bypass -File "' + scriptPath + '"', { timeout: 8000, windowsHide: true });
-      chromeVisible = false;
-      log('Chrome window: hidden');
-    }
-  } catch(e) {
-    log('Chrome toggle failed: ' + e.message);
-  }
-}
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: CONFIG.WINDOW_WIDTH,
     height: CONFIG.WINDOW_HEIGHT,
     minWidth: CONFIG.MIN_WIDTH,
     minHeight: CONFIG.MIN_HEIGHT,
-    title: '智学笔记',
+    title: 'Sorryios AI - 管理后台',
     icon: ICON_PATH,
-    backgroundColor: '#f5f3ff',
+    backgroundColor: '#f0f2f7',
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
@@ -343,7 +279,7 @@ function createWindow() {
     }
   });
 
-  // Dynamic context menu (rebuilds each time to update Chrome label)
+  // Context menu
   mainWindow.webContents.on('context-menu', function() {
     var menu = Menu.buildFromTemplate([
       { label: '返回', click: function() { mainWindow.webContents.goBack(); } },
@@ -353,7 +289,6 @@ function createWindow() {
       { label: '粘贴', role: 'paste' },
       { label: '全选', role: 'selectAll' },
       { type: 'separator' },
-      { label: chromeVisible ? '隐藏 Chrome' : '显示 Chrome', click: function() { toggleChrome(); } },
       { label: '控制台 (Ctrl+L)', click: function() { createLogWindow(); } },
       { label: '开发者工具 (F12)', click: function() { mainWindow.webContents.openDevTools(); } },
     ]);
@@ -368,7 +303,7 @@ function createWindow() {
         overrideBrowserWindowOptions: {
           width: 950, height: 750,
           autoHideMenuBar: true,
-          title: '智学笔记',
+          title: 'Sorryios AI - 管理后台',
           icon: ICON_PATH,
           backgroundColor: '#ffffff',
         }
@@ -389,11 +324,10 @@ function createTray() {
   if (!fs.existsSync(ICON_PATH)) return;
   try {
     tray = new Tray(ICON_PATH);
-    tray.setToolTip('智学笔记');
+    tray.setToolTip('Sorryios AI - 管理后台');
     var trayMenu = Menu.buildFromTemplate([
-      { label: '打开应用', click: function() { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
+      { label: '打开管理后台', click: function() { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
       { label: '控制台', click: function() { createLogWindow(); } },
-      { label: '显示/隐藏 Chrome', click: function() { if (mainWindow) toggleChrome(); } },
       { type: 'separator' },
       { label: '刷新', click: function() { if (mainWindow) mainWindow.webContents.reload(); } },
       { label: '在浏览器中打开', click: function() { shell.openExternal(CONFIG.APP_URL); } },
@@ -413,16 +347,29 @@ function createTray() {
 function getSplashHTML(statusText) {
   var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
     + '*{margin:0;padding:0;box-sizing:border-box}'
-    + 'body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);height:100vh;display:flex;align-items:center;justify-content:center}'
-    + '.c{text-align:center;color:#fff}'
-    + '.logo{font-size:48px;font-weight:800;letter-spacing:2px;margin-bottom:8px;text-shadow:0 2px 20px rgba(0,0,0,.2)}'
-    + '.sub{font-size:16px;opacity:.85;margin-bottom:48px;letter-spacing:4px}'
-    + '.sp{width:48px;height:48px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:s .8s linear infinite;margin:0 auto 24px}'
+    + 'body{font-family:"Noto Sans SC","Microsoft YaHei","PingFang SC",sans-serif;'
+    + 'background:linear-gradient(135deg,#0f0f1a 0%,#1a1a3e 40%,#2d1b69 100%);'
+    + 'height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}'
+    + '.bg-glow{position:fixed;width:400px;height:400px;border-radius:50%;filter:blur(120px);opacity:0.3;}'
+    + '.bg-glow.a{top:-100px;right:-100px;background:#7c5cfc;}'
+    + '.bg-glow.b{bottom:-100px;left:-100px;background:#a78bfa;}'
+    + '.c{text-align:center;color:#fff;position:relative;z-index:1;}'
+    + '.logo-box{width:64px;height:64px;background:linear-gradient(135deg,#7c5cfc,#a78bfa);'
+    + 'border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;'
+    + 'margin:0 auto 20px;box-shadow:0 8px 32px rgba(124,92,252,0.3);}'
+    + '.title{font-size:28px;font-weight:700;letter-spacing:1px;margin-bottom:6px;}'
+    + '.sub{font-size:14px;opacity:0.6;margin-bottom:40px;letter-spacing:2px;}'
+    + '.sp{width:40px;height:40px;border:3px solid rgba(255,255,255,0.15);'
+    + 'border-top-color:rgba(124,92,252,0.9);border-radius:50%;'
+    + 'animation:s 0.8s linear infinite;margin:0 auto 20px;}'
     + '@keyframes s{to{transform:rotate(360deg)}}'
-    + '.st{font-size:14px;opacity:.8}'
-    + '</style></head><body><div class="c">'
-    + '<div class="logo">智学笔记</div>'
-    + '<div class="sub">智能学习报告系统</div>'
+    + '.st{font-size:13px;opacity:0.6;}'
+    + '</style></head><body>'
+    + '<div class="bg-glow a"></div><div class="bg-glow b"></div>'
+    + '<div class="c">'
+    + '<div class="logo-box">🤖</div>'
+    + '<div class="title">Sorryios AI</div>'
+    + '<div class="sub">管理后台</div>'
     + '<div class="sp"></div>'
     + '<div class="st">' + statusText + '</div>'
     + '</div></body></html>';
@@ -434,36 +381,33 @@ function getSplashHTML(statusText) {
 // ============================================================
 app.whenReady().then(async function() {
   log('====================================');
-  log('  智学笔记 - 启动中');
+  log('  Sorryios AI 管理后台 - 启动中');
   log('====================================');
 
   var win = createWindow();
-  win.loadURL(getSplashHTML('正在启动服务器...'));
+  win.loadURL(getSplashHTML('正在检查服务器状态...'));
   win.show();
 
   createTray();
   globalShortcut.register('CommandOrControl+L', function() { createLogWindow(); });
 
   try {
-    if (!isFrontendBuilt()) {
-      log('Frontend not built, building...');
-      win.loadURL(getSplashHTML('首次运行：正在构建前端（1-2分钟）...'));
-      try { buildFrontend(); } catch(e) {
-        log('Frontend build failed: ' + e.message);
-        dialog.showErrorBox('构建失败', '无法构建前端.\n\n' + e.message);
-        app.quit(); return;
-      }
+    // Check if backend is already running (e.g. started by the main desktop app)
+    var alreadyRunning = await checkBackendRunning();
+
+    if (alreadyRunning) {
+      log('后端服务已在运行中，直接连接...');
+    } else {
+      win.loadURL(getSplashHTML('正在启动后端服务...'));
+      await startBackend();
     }
 
-    win.loadURL(getSplashHTML('正在启动后端服务...'));
-    await startBackend();
-
-    log('正在加载应用...');
+    log('正在加载管理后台...');
     win.loadURL(CONFIG.APP_URL);
 
     win.webContents.on('did-finish-load', function() {
-      log('应用加载完成');
-      win.setTitle('智学笔记');
+      log('管理后台加载完成');
+      win.setTitle('Sorryios AI - 管理后台');
     });
 
     win.webContents.on('did-fail-load', function(ev, code, desc) {
@@ -478,13 +422,26 @@ app.whenReady().then(async function() {
   }
 });
 
-app.on('window-all-closed', function() { stopBackend(); app.quit(); });
-app.on('before-quit', function() { isQuitting = true; globalShortcut.unregisterAll(); stopBackend(); });
+app.on('window-all-closed', function() {
+  // Only stop backend if WE started it
+  if (backendProcess) stopBackend();
+  app.quit();
+});
+
+app.on('before-quit', function() {
+  isQuitting = true;
+  globalShortcut.unregisterAll();
+  if (backendProcess) stopBackend();
+});
+
 app.on('activate', function() {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow(); mainWindow.loadURL(CONFIG.APP_URL); mainWindow.show();
+    createWindow();
+    mainWindow.loadURL(CONFIG.APP_URL);
+    mainWindow.show();
   }
 });
-process.on('uncaughtException', function(err) { log('Fatal: ' + err.message); stopBackend(); });
-process.on('SIGINT', function() { stopBackend(); process.exit(0); });
-process.on('SIGTERM', function() { stopBackend(); process.exit(0); });
+
+process.on('uncaughtException', function(err) { log('Fatal: ' + err.message); if (backendProcess) stopBackend(); });
+process.on('SIGINT', function() { if (backendProcess) stopBackend(); process.exit(0); });
+process.on('SIGTERM', function() { if (backendProcess) stopBackend(); process.exit(0); });

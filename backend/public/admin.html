@@ -4,556 +4,620 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorryios AI - 管理后台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #161625;
+            --bg-card: #1c1c2e;
+            --bg-card-hover: #22223a;
+            --bg-surface: #f8f9fc;
+            --bg-page: #f0f2f7;
+            --border-dark: rgba(255,255,255,0.06);
+            --border-light: #e2e5f1;
+            --text-white: #ffffff;
+            --text-white-muted: rgba(255,255,255,0.55);
+            --text-dark: #1a1a2e;
+            --text-muted: #6b7194;
+            --accent: #7c5cfc;
+            --accent-light: #9b82fc;
+            --accent-glow: rgba(124,92,252,0.3);
+            --success: #34d399;
+            --success-bg: #ecfdf5;
+            --warning: #fbbf24;
+            --warning-bg: #fffbeb;
+            --danger: #f87171;
+            --danger-bg: #fef2f2;
+            --info: #60a5fa;
+            --info-bg: #eff6ff;
+            --sidebar-width: 240px;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            background: #f7f7f8;
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-page);
             min-height: 100vh;
+            color: var(--text-dark);
+            overflow-x: hidden;
         }
-        
-        /* 侧边栏 */
+
+        /* ===================== SIDEBAR ===================== */
         .sidebar {
             position: fixed;
-            left: 0;
-            top: 0;
-            width: 220px;
+            left: 0; top: 0;
+            width: var(--sidebar-width);
             height: 100vh;
-            background: #1a1a1a;
-            color: white;
-            padding: 20px 0;
-            overflow-y: auto;
+            background: var(--bg-primary);
+            color: var(--text-white);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            overflow: hidden;
         }
-        
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--accent) 0%, transparent 50%, var(--accent) 100%);
+            opacity: 0.15;
+        }
+
         .logo {
-            padding: 0 20px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 20px;
+            padding: 28px 24px 24px;
+            border-bottom: 1px solid var(--border-dark);
         }
-        
+
         .logo h1 {
-            font-size: 18px;
+            font-size: 20px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 10px;
+            letter-spacing: 0.5px;
         }
-        
-        .logo span {
-            font-size: 12px;
-            opacity: 0.7;
-            display: block;
-            margin-top: 5px;
+
+        .logo h1 .logo-icon {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--accent), #a78bfa);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
         }
-        
-        .nav-menu {
-            list-style: none;
+
+        .logo .version {
+            font-size: 11px;
+            color: var(--text-white-muted);
+            margin-top: 6px;
+            padding-left: 44px;
+            letter-spacing: 1px;
         }
-        
+
+        .nav-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+
+        .nav-scroll::-webkit-scrollbar { width: 3px; }
+        .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        .nav-menu { list-style: none; }
+
         .nav-menu li a {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 14px 20px;
-            color: rgba(255,255,255,0.7);
+            padding: 11px 20px 11px 24px;
+            color: var(--text-white-muted);
             text-decoration: none;
-            transition: all 0.2s;
-            font-size: 14px;
+            transition: all var(--transition);
+            font-size: 13.5px;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            position: relative;
         }
-        
-        .nav-menu li a:hover,
+
+        .nav-menu li a:hover {
+            color: var(--text-white);
+            background: rgba(255,255,255,0.04);
+        }
+
         .nav-menu li a.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border-left: 3px solid #9ca3af;
+            color: var(--text-white);
+            background: rgba(124,92,252,0.1);
+            border-left-color: var(--accent);
         }
-        
-        .nav-menu li a .icon {
-            font-size: 18px;
+
+        .nav-menu li a.active .nav-icon {
+            color: var(--accent-light);
+        }
+
+        .nav-icon {
+            font-size: 17px;
+            width: 22px;
+            text-align: center;
+            flex-shrink: 0;
         }
 
         .nav-divider {
             height: 1px;
-            background: rgba(255,255,255,0.1);
-            margin: 10px 20px;
+            background: var(--border-dark);
+            margin: 10px 24px;
         }
 
         .nav-label {
-            padding: 10px 20px 5px;
-            font-size: 11px;
-            color: rgba(255,255,255,0.4);
+            padding: 14px 24px 6px;
+            font-size: 10px;
+            color: var(--text-white-muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            font-weight: 600;
         }
-        
-        /* 主内容区 */
+
+        /* ===================== MAIN CONTENT ===================== */
         .main-content {
-            margin-left: 220px;
-            padding: 20px 30px;
-            overflow: hidden;
-            max-width: calc(100vw - 220px);
+            margin-left: var(--sidebar-width);
+            padding: 28px 32px;
+            min-height: 100vh;
+            max-width: calc(100vw - var(--sidebar-width));
         }
-        
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 24px;
         }
-        
+
         .header h2 {
             font-size: 22px;
-            color: #1a1a1a;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        
+
+        .header h2 .page-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent), #a78bfa);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+
         .header-actions {
             display: flex;
             gap: 10px;
         }
-        
+
+        /* ===================== BUTTONS ===================== */
         .btn {
-            padding: 10px 18px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
+            padding: 9px 18px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
-            display: flex;
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 500;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: all 0.2s;
+            transition: all var(--transition);
             background: white;
-            color: #374151;
+            color: var(--text-dark);
         }
-        .btn:hover { background: #f9fafb; border-color: #9ca3af; }
-        
+        .btn:hover { border-color: #c5cae0; box-shadow: var(--shadow-card); }
+
         .btn-primary {
-            background: white;
-            color: #2563eb;
-            border: 1px solid #93c5fd;
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
         }
-        
-        .btn-primary:hover {
-            background: #eff6ff;
-            border-color: #60a5fa;
-        }
-        
-        .btn-secondary {
-            background: white;
-            color: #374151;
-            border: 1px solid #d1d5db;
-        }
-        
+        .btn-primary:hover { background: var(--accent-light); border-color: var(--accent-light); box-shadow: 0 4px 14px var(--accent-glow); }
+
         .btn-danger {
-            background: white;
-            color: #dc2626;
-            border: 1px solid #fecaca;
+            color: var(--danger);
+            border-color: #fecaca;
         }
-        .btn-danger:hover {
-            background: #fef2f2;
-            border-color: #f87171;
-        }
-        
-        /* 统计卡片 */
+        .btn-danger:hover { background: var(--danger-bg); border-color: #f87171; }
+
+        /* ===================== STATS GRID ===================== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
-        
+
         .stat-card {
             background: white;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #e5e5e5;
+            border-radius: var(--radius-lg);
+            padding: 22px;
+            border: 1px solid var(--border-light);
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
         }
-        
-        .stat-card .icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+        .stat-card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
+
+        .stat-card .stat-icon {
+            width: 44px; height: 44px;
+            border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            margin-bottom: 12px;
+            font-size: 22px;
+            margin-bottom: 14px;
         }
-        
-        .stat-card .icon.blue { background: #eff6ff; }
-        .stat-card .icon.green { background: #ecfdf5; }
-        .stat-card .icon.orange { background: #fff7ed; }
-        .stat-card .icon.purple { background: #faf5ff; }
-        .stat-card .icon.red { background: #fef2f2; }
-        
+
+        .stat-icon.purple { background: linear-gradient(135deg, #f0ebff, #e4d9ff); }
+        .stat-icon.green { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+        .stat-icon.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+        .stat-icon.orange { background: linear-gradient(135deg, #ffedd5, #fed7aa); }
+        .stat-icon.red { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+
         .stat-card .value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #1a1a1a;
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-family: 'JetBrains Mono', monospace;
         }
-        
+
         .stat-card .label {
             font-size: 13px;
-            color: #666;
-            margin-top: 5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 500;
         }
-        
-        /* 卡片容器 */
+
+        /* ===================== CARDS ===================== */
         .card {
             background: white;
-            border-radius: 12px;
-            border: 1px solid #e5e5e5;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
             margin-bottom: 20px;
+            transition: box-shadow var(--transition);
         }
-        
+        .card:hover { box-shadow: var(--shadow-card); }
+
         .card-header {
-            padding: 18px 20px;
-            border-bottom: 1px solid #e5e5e5;
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .card-header h3 {
-            font-size: 16px;
-            color: #1a1a1a;
-        }
-        
-        .card-body {
-            padding: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .card-body-padded {
-            padding: 20px;
-        }
-        
-        /* 表格 */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
+        .card-body { padding: 0; }
+        .card-body-padded { padding: 22px; }
+
+        /* ===================== TABLE ===================== */
+        table { width: 100%; border-collapse: collapse; }
+
         th, td {
-            padding: 14px 20px;
+            padding: 13px 20px;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f1f3f9;
         }
-        
+
         th {
-            background: #f8f9fa;
+            background: var(--bg-surface);
             font-weight: 600;
-            color: #666;
-            font-size: 13px;
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        
+
         td {
-            font-size: 14px;
-            color: #333;
+            font-size: 13.5px;
+            color: var(--text-dark);
         }
-        
-        tr:hover {
-            background: #f8f9fa;
-        }
-        
-        /* 徽章 */
+
+        tr:hover { background: #fafbfe; }
+        tr:last-child td { border-bottom: none; }
+
+        /* ===================== BADGES ===================== */
         .badge {
             padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
         }
-        
-        .badge-success { background: #e8f5e9; color: #2e7d32; }
-        .badge-warning { background: #fff3e0; color: #f57c00; }
-        .badge-danger { background: #ffebee; color: #c62828; }
-        .badge-info { background: #e3f2fd; color: #1565c0; }
-        .badge-default { background: #f5f5f5; color: #666; }
-        
-        /* 弹窗 */
+
+        .badge-success { background: var(--success-bg); color: #059669; }
+        .badge-warning { background: var(--warning-bg); color: #d97706; }
+        .badge-danger { background: var(--danger-bg); color: #dc2626; }
+        .badge-info { background: var(--info-bg); color: #2563eb; }
+        .badge-default { background: #f3f4f6; color: #6b7280; }
+
+        /* ===================== MODAL ===================== */
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15,15,26,0.6);
+            backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
         }
-        
-        .modal.active {
-            display: flex;
-        }
-        
+        .modal.active { display: flex; }
+
         .modal-content {
             background: white;
-            border-radius: 12px;
+            border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 500px;
+            max-width: 480px;
             max-height: 80vh;
             overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: modalIn 0.25s ease;
         }
-        
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
+            padding: 22px 24px;
+            border-bottom: 1px solid var(--border-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
-        .modal-header h3 {
-            font-size: 18px;
-        }
-        
+
+        .modal-header h3 { font-size: 17px; font-weight: 600; }
+
         .modal-close {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 22px;
             cursor: pointer;
-            color: #999;
+            color: var(--text-muted);
+            width: 32px; height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all var(--transition);
         }
-        
-        .modal-body {
-            padding: 20px;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
+        .modal-close:hover { background: #f3f4f6; color: var(--text-dark); }
+
+        .modal-body { padding: 24px; }
+
+        .form-group { margin-bottom: 16px; }
         .form-group label {
             display: block;
             margin-bottom: 6px;
-            font-weight: 500;
-            color: #333;
-            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 13px;
         }
-        
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
+            padding: 10px 14px;
+            border: 1px solid var(--border-light);
             border-radius: 8px;
             font-size: 14px;
+            font-family: inherit;
+            transition: border-color var(--transition);
+            background: white;
         }
-        
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
         }
-        
+
         .modal-footer {
-            padding: 15px 20px;
-            border-top: 1px solid #eee;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-light);
             display: flex;
             justify-content: flex-end;
             gap: 10px;
         }
-        
-        /* 操作按钮 */
+
+        /* ===================== ACTION BUTTONS ===================== */
         .action-btn {
-            padding: 6px 12px;
+            padding: 6px 14px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            margin-right: 5px;
-            transition: all 0.2s;
+            font-weight: 500;
+            font-family: inherit;
+            margin-right: 4px;
+            transition: all var(--transition);
         }
-        
-        .action-btn.edit { background: #e3f2fd; color: #1565c0; }
-        .action-btn.edit:hover { background: #bbdefb; }
-        .action-btn.delete { background: #ffebee; color: #c62828; }
-        .action-btn.delete:hover { background: #ffcdd2; }
-        .action-btn.view { background: #e8f5e9; color: #2e7d32; }
-        .action-btn.view:hover { background: #c8e6c9; }
-        
-        /* 区块显示 */
+        .action-btn.edit { background: var(--info-bg); color: #2563eb; }
+        .action-btn.edit:hover { background: #dbeafe; }
+        .action-btn.delete { background: var(--danger-bg); color: #dc2626; }
+        .action-btn.delete:hover { background: #fee2e2; }
+        .action-btn.view { background: var(--success-bg); color: #059669; }
+        .action-btn.view:hover { background: #d1fae5; }
+
+        /* ===================== SECTIONS ===================== */
         .section {
             display: none;
             width: 100%;
             max-width: 100%;
-            box-sizing: border-box;
+            animation: fadeIn 0.3s ease;
         }
-        
-        .section.active {
-            display: block;
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        /* 加载状态 */
+
         .loading {
             text-align: center;
             padding: 40px;
-            color: #666;
+            color: var(--text-muted);
         }
-        
-        /* 空状态 */
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #999;
+            color: var(--text-muted);
         }
-        
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        
-        /* 时间线样式 */
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+
+        /* ===================== TIMELINE ===================== */
         .timeline-item {
             display: flex;
             gap: 15px;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
+            padding: 14px 22px;
+            border-bottom: 1px solid #f1f3f9;
+            transition: background var(--transition);
         }
-        
-        .timeline-item:last-child {
-            border-bottom: none;
-        }
-        
+        .timeline-item:hover { background: #fafbfe; }
+        .timeline-item:last-child { border-bottom: none; }
+
         .timeline-dot {
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             border-radius: 50%;
-            background: #667eea;
+            background: var(--accent);
             margin-top: 5px;
-        }
-        
-        .timeline-content {
-            flex: 1;
-        }
-        
-        .timeline-content .time {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 4px;
-        }
-        
-        .timeline-content .message {
-            font-size: 14px;
-            color: #333;
+            flex-shrink: 0;
         }
 
-        /* ============================================ */
-        /* 分块管理专用样式 */
-        /* ============================================ */
+        .timeline-content { flex: 1; }
+        .timeline-content .time { font-size: 12px; color: var(--text-muted); margin-bottom: 3px; }
+        .timeline-content .message { font-size: 13.5px; color: var(--text-dark); line-height: 1.5; }
+
+        /* ===================== CHUNK MANAGEMENT ===================== */
         .chunk-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
-
         @media (max-width: 1200px) {
-            .chunk-grid {
-                grid-template-columns: 1fr;
-            }
+            .chunk-grid { grid-template-columns: 1fr; }
         }
-
-        .chunk-full-width {
-            grid-column: 1 / -1;
-        }
+        .chunk-full-width { grid-column: 1 / -1; }
 
         .slider-group {
             display: flex;
             align-items: center;
             gap: 15px;
         }
-
         .slider-group input[type="range"] {
             flex: 1;
             height: 6px;
             border-radius: 3px;
-            background: #e0e0e0;
+            background: #e2e5f1;
             appearance: none;
         }
-
         .slider-group input[type="range"]::-webkit-slider-thumb {
             appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 18px; height: 18px;
             border-radius: 50%;
-            background: #667eea;
+            background: var(--accent);
             cursor: pointer;
+            box-shadow: 0 2px 6px var(--accent-glow);
         }
-
         .slider-value {
             min-width: 60px;
             text-align: right;
-            font-weight: bold;
-            color: #667eea;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .chunk-stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 12px;
             margin-bottom: 15px;
         }
 
         .chunk-stat-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
+            background: var(--bg-surface);
+            padding: 16px;
+            border-radius: var(--radius);
             text-align: center;
+            border: 1px solid var(--border-light);
         }
-
         .chunk-stat-item .value {
             font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
         }
-
         .chunk-stat-item .label {
             font-size: 12px;
-            color: #666;
-            margin-top: 5px;
+            color: var(--text-muted);
+            margin-top: 4px;
         }
 
         .chunk-text-input {
             width: 100%;
             height: 200px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Consolas', 'Monaco', monospace;
+            padding: 16px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
             resize: vertical;
+            transition: border-color var(--transition);
         }
-
         .chunk-text-input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
         .chunk-result-box {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
+            background: var(--bg-surface);
+            border-radius: var(--radius);
+            padding: 14px;
             max-height: 300px;
             overflow-y: auto;
+            border: 1px solid var(--border-light);
         }
 
         .chunk-result-item {
             padding: 12px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-light);
             background: white;
             margin-bottom: 8px;
-            border-radius: 6px;
+            border-radius: 8px;
         }
-
-        .chunk-result-item:last-child {
-            margin-bottom: 0;
-        }
+        .chunk-result-item:last-child { margin-bottom: 0; }
 
         .chunk-result-header {
             display: flex;
@@ -563,203 +627,178 @@
         }
 
         .chunk-index {
-            background: #667eea;
+            background: var(--accent);
             color: white;
             padding: 2px 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 12px;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 11px;
         }
-
-        .chunk-size {
-            color: #888;
-            font-size: 12px;
-        }
+        .chunk-size { color: var(--text-muted); font-size: 12px; }
 
         .chunk-preview {
-            color: #666;
+            color: #555;
             font-size: 12px;
-            line-height: 1.5;
+            line-height: 1.6;
             white-space: pre-wrap;
             word-break: break-all;
+            font-family: 'JetBrains Mono', monospace;
         }
 
-        .chunk-file-list {
-            max-height: 250px;
-            overflow-y: auto;
-        }
+        .chunk-file-list { max-height: 250px; overflow-y: auto; }
 
         .chunk-file-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 12px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f1f3f9;
+            transition: background var(--transition);
         }
-
-        .chunk-file-item:hover {
-            background: #f8f9fa;
-        }
+        .chunk-file-item:hover { background: var(--bg-surface); }
 
         .chunk-file-name {
             flex: 1;
-            font-family: monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            color: #667eea;
+            color: var(--accent);
             cursor: pointer;
         }
+        .chunk-file-name:hover { text-decoration: underline; }
 
-        .chunk-file-name:hover {
-            text-decoration: underline;
-        }
+        .chunk-file-size { color: var(--text-muted); font-size: 12px; margin: 0 10px; }
 
-        .chunk-file-size {
-            color: #888;
-            font-size: 12px;
-            margin: 0 10px;
-        }
-
-        .chunk-loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .chunk-loading.active {
-            display: block;
-        }
+        .chunk-loading { display: none; text-align: center; padding: 20px; }
+        .chunk-loading.active { display: block; }
 
         .chunk-spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid #e0e0e0;
-            border-top-color: #667eea;
+            width: 30px; height: 30px;
+            border: 3px solid #e2e5f1;
+            border-top-color: var(--accent);
             border-radius: 50%;
-            animation: chunk-spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
             margin: 0 auto 10px;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        @keyframes chunk-spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Toast 提示 */
+        /* ===================== TOAST ===================== */
         .toast {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
+            top: 24px; right: 24px;
+            padding: 12px 22px;
+            border-radius: var(--radius);
             color: white;
             font-weight: 500;
+            font-size: 13.5px;
             z-index: 2000;
-            animation: toast-slide 0.3s ease;
+            animation: toastSlide 0.35s cubic-bezier(0.21, 1.02, 0.73, 1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
         }
+        .toast.success { background: #059669; }
+        .toast.error { background: #dc2626; }
 
-        .toast.success { background: #2e7d32; }
-        .toast.error { background: #c62828; }
-
-        @keyframes toast-slide {
+        @keyframes toastSlide {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        
-        /* 响应式 */
+
+        /* ===================== RESPONSIVE ===================== */
         @media (max-width: 768px) {
-            .sidebar {
-                width: 60px;
-            }
-            .sidebar .logo h1 span,
-            .sidebar .nav-menu li a span,
-            .sidebar .nav-label {
-                display: none;
-            }
-            .main-content {
-                margin-left: 60px;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .sidebar { width: 64px; }
+            .sidebar .logo h1 span, .sidebar .nav-menu li a span,
+            .sidebar .nav-label, .sidebar .logo .version { display: none; }
+            .sidebar .logo { padding: 20px 12px; }
+            .sidebar .logo h1 { justify-content: center; }
+            .nav-menu li a { padding: 11px 12px; justify-content: center; }
+            .main-content { margin-left: 64px; padding: 20px 16px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
-    <!-- 侧边栏 -->
+    <!-- ==================== SIDEBAR ==================== -->
     <div class="sidebar">
         <div class="logo">
-            <h1>🤖 Sorryios AI</h1>
-            <span>管理后台 v2.4</span>
+            <h1>
+                <span class="logo-icon">🤖</span>
+                <span>Sorryios AI</span>
+            </h1>
+            <div class="version">管理后台 v3.0</div>
         </div>
-        <ul class="nav-menu">
-            <li><a href="#" class="active" onclick="showSection('dashboard')"><span class="icon">📊</span><span>仪表盘</span></a></li>
-            <li><a href="#" onclick="showSection('users')"><span class="icon">👥</span><span>用户管理</span></a></li>
-            <li><a href="#" onclick="showSection('tasks')"><span class="icon">📋</span><span>任务管理</span></a></li>
-            <li><a href="#" onclick="showSection('files')"><span class="icon">📁</span><span>文件管理</span></a></li>
-            <li><a href="#" onclick="showSection('logs')"><span class="icon">📝</span><span>系统日志</span></a></li>
-            
-            <div class="nav-divider"></div>
-            <div class="nav-label">📚 数据库管理</div>
-            
-            <li><a href="#" onclick="showIframePage('/vocabulary-admin', '词库管理')"><span class="icon">📖</span><span>词库管理</span></a></li>
-            <li><a href="#" onclick="showIframePage('/grammar-admin', '语法库管理')"><span class="icon">📗</span><span>语法库管理</span></a></li>
-            <li><a href="#" onclick="showIframePage('/matching-dict-admin', '替换库管理')"><span class="icon">🔄</span><span>替换库管理</span></a></li>
-            
-            <div class="nav-divider"></div>
-            <div class="nav-label">🔧 工具</div>
-            
-            <li><a href="#" onclick="showSection('chunk')"><span class="icon">✂️</span><span>分块管理</span></a></li>
-            <li><a href="#" onclick="showIframePage('/processing-log-admin', '处理日志')"><span class="icon">📋</span><span>处理日志</span></a></li>
-            
-            <div class="nav-divider"></div>
-            
-            <li><a href="/" target="_blank"><span class="icon">🔗</span><span>API 文档</span></a></li>
-            <li><a href="http://localhost:5173" target="_blank"><span class="icon">🌐</span><span>前端页面</span></a></li>
-        </ul>
+
+        <div class="nav-scroll">
+            <ul class="nav-menu">
+                <li><a href="#" class="active" onclick="showSection('dashboard')"><span class="nav-icon">📊</span><span>仪表盘</span></a></li>
+                <li><a href="#" onclick="showSection('users')"><span class="nav-icon">👥</span><span>用户管理</span></a></li>
+                <li><a href="#" onclick="showSection('tasks')"><span class="nav-icon">📋</span><span>任务管理</span></a></li>
+                <li><a href="#" onclick="showSection('files')"><span class="nav-icon">📁</span><span>文件管理</span></a></li>
+                <li><a href="#" onclick="showSection('logs')"><span class="nav-icon">📝</span><span>系统日志</span></a></li>
+
+                <div class="nav-divider"></div>
+                <div class="nav-label">数据库管理</div>
+
+                <li><a href="#" onclick="showIframePage('/vocabulary-admin', '词库管理')"><span class="nav-icon">📖</span><span>词库管理</span></a></li>
+                <li><a href="#" onclick="showIframePage('/grammar-admin', '语法库管理')"><span class="nav-icon">📗</span><span>语法库管理</span></a></li>
+                <li><a href="#" onclick="showIframePage('/matching-dict-admin', '替换库管理')"><span class="nav-icon">🔄</span><span>替换库管理</span></a></li>
+
+                <div class="nav-divider"></div>
+                <div class="nav-label">工具</div>
+
+                <li><a href="#" onclick="showSection('chunk')"><span class="nav-icon">✂️</span><span>分块管理</span></a></li>
+                <li><a href="#" onclick="showIframePage('/processing-log-admin', '处理日志')"><span class="nav-icon">📋</span><span>处理日志</span></a></li>
+
+                <div class="nav-divider"></div>
+
+                <li><a href="/" target="_blank"><span class="nav-icon">🔗</span><span>API 文档</span></a></li>
+                <li><a href="http://localhost:5173" target="_blank"><span class="nav-icon">🌐</span><span>前端页面</span></a></li>
+            </ul>
+        </div>
     </div>
 
-    <!-- 主内容区 -->
+    <!-- ==================== MAIN CONTENT ==================== -->
     <div class="main-content">
-        <!-- 仪表盘 -->
+
+        <!-- ========== DASHBOARD ========== -->
         <div id="section-dashboard" class="section active">
             <div class="header">
-                <h2>📊 仪表盘</h2>
+                <h2><span class="page-icon">📊</span> 仪表盘</h2>
                 <div class="header-actions">
-                    <button class="btn btn-secondary" onclick="refreshDashboard()">🔄 刷新数据</button>
+                    <button class="btn" onclick="refreshDashboard()">🔄 刷新数据</button>
                 </div>
             </div>
-            
+
             <div class="stats-grid" id="stats-grid">
                 <div class="stat-card">
-                    <div class="icon blue">👥</div>
+                    <div class="stat-icon purple">👥</div>
                     <div class="value" id="stat-users">-</div>
                     <div class="label">总用户数</div>
                 </div>
                 <div class="stat-card">
-                    <div class="icon green">✅</div>
+                    <div class="stat-icon green">✅</div>
                     <div class="value" id="stat-tasks-completed">-</div>
                     <div class="label">已完成任务</div>
                 </div>
                 <div class="stat-card">
-                    <div class="icon orange">📋</div>
+                    <div class="stat-icon blue">📋</div>
                     <div class="value" id="stat-tasks-total">-</div>
                     <div class="label">总任务数</div>
                 </div>
                 <div class="stat-card">
-                    <div class="icon purple">📁</div>
+                    <div class="stat-icon orange">📁</div>
                     <div class="value" id="stat-files">-</div>
                     <div class="label">总文件数</div>
                 </div>
                 <div class="stat-card">
-                    <div class="icon red">⏳</div>
+                    <div class="stat-icon red">⏳</div>
                     <div class="value" id="stat-tasks-today">-</div>
                     <div class="label">今日任务</div>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-header">
                     <h3>📋 最近任务</h3>
-                    <button class="btn btn-secondary" onclick="showSection('tasks')">查看全部</button>
+                    <button class="btn" onclick="showSection('tasks')" style="padding:6px 14px;font-size:12px;">查看全部 →</button>
                 </div>
                 <div class="card-body">
                     <table>
@@ -778,11 +817,11 @@
                     </table>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-header">
                     <h3>📝 最近日志</h3>
-                    <button class="btn btn-secondary" onclick="showSection('logs')">查看全部</button>
+                    <button class="btn" onclick="showSection('logs')" style="padding:6px 14px;font-size:12px;">查看全部 →</button>
                 </div>
                 <div class="card-body" id="recent-logs">
                     <div class="loading">加载中...</div>
@@ -790,16 +829,16 @@
             </div>
         </div>
 
-        <!-- 用户管理 -->
+        <!-- ========== USERS ========== -->
         <div id="section-users" class="section">
             <div class="header">
-                <h2>👥 用户管理</h2>
+                <h2><span class="page-icon">👥</span> 用户管理</h2>
                 <div class="header-actions">
                     <button class="btn btn-primary" onclick="showAddUserModal()">+ 添加用户</button>
-                    <button class="btn btn-secondary" onclick="loadUsers()">🔄 刷新</button>
+                    <button class="btn" onclick="loadUsers()">🔄 刷新</button>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-body">
                     <table>
@@ -823,15 +862,15 @@
             </div>
         </div>
 
-        <!-- 任务管理 -->
+        <!-- ========== TASKS ========== -->
         <div id="section-tasks" class="section">
             <div class="header">
-                <h2>📋 任务管理</h2>
+                <h2><span class="page-icon">📋</span> 任务管理</h2>
                 <div class="header-actions">
-                    <button class="btn btn-secondary" onclick="loadTasks()">🔄 刷新</button>
+                    <button class="btn" onclick="loadTasks()">🔄 刷新</button>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-body">
                     <table>
@@ -855,16 +894,16 @@
             </div>
         </div>
 
-        <!-- 文件管理 -->
+        <!-- ========== FILES ========== -->
         <div id="section-files" class="section">
             <div class="header">
-                <h2>📁 文件管理</h2>
+                <h2><span class="page-icon">📁</span> 文件管理</h2>
                 <div class="header-actions">
-                    <span id="files-stats" style="color:#666;margin-right:15px;"></span>
-                    <button class="btn btn-secondary" onclick="loadFiles()">🔄 刷新</button>
+                    <span id="files-stats" style="color:var(--text-muted);margin-right:15px;font-size:13px;"></span>
+                    <button class="btn" onclick="loadFiles()">🔄 刷新</button>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-body">
                     <table>
@@ -886,15 +925,15 @@
             </div>
         </div>
 
-        <!-- 系统日志 -->
+        <!-- ========== LOGS ========== -->
         <div id="section-logs" class="section">
             <div class="header">
-                <h2>📝 系统日志</h2>
+                <h2><span class="page-icon">📝</span> 系统日志</h2>
                 <div class="header-actions">
-                    <button class="btn btn-secondary" onclick="loadLogs()">🔄 刷新</button>
+                    <button class="btn" onclick="loadLogs()">🔄 刷新</button>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-body">
                     <table>
@@ -915,23 +954,18 @@
             </div>
         </div>
 
-        <!-- ============================================ -->
-        <!-- 分块管理 -->
-        <!-- ============================================ -->
+        <!-- ========== CHUNK MANAGEMENT ========== -->
         <div id="section-chunk" class="section">
             <div class="header">
-                <h2>✂️ 分块管理</h2>
+                <h2><span class="page-icon">✂️</span> 分块管理</h2>
                 <div class="header-actions">
-                    <button class="btn btn-secondary" onclick="loadChunkFiles()">🔄 刷新文件</button>
+                    <button class="btn" onclick="loadChunkFiles()">🔄 刷新文件</button>
                 </div>
             </div>
 
             <div class="chunk-grid">
-                <!-- 配置卡片 -->
                 <div class="card">
-                    <div class="card-header">
-                        <h3>⚙️ 分块配置</h3>
-                    </div>
+                    <div class="card-header"><h3>⚙️ 分块配置</h3></div>
                     <div class="card-body card-body-padded">
                         <div class="form-group">
                             <label>分块大小（字符数）</label>
@@ -945,22 +979,19 @@
                             <input type="number" id="minChunkSize" value="2000" min="500" max="5000">
                         </div>
                         <div class="form-group">
-                            <label style="display: flex; align-items: center; gap: 8px;">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                                 <input type="checkbox" id="saveChunks" checked>
                                 <span>保存分块文件</span>
                             </label>
                         </div>
-                        <div style="margin-top: 15px;">
+                        <div style="margin-top:15px;">
                             <button class="btn btn-primary" onclick="saveChunkConfig()">💾 保存配置</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 统计卡片 -->
                 <div class="card">
-                    <div class="card-header">
-                        <h3>📊 分块统计</h3>
-                    </div>
+                    <div class="card-header"><h3>📊 分块统计</h3></div>
                     <div class="card-body card-body-padded">
                         <div class="chunk-stats-grid">
                             <div class="chunk-stat-item">
@@ -976,74 +1007,65 @@
                                 <div class="label">平均块大小</div>
                             </div>
                         </div>
-                        <div id="splitPointsInfo" style="color: #666; font-size: 12px;"></div>
+                        <div id="splitPointsInfo" style="color:var(--text-muted);font-size:12px;"></div>
                     </div>
                 </div>
 
-                <!-- 文本输入 -->
                 <div class="card chunk-full-width">
-                    <div class="card-header">
-                        <h3>📝 输入文本</h3>
-                    </div>
+                    <div class="card-header"><h3>📝 输入文本</h3></div>
                     <div class="card-body card-body-padded">
                         <textarea class="chunk-text-input" id="chunkInputText" placeholder="粘贴需要分块的文本..."></textarea>
-                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <div style="margin-top:15px;display:flex;gap:10px;">
                             <button class="btn btn-primary" onclick="previewChunks()">👁️ 预览分块</button>
                             <button class="btn btn-primary" onclick="executeChunks()">✂️ 执行分块</button>
-                            <button class="btn btn-secondary" onclick="clearChunkInput()">🗑️ 清空</button>
+                            <button class="btn" onclick="clearChunkInput()">🗑️ 清空</button>
                         </div>
                         <div class="chunk-loading" id="chunkLoading">
                             <div class="chunk-spinner"></div>
-                            <div>处理中...</div>
+                            <div style="color:var(--text-muted);">处理中...</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 分块结果 -->
                 <div class="card">
-                    <div class="card-header">
-                        <h3>📦 分块结果</h3>
-                    </div>
+                    <div class="card-header"><h3>📦 分块结果</h3></div>
                     <div class="card-body card-body-padded">
                         <div class="chunk-result-box" id="chunkResultBox">
-                            <div class="empty-state" style="padding: 30px;">
-                                点击"预览分块"或"执行分块"查看结果
-                            </div>
+                            <div class="empty-state" style="padding:30px;">点击"预览分块"或"执行分块"查看结果</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 已保存文件 -->
                 <div class="card">
                     <div class="card-header">
                         <h3>📁 已保存的分块文件</h3>
-                        <button class="btn btn-danger" onclick="clearAllChunkFiles()" style="padding: 6px 12px; font-size: 12px;">🗑️ 清空全部</button>
+                        <button class="btn btn-danger" onclick="clearAllChunkFiles()" style="padding:6px 12px;font-size:12px;">🗑️ 清空全部</button>
                     </div>
                     <div class="card-body card-body-padded">
                         <div class="chunk-file-list" id="chunkFileList">
-                            <div class="empty-state" style="padding: 20px;">加载中...</div>
+                            <div class="empty-state" style="padding:20px;">加载中...</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- iframe页面容器 -->
+        <!-- ========== IFRAME CONTAINER ========== -->
         <div id="section-iframe" class="section">
-            <div class="header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <h2 id="iframe-title">📄 页面加载中...</h2>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn btn-secondary" onclick="refreshIframe()">🔄 刷新</button>
-                    <button class="btn btn-secondary" onclick="openInNewTab()">↗️ 新标签打开</button>
+            <div class="header" style="flex-wrap:wrap;gap:10px;">
+                <h2 id="iframe-title"><span class="page-icon">📄</span> 页面加载中...</h2>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn" onclick="refreshIframe()">🔄 刷新</button>
+                    <button class="btn" onclick="openInNewTab()">↗️ 新标签打开</button>
                 </div>
             </div>
-            <div style="margin-top: 10px; height: calc(100vh - 140px); border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <iframe id="content-iframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+            <div style="margin-top:10px;height:calc(100vh - 140px);border-radius:var(--radius-lg);overflow:hidden;background:white;border:1px solid var(--border-light);">
+                <iframe id="content-iframe" src="" style="width:100%;height:100%;border:none;"></iframe>
             </div>
         </div>
     </div>
 
-    <!-- 添加用户弹窗 -->
+    <!-- ==================== ADD USER MODAL ==================== -->
     <div class="modal" id="addUserModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1051,36 +1073,36 @@
                 <button class="modal-close" onclick="closeModal('addUserModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="addUserForm">
+                <div id="addUserForm">
                     <div class="form-group">
                         <label>用户名 *</label>
-                        <input type="text" name="username" required placeholder="请输入用户名">
+                        <input type="text" name="username" id="addUsername" required placeholder="请输入用户名">
                     </div>
                     <div class="form-group">
                         <label>密码</label>
-                        <input type="password" name="password" placeholder="默认：123456">
+                        <input type="password" name="password" id="addPassword" placeholder="默认：123456">
                     </div>
                     <div class="form-group">
                         <label>邮箱</label>
-                        <input type="email" name="email" placeholder="可选">
+                        <input type="email" name="email" id="addEmail" placeholder="可选">
                     </div>
                     <div class="form-group">
                         <label>角色</label>
-                        <select name="role">
+                        <select name="role" id="addRole">
                             <option value="user">普通用户</option>
                             <option value="admin">管理员</option>
                         </select>
                     </div>
-                </form>
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('addUserModal')">取消</button>
+                <button class="btn" onclick="closeModal('addUserModal')">取消</button>
                 <button class="btn btn-primary" onclick="addUser()">确认添加</button>
             </div>
         </div>
     </div>
 
-    <!-- 编辑用户弹窗 -->
+    <!-- ==================== EDIT USER MODAL ==================== -->
     <div class="modal" id="editUserModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1088,38 +1110,38 @@
                 <button class="modal-close" onclick="closeModal('editUserModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="editUserForm">
-                    <input type="hidden" name="id">
+                <div id="editUserForm">
+                    <input type="hidden" name="id" id="editId">
                     <div class="form-group">
                         <label>用户名</label>
-                        <input type="text" name="username" disabled>
+                        <input type="text" name="username" id="editUsername" disabled>
                     </div>
                     <div class="form-group">
                         <label>新密码</label>
-                        <input type="password" name="password" placeholder="留空则不修改">
+                        <input type="password" name="password" id="editPassword" placeholder="留空则不修改">
                     </div>
                     <div class="form-group">
                         <label>邮箱</label>
-                        <input type="email" name="email">
+                        <input type="email" name="email" id="editEmail">
                     </div>
                     <div class="form-group">
                         <label>角色</label>
-                        <select name="role">
+                        <select name="role" id="editRole">
                             <option value="user">普通用户</option>
                             <option value="admin">管理员</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>状态</label>
-                        <select name="status">
+                        <select name="status" id="editStatus">
                             <option value="active">正常</option>
                             <option value="inactive">禁用</option>
                         </select>
                     </div>
-                </form>
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('editUserModal')">取消</button>
+                <button class="btn" onclick="closeModal('editUserModal')">取消</button>
                 <button class="btn btn-primary" onclick="updateUser()">保存修改</button>
             </div>
         </div>
@@ -1128,17 +1150,17 @@
     <script>
         const API_BASE = '/api/admin';
         const CHUNK_API = '/api/chunk';
-        
+
         // ============================================
-        // 导航切换
+        // Navigation
         // ============================================
         function showSection(name) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
-            
+
             document.getElementById(`section-${name}`).classList.add('active');
             event.target.closest('a').classList.add('active');
-            
+
             switch(name) {
                 case 'dashboard': refreshDashboard(); break;
                 case 'users': loadUsers(); break;
@@ -1148,54 +1170,47 @@
                 case 'chunk': loadChunkConfig(); loadChunkFiles(); break;
             }
         }
-        
+
         // ============================================
-        // iframe页面显示（工具类页面）
+        // Iframe pages
         // ============================================
         let currentIframeUrl = '';
-        
+
         function showIframePage(url, title) {
-            // 隐藏所有section，显示iframe section
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
-            
+
             document.getElementById('section-iframe').classList.add('active');
             event.target.closest('a').classList.add('active');
-            
-            // 设置标题和加载页面
+
             const iconMap = {
-                '/grammar-admin': '📚',
-                '/vocabulary-admin': '📖',
-                '/matching-dict-admin': '📚',
-                '/processing-log-admin': '📋'
+                '/grammar-admin': '📚', '/vocabulary-admin': '📖',
+                '/matching-dict-admin': '📚', '/processing-log-admin': '📋'
             };
             const icon = iconMap[url] || '📄';
-            document.getElementById('iframe-title').textContent = `${icon} ${title}`;
-            
-            // 加载页面到iframe
+            document.getElementById('iframe-title').innerHTML = `<span class="page-icon">${icon}</span> ${title}`;
+
             currentIframeUrl = url;
             document.getElementById('content-iframe').src = url;
         }
-        
+
         function refreshIframe() {
             const iframe = document.getElementById('content-iframe');
             iframe.src = iframe.src;
         }
-        
+
         function openInNewTab() {
-            if (currentIframeUrl) {
-                window.open(currentIframeUrl, '_blank');
-            }
+            if (currentIframeUrl) window.open(currentIframeUrl, '_blank');
         }
-        
+
         // ============================================
-        // 仪表盘数据
+        // Dashboard
         // ============================================
         async function refreshDashboard() {
             try {
                 const res = await fetch(`${API_BASE}/dashboard`);
                 const json = await res.json();
-                
+
                 if (json.success) {
                     const d = json.data;
                     document.getElementById('stat-users').textContent = d.users?.total || 0;
@@ -1204,14 +1219,13 @@
                     document.getElementById('stat-files').textContent = d.files?.total || 0;
                     document.getElementById('stat-tasks-today').textContent = d.tasks?.today || 0;
                 }
-                
-                // 加载最近任务
+
                 const tasksRes = await fetch(`${API_BASE}/tasks?limit=5`);
                 const tasksJson = await tasksRes.json();
                 if (tasksJson.success && tasksJson.data.length > 0) {
                     document.getElementById('recent-tasks').innerHTML = tasksJson.data.slice(0, 5).map(task => `
                         <tr>
-                            <td style="font-family:monospace;font-size:12px;">${task.task_id?.slice(0,8) || '-'}...</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);">${task.task_id?.slice(0,8) || '-'}...</td>
                             <td>${task.title || '-'}</td>
                             <td>${task.username || '-'}</td>
                             <td>${getStatusBadge(task.status)}</td>
@@ -1219,8 +1233,7 @@
                         </tr>
                     `).join('');
                 }
-                
-                // 加载最近日志
+
                 const logsRes = await fetch(`${API_BASE}/logs?limit=5`);
                 const logsJson = await logsRes.json();
                 if (logsJson.success && logsJson.data.length > 0) {
@@ -1238,25 +1251,25 @@
                 console.error('Dashboard error:', err);
             }
         }
-        
+
         // ============================================
-        // 加载用户列表
+        // Users
         // ============================================
         async function loadUsers() {
             try {
                 const res = await fetch(`${API_BASE}/users`);
                 const json = await res.json();
-                
+
                 const tbody = document.getElementById('users-table');
                 if (json.success && json.data.length > 0) {
                     tbody.innerHTML = json.data.map(user => `
                         <tr>
-                            <td>${user.id}</td>
-                            <td>${user.username}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--text-muted);">${user.id}</td>
+                            <td style="font-weight:600;">${user.username}</td>
                             <td>${user.email || '-'}</td>
                             <td>${getRoleBadge(user.role)}</td>
                             <td>${getStatusBadge(user.status)}</td>
-                            <td>${user.task_count || 0}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;">${user.task_count || 0}</td>
                             <td>${formatDate(user.created_at)}</td>
                             <td>
                                 <button class="action-btn edit" onclick="editUser(${user.id})">编辑</button>
@@ -1271,25 +1284,25 @@
                 console.error('Load users error:', err);
             }
         }
-        
+
         // ============================================
-        // 加载任务列表
+        // Tasks
         // ============================================
         async function loadTasks() {
             try {
                 const res = await fetch(`${API_BASE}/tasks`);
                 const json = await res.json();
-                
+
                 const tbody = document.getElementById('tasks-table');
                 if (json.success && json.data.length > 0) {
                     tbody.innerHTML = json.data.map(task => `
                         <tr>
-                            <td style="font-family:monospace;font-size:12px;">${task.task_id?.slice(0,8) || '-'}...</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);">${task.task_id?.slice(0,8) || '-'}...</td>
                             <td>${task.title || '-'}</td>
                             <td>${task.username || '-'}</td>
                             <td>${getStatusBadge(task.status)}</td>
-                            <td>${task.progress || 0}%</td>
-                            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" title="${task.original_file || ''}">${task.original_file || '-'}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;">${task.progress || 0}%</td>
+                            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${task.original_file || ''}">${task.original_file || '-'}</td>
                             <td>${formatDate(task.created_at)}</td>
                             <td>
                                 <button class="action-btn view" onclick="viewTask('${task.task_id}')">查看</button>
@@ -1304,24 +1317,24 @@
                 console.error('Load tasks error:', err);
             }
         }
-        
+
         // ============================================
-        // 加载文件列表
+        // Files
         // ============================================
         async function loadFiles() {
             try {
                 const res = await fetch(`${API_BASE}/files`);
                 const json = await res.json();
-                
+
                 const tbody = document.getElementById('files-table');
                 if (json.success && json.data.length > 0) {
                     tbody.innerHTML = json.data.map(file => `
                         <tr>
-                            <td>${file.id}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--text-muted);">${file.id}</td>
                             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${file.original_name}">${file.original_name}</td>
                             <td>${file.username || '-'}</td>
                             <td>${getTypeBadge(file.file_type)}</td>
-                            <td>${formatSize(file.file_size)}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;">${formatSize(file.file_size)}</td>
                             <td>${formatDate(file.created_at)}</td>
                         </tr>
                     `).join('');
@@ -1332,24 +1345,24 @@
                 console.error('Load files error:', err);
             }
         }
-        
+
         // ============================================
-        // 加载日志
+        // Logs
         // ============================================
         async function loadLogs() {
             try {
                 const res = await fetch(`${API_BASE}/logs`);
                 const json = await res.json();
-                
+
                 const tbody = document.getElementById('logs-table');
                 if (json.success && json.data.length > 0) {
                     tbody.innerHTML = json.data.map(log => `
                         <tr>
-                            <td style="white-space:nowrap;">${formatDate(log.created_at)}</td>
+                            <td style="white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:12px;">${formatDate(log.created_at)}</td>
                             <td>${getLevelBadge(log.level)}</td>
                             <td>${log.action || '-'}</td>
                             <td>${log.username || '-'}</td>
-                            <td>${log.message || '-'}</td>
+                            <td style="max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${log.message || ''}">${log.message || '-'}</td>
                         </tr>
                     `).join('');
                 } else {
@@ -1361,37 +1374,29 @@
         }
 
         // ============================================
-        // 分块管理功能
+        // Chunk Management
         // ============================================
-        
-        // 初始化滑块
         document.addEventListener('DOMContentLoaded', () => {
             const slider = document.getElementById('chunkSize');
             const valueDisplay = document.getElementById('chunkSizeValue');
-            slider.addEventListener('input', () => {
-                valueDisplay.textContent = slider.value;
-            });
+            slider.addEventListener('input', () => { valueDisplay.textContent = slider.value; });
         });
 
-        // 加载分块配置
         async function loadChunkConfig() {
             try {
                 const res = await fetch(`${CHUNK_API}/config`);
                 const data = await res.json();
-                
                 if (data.success) {
-                    const config = data.data.chunk_settings;
-                    document.getElementById('chunkSize').value = config.default_chunk_size;
-                    document.getElementById('chunkSizeValue').textContent = config.default_chunk_size;
-                    document.getElementById('minChunkSize').value = config.min_chunk_size;
-                    document.getElementById('saveChunks').checked = data.data.output_settings?.save_chunks !== false;
+                    document.getElementById('chunkSize').value = data.data.chunk_size || 6000;
+                    document.getElementById('chunkSizeValue').textContent = data.data.chunk_size || 6000;
+                    document.getElementById('minChunkSize').value = data.data.min_chunk_size || 2000;
+                    document.getElementById('saveChunks').checked = data.data.save_chunks !== false;
                 }
             } catch (err) {
-                console.error('加载配置失败:', err);
+                console.error('Load chunk config error:', err);
             }
         }
 
-        // 保存分块配置
         async function saveChunkConfig() {
             try {
                 const config = {
@@ -1407,34 +1412,23 @@
                 });
 
                 const data = await res.json();
-                if (data.success) {
-                    showToast('配置已保存');
-                } else {
-                    showToast(data.error, 'error');
-                }
+                if (data.success) { showToast('配置已保存'); }
+                else { showToast(data.error, 'error'); }
             } catch (err) {
                 showToast('保存失败', 'error');
             }
         }
 
-        // 预览分块
         async function previewChunks() {
             const text = document.getElementById('chunkInputText').value;
-            if (!text.trim()) {
-                showToast('请输入文本', 'error');
-                return;
-            }
+            if (!text.trim()) { showToast('请输入文本', 'error'); return; }
 
             setChunkLoading(true);
-
             try {
                 const res = await fetch(`${CHUNK_API}/preview`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        text,
-                        chunk_size: parseInt(document.getElementById('chunkSize').value)
-                    })
+                    body: JSON.stringify({ text, chunk_size: parseInt(document.getElementById('chunkSize').value) })
                 });
 
                 const data = await res.json();
@@ -1442,26 +1436,16 @@
                     updateChunkStats(data.data);
                     displayChunkPreview(data.data);
                     showToast('预览完成');
-                } else {
-                    showToast(data.error, 'error');
-                }
-            } catch (err) {
-                showToast('预览失败', 'error');
-            } finally {
-                setChunkLoading(false);
-            }
+                } else { showToast(data.error, 'error'); }
+            } catch (err) { showToast('预览失败', 'error'); }
+            finally { setChunkLoading(false); }
         }
 
-        // 执行分块
         async function executeChunks() {
             const text = document.getElementById('chunkInputText').value;
-            if (!text.trim()) {
-                showToast('请输入文本', 'error');
-                return;
-            }
+            if (!text.trim()) { showToast('请输入文本', 'error'); return; }
 
             setChunkLoading(true);
-
             try {
                 const res = await fetch(`${CHUNK_API}/split`, {
                     method: 'POST',
@@ -1484,14 +1468,9 @@
                     });
                     loadChunkFiles();
                     showToast(`分块完成，共 ${data.data.totalChunks} 块`);
-                } else {
-                    showToast(data.error, 'error');
-                }
-            } catch (err) {
-                showToast('分块失败', 'error');
-            } finally {
-                setChunkLoading(false);
-            }
+                } else { showToast(data.error, 'error'); }
+            } catch (err) { showToast('分块失败', 'error'); }
+            finally { setChunkLoading(false); }
         }
 
         function setChunkLoading(show) {
@@ -1502,7 +1481,6 @@
             document.getElementById('statTotalLength').textContent = (data.totalLength || 0).toLocaleString();
             document.getElementById('statChunks').textContent = data.estimatedChunks || 0;
             document.getElementById('statAvgSize').textContent = (data.avgChunkSize || 0).toLocaleString();
-            
             if (data.splitPoints) {
                 const patterns = data.splitPoints.map(p => p.pattern).join(' → ');
                 document.getElementById('splitPointsInfo').textContent = `切分模式: ${patterns}`;
@@ -1537,7 +1515,7 @@
 
         function clearChunkInput() {
             document.getElementById('chunkInputText').value = '';
-            document.getElementById('chunkResultBox').innerHTML = '<div class="empty-state" style="padding: 30px;">点击"预览分块"或"执行分块"查看结果</div>';
+            document.getElementById('chunkResultBox').innerHTML = '<div class="empty-state" style="padding:30px;">点击"预览分块"或"执行分块"查看结果</div>';
             document.getElementById('statTotalLength').textContent = '0';
             document.getElementById('statChunks').textContent = '0';
             document.getElementById('statAvgSize').textContent = '0';
@@ -1548,22 +1526,16 @@
             try {
                 const res = await fetch(`${CHUNK_API}/files`);
                 const data = await res.json();
-                
-                if (data.success) {
-                    displayChunkFiles(data.data.files || []);
-                }
-            } catch (err) {
-                console.error('加载文件列表失败:', err);
-            }
+                if (data.success) { displayChunkFiles(data.data.files || []); }
+            } catch (err) { console.error('加载文件列表失败:', err); }
         }
 
         function displayChunkFiles(files) {
             const list = document.getElementById('chunkFileList');
             if (files.length === 0) {
-                list.innerHTML = '<div class="empty-state" style="padding: 20px;">暂无文件</div>';
+                list.innerHTML = '<div class="empty-state" style="padding:20px;">暂无文件</div>';
                 return;
             }
-
             list.innerHTML = files.slice(0, 30).map(file => `
                 <div class="chunk-file-item">
                     <span class="chunk-file-name" onclick="viewChunkFile('${file.filename}')">${file.filename}</span>
@@ -1583,67 +1555,52 @@
                 } else if (data.success && data.data.isJson) {
                     alert(JSON.stringify(data.data.content, null, 2));
                 }
-            } catch (err) {
-                showToast('加载失败', 'error');
-            }
+            } catch (err) { showToast('加载失败', 'error'); }
         }
 
         async function deleteChunkFile(filename) {
             if (!confirm(`确定删除 ${filename}？`)) return;
-            
             try {
                 const res = await fetch(`${CHUNK_API}/files/${filename}`, { method: 'DELETE' });
                 const data = await res.json();
-                if (data.success) {
-                    showToast('已删除');
-                    loadChunkFiles();
-                }
-            } catch (err) {
-                showToast('删除失败', 'error');
-            }
+                if (data.success) { showToast('已删除'); loadChunkFiles(); }
+            } catch (err) { showToast('删除失败', 'error'); }
         }
 
         async function clearAllChunkFiles() {
             if (!confirm('确定清空所有分块文件？')) return;
-            
             try {
                 const res = await fetch(`${CHUNK_API}/files`, { method: 'DELETE' });
                 const data = await res.json();
-                if (data.success) {
-                    showToast(data.message);
-                    loadChunkFiles();
-                }
-            } catch (err) {
-                showToast('清空失败', 'error');
-            }
+                if (data.success) { showToast(data.message); loadChunkFiles(); }
+            } catch (err) { showToast('清空失败', 'error'); }
         }
-        
+
         // ============================================
-        // 弹窗相关
+        // User Modals
         // ============================================
         function showAddUserModal() {
-            document.getElementById('addUserForm').reset();
+            document.getElementById('addUsername').value = '';
+            document.getElementById('addPassword').value = '';
+            document.getElementById('addEmail').value = '';
+            document.getElementById('addRole').value = 'user';
             document.getElementById('addUserModal').classList.add('active');
         }
-        
+
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
         }
-        
+
         async function addUser() {
-            const form = document.getElementById('addUserForm');
             const data = {
-                username: form.username.value,
-                password: form.password.value || '123456',
-                email: form.email.value,
-                role: form.role.value
+                username: document.getElementById('addUsername').value,
+                password: document.getElementById('addPassword').value || '123456',
+                email: document.getElementById('addEmail').value,
+                role: document.getElementById('addRole').value
             };
-            
-            if (!data.username) {
-                alert('请输入用户名！');
-                return;
-            }
-            
+
+            if (!data.username) { alert('请输入用户名！'); return; }
+
             try {
                 const res = await fetch(`${API_BASE}/users`, {
                     method: 'POST',
@@ -1651,115 +1608,83 @@
                     body: JSON.stringify(data)
                 });
                 const json = await res.json();
-                
+
                 if (json.success) {
-                    alert('用户创建成功！');
+                    showToast('用户创建成功');
                     closeModal('addUserModal');
-                    form.reset();
                     loadUsers();
-                } else {
-                    alert('错误：' + json.error);
-                }
-            } catch (err) {
-                alert('创建用户失败');
-            }
+                } else { alert('错误：' + json.error); }
+            } catch (err) { alert('创建用户失败'); }
         }
-        
+
         async function editUser(id) {
             try {
                 const res = await fetch(`${API_BASE}/users/${id}`);
                 const json = await res.json();
-                
+
                 if (json.success) {
                     const user = json.data;
-                    const form = document.getElementById('editUserForm');
-                    form.id.value = user.id;
-                    form.username.value = user.username;
-                    form.email.value = user.email || '';
-                    form.role.value = user.role;
-                    form.status.value = user.status;
-                    form.password.value = '';
-                    
+                    document.getElementById('editId').value = user.id;
+                    document.getElementById('editUsername').value = user.username;
+                    document.getElementById('editEmail').value = user.email || '';
+                    document.getElementById('editRole').value = user.role;
+                    document.getElementById('editStatus').value = user.status;
+                    document.getElementById('editPassword').value = '';
                     document.getElementById('editUserModal').classList.add('active');
                 }
-            } catch (err) {
-                alert('获取用户信息失败');
-            }
+            } catch (err) { alert('获取用户信息失败'); }
         }
-        
+
         async function updateUser() {
-            const form = document.getElementById('editUserForm');
             const data = {
-                email: form.email.value,
-                role: form.role.value,
-                status: form.status.value
+                email: document.getElementById('editEmail').value,
+                role: document.getElementById('editRole').value,
+                status: document.getElementById('editStatus').value
             };
-            
-            if (form.password.value) {
-                data.password = form.password.value;
-            }
-            
+
+            const pw = document.getElementById('editPassword').value;
+            if (pw) data.password = pw;
+
             try {
-                const res = await fetch(`${API_BASE}/users/${form.id.value}`, {
+                const res = await fetch(`${API_BASE}/users/${document.getElementById('editId').value}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
                 const json = await res.json();
-                
+
                 if (json.success) {
-                    alert('用户更新成功！');
+                    showToast('用户更新成功');
                     closeModal('editUserModal');
                     loadUsers();
-                } else {
-                    alert('更新失败');
-                }
-            } catch (err) {
-                alert('更新用户失败');
-            }
+                } else { alert('更新失败'); }
+            } catch (err) { alert('更新用户失败'); }
         }
-        
+
         async function deleteUser(id) {
             if (!confirm('确定要删除此用户吗？此操作不可恢复！')) return;
-            
             try {
                 const res = await fetch(`${API_BASE}/users/${id}`, { method: 'DELETE' });
                 const json = await res.json();
-                
-                if (json.success) {
-                    loadUsers();
-                } else {
-                    alert('删除失败');
-                }
-            } catch (err) {
-                alert('删除用户失败');
-            }
+                if (json.success) { loadUsers(); } else { alert('删除失败'); }
+            } catch (err) { alert('删除用户失败'); }
         }
-        
+
         async function deleteTask(id) {
             if (!confirm('确定要删除此任务吗？此操作不可恢复！')) return;
-            
             try {
                 const res = await fetch(`${API_BASE}/tasks/${id}`, { method: 'DELETE' });
                 const json = await res.json();
-                
-                if (json.success) {
-                    loadTasks();
-                } else {
-                    alert('删除失败');
-                }
-            } catch (err) {
-                alert('删除任务失败');
-            }
+                if (json.success) { loadTasks(); } else { alert('删除失败'); }
+            } catch (err) { alert('删除任务失败'); }
         }
 
         function viewTask(taskId) {
             showToast('查看任务: ' + taskId);
-            // TODO: 实现任务详情查看
         }
-        
+
         // ============================================
-        // 辅助函数
+        // Helpers
         // ============================================
         function getStatusBadge(status) {
             const badges = {
@@ -1772,7 +1697,7 @@
             };
             return badges[status] || `<span class="badge badge-default">${status || '未知'}</span>`;
         }
-        
+
         function getRoleBadge(role) {
             const badges = {
                 'admin': '<span class="badge badge-danger">管理员</span>',
@@ -1780,7 +1705,7 @@
             };
             return badges[role] || `<span class="badge badge-default">${role}</span>`;
         }
-        
+
         function getLevelBadge(level) {
             const badges = {
                 'info': '<span class="badge badge-info">信息</span>',
@@ -1789,31 +1714,19 @@
             };
             return badges[level] || `<span class="badge badge-default">${level}</span>`;
         }
-        
+
         function getTypeBadge(type) {
-            const colors = {
-                'txt': 'info',
-                'pdf': 'danger',
-                'mp3': 'warning',
-                'wav': 'warning',
-                'doc': 'info',
-                'docx': 'info'
-            };
+            const colors = { 'txt': 'info', 'pdf': 'danger', 'mp3': 'warning', 'wav': 'warning', 'doc': 'info', 'docx': 'info' };
             const color = colors[type] || 'default';
             return `<span class="badge badge-${color}">${type || '未知'}</span>`;
         }
-        
+
         function formatDate(dateStr) {
             if (!dateStr) return '-';
             const d = new Date(dateStr);
-            return d.toLocaleString('zh-CN', {
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         }
-        
+
         function formatSize(bytes) {
             if (!bytes) return '-';
             if (bytes < 1024) return bytes + ' B';
@@ -1827,7 +1740,6 @@
             return div.innerHTML;
         }
 
-        // Toast 提示
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -1835,8 +1747,8 @@
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
-        
-        // 页面加载完成后刷新仪表盘
+
+        // Init
         refreshDashboard();
     </script>
 </body>

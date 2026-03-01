@@ -1,0 +1,52 @@
+{
+  "name": "sorryios-ai",
+  "version": "1.0.0",
+  "description": "Sorryios AI - Smart Learning System",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.sorryios.ai",
+    "productName": "Sorryios AI",
+    "copyright": "Copyright 2026",
+    "directories": {
+      "output": "../release"
+    },
+    "files": [
+      "main.js",
+      "config.json",
+      "app.ico"
+    ],
+    "extraResources": [],
+    "win": {
+      "icon": "app.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sorryios AI",
+      "installerIcon": "app.ico",
+      "uninstallerIcon": "app.ico",
+      "installerHeaderIcon": "app.ico",
+      "language": "2052"
+    }
+  }
+}
