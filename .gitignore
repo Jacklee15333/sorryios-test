@@ -1,8 +1,11 @@
 ﻿# Node / Electron
 node_modules/
 desktop/node_modules/
+desktop-client/node_modules/
+desktop-admin/node_modules/
 desktop/**/dist/
 dist/
 out/
 release/
 *.exe
+*.zip
