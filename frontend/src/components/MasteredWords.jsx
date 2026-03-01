@@ -1,8 +1,8 @@
 /**
- * MasteredWords.jsx - 已掌握词汇管理界面
+ * MasteredWords.jsx - 已知词库管理界面
  * 
  * 功能：
- * - 显示用户所有已掌握的词汇
+ * - 管理不需要出现在报告中的简单/已知词汇
  * - 按类型分类（单词、短语、句型、语法）
  * - 支持移除操作（带确认）
  * - 支持搜索和筛选
@@ -35,7 +35,8 @@ import {
   BookOutlined,
   FileTextOutlined,
   FormOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  FilterOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 
@@ -76,9 +77,9 @@ const MasteredWords = () => {
         return;
       }
 
-      console.log('[MasteredWords] 📊 开始加载已掌握词汇...');
+      console.log('[MasteredWords] 📊 开始加载已知词库...');
 
-      // 1. 获取所有已掌握词汇
+      // 1. 获取所有已知词汇
       const allResponse = await axios.get('/api/user-mastered/list', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -141,11 +142,11 @@ const MasteredWords = () => {
   // 批量清空
   const handleClearAll = async () => {
     Modal.confirm({
-      title: '⚠️ 确认清空所有已掌握词汇？',
+      title: '⚠️ 确认清空已知词库？',
       content: (
         <div>
-          <p>此操作将清空 <strong style={{color: '#ff4d4f'}}>{stats.total}</strong> 个已掌握的词汇。</p>
-          <p style={{color: '#999', fontSize: '13px'}}>此操作不可撤销，请谨慎操作。</p>
+          <p>此操作将清空 <strong style={{color: '#ff4d4f'}}>{stats.total}</strong> 个已知词汇。</p>
+          <p style={{color: '#999', fontSize: '13px'}}>清空后，这些词汇将重新出现在学习报告中。</p>
         </div>
       ),
       okText: '确认清空',
@@ -236,7 +237,7 @@ const MasteredWords = () => {
       width: '25%',
       render: (_, record) => (
         <Popconfirm
-          title="确认移除此词汇？"
+          title="确认移除？"
           description={
             <div style={{ maxWidth: 300 }}>
               <p>将移除：<strong>{record.word}</strong></p>
@@ -246,7 +247,7 @@ const MasteredWords = () => {
             </div>
           }
           onConfirm={() => handleRemove(record)}
-          okText="确认移除"
+          okText="确认"
           cancelText="取消"
           okButtonProps={{ danger: true }}
         >
@@ -317,55 +318,66 @@ const MasteredWords = () => {
   ];
 
   return (
-    <div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
+    <div style={{ background: 'transparent', minHeight: '100%' }}>
       <Card 
         bordered={false}
-        style={{ maxWidth: 1200, margin: '0 auto' }}
+        style={{ 
+          maxWidth: 1200, 
+          margin: '0 auto',
+          borderRadius: 12,
+          border: '1px solid #e5e7eb'
+        }}
       >
-        {/* 标题和统计 */}
+        {/* 标题和说明 */}
         <div style={{ marginBottom: 24 }}>
-          <Title level={3} style={{ marginBottom: 16 }}>
-            📚 已掌握词汇管理
-          </Title>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <FilterOutlined style={{ fontSize: 20, color: '#3b82f6' }} />
+            <Title level={4} style={{ marginBottom: 0 }}>
+              已知词库
+            </Title>
+          </div>
+          <p style={{ color: '#9ca3af', fontSize: 13, marginTop: 4, marginBottom: 16 }}>
+            这里存放你已经认识的词汇，它们不会出现在后续的学习报告中
+          </p>
           
           <Row gutter={16} style={{ marginBottom: 16 }}>
             <Col xs={24} sm={12} md={6}>
-              <Card>
+              <Card size="small">
                 <Statistic
                   title="总计"
                   value={stats.total || 0}
                   prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
+                  valueStyle={{ color: '#3b82f6' }}
                 />
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Card>
+              <Card size="small">
                 <Statistic
                   title="单词"
                   value={stats.words || 0}
                   prefix={<BookOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
+                  valueStyle={{ color: '#6b7280' }}
                 />
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Card>
+              <Card size="small">
                 <Statistic
                   title="短语"
                   value={stats.phrases || 0}
                   prefix={<FileTextOutlined />}
-                  valueStyle={{ color: '#52c41a' }}
+                  valueStyle={{ color: '#6b7280' }}
                 />
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Card>
+              <Card size="small">
                 <Statistic
                   title="语法"
                   value={stats.grammar || 0}
                   prefix={<InfoCircleOutlined />}
-                  valueStyle={{ color: '#722ed1' }}
+                  valueStyle={{ color: '#6b7280' }}
                 />
               </Card>
             </Col>
@@ -420,9 +432,9 @@ const MasteredWords = () => {
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
                   <div>
-                    <p style={{ marginBottom: 8 }}>暂无已掌握的词汇</p>
+                    <p style={{ marginBottom: 8 }}>暂无已知词汇</p>
                     <p style={{ color: '#999', fontSize: '13px' }}>
-                      在学习报告中点击"已学会"按钮标记词汇
+                      在学习报告中点击"已学会"按钮，将简单词汇加入此列表
                     </p>
                   </div>
                 }

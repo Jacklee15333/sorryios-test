@@ -1,32 +1,6 @@
 /**
  * AI智能课堂笔记 - Electron 桌面应用
- * 
- * ============================================================
- * 🔧 定制指南（后续修改请看这里）：
- * ============================================================
- * 
- * 【修改软件名称】
- *   1. config.json → "appName" 字段（运行时读取的名称）
- *   2. package.json → "productName" 字段（安装包和 exe 显示的名称）
- *   3. package.json → "build.nsis.shortcutName"（桌面快捷方式名称）
- * 
- * 【修改图标】
- *   1. 替换 desktop-client/app.ico（必须是 .ico 格式，建议 256x256）
- *   2. package.json → "build.win.icon" 指定图标路径
- * 
- * 【修改启动界面】
- *   搜索 "getSplashHTML" 函数（在本文件底部），修改其中的：
- *   - 标题文字、副标题
- *   - 背景颜色（CSS gradient）
- *   - Logo emoji 或图片
- *   - 加载提示文字
- * 
- * 【修改窗口大小】
- *   修改本文件顶部 CONFIG 对象中的 WINDOW_WIDTH / WINDOW_HEIGHT
- * 
- * 【修改服务器地址】
- *   config.json → "server" 字段
- * ============================================================
+ * v5.1: 新增右键菜单 显示/隐藏Chrome 功能
  */
 
 const { app, BrowserWindow, Menu, Tray, shell, dialog, globalShortcut, ipcMain } = require('electron');
@@ -90,6 +64,123 @@ let logWindow = null;
 let tray = null;
 let backendProcess = null;
 let isQuitting = false;
+
+// ============================================================
+// 🆕 Chrome 显示/隐藏 控制
+// ============================================================
+let chromeVisible = false;
+
+/**
+ * 获取Chrome标志文件路径
+ */
+function getChromeFlagPath() {
+  return path.join(BACKEND_DIR, 'data', 'show-chrome.flag');
+}
+
+/**
+ * 切换Chrome显示状态
+ */
+function toggleChrome(show) {
+  chromeVisible = show;
+  var flagPath = getChromeFlagPath();
+  
+  try {
+    // 确保data目录存在
+    var dataDir = path.dirname(flagPath);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    
+    if (show) {
+      fs.writeFileSync(flagPath, '1');
+      log('Chrome 标志已设置: 显示');
+      // 立即尝试显示当前运行的 Chrome 窗口
+      showChromeWindows();
+    } else {
+      try { fs.unlinkSync(flagPath); } catch (e) {}
+      log('Chrome 标志已设置: 隐藏');
+      // 立即尝试隐藏当前运行的 Chrome 窗口
+      hideChromeWindows();
+    }
+  } catch (e) {
+    log('Chrome 控制失败: ' + e.message);
+  }
+  
+  // 更新右键菜单
+  updateContextMenu();
+}
+
+/**
+ * 执行 PowerShell 脚本（写临时 .ps1 文件再执行，避免 here-string 语法问题）
+ */
+function runPowerShellScript(scriptContent, label) {
+  if (process.platform !== 'win32') return;
+  var tmpFile = path.join(app.getPath('temp'), 'chrome-ctrl-' + Date.now() + '.ps1');
+  try {
+    fs.writeFileSync(tmpFile, scriptContent, 'utf8');
+    execSync('powershell -ExecutionPolicy Bypass -File "' + tmpFile + '"', {
+      windowsHide: true, timeout: 10000
+    });
+    log(label + ' 成功');
+  } catch (e) {
+    log(label + ' 失败: ' + e.message.substring(0, 120));
+  } finally {
+    try { fs.unlinkSync(tmpFile); } catch (e) {}
+  }
+}
+
+/**
+ * 立即显示当前运行的 Chromium 窗口（Windows）
+ */
+function showChromeWindows() {
+  var script = [
+    'Add-Type @"',
+    'using System;',
+    'using System.Runtime.InteropServices;',
+    'public class Win32Show {',
+    '  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr h, int x, int y, int w, int ht, bool r);',
+    '  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);',
+    '  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);',
+    '}',
+    '"@',
+    'Get-Process | Where-Object { $_.ProcessName -match "chromium|chrome" -and $_.MainWindowHandle -ne 0 } | ForEach-Object {',
+    '  [Win32Show]::ShowWindow($_.MainWindowHandle, 9)',
+    '  [Win32Show]::MoveWindow($_.MainWindowHandle, 50, 50, 1300, 850, $true)',
+    '  [Win32Show]::SetForegroundWindow($_.MainWindowHandle)',
+    '}',
+  ].join('\r\n');
+  runPowerShellScript(script, '显示 Chrome 窗口');
+}
+
+/**
+ * 立即隐藏当前运行的 Chromium 窗口
+ */
+function hideChromeWindows() {
+  var script = [
+    'Add-Type @"',
+    'using System;',
+    'using System.Runtime.InteropServices;',
+    'public class Win32Hide {',
+    '  [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr h, int x, int y, int w, int ht, bool r);',
+    '}',
+    '"@',
+    'Get-Process | Where-Object { $_.ProcessName -match "chromium|chrome" -and $_.MainWindowHandle -ne 0 } | ForEach-Object {',
+    '  [Win32Hide]::MoveWindow($_.MainWindowHandle, -32000, -32000, 1300, 850, $true)',
+    '}',
+  ].join('\r\n');
+  runPowerShellScript(script, '隐藏 Chrome 窗口');
+}
+
+/**
+ * 初始化时读取Chrome状态
+ */
+function initChromeState() {
+  try {
+    chromeVisible = fs.existsSync(getChromeFlagPath());
+  } catch (e) {
+    chromeVisible = false;
+  }
+}
 
 // ============================================================
 // Log Buffer
@@ -336,24 +427,12 @@ function createWindow() {
     width: CONFIG.WINDOW_WIDTH, height: CONFIG.WINDOW_HEIGHT,
     minWidth: CONFIG.MIN_WIDTH, minHeight: CONFIG.MIN_HEIGHT,
     title: APP_NAME, icon: ICON_PATH,
-    backgroundColor: '#f5f3ff', show: false, autoHideMenuBar: true,
+    backgroundColor: '#ffffff', show: false, autoHideMenuBar: true,
     webPreferences: { nodeIntegration: false, contextIsolation: true, spellcheck: false }
   });
 
-  // 右键菜单（中文）
-  mainWindow.webContents.on('context-menu', function () {
-    Menu.buildFromTemplate([
-      { label: '返回', click: function () { mainWindow.webContents.goBack(); } },
-      { label: '刷新', click: function () { mainWindow.webContents.reload(); } },
-      { type: 'separator' },
-      { label: '复制', role: 'copy' },
-      { label: '粘贴', role: 'paste' },
-      { label: '全选', role: 'selectAll' },
-      { type: 'separator' },
-      { label: '控制台 (Ctrl+L)', click: function () { createLogWindow(); } },
-      { label: '开发者工具 (F12)', click: function () { mainWindow.webContents.openDevTools(); } },
-    ]).popup();
-  });
+  // 🆕 右键菜单 - 包含Chrome显示/隐藏
+  updateContextMenu();
 
   mainWindow.webContents.setWindowOpenHandler(function (details) {
     var url = details.url;
@@ -368,6 +447,45 @@ function createWindow() {
   return mainWindow;
 }
 
+/**
+ * 🆕 更新右键菜单（根据Chrome状态动态显示）
+ */
+function updateContextMenu() {
+  if (!mainWindow) return;
+  
+  mainWindow.webContents.removeAllListeners('context-menu');
+  mainWindow.webContents.on('context-menu', function () {
+    var template = [
+      { label: '返回', click: function () { mainWindow.webContents.goBack(); } },
+      { label: '刷新', click: function () { mainWindow.webContents.reload(); } },
+      { type: 'separator' },
+      { label: '复制', role: 'copy' },
+      { label: '粘贴', role: 'paste' },
+      { label: '全选', role: 'selectAll' },
+      { type: 'separator' },
+    ];
+    
+    // 🆕 Chrome 显示/隐藏选项
+    if (chromeVisible) {
+      template.push({
+        label: '🔲 隐藏 Chrome',
+        click: function () { toggleChrome(false); }
+      });
+    } else {
+      template.push({
+        label: '🌐 显示 Chrome',
+        click: function () { toggleChrome(true); }
+      });
+    }
+    
+    template.push({ type: 'separator' });
+    template.push({ label: '控制台 (Ctrl+L)', click: function () { createLogWindow(); } });
+    template.push({ label: '开发者工具 (F12)', click: function () { mainWindow.webContents.openDevTools(); } });
+    
+    Menu.buildFromTemplate(template).popup();
+  });
+}
+
 // ============================================================
 // System Tray (中文)
 // ============================================================
@@ -376,22 +494,30 @@ function createTray() {
   try {
     tray = new Tray(ICON_PATH);
     tray.setToolTip(APP_NAME);
-    tray.setContextMenu(Menu.buildFromTemplate([
-      { label: '打开应用', click: function () { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
-      { label: '控制台', click: function () { createLogWindow(); } },
-      { type: 'separator' },
-      { label: '刷新', click: function () { if (mainWindow) mainWindow.webContents.reload(); } },
-      { type: 'separator' },
-      { label: '退出', click: function () { isQuitting = true; app.quit(); } },
-    ]));
+    
+    function updateTrayMenu() {
+      tray.setContextMenu(Menu.buildFromTemplate([
+        { label: '打开应用', click: function () { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
+        { label: '控制台', click: function () { createLogWindow(); } },
+        { type: 'separator' },
+        chromeVisible
+          ? { label: '🔲 隐藏 Chrome', click: function () { toggleChrome(false); updateTrayMenu(); } }
+          : { label: '🌐 显示 Chrome', click: function () { toggleChrome(true); updateTrayMenu(); } },
+        { type: 'separator' },
+        { label: '刷新', click: function () { if (mainWindow) mainWindow.webContents.reload(); } },
+        { type: 'separator' },
+        { label: '退出', click: function () { isQuitting = true; app.quit(); } },
+      ]));
+    }
+    
+    updateTrayMenu();
     tray.on('click', function () { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } });
   } catch (e) { log('托盘图标加载失败: ' + e.message); }
 }
 
 // ============================================================
-// 启动界面（中文，无技术信息）
+// 启动界面
 // ============================================================
-// 【定制说明】修改这个函数可以自定义启动画面的外观
 function getSplashHTML(statusText) {
   var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
     + '*{margin:0;padding:0;box-sizing:border-box}'
@@ -415,12 +541,11 @@ function getSplashHTML(statusText) {
     + '</style></head><body>'
     + '<div class="bg a"></div><div class="bg b"></div>'
     + '<div class="c">'
-    + '<div class="logo">\uD83D\uDCDA</div>'           // 📚 书本emoji，可替换
+    + '<div class="logo">\uD83D\uDCDA</div>'
     + '<div class="title">' + APP_NAME + '</div>'
     + '<div class="sub">智能学习 · 高效笔记</div>'
     + '<div class="sp"></div>'
     + '<div class="st">' + statusText + '</div>'
-    // 不再显示 localhost 等技术信息
     + '</div></body></html>';
   return 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
 }
@@ -434,6 +559,9 @@ app.whenReady().then(async function () {
   log('  模式: ' + (IS_LOCAL ? '本地' : '远程'));
   log('  后端目录: ' + BACKEND_DIR);
   log('====================================');
+
+  // 🆕 初始化Chrome状态
+  initChromeState();
 
   var win = createWindow();
   win.loadURL(getSplashHTML('正在初始化...'));

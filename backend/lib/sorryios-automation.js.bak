@@ -101,7 +101,7 @@ class SorryiosAutomation {
         log('启动浏览器...');
         this.browser = await chromium.launch({
             headless: CONFIG.headless,
-            args: CONFIG.desktopMode && !fs.existsSync(path.join(__dirname, '..', 'data', 'show-chrome.flag')) ? [
+            args: CONFIG.desktopMode ? [
                 '--window-position=-32000,-32000',
             ] : [],
         });
